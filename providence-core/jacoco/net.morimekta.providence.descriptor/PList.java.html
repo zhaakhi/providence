@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PList.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.descriptor</a> &gt; <span class="el_source">PList.java</span></div><h1>PList.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.descriptor;
+
+import net.morimekta.providence.PBuilder;
+import net.morimekta.providence.PBuilderFactory;
+import net.morimekta.providence.PType;
+
+import com.google.common.collect.ImmutableList;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Descriptor for a list with item type.
+ */
+public class PList&lt;Item&gt; extends PContainer&lt;List&lt;Item&gt;&gt; {
+    private final BuilderFactory&lt;Item&gt; builderFactory;
+
+    public PList(PDescriptorProvider itemType,
+                 BuilderFactory&lt;Item&gt; builderFactory) {
+<span class="fc" id="L41">        super(itemType);</span>
+<span class="fc" id="L42">        this.builderFactory = builderFactory;</span>
+<span class="fc" id="L43">    }</span>
+
+    @Nonnull
+    @Override
+    public String getName() {
+<span class="fc" id="L48">        return &quot;list&lt;&quot; + itemDescriptor().getName() + &quot;&gt;&quot;;</span>
+    }
+
+    @Nonnull
+    @Override
+    public String getQualifiedName(String programContext) {
+<span class="fc" id="L54">        return &quot;list&lt;&quot; + itemDescriptor().getQualifiedName(programContext) + &quot;&gt;&quot;;</span>
+    }
+
+    @Nonnull
+    @Override
+    public PType getType() {
+<span class="fc" id="L60">        return PType.LIST;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="pc bpc" id="L65" title="1 of 4 branches missed.">        if (o == null || !(o instanceof PList)) {</span>
+<span class="fc" id="L66">            return false;</span>
+        }
+<span class="fc" id="L68">        PList&lt;?&gt; other = (PList&lt;?&gt;) o;</span>
+<span class="fc" id="L69">        return other.itemDescriptor()</span>
+<span class="fc" id="L70">                    .equals(itemDescriptor());</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L75">        return PList.class.hashCode() + itemDescriptor().hashCode();</span>
+    }
+
+    public interface Builder&lt;I&gt; extends PBuilder&lt;List&lt;I&gt;&gt; {
+        @Nonnull
+        Builder&lt;I&gt; add(I value);
+        @Nonnull
+        Builder&lt;I&gt; addAll(Collection&lt;I&gt; items);
+        @Nonnull
+        Builder&lt;I&gt; clear();
+
+        @Nonnull
+        @Override
+        List&lt;I&gt; build();
+    }
+
+    private interface BuilderFactory&lt;I&gt; extends PBuilderFactory&lt;List&lt;I&gt;&gt; {
+        @Nonnull
+        @Override
+        Builder&lt;I&gt; builder();
+    }
+
+    public static class ImmutableListBuilder&lt;I&gt; implements Builder&lt;I&gt; {
+        private ImmutableList.Builder&lt;I&gt; builder;
+
+<span class="fc" id="L100">        public ImmutableListBuilder() {</span>
+<span class="fc" id="L101">            builder = ImmutableList.builder();</span>
+<span class="fc" id="L102">        }</span>
+
+        @Nonnull
+        @Override
+        public ImmutableListBuilder&lt;I&gt; add(I value) {
+<span class="fc" id="L107">            builder.add(value);</span>
+<span class="fc" id="L108">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public ImmutableListBuilder&lt;I&gt; addAll(Collection&lt;I&gt; items) {
+<span class="fc" id="L114">            builder.addAll(items);</span>
+<span class="fc" id="L115">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public ImmutableListBuilder&lt;I&gt; clear() {
+<span class="fc" id="L121">            builder = ImmutableList.builder();</span>
+<span class="fc" id="L122">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public List&lt;I&gt; build() {
+<span class="fc" id="L128">            return builder.build();</span>
+        }
+    }
+
+    @Override
+    public Builder&lt;Item&gt; builder() {
+<span class="fc" id="L134">        return builderFactory.builder();</span>
+    }
+
+    public static &lt;I&gt; PContainerProvider&lt;List&lt;I&gt;, PList&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc) {
+<span class="fc" id="L138">        return provider(itemDesc, ImmutableListBuilder::new);</span>
+    }
+
+    public static &lt;I&gt; PContainerProvider&lt;List&lt;I&gt;, PList&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc,
+                                                                     BuilderFactory&lt;I&gt; builderFactory) {
+<span class="fc" id="L143">        return new PContainerProvider&lt;&gt;(new PList&lt;&gt;(itemDesc, builderFactory));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

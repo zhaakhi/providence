@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JavaMessageFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java</a> &gt; <span class="el_source">JavaMessageFormatter.java</span></div><h1>JavaMessageFormatter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java;
+
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.format.java.messages.BuilderCommonMemberFormatter;
+import net.morimekta.providence.generator.format.java.messages.BuilderCoreOverridesFormatter;
+import net.morimekta.providence.generator.format.java.messages.CommonBuilderFormatter;
+import net.morimekta.providence.generator.format.java.messages.CommonMemberFormatter;
+import net.morimekta.providence.generator.format.java.messages.CommonOverridesFormatter;
+import net.morimekta.providence.generator.format.java.messages.CoreOverridesFormatter;
+import net.morimekta.providence.generator.format.java.messages.extras.AndroidMessageFormatter;
+import net.morimekta.providence.generator.format.java.messages.extras.BinaryReaderBuilderFormatter;
+import net.morimekta.providence.generator.format.java.messages.extras.BinaryWriterFormatter;
+import net.morimekta.providence.generator.format.java.messages.extras.HazelcastPortableMessageFormatter;
+import net.morimekta.providence.generator.format.java.messages.extras.JacksonMessageFormatter;
+import net.morimekta.providence.generator.format.java.shared.BaseMessageFormatter;
+import net.morimekta.providence.generator.format.java.shared.MessageMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.JHelper;
+import net.morimekta.providence.generator.format.java.utils.JMessage;
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
+/**
+ * Formatter for java messages main class.
+ */
+public class JavaMessageFormatter extends BaseMessageFormatter {
+    public JavaMessageFormatter(IndentedPrintWriter writer,
+                                JHelper helper,
+                                JavaOptions options) {
+<span class="fc" id="L53">        this(false, false, writer, helper, options);</span>
+<span class="fc" id="L54">    }</span>
+
+    public JavaMessageFormatter(boolean inner,
+                                boolean makeProtected,
+                                IndentedPrintWriter writer,
+                                JHelper helper,
+                                JavaOptions options) {
+<span class="fc" id="L61">        super(inner, makeProtected, writer, helper, getFormatters(writer, helper, options));</span>
+<span class="fc" id="L62">    }</span>
+
+    public String getClassName(JMessage&lt;?&gt; message) {
+<span class="fc" id="L65">        return message.instanceType();</span>
+    }
+
+    private static List&lt;MessageMemberFormatter&gt; getFormatters(IndentedPrintWriter writer,
+                                                              JHelper helper,
+                                                              JavaOptions options) {
+<span class="fc" id="L71">        ImmutableList.Builder&lt;MessageMemberFormatter&gt; builderFormatters = ImmutableList.builder();</span>
+<span class="fc" id="L72">        builderFormatters.add(new BuilderCommonMemberFormatter(writer, helper))</span>
+<span class="fc" id="L73">                         .add(new BuilderCoreOverridesFormatter(writer, helper));</span>
+
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (options.hazelcast_portable) {</span>
+<span class="fc" id="L76">            builderFormatters.add(new HazelcastPortableMessageFormatter(writer, helper));</span>
+        }
+
+<span class="fc" id="L79">        ImmutableList.Builder&lt;MessageMemberFormatter&gt; formatters = ImmutableList.builder();</span>
+<span class="fc" id="L80">        formatters.add(new CommonMemberFormatter(writer, helper))</span>
+<span class="fc" id="L81">                  .add(new CoreOverridesFormatter(writer))</span>
+<span class="fc" id="L82">                  .add(new CommonOverridesFormatter(writer));</span>
+
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (options.android) {</span>
+<span class="fc" id="L85">            formatters.add(new AndroidMessageFormatter(writer));</span>
+        }
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (options.jackson) {</span>
+<span class="fc" id="L88">            formatters.add(new JacksonMessageFormatter(writer, helper));</span>
+        }
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (options.rw_binary) {</span>
+<span class="fc" id="L91">            formatters.add(new BinaryWriterFormatter(writer, helper));</span>
+<span class="fc" id="L92">            builderFormatters.add(new BinaryReaderBuilderFormatter(writer, helper));</span>
+        }
+
+<span class="fc" id="L95">        formatters.add(new CommonBuilderFormatter(writer, helper, builderFormatters.build()));</span>
+<span class="fc" id="L96">        return formatters.build();</span>
+    }
+
+    @Override
+    public void appendMessageClass(PMessageDescriptor&lt;?, ?&gt; descriptor) throws GeneratorException {
+<span class="fc" id="L101">        super.appendMessageClass(descriptor);</span>
+<span class="fc" id="L102">        writer.newline();</span>
+<span class="fc" id="L103">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

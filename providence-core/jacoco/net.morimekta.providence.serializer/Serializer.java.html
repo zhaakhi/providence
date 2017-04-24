@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Serializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.serializer</a> &gt; <span class="el_source">Serializer.java</span></div><h1>Serializer.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.serializer;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.PServiceCallType;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PService;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+/**
+ * Thrift serializers are stateless injectable implementation classes that
+ * transforms messages to binary stream (serializes), or binary stream to
+ * messages (deserializes). Since the serializer is state-less it should also
+ * be inherently thread safe (including not needing any synchronized methods.
+ */
+<span class="fc" id="L41">public abstract class Serializer {</span>
+    public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    int serialize(OutputStream output, Message message) throws IOException;
+
+    public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    int serialize(OutputStream output, PServiceCall&lt;Message, Field&gt; call) throws IOException;
+
+    @Nonnull
+    public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    Message deserialize(InputStream input, PMessageDescriptor&lt;Message, Field&gt; descriptor) throws IOException;
+
+    @Nonnull
+    public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    PServiceCall&lt;Message, Field&gt; deserialize(InputStream input, PService service) throws IOException;
+
+    public abstract boolean binaryProtocol();
+
+    public abstract String mimeType();
+
+    /**
+     * Utility method to check if a service call is a request type.
+     *
+     * @param type The service call type.
+     * @return If the service call is a request, and not a response.
+     */
+    protected boolean isRequestCallType(PServiceCallType type) {
+<span class="pc bfc" id="L67" title="All 2 branches covered.">        switch (type) {</span>
+            case CALL:
+            case ONEWAY:
+<span class="fc" id="L70">                return true;</span>
+        }
+<span class="fc" id="L72">        return false;</span>
+    }
+
+    public static final boolean DEFAULT_STRICT = false;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

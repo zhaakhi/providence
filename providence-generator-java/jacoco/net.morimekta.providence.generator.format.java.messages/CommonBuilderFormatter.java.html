@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommonBuilderFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.messages</a> &gt; <span class="el_source">CommonBuilderFormatter.java</span></div><h1>CommonBuilderFormatter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.messages;
+
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PType;
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.format.java.shared.BaseMessageFormatter;
+import net.morimekta.providence.generator.format.java.shared.MessageMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.BlockCommentBuilder;
+import net.morimekta.providence.generator.format.java.utils.JAnnotation;
+import net.morimekta.providence.generator.format.java.utils.JField;
+import net.morimekta.providence.generator.format.java.utils.JHelper;
+import net.morimekta.providence.generator.format.java.utils.JMessage;
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import java.util.List;
+import java.util.Optional;
+
+import static net.morimekta.providence.generator.format.java.messages.CoreOverridesFormatter.UNION_FIELD;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 08.01.16.
+ */
+public class CommonBuilderFormatter
+        extends BaseMessageFormatter
+        implements MessageMemberFormatter {
+    public CommonBuilderFormatter(IndentedPrintWriter writer,
+                                  JHelper helper,
+                                  List&lt;MessageMemberFormatter&gt; formatters) {
+<span class="fc" id="L50">        super(true, false, writer, helper, formatters);</span>
+<span class="fc" id="L51">    }</span>
+
+    @Override
+    public String getClassName(JMessage&lt;?&gt; message) {
+<span class="fc" id="L55">        return &quot;_Builder&quot;;</span>
+    }
+
+    @Override
+    public void appendMethods(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L60">        appendMutate(message);</span>
+<span class="fc" id="L61">    }</span>
+
+    @Override
+    public void appendExtraProperties(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L65">        appendStaticMakeBuilder(message);</span>
+<span class="fc" id="L66">        appendMessageClass(message.descriptor());</span>
+<span class="fc" id="L67">    }</span>
+
+    @Override
+    public void appendConstructors(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L71">        appendBuilderConstructors(message);</span>
+<span class="fc" id="L72">    }</span>
+
+    @Override
+    protected void appendClassExtends(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L76">        writer.formatln(&quot;extends %s&lt;%s,_Field&gt;&quot;,</span>
+<span class="fc" id="L77">                        PMessageBuilder.class.getName(),</span>
+<span class="fc" id="L78">                        message.instanceType());</span>
+<span class="fc" id="L79">    }</span>
+
+    private void appendMutate(JMessage message) {
+<span class="fc" id="L82">        writer.appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L83">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L84">              .appendln(&quot;public _Builder mutate() {&quot;)</span>
+<span class="fc" id="L85">              .begin()</span>
+<span class="fc" id="L86">              .appendln(&quot;return new _Builder(this);&quot;)</span>
+<span class="fc" id="L87">              .end()</span>
+<span class="fc" id="L88">              .appendln('}')</span>
+<span class="fc" id="L89">              .newline();</span>
+<span class="fc" id="L90">    }</span>
+
+    private void appendStaticMakeBuilder(JMessage message) {
+<span class="fc" id="L93">        BlockCommentBuilder comment = new BlockCommentBuilder(writer);</span>
+<span class="fc" id="L94">        comment.comment(&quot;Make a &quot; + message.descriptor().getQualifiedName() + &quot; builder.&quot;)</span>
+<span class="fc" id="L95">               .return_(&quot;The builder instance.&quot;)</span>
+<span class="fc" id="L96">               .finish();</span>
+<span class="fc" id="L97">        writer.formatln(&quot;public static _Builder builder() {&quot;)</span>
+<span class="fc" id="L98">              .begin()</span>
+<span class="fc" id="L99">              .appendln(&quot;return new _Builder();&quot;)</span>
+<span class="fc" id="L100">              .end()</span>
+<span class="fc" id="L101">              .appendln('}')</span>
+<span class="fc" id="L102">              .newline();</span>
+<span class="fc" id="L103">    }</span>
+
+    private void appendBuilderConstructors(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L106">        writer.formatln(&quot;private %s(_Builder builder) {&quot;, message.instanceType())</span>
+<span class="fc" id="L107">              .begin();</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (message.isUnion()) {</span>
+<span class="fc" id="L109">            writer.formatln(&quot;%s = builder.%s;&quot;,</span>
+                            UNION_FIELD, UNION_FIELD)
+<span class="fc" id="L111">                  .newline();</span>
+
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
+<span class="pc bfc" id="L114" title="All 4 branches covered.">                switch (field.type()) {</span>
+                    case VOID:
+                        // Void fields have no value.
+<span class="fc" id="L117">                        break;</span>
+                    case LIST:
+                    case MAP:
+                    case SET:
+<span class="fc" id="L121">                        writer.formatln(</span>
+                                &quot;%s = %s == _Field.%s ? builder.%s.build() : null;&quot;,
+<span class="fc" id="L123">                                field.member(),</span>
+                                UNION_FIELD,
+<span class="fc" id="L125">                                field.fieldEnum(),</span>
+<span class="fc" id="L126">                                field.member());</span>
+<span class="fc" id="L127">                        break;</span>
+                    case MESSAGE:
+<span class="fc" id="L129">                        writer.formatln(&quot;%s = %s != _Field.%s&quot;, field.member(), UNION_FIELD, field.fieldEnum())</span>
+<span class="fc" id="L130">                              .appendln(&quot;        ? null&quot;)</span>
+<span class="fc" id="L131">                              .formatln(&quot;        : builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
+<span class="fc" id="L132">                                        field.member(), field.member(), field.member());</span>
+<span class="fc" id="L133">                        break;</span>
+                    default:
+<span class="fc bfc" id="L135" title="All 2 branches covered.">                        if (field.alwaysPresent()) {</span>
+<span class="fc" id="L136">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : %s;&quot;,</span>
+<span class="fc" id="L137">                                            field.member(),</span>
+                                            UNION_FIELD,
+<span class="fc" id="L139">                                            field.fieldEnum(),</span>
+<span class="fc" id="L140">                                            field.member(),</span>
+<span class="fc" id="L141">                                            field.kDefault());</span>
+                        } else {
+<span class="fc" id="L143">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : null;&quot;,</span>
+<span class="fc" id="L144">                                            field.member(),</span>
+                                            UNION_FIELD,
+<span class="fc" id="L146">                                            field.fieldEnum(),</span>
+<span class="fc" id="L147">                                            field.member());</span>
+                        }
+                        break;
+                }
+<span class="fc" id="L151">            }</span>
+        } else {
+<span class="fc bfc" id="L153" title="All 2 branches covered.">            if (message.isException()) {</span>
+                // If an exception class contains a field named 'message' (no caps), it will use that
+                // as the exception message unmodified.
+<span class="fc" id="L156">                Optional&lt;JField&gt; msg = message.exceptionMessageField();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                if (msg.isPresent()) {</span>
+<span class="fc" id="L158">                    writer.formatln(&quot;super(builder.%s);&quot;, msg.get().member())</span>
+<span class="fc" id="L159">                          .newline();</span>
+                } else {
+<span class="fc" id="L161">                    writer.appendln(&quot;super(createMessage(&quot;)</span>
+<span class="fc" id="L162">                          .begin(&quot;                    &quot;);</span>
+<span class="fc" id="L163">                    boolean first = true;</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                    for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">                        if (first) {</span>
+<span class="fc" id="L166">                            first = false;</span>
+                        } else {
+<span class="fc" id="L168">                            writer.append(',')</span>
+<span class="fc" id="L169">                                  .appendln();</span>
+                        }
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                        if (field.container()) {</span>
+<span class="nc" id="L172">                            writer.format(&quot;builder.%s() ? builder.%s.build() : null&quot;, field.isSet(), field.member());</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                        } else if (!field.isVoid()) {</span>
+                            // Void fields have no value.
+<span class="fc" id="L175">                            writer.format(&quot;builder.%s&quot;, field.member());</span>
+                        }
+<span class="fc" id="L177">                    }</span>
+<span class="fc" id="L178">                    writer.append(&quot;));&quot;)</span>
+<span class="fc" id="L179">                          .end()</span>
+<span class="fc" id="L180">                          .newline();</span>
+                }
+            }
+
+<span class="fc bfc" id="L184" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">                if (field.container()) {</span>
+<span class="fc" id="L186">                    writer.formatln(&quot;if (builder.%s()) {&quot;, field.isSet())</span>
+<span class="fc" id="L187">                          .formatln(&quot;    %s = builder.%s.build();&quot;, field.member(), field.member())</span>
+<span class="fc" id="L188">                          .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L189">                          .formatln(&quot;    %s = null;&quot;, field.member())</span>
+<span class="fc" id="L190">                          .appendln('}');</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">                } else if (field.type() == PType.MESSAGE) {</span>
+<span class="fc" id="L192">                    writer.formatln(&quot;%s = builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
+<span class="fc" id="L193">                                    field.member(), field.member(), field.member(), field.member());</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">                } else if (!field.isVoid()){</span>
+                    // Void fields have no value.
+<span class="fc" id="L196">                    writer.formatln(&quot;%s = builder.%s;&quot;, field.member(), field.member());</span>
+                }
+<span class="fc" id="L198">            }</span>
+        }
+<span class="fc" id="L200">        writer.end()</span>
+<span class="fc" id="L201">              .appendln('}')</span>
+<span class="fc" id="L202">              .newline();</span>
+<span class="fc" id="L203">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

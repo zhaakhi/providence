@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PPrimitive.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.descriptor</a> &gt; <span class="el_source">PPrimitive.java</span></div><h1>PPrimitive.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.descriptor;
+
+import net.morimekta.providence.PType;
+
+import javax.annotation.Nonnull;
+import java.util.Objects;
+
+/**
+ * Descriptors for primitive types.
+ * &lt;p&gt;
+ * These are the basic types used in the thrift structure except containers.
+ */
+public class PPrimitive implements PDescriptor {
+<span class="fc" id="L34">    public static final PPrimitive VOID   = new PPrimitive(PType.VOID, null);</span>
+<span class="fc" id="L35">    public static final PPrimitive BOOL   = new PPrimitive(PType.BOOL, false);</span>
+<span class="fc" id="L36">    public static final PPrimitive BYTE   = new PPrimitive(PType.BYTE, (byte) 0);</span>
+<span class="fc" id="L37">    public static final PPrimitive I16    = new PPrimitive(PType.I16, (short) 0);</span>
+<span class="fc" id="L38">    public static final PPrimitive I32    = new PPrimitive(PType.I32, 0);</span>
+<span class="fc" id="L39">    public static final PPrimitive I64    = new PPrimitive(PType.I64, (long) 0);</span>
+<span class="fc" id="L40">    public static final PPrimitive DOUBLE = new PPrimitive(PType.DOUBLE, 0.0);</span>
+<span class="fc" id="L41">    public static final PPrimitive STRING = new PPrimitive(PType.STRING, null);</span>
+<span class="fc" id="L42">    public static final PPrimitive BINARY = new PPrimitive(PType.BINARY, null);</span>
+
+    private final PPrimitiveProvider mProvider;
+    private final PType              mType;
+    private final Object             mDefault;
+
+<span class="fc" id="L48">    private PPrimitive(PType type, Object defValue) {</span>
+<span class="fc" id="L49">        mType = type;</span>
+<span class="fc" id="L50">        mProvider = new PPrimitiveProvider(this);</span>
+<span class="fc" id="L51">        mDefault = defValue;</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * Get the descriptor provider for the primitive.
+     *
+     * @return The descriptor provider.
+     */
+    @Nonnull
+    public PPrimitiveProvider provider() {
+<span class="fc" id="L61">        return mProvider;</span>
+    }
+
+    @Override
+    public String getProgramName() {
+<span class="fc" id="L66">        return null;</span>
+    }
+
+    @Nonnull
+    @Override
+    public String getName() {
+<span class="fc" id="L72">        return mType.toString();</span>
+    }
+
+    @Nonnull
+    @Override
+    public String getQualifiedName(String programContext) {
+<span class="fc" id="L78">        return mType.toString();</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L83">        return mType.toString();</span>
+    }
+
+    @Nonnull
+    @Override
+    public PType getType() {
+<span class="fc" id="L89">        return mType;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        return this == o;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L99">        return Objects.hash(mType, mDefault);</span>
+    }
+
+    /**
+     * @return The default value for the primitive.
+     */
+    public Object getDefaultValue() {
+<span class="fc" id="L106">        return mDefault;</span>
+    }
+
+    /**
+     * Find primitive by name.
+     * @param name The name of the primitive.
+     * @return The primitive descriptor.
+     */
+    public static PPrimitive findByName(String name) {
+<span class="pc bpc" id="L115" title="10 of 41 branches missed.">        switch (name) {</span>
+            case &quot;void&quot;:
+<span class="fc" id="L117">                return VOID;</span>
+            case &quot;bool&quot;:
+<span class="fc" id="L119">                return BOOL;</span>
+            case &quot;byte&quot;:
+            case &quot;i8&quot;:
+<span class="fc" id="L122">                return BYTE;</span>
+            case &quot;i16&quot;:
+<span class="fc" id="L124">                return I16;</span>
+            case &quot;i32&quot;:
+<span class="fc" id="L126">                return I32;</span>
+            case &quot;i64&quot;:
+<span class="fc" id="L128">                return I64;</span>
+            case &quot;double&quot;:
+<span class="fc" id="L130">                return DOUBLE;</span>
+            case &quot;string&quot;:
+<span class="fc" id="L132">                return STRING;</span>
+            case &quot;binary&quot;:
+<span class="fc" id="L134">                return BINARY;</span>
+        }
+<span class="fc" id="L136">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

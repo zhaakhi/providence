@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.utils</a> &gt; <span class="el_source">JUtils.java</span></div><h1>JUtils.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.utils;
+
+import net.morimekta.providence.PEnumValue;
+import net.morimekta.providence.descriptor.PDeclaredDescriptor;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.reflect.contained.CProgram;
+import net.morimekta.util.Strings;
+
+import java.io.File;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 07.09.15
+ */
+<span class="nc" id="L37">public class JUtils {</span>
+    public static long generateSerialVersionUID(PMessageDescriptor&lt;?, ?&gt; type) {
+<span class="fc" id="L39">        String string = type.getVariant()</span>
+<span class="fc" id="L40">                            .toString() + &quot; &quot; + type.getQualifiedName();</span>
+
+<span class="fc" id="L42">        long hash = 1125899906842597L; // prime</span>
+<span class="fc" id="L43">        final int len = string.length();</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        for (int i = 0; i &lt; len; i++) {</span>
+<span class="fc" id="L45">            hash = 4909L * hash + 7919L * string.charAt(i);</span>
+        }
+<span class="fc" id="L47">        return hash;</span>
+    }
+
+    public static String getClassName(PDeclaredDescriptor&lt;?&gt; type) {
+<span class="fc" id="L51">        return camelCase(&quot;&quot;, type.getName());</span>
+    }
+
+    public static String getClassName(PService service) {
+<span class="fc" id="L55">        return camelCase(&quot;&quot;, service.getName());</span>
+    }
+
+    public static String getJavaPackage(CProgram document) throws GeneratorException {
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (document == null) {</span>
+<span class="nc" id="L60">            System.err.println(&quot;NOOO&quot;);</span>
+        }
+<span class="fc" id="L62">        String javaPackage = document.getNamespaceForLanguage(&quot;java&quot;);</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (javaPackage == null) {</span>
+<span class="nc" id="L64">            throw new GeneratorException(&quot;No java namespace for thrift package &quot; + document.getProgramName());</span>
+        }
+<span class="fc" id="L66">        return javaPackage;</span>
+    }
+
+    public static String getPackageClassPath(String javaPackage) throws GeneratorException {
+<span class="fc" id="L70">        String[] parts = javaPackage.split(&quot;[.]&quot;);</span>
+<span class="fc" id="L71">        return Strings.join(File.separator, parts);</span>
+    }
+
+    /**
+     * Method to get the thrift file as a class name for a hazelcast factory.
+     *
+     * @param type PStructDescriptor with the information to fetch thrift info from.
+     * @return class name for the hazelcast factory.
+     */
+    public static String getHazelcastFactory(PMessageDescriptor&lt;?, ?&gt; type) {
+<span class="fc" id="L81">        return camelCase(&quot;&quot;, type.getProgramName()).concat(&quot;_Factory&quot;);</span>
+    }
+
+    /**
+     * Method to get the message constant for the thrift struct.
+     *
+     * @param type PStructDescriptor with the information to fetch message info from.
+     * @return macro cased constant value of the message.
+     */
+    public static String getHazelcastClassId(PMessageDescriptor&lt;?, ?&gt; type) {
+<span class="fc" id="L91">        return getHazelcastClassId(type.getName());</span>
+    }
+
+    /**
+     * Method to get the message constant for the thrift struct.
+     *
+     * @param name String with the class name to create format from.
+     * @return macro cased constant value of the message.
+     */
+    public static String getHazelcastClassId(String name) {
+<span class="fc" id="L101">        return macroCase(name).concat(&quot;_ID&quot;);</span>
+    }
+
+    /**
+     * Format a prefixed name as camelCase. The prefix is kept verbatim, while
+     * tha name is split on '_' chars, and joined with each part capitalized.
+     *
+     * @param name   The name to camel-case.
+     * @return theCamelCasedName
+     */
+    public static String camelCase(String name) {
+<span class="fc" id="L112">        StringBuilder builder = new StringBuilder();</span>
+
+<span class="fc" id="L114">        String[] parts = name.split(&quot;[-._]&quot;);</span>
+<span class="fc" id="L115">        boolean first = true;</span>
+<span class="fc" id="L116">        int skipped = 0;</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        for (String part : parts) {</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if (part.isEmpty()) {</span>
+<span class="nc" id="L119">                skipped++;</span>
+<span class="nc" id="L120">                continue;</span>
+            }
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">            if (first) {</span>
+<span class="fc" id="L123">                first = false;</span>
+<span class="fc" id="L124">                builder.append(part);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            } else if (skipped &gt; 1) {</span>
+<span class="nc" id="L126">                builder.append('_');</span>
+<span class="nc" id="L127">                builder.append(part);</span>
+            } else {
+<span class="nc" id="L129">                builder.append(Strings.capitalize(part));</span>
+            }
+<span class="fc" id="L131">            skipped = 0;</span>
+        }
+
+<span class="fc" id="L134">        return builder.toString();</span>
+    }
+
+    /**
+     * Format a prefixed name as camelCase. The prefix is kept verbatim, while
+     * tha name is split on '_' chars, and joined with each part capitalized.
+     *
+     * @param prefix The prefix.
+     * @param name   The name to camel-case.
+     * @return theCamelCasedName
+     */
+    public static String camelCase(String prefix, String name) {
+<span class="fc" id="L146">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc" id="L147">        builder.append(prefix);</span>
+
+<span class="fc" id="L149">        String[] parts = name.split(&quot;[-._]&quot;);</span>
+<span class="fc" id="L150">        int skipped = 0;</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        for (String part : parts) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if (part.isEmpty()) {</span>
+<span class="fc" id="L153">                skipped++;</span>
+<span class="fc" id="L154">                continue;</span>
+            }
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (skipped &gt; 1) {</span>
+<span class="fc" id="L157">                builder.append('_');</span>
+<span class="fc" id="L158">                builder.append(part);</span>
+            } else {
+<span class="fc" id="L160">                builder.append(Strings.capitalize(part));</span>
+            }
+<span class="fc" id="L162">            skipped = 0;</span>
+        }
+<span class="fc" id="L164">        return builder.toString();</span>
+    }
+
+    /**
+     * Format a prefixed name as MACRO_CASE.
+     *
+     * @param name   The name to macro-case.
+     * @return THE_MACRO_CASED_NAME
+     */
+    public static String macroCase(String name) {
+<span class="fc" id="L174">        String result = name.replaceAll(&quot;([A-Z])&quot;, &quot;_$1&quot;);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        while( result.startsWith(&quot;_&quot;) ) {</span>
+<span class="fc" id="L176">            result = result.substring(1, result.length());</span>
+        }
+<span class="fc" id="L178">        return result.toUpperCase();</span>
+    }
+
+    public static String enumConst(PEnumValue value) {
+<span class="fc" id="L182">        return Strings.c_case(&quot;&quot;, value.getName()).toUpperCase();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

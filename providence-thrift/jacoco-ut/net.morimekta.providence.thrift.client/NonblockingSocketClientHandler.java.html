@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NonblockingSocketClientHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Thrift Bridge</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.thrift.client</a> &gt; <span class="el_source">NonblockingSocketClientHandler.java</span></div><h1>NonblockingSocketClientHandler.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.thrift.client;
+
+import net.morimekta.providence.PApplicationException;
+import net.morimekta.providence.PApplicationExceptionType;
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.PServiceCallHandler;
+import net.morimekta.providence.PServiceCallType;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.thrift.io.FramedBufferInputSteram;
+import net.morimekta.providence.thrift.io.FramedBufferOutputStream;
+
+import javax.annotation.Nonnull;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.nio.channels.SocketChannel;
+
+/**
+ * Client handler for thrift RPC using the TNonblockingServer, or similar that
+ * uses the TFramedTransport message wrapper.
+ *
+ * When using this client handler make sure to close it when no longer in use.
+ * Otherwise it will keep the socket channel open almost indefinitely.
+ */
+public class NonblockingSocketClientHandler implements PServiceCallHandler, Closeable {
+    private final Serializer    serializer;
+    private final SocketAddress address;
+    private final int           connect_timeout;
+    private final int           read_timeout;
+
+    private SocketChannel channel;
+
+    public NonblockingSocketClientHandler(Serializer serializer, SocketAddress address) {
+<span class="fc" id="L60">        this(serializer, address, 10000, 10000);</span>
+<span class="fc" id="L61">    }</span>
+
+<span class="fc" id="L63">    public NonblockingSocketClientHandler(Serializer serializer, SocketAddress address, int connect_timeout, int read_timeout) {</span>
+<span class="fc" id="L64">        this.serializer = serializer;</span>
+<span class="fc" id="L65">        this.address = address;</span>
+<span class="fc" id="L66">        this.connect_timeout = connect_timeout;</span>
+<span class="fc" id="L67">        this.read_timeout = read_timeout;</span>
+<span class="fc" id="L68">    }</span>
+
+    @Nonnull
+    private SocketChannel connect() throws IOException {
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (channel == null) {</span>
+<span class="fc" id="L73">            channel = SocketChannel.open();</span>
+<span class="fc" id="L74">            Socket socket = channel.socket();</span>
+<span class="fc" id="L75">            socket.setSoLinger(false, 0);</span>
+<span class="fc" id="L76">            socket.setTcpNoDelay(true);</span>
+<span class="fc" id="L77">            socket.setKeepAlive(true);</span>
+<span class="fc" id="L78">            socket.setSoTimeout(read_timeout);</span>
+
+            // The channel is always in blocking mode.
+<span class="fc" id="L81">            channel.configureBlocking(true);</span>
+<span class="fc" id="L82">            channel.socket().connect(address, connect_timeout);</span>
+        }
+<span class="fc" id="L84">        return channel;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (channel != null) {</span>
+            try {
+<span class="nc" id="L91">                channel.close();</span>
+            } finally {
+<span class="nc" id="L93">                channel = null;</span>
+<span class="nc" id="L94">            }</span>
+        }
+<span class="nc" id="L96">    }</span>
+
+    @Override
+    public &lt;Request extends PMessage&lt;Request, RequestField&gt;,
+            Response extends PMessage&lt;Response, ResponseField&gt;,
+            RequestField extends PField,
+            ResponseField extends PField&gt;
+    PServiceCall&lt;Response, ResponseField&gt; handleCall(PServiceCall&lt;Request, RequestField&gt; call, PService service)
+            throws IOException {
+<span class="pc bpc" id="L105" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
+<span class="nc" id="L106">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
+                                            PApplicationExceptionType.INVALID_MESSAGE_TYPE);
+        }
+
+<span class="fc" id="L110">        SocketChannel channel = connect();</span>
+
+<span class="fc" id="L112">        OutputStream out = new FramedBufferOutputStream(channel);</span>
+<span class="fc" id="L113">        serializer.serialize(out, call);</span>
+<span class="fc" id="L114">        out.flush();</span>
+
+<span class="fc" id="L116">        PServiceCall&lt;Response, ResponseField&gt; reply = null;</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if (call.getType() == PServiceCallType.CALL) {</span>
+<span class="fc" id="L118">            InputStream in = new FramedBufferInputSteram(channel);</span>
+<span class="fc" id="L119">            reply = serializer.deserialize(in, service);</span>
+
+<span class="pc bpc" id="L121" title="2 of 4 branches missed.">            if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
+<span class="nc" id="L122">                throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
+                                                PApplicationExceptionType.INVALID_MESSAGE_TYPE);
+            }
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">            if (reply.getSequence() != call.getSequence()) {</span>
+<span class="nc" id="L126">                throw new PApplicationException(&quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
+                                                PApplicationExceptionType.BAD_SEQUENCE_ID);
+            }
+        }
+
+<span class="fc" id="L131">        return reply;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

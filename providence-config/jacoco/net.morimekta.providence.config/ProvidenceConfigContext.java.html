@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProvidenceConfigContext.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config</a> &gt; <span class="el_source">ProvidenceConfigContext.java</span></div><h1>ProvidenceConfigContext.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.config;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.util.pretty.Token;
+import net.morimekta.providence.util.pretty.Tokenizer;
+import net.morimekta.providence.util.pretty.TokenizerException;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ *
+ */
+class ProvidenceConfigContext {
+    private final Set&lt;String&gt;                     includeAliases;
+    private final Map&lt;String, Object&gt;             references;
+    private final Map&lt;String, TokenizerException&gt; referenceExceptions;
+
+<span class="fc" id="L21">    ProvidenceConfigContext() {</span>
+<span class="fc" id="L22">        this.references = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L23">        this.referenceExceptions = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L24">        this.includeAliases = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L25">    }</span>
+
+    boolean containsReference(String name) {
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        return referenceExceptions.containsKey(name) ||</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">               references.containsKey(name);</span>
+    }
+
+    void setInclude(String alias, PMessage include) {
+<span class="fc" id="L33">        references.put(alias, include);</span>
+<span class="fc" id="L34">        includeAliases.add(alias);</span>
+<span class="fc" id="L35">    }</span>
+
+    String initReference(Token token, Tokenizer tokenizer) throws TokenizerException {
+<span class="fc" id="L38">        String reference = token.asString();</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (ProvidenceConfig.RESERVED_WORDS.contains(reference)) {</span>
+<span class="fc" id="L40">            throw new TokenizerException(token, &quot;Trying to assign reference id '%s', which is reserved.&quot;, reference).setLine(tokenizer.getLine(token.getLineNo()));</span>
+        }
+
+<span class="fc" id="L43">        TokenizerException ex = referenceExceptions.get(reference);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (ex != null) {</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            if (references.containsKey(reference)) {</span>
+<span class="fc" id="L46">                throw new TokenizerException(token,</span>
+                                             &quot;Trying to reassign reference '%s', original at line %d&quot;,
+                                             reference,
+<span class="fc" id="L49">                                             ex.getLineNo())</span>
+<span class="fc" id="L50">                        .setLine(tokenizer.getLine(token.getLineNo()))</span>
+<span class="fc" id="L51">                        .initCause(ex);</span>
+            }
+<span class="fc" id="L53">            throw new TokenizerException(token,</span>
+                                         &quot;Trying to reassign reference '%s' while calculating it's value, original at line %d&quot;,
+                                         reference,
+<span class="fc" id="L56">                                         ex.getLineNo())</span>
+<span class="fc" id="L57">                    .setLine(tokenizer.getLine(token.getLineNo()))</span>
+<span class="fc" id="L58">                    .initCause(ex);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        } else if (includeAliases.contains(reference)) {</span>
+<span class="fc" id="L60">            throw new TokenizerException(token,</span>
+                                         &quot;Trying to reassign include alias '%s' to reference.&quot;,
+                                         reference)
+<span class="fc" id="L63">                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
+        }
+
+<span class="fc" id="L66">        referenceExceptions.put(reference, new TokenizerException(token, &quot;Original reference&quot;)</span>
+<span class="fc" id="L67">                .setLine(tokenizer.getLine(token.getLineNo())));</span>
+<span class="fc" id="L68">        return reference;</span>
+    }
+
+    Object setReference(String reference, Object value) {
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (reference != null) {</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">            if (!referenceExceptions.containsKey(reference)) {</span>
+<span class="nc" id="L74">                throw new RuntimeException(&quot;Reference '&quot; + reference + &quot;' not initialised&quot;);</span>
+            }
+<span class="fc" id="L76">            references.put(reference, value);</span>
+        }
+<span class="fc" id="L78">        return value;</span>
+    }
+
+    Object getReference(String reference, Token token, Tokenizer tokenizer) throws TokenizerException {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (references.containsKey(reference)) {</span>
+<span class="fc" id="L83">            return references.get(reference);</span>
+        }
+
+<span class="fc" id="L86">        TokenizerException ex = referenceExceptions.get(reference);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (ex != null) {</span>
+<span class="fc" id="L88">            throw new TokenizerException(token, &quot;Trying to reference '%s' while it's being defined, original at line %d&quot;,</span>
+<span class="fc" id="L89">                                         reference, ex.getLineNo()).setLine(tokenizer.getLine(token.getLineNo()));</span>
+        }
+<span class="fc" id="L91">        throw new TokenizerException(token, &quot;No such reference '%s'&quot;, reference)</span>
+<span class="fc" id="L92">                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PMessage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence</a> &gt; <span class="el_source">PMessage.java</span></div><h1>PMessage.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence;
+
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.util.Stringable;
+
+import javax.annotation.Nonnull;
+
+/**
+ * Base class for all messages.
+ *
+ * @author Stein Eldar Johnsen
+ * @since 25.08.15
+ */
+public interface PMessage&lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+        extends PValue&lt;Message&gt;, Stringable {
+    /**
+     * @param key The key of the field.
+     * @return Whether the field is present.
+     */
+    boolean has(int key);
+
+    /**
+     * @param field The field.
+     * @return Whether the field is present.
+     */
+    default boolean has(@Nonnull Field field) {
+<span class="nc" id="L48">        return has(field.getKey());</span>
+    }
+
+    /**
+     * @param key The key of the field.
+     * @return Number of values for the field.
+     */
+    int num(int key);
+
+    /**
+     * @param field The field.
+     * @return Whether the field is present.
+     */
+    default int num(@Nonnull Field field) {
+<span class="nc" id="L62">        return num(field.getKey());</span>
+    }
+
+    /**
+     * @param key The key of the field.
+     * @return The value of the field.
+     */
+    Object get(int key);
+
+    /**
+     * @param field The field.
+     * @return Whether the field is present.
+     */
+    default Object get(@Nonnull Field field) {
+<span class="nc" id="L76">        return get(field.getKey());</span>
+    }
+
+    /**
+     * Get a builder that extends the current object.
+     *
+     * @return The builder instance.
+     */
+    @Nonnull
+    PMessageBuilder&lt;Message, Field&gt; mutate();
+
+    /**
+     * Shorthand for merging two messages.
+     *
+     * @param other The message to merge over this messages' values.
+     * @return The merged message.
+     */
+    @Nonnull
+    default Message mergeWith(Message other) {
+<span class="nc" id="L95">        return mutate().merge(other).build();</span>
+    }
+
+    /**
+     * Pure string representation of content. Does not contain type info.
+     *
+     * @return String representation.
+     */
+    @Nonnull
+    @Override
+    String asString();
+
+    @Nonnull
+    @Override
+    PMessageDescriptor&lt;Message, Field&gt; descriptor();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

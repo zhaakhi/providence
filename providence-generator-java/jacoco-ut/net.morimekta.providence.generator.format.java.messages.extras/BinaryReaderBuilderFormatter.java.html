@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BinaryReaderBuilderFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.messages.extras</a> &gt; <span class="el_source">BinaryReaderBuilderFormatter.java</span></div><h1>BinaryReaderBuilderFormatter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.messages.extras;
+
+import net.morimekta.providence.PType;
+import net.morimekta.providence.descriptor.PContainer;
+import net.morimekta.providence.descriptor.PDescriptor;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.format.java.shared.MessageMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.JField;
+import net.morimekta.providence.generator.format.java.utils.JHelper;
+import net.morimekta.providence.generator.format.java.utils.JMessage;
+import net.morimekta.providence.serializer.SerializerException;
+import net.morimekta.providence.serializer.rw.BinaryFormatUtils;
+import net.morimekta.providence.serializer.rw.BinaryReader;
+import net.morimekta.providence.serializer.rw.BinaryType;
+import net.morimekta.util.io.BigEndianBinaryReader;
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.morimekta.providence.generator.format.java.messages.CoreOverridesFormatter.UNION_FIELD;
+import static net.morimekta.providence.serializer.rw.BinaryType.forType;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 08.01.16.
+ */
+public class BinaryReaderBuilderFormatter implements MessageMemberFormatter {
+<span class="fc" id="L54">    private final AtomicInteger nextId = new AtomicInteger(1);</span>
+
+    private final IndentedPrintWriter writer;
+    private final JHelper helper;
+
+<span class="fc" id="L59">    public BinaryReaderBuilderFormatter(IndentedPrintWriter writer, JHelper helper) {</span>
+<span class="fc" id="L60">        this.writer = writer;</span>
+<span class="fc" id="L61">        this.helper = helper;</span>
+<span class="fc" id="L62">    }</span>
+
+    @Override
+    public Collection&lt;String&gt; getExtraImplements(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L66">        return ImmutableList.of(BinaryReader.class.getName());</span>
+    }
+
+    private void appendReadFieldValue(String member, JMessage message, JField field, PDescriptor descriptor) {
+<span class="pc bpc" id="L70" title="1 of 14 branches missed.">        switch (descriptor.getType()) {</span>
+            case VOID:
+<span class="fc" id="L72">                break;</span>
+            case BOOL:
+<span class="fc" id="L74">                writer.formatln(&quot;%s = reader.expectUInt8() == 1;&quot;, member);</span>
+<span class="fc" id="L75">                break;</span>
+            case BYTE:
+<span class="fc" id="L77">                writer.formatln(&quot;%s = reader.expectByte();&quot;, member);</span>
+<span class="fc" id="L78">                break;</span>
+            case I16:
+<span class="fc" id="L80">                writer.formatln(&quot;%s = reader.expectShort();&quot;, member);</span>
+<span class="fc" id="L81">                break;</span>
+            case I32:
+<span class="fc" id="L83">                writer.formatln(&quot;%s = reader.expectInt();&quot;, member);</span>
+<span class="fc" id="L84">                break;</span>
+            case I64:
+<span class="fc" id="L86">                writer.formatln(&quot;%s = reader.expectLong();&quot;, member);</span>
+<span class="fc" id="L87">                break;</span>
+            case DOUBLE:
+<span class="fc" id="L89">                writer.formatln(&quot;%s = reader.expectDouble();&quot;, member);</span>
+<span class="fc" id="L90">                break;</span>
+            case BINARY: {
+<span class="fc" id="L92">                String tmp = &quot;len_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L93">                writer.formatln(&quot;int %s = reader.expectUInt32();&quot;, tmp);</span>
+<span class="fc" id="L94">                writer.formatln(&quot;%s = reader.expectBinary(%s);&quot;, member, tmp);</span>
+<span class="fc" id="L95">                break;</span>
+            }
+            case STRING: {
+<span class="fc" id="L98">                String tmp = &quot;len_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L99">                writer.formatln(&quot;int %s = reader.expectUInt32();&quot;, tmp);</span>
+<span class="fc" id="L100">                writer.formatln(&quot;%s = new String(reader.expectBytes(%s), %s.UTF_8);&quot;,</span>
+<span class="fc" id="L101">                                member, tmp, StandardCharsets.class.getName());</span>
+<span class="fc" id="L102">                break;</span>
+            }
+            case ENUM:
+<span class="fc" id="L105">                writer.formatln(&quot;%s = %s.forValue(reader.expectInt());&quot;,</span>
+<span class="fc" id="L106">                                member, helper.getFieldType(descriptor));</span>
+<span class="fc" id="L107">                break;</span>
+            case MAP: {
+<span class="fc" id="L109">                PMap&lt;?, ?&gt; pMap = (PMap&lt;?, ?&gt;) descriptor;</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">                if (field == null) {</span>
+<span class="nc" id="L111">                    throw new GeneratorException(&quot;Impossible!&quot;);</span>
+                }
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">                if (pMap.keyDescriptor() instanceof PContainer ||</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">                    pMap.itemDescriptor() instanceof PContainer) {</span>
+                    // If the container contains a container this code will
+                    // break. Using the reader library in that case.
+<span class="fc" id="L117">                    writer.formatln(&quot;%s.putAll((%s) %s.readFieldValue(reader, new %s(field, type), _Field.%s.getDescriptor(), strict));&quot;,</span>
+                                    member,
+<span class="fc" id="L119">                                    field.fieldType(),</span>
+<span class="fc" id="L120">                                    BinaryFormatUtils.class.getName(),</span>
+<span class="fc" id="L121">                                    BinaryFormatUtils.FieldInfo.class.getName().replaceAll(&quot;\\$&quot;, &quot;.&quot;),</span>
+<span class="fc" id="L122">                                    field.fieldEnum(),</span>
+<span class="fc" id="L123">                                    helper.getFieldType(descriptor));</span>
+<span class="fc" id="L124">                    break;</span>
+                }
+<span class="fc" id="L126">                String len = &quot;len_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L127">                String keyType = &quot;t_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L128">                String valueType = &quot;t_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L129">                writer.formatln(&quot;byte %s = reader.expectByte();&quot;, keyType)</span>
+<span class="fc" id="L130">                      .formatln(&quot;byte %s = reader.expectByte();&quot;, valueType)</span>
+<span class="fc" id="L131">                      .formatln(&quot;if (%s == %d &amp;&amp; %s == %d) {&quot;,</span>
+<span class="fc" id="L132">                                keyType, forType(pMap.keyDescriptor().getType()),</span>
+<span class="fc" id="L133">                                valueType, forType(pMap.itemDescriptor().getType()))</span>
+<span class="fc" id="L134">                      .begin()</span>
+<span class="fc" id="L135">                      .formatln(&quot;final int %s = reader.expectUInt32();&quot;, len);</span>
+
+<span class="fc" id="L137">                String i = &quot;i_&quot; + nextId.getAndIncrement();</span>
+
+<span class="fc" id="L139">                writer.formatln(&quot;for (int %s = 0; %s &lt; %s; ++%s) {&quot;,</span>
+                                i, i, len, i)
+<span class="fc" id="L141">                      .begin();</span>
+
+<span class="fc" id="L143">                String key = &quot;key_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L144">                String value = &quot;val_&quot; + nextId.getAndIncrement();</span>
+
+<span class="fc" id="L146">                String keyMember = String.format(&quot;%s %s&quot;,</span>
+<span class="fc" id="L147">                                                 helper.getFieldType(pMap.keyDescriptor()),</span>
+                                                 key);
+<span class="fc" id="L149">                String valueMember = String.format(&quot;%s %s&quot;,</span>
+<span class="fc" id="L150">                                                 helper.getFieldType(pMap.itemDescriptor()),</span>
+                                                 value);
+
+<span class="fc" id="L153">                appendReadFieldValue(keyMember, null, null, pMap.keyDescriptor());</span>
+<span class="fc" id="L154">                appendReadFieldValue(valueMember, null, null, pMap.itemDescriptor());</span>
+
+<span class="fc" id="L156">                writer.formatln(&quot;%s.put(%s, %s);&quot;, member, key, value);</span>
+
+<span class="fc" id="L158">                writer.end()  // for len</span>
+<span class="fc" id="L159">                      .appendln('}');</span>
+
+<span class="fc" id="L161">                writer.end()  // if keyType &amp;&amp; valueType</span>
+<span class="fc" id="L162">                      .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L163">                      .formatln(&quot;    throw new %s(&quot;, SerializerException.class.getName())</span>
+<span class="fc" id="L164">                      .formatln(&quot;            \&quot;Wrong key type \&quot; + %s.asString(%s) +&quot;,</span>
+<span class="fc" id="L165">                                BinaryType.class.getName(),</span>
+                                keyType)
+<span class="fc" id="L167">                      .formatln(&quot;            \&quot; or value type \&quot; + %s.asString(%s) +&quot;,</span>
+<span class="fc" id="L168">                                BinaryType.class.getName(),</span>
+                                valueType)
+<span class="fc" id="L170">                      .formatln(&quot;            \&quot; for %s.%s, should be %s and %s\&quot;);&quot;,</span>
+<span class="fc" id="L171">                                message.descriptor().getQualifiedName(),</span>
+<span class="fc" id="L172">                                field.name(),</span>
+<span class="fc" id="L173">                                BinaryType.asString(forType(pMap.keyDescriptor().getType())),</span>
+<span class="fc" id="L174">                                BinaryType.asString(forType(pMap.itemDescriptor().getType())))</span>
+<span class="fc" id="L175">                      .appendln('}');</span>
+<span class="fc" id="L176">                break;</span>
+            }
+            case LIST:
+            case SET: {
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">                if (field == null) {</span>
+<span class="nc" id="L181">                    throw new GeneratorException(&quot;Impossible!&quot;);</span>
+                }
+<span class="fc" id="L183">                PContainer&lt;?&gt; pCont = (PContainer&lt;?&gt;) descriptor;</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">                if (pCont.itemDescriptor() instanceof PContainer) {</span>
+                    // If the container contains a container this code will
+                    // break. Using the reader library in that case.
+<span class="fc" id="L187">                    writer.formatln(&quot;%s.addAll((%s) %s.readFieldValue(reader, new %s(field, type), _Field.%s.getDescriptor(), strict));&quot;,</span>
+                                    member,
+<span class="fc" id="L189">                                    field.fieldType(),</span>
+<span class="fc" id="L190">                                    BinaryFormatUtils.class.getName(),</span>
+<span class="fc" id="L191">                                    BinaryFormatUtils.FieldInfo.class.getName().replaceAll(&quot;\\$&quot;, &quot;.&quot;),</span>
+<span class="fc" id="L192">                                    field.fieldEnum(),</span>
+<span class="fc" id="L193">                                    helper.getFieldType(descriptor));</span>
+<span class="fc" id="L194">                    break;</span>
+                }
+
+<span class="fc" id="L197">                String len = &quot;len_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L198">                String itemType = &quot;t_&quot; + nextId.getAndIncrement();</span>
+<span class="fc" id="L199">                writer.formatln(&quot;byte %s = reader.expectByte();&quot;, itemType)</span>
+<span class="fc" id="L200">                      .formatln(&quot;if (%s == %d) {&quot;,</span>
+<span class="fc" id="L201">                                itemType, forType(pCont.itemDescriptor().getType()))</span>
+<span class="fc" id="L202">                      .begin()</span>
+<span class="fc" id="L203">                      .formatln(&quot;final int %s = reader.expectUInt32();&quot;, len);</span>
+
+<span class="fc" id="L205">                String i = &quot;i_&quot; + nextId.getAndIncrement();</span>
+
+<span class="fc" id="L207">                writer.formatln(&quot;for (int %s = 0; %s &lt; %s; ++%s) {&quot;,</span>
+                                i, i, len, i)
+<span class="fc" id="L209">                      .begin();</span>
+
+<span class="fc" id="L211">                String item = &quot;key_&quot; + nextId.getAndIncrement();</span>
+
+<span class="fc" id="L213">                String itemMember = String.format(&quot;%s %s&quot;,</span>
+<span class="fc" id="L214">                                                 helper.getFieldType(pCont.itemDescriptor()),</span>
+                                                 item);
+
+<span class="fc" id="L217">                appendReadFieldValue(itemMember, null, null, pCont.itemDescriptor());</span>
+
+<span class="fc" id="L219">                writer.formatln(&quot;%s.add(%s);&quot;, member, item);</span>
+
+<span class="fc" id="L221">                writer.end()  // for len</span>
+<span class="fc" id="L222">                      .appendln('}');</span>
+
+<span class="fc" id="L224">                writer.end()  // if itemType</span>
+<span class="fc" id="L225">                      .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L226">                      .formatln(&quot;    throw new %s(\&quot;Wrong item type \&quot; + %s.asString(%s) + \&quot; for %s.%s, should be %s\&quot;);&quot;,</span>
+<span class="fc" id="L227">                                SerializerException.class.getName(),</span>
+<span class="fc" id="L228">                                BinaryType.class.getName(),</span>
+                                itemType,
+<span class="fc" id="L230">                                message.descriptor().getQualifiedName(),</span>
+<span class="fc" id="L231">                                field.name(),</span>
+<span class="fc" id="L232">                                BinaryType.asString(forType(pCont.itemDescriptor().getType())))</span>
+<span class="fc" id="L233">                      .appendln('}');</span>
+<span class="fc" id="L234">                break;</span>
+            }
+            case MESSAGE: {
+                // Since the referred class may not implement the BinaryWriter interface (yet)
+<span class="fc" id="L238">                writer.formatln(&quot;%s = %s.readMessage(reader, %s.kDescriptor, strict);&quot;,</span>
+                                member,
+<span class="fc" id="L240">                                BinaryFormatUtils.class.getName(),</span>
+<span class="fc" id="L241">                                helper.getFieldType(descriptor));</span>
+<span class="fc" id="L242">                break;</span>
+            }
+            default:
+<span class="nc" id="L245">                throw new GeneratorException(&quot;Unsupported binary writer type: &quot; + descriptor.getQualifiedName());</span>
+        }
+
+<span class="fc" id="L248">    }</span>
+
+    @Override
+    public void appendMethods(JMessage&lt;?&gt; message) {
+<span class="fc" id="L252">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L253">              .formatln(&quot;public void readBinary(%s reader, boolean strict) throws %s {&quot;,</span>
+<span class="fc" id="L254">                        BigEndianBinaryReader.class.getName(),</span>
+<span class="fc" id="L255">                        IOException.class.getName())</span>
+<span class="fc" id="L256">              .begin();</span>
+
+<span class="fc" id="L258">        writer.appendln(&quot;byte type = reader.expectByte();&quot;)</span>
+<span class="fc" id="L259">              .formatln(&quot;while (type != %d) {&quot;, BinaryType.STOP)</span>
+<span class="fc" id="L260">              .begin();</span>
+
+<span class="fc" id="L262">        writer.appendln(&quot;int field = reader.expectShort();&quot;)</span>
+<span class="fc" id="L263">              .appendln(&quot;switch (field) {&quot;)</span>
+<span class="fc" id="L264">              .begin();</span>
+
+<span class="fc bfc" id="L266" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L267">            writer.formatln(&quot;case %d: {&quot;, field.id())</span>
+<span class="fc" id="L268">                  .begin();</span>
+
+<span class="fc" id="L270">            writer.formatln(&quot;if (type == %d) {&quot;, forType(field.type()))</span>
+<span class="fc" id="L271">                  .begin();</span>
+
+<span class="fc" id="L273">            appendReadFieldValue(field.member(),</span>
+                                 message,
+                                 field,
+<span class="fc" id="L276">                                 field.field()</span>
+<span class="fc" id="L277">                                      .getDescriptor());</span>
+
+<span class="fc bfc" id="L279" title="All 2 branches covered.">            if (message.isUnion()) {</span>
+<span class="fc" id="L280">                writer.formatln(&quot;%s = _Field.%s;&quot;, UNION_FIELD, field.fieldEnum());</span>
+            } else {
+<span class="fc" id="L282">                writer.formatln(&quot;optionals.set(%d);&quot;, field.index());</span>
+            }
+<span class="fc" id="L284">            writer.end()  // if type</span>
+<span class="fc" id="L285">                  .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L286">                  .formatln(&quot;    throw new %s(\&quot;Wrong type \&quot; + %s.asString(type) + \&quot; for %s.%s, should be %s\&quot;);&quot;,</span>
+<span class="fc" id="L287">                            SerializerException.class.getName(),</span>
+<span class="fc" id="L288">                            BinaryType.class.getName(),</span>
+<span class="fc" id="L289">                            message.descriptor().getQualifiedName(),</span>
+<span class="fc" id="L290">                            field.name(),</span>
+<span class="fc" id="L291">                            BinaryType.asString(forType(message.descriptor().getType())))</span>
+<span class="fc" id="L292">                  .appendln('}');</span>
+
+<span class="fc" id="L294">            writer.appendln(&quot;break;&quot;)</span>
+<span class="fc" id="L295">                  .end()  // case</span>
+<span class="fc" id="L296">                  .appendln('}');</span>
+<span class="fc" id="L297">        }</span>
+
+<span class="fc" id="L299">        writer.appendln(&quot;default: {&quot;)</span>
+<span class="fc" id="L300">              .appendln(&quot;    if (strict) {&quot;)</span>
+<span class="fc" id="L301">              .formatln(&quot;        throw new %s(\&quot;No field with id \&quot; + field + \&quot; exists in %s\&quot;);&quot;,</span>
+<span class="fc" id="L302">                        SerializerException.class.getName(),</span>
+<span class="fc" id="L303">                        message.descriptor().getQualifiedName())</span>
+<span class="fc" id="L304">              .appendln(&quot;    } else {&quot;)</span>
+<span class="fc" id="L305">              .formatln(&quot;        %s.readFieldValue(reader, new %s(field, type), null, false);&quot;,</span>
+<span class="fc" id="L306">                        BinaryFormatUtils.class.getName(),</span>
+<span class="fc" id="L307">                        BinaryFormatUtils.FieldInfo.class.getName().replaceAll(&quot;\\$&quot;, &quot;.&quot;))</span>
+<span class="fc" id="L308">              .appendln(&quot;    }&quot;)</span>
+<span class="fc" id="L309">              .appendln(&quot;    break;&quot;)</span>
+<span class="fc" id="L310">              .appendln('}');</span>
+
+<span class="fc" id="L312">        writer.end()  // switch</span>
+<span class="fc" id="L313">              .appendln('}');</span>
+
+<span class="fc" id="L315">        writer.appendln(&quot;type = reader.expectByte();&quot;)</span>
+<span class="fc" id="L316">              .end()  // while</span>
+<span class="fc" id="L317">              .appendln(&quot;}&quot;);</span>
+
+<span class="fc" id="L319">        writer.end()  // readBinary</span>
+<span class="fc" id="L320">              .appendln('}')</span>
+<span class="fc" id="L321">              .newline();</span>
+<span class="fc" id="L322">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

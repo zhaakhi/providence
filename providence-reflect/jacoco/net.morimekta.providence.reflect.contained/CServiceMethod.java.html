@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CServiceMethod.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.contained</a> &gt; <span class="el_source">CServiceMethod.java</span></div><h1>CServiceMethod.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect.contained;
+
+import net.morimekta.providence.descriptor.PServiceMethod;
+
+import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Descriptor for a single service method.
+ */
+@SuppressWarnings(&quot;unchecked&quot;)
+public class CServiceMethod implements PServiceMethod,
+                                       CAnnotatedDescriptor {
+    private final String              name;
+    private final boolean             oneway;
+    private final CStructDescriptor   requestType;
+    private final CUnionDescriptor    responseType;
+    private final String              comment;
+    private final Map&lt;String, String&gt; annotations;
+
+    public CServiceMethod(String comment,
+                          String name,
+                          boolean oneway,
+                          CStructDescriptor requestType,
+                          CUnionDescriptor responseType,
+<span class="nc" id="L48">                          Map&lt;String, String&gt; annotations) {</span>
+<span class="nc" id="L49">        this.comment = comment;</span>
+<span class="nc" id="L50">        this.name = name;</span>
+<span class="nc" id="L51">        this.oneway = oneway;</span>
+<span class="nc" id="L52">        this.requestType = requestType;</span>
+<span class="nc" id="L53">        this.responseType = responseType;</span>
+<span class="nc" id="L54">        this.annotations = annotations;</span>
+<span class="nc" id="L55">    }</span>
+
+    @Nonnull
+    @Override
+    public String getName() {
+<span class="nc" id="L60">        return name;</span>
+    }
+
+    @Override
+    public boolean isOneway() {
+<span class="nc" id="L65">        return oneway;</span>
+    }
+
+    @Nonnull
+    @Override
+    public CStructDescriptor getRequestType() {
+<span class="nc" id="L71">        return requestType;</span>
+    }
+
+    @Override
+    public CUnionDescriptor getResponseType() {
+<span class="nc" id="L76">        return responseType;</span>
+    }
+
+    @Nonnull
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public Set&lt;String&gt; getAnnotations() {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (annotations != null) {</span>
+<span class="nc" id="L84">            return annotations.keySet();</span>
+        }
+<span class="nc" id="L86">        return Collections.EMPTY_SET;</span>
+    }
+
+    @Override
+    public boolean hasAnnotation(@Nonnull String name) {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (annotations != null) {</span>
+<span class="nc" id="L92">            return annotations.containsKey(name);</span>
+        }
+<span class="nc" id="L94">        return false;</span>
+    }
+
+    @Override
+    public String getAnnotationValue(@Nonnull String name) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (annotations != null) {</span>
+<span class="nc" id="L100">            return annotations.get(name);</span>
+        }
+<span class="nc" id="L102">        return null;</span>
+    }
+
+    @Override
+    public String getDocumentation() {
+<span class="nc" id="L107">        return comment;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

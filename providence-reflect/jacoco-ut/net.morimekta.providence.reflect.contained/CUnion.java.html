@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CUnion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.contained</a> &gt; <span class="el_source">CUnion.java</span></div><h1>CUnion.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect.contained;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PType;
+import net.morimekta.providence.PUnion;
+import net.morimekta.providence.descriptor.PList;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.descriptor.PSet;
+import net.morimekta.providence.descriptor.PStructDescriptor;
+import net.morimekta.providence.descriptor.PUnionDescriptor;
+
+import com.google.common.collect.ImmutableMap;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 07.09.15
+ */
+public class CUnion extends CMessage&lt;CUnion,CField&gt; implements PUnion&lt;CUnion,CField&gt; {
+    private final CUnionDescriptor descriptor;
+    private final CField           unionField;
+
+    private CUnion(Builder builder) {
+<span class="nc" id="L49">        super(builder.getValueMap());</span>
+<span class="nc" id="L50">        this.unionField = builder.unionField;</span>
+<span class="nc" id="L51">        this.descriptor = builder.descriptor;</span>
+<span class="nc" id="L52">    }</span>
+
+    @Nonnull
+    @Override
+    public PMessageBuilder&lt;CUnion,CField&gt; mutate() {
+<span class="nc" id="L57">        return new Builder(descriptor);</span>
+    }
+
+    @Nonnull
+    @Override
+    public CUnionDescriptor descriptor() {
+<span class="nc" id="L63">        return descriptor;</span>
+    }
+
+    @Nonnull
+    @Override
+    public CField unionField() {
+<span class="nc" id="L69">        return unionField;</span>
+    }
+
+    public static class Builder extends PMessageBuilder&lt;CUnion,CField&gt; {
+        private final CUnionDescriptor descriptor;
+
+        private CField unionField;
+        private Object currentValue;
+
+<span class="nc" id="L78">        public Builder(CUnionDescriptor descriptor) {</span>
+<span class="nc" id="L79">            this.descriptor = descriptor;</span>
+<span class="nc" id="L80">        }</span>
+
+        private Map&lt;Integer, Object&gt; getValueMap() {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            if (unionField == null) {</span>
+<span class="nc" id="L84">                return ImmutableMap.of();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            } else if (currentValue == null) {</span>
+<span class="nc" id="L86">                throw new IllegalStateException(&quot;Union field set, but value is null.&quot;);</span>
+            } else {
+<span class="nc bnc" id="L88" title="All 5 branches missed.">                switch (unionField.getType()) {</span>
+                    case LIST:
+<span class="nc" id="L90">                        return ImmutableMap.of(unionField.getKey(), ((PList.Builder) this.currentValue).build());</span>
+                    case SET:
+<span class="nc" id="L92">                        return ImmutableMap.of(unionField.getKey(), ((PSet.Builder) this.currentValue).build());</span>
+                    case MAP:
+<span class="nc" id="L94">                        return ImmutableMap.of(unionField.getKey(), ((PMap.Builder) this.currentValue).build());</span>
+                    case MESSAGE:
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                        if (currentValue instanceof PMessageBuilder) {</span>
+<span class="nc" id="L97">                            return ImmutableMap.of(unionField.getKey(), ((PMessageBuilder) currentValue).build());</span>
+                        }
+                    default:
+<span class="nc" id="L100">                        return ImmutableMap.of(unionField.getKey(), this.currentValue);</span>
+                }
+            }
+        }
+
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public PMessageBuilder mutator(int key) {
+<span class="nc" id="L109">            CField field = descriptor.getField(key);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (field == null) {</span>
+<span class="nc" id="L111">                throw new IllegalArgumentException(&quot;No such unionField ID &quot; + key);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            } else if (field.getType() != PType.MESSAGE) {</span>
+<span class="nc" id="L113">                throw new IllegalArgumentException(&quot;Not a message unionField ID &quot; + key + &quot;: &quot; + field.getName());</span>
+            }
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (unionField != field) {</span>
+<span class="nc" id="L116">                unionField = field;</span>
+<span class="nc" id="L117">                currentValue = null;</span>
+            }
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (currentValue == null) {</span>
+<span class="nc" id="L121">                currentValue = ((PStructDescriptor) field.getDescriptor()).builder();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            } else if (currentValue instanceof PMessage) {</span>
+<span class="nc" id="L123">                currentValue = ((PMessage) currentValue).mutate();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            } else if (!(currentValue instanceof PMessageBuilder)) {</span>
+                // This should in theory not be possible. This is just a safe-guard.
+<span class="nc" id="L126">                throw new IllegalArgumentException(&quot;Invalid currentValue in map on message type: &quot; + currentValue.getClass().getSimpleName());</span>
+            }
+
+<span class="nc" id="L129">            return (PMessageBuilder) currentValue;</span>
+        }
+
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public Builder merge(CUnion from) {
+<span class="nc bnc" id="L136" title="All 4 branches missed.">            if (unionField == null || unionField != from.unionField()) {</span>
+<span class="nc" id="L137">                set(from.unionField.getKey(), from.get(from.unionField.getKey()));</span>
+            } else {
+<span class="nc" id="L139">                int key = unionField.getKey();</span>
+<span class="nc bnc" id="L140" title="All 4 branches missed.">                switch (unionField.getType()) {</span>
+                    case MESSAGE: {
+                        PMessageBuilder src;
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                        if (currentValue instanceof PMessageBuilder) {</span>
+<span class="nc" id="L144">                            src = (PMessageBuilder) currentValue;</span>
+                        } else {
+<span class="nc" id="L146">                            src = ((PMessage) currentValue).mutate();</span>
+                        }
+<span class="nc" id="L148">                        PMessage toMerge = (PMessage) from.get(key);</span>
+
+<span class="nc" id="L150">                        currentValue = src.merge(toMerge);</span>
+<span class="nc" id="L151">                        break;</span>
+                    }
+                    case SET:
+<span class="nc" id="L154">                        ((PSet.Builder&lt;Object&gt;) currentValue).addAll((Set&lt;Object&gt;) from.get(key));</span>
+<span class="nc" id="L155">                        break;</span>
+                    case MAP:
+<span class="nc" id="L157">                        ((PMap.Builder&lt;Object, Object&gt;) currentValue).putAll((Map&lt;Object, Object&gt;) from.get(key));</span>
+<span class="nc" id="L158">                        break;</span>
+                    default:
+<span class="nc" id="L160">                        set(key, from.get(key));</span>
+                        break;
+                }
+            }
+
+<span class="nc" id="L165">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public PUnionDescriptor&lt;CUnion, CField&gt; descriptor() {
+<span class="nc" id="L171">            return descriptor;</span>
+        }
+
+        @Nonnull
+        @Override
+        public CUnion build() {
+<span class="nc" id="L177">            return new CUnion(this);</span>
+        }
+
+        @Override
+        public boolean valid() {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">            return unionField != null;</span>
+        }
+
+        @Override
+        public void validate() {
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (!valid()) {</span>
+<span class="nc" id="L188">                throw new IllegalStateException(&quot;No union field set in &quot; +</span>
+<span class="nc" id="L189">                                                descriptor().getQualifiedName());</span>
+            }
+<span class="nc" id="L191">        }</span>
+
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public Builder set(int key, Object value) {
+<span class="nc" id="L197">            CField field = descriptor.getField(key);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">            if (field == null) {</span>
+<span class="nc" id="L199">                return this; // soft ignoring unsupported fields.</span>
+            }
+<span class="nc bnc" id="L201" title="All 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L202">                return clear(key);</span>
+            }
+<span class="nc" id="L204">            this.unionField = field;</span>
+<span class="nc bnc" id="L205" title="All 4 branches missed.">            switch (field.getType()) {</span>
+                case SET:
+<span class="nc" id="L207">                    this.currentValue = ((PSet) field.getDescriptor()).builder().addAll((Collection) value);</span>
+<span class="nc" id="L208">                    break;</span>
+                case LIST:
+<span class="nc" id="L210">                    this.currentValue = ((PList) field.getDescriptor()).builder().addAll((Collection) value);</span>
+<span class="nc" id="L211">                    break;</span>
+                case MAP:
+<span class="nc" id="L213">                    this.currentValue = ((PMap) field.getDescriptor()).builder().putAll((Map) value);</span>
+<span class="nc" id="L214">                    break;</span>
+                default:
+<span class="nc" id="L216">                    this.currentValue = value;</span>
+                    break;
+            }
+
+<span class="nc" id="L220">            return this;</span>
+        }
+
+        @Override
+        public boolean isSet(int key) {
+<span class="nc bnc" id="L225" title="All 4 branches missed.">            return unionField != null &amp;&amp; unionField.getKey() == key;</span>
+        }
+
+        @Override
+        public boolean isModified(int key) {
+<span class="nc" id="L230">            return false;</span>
+        }
+
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public Builder addTo(int key, Object value) {
+<span class="nc" id="L237">            CField field = descriptor.getField(key);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">            if (field == null) {</span>
+<span class="nc" id="L239">                return this; // soft ignoring unsupported fields.</span>
+            }
+<span class="nc bnc" id="L241" title="All 4 branches missed.">            if (this.unionField != field || this.currentValue == null) {</span>
+<span class="nc" id="L242">                this.unionField = field;</span>
+<span class="nc bnc" id="L243" title="All 3 branches missed.">                switch (field.getType()) {</span>
+                    case LIST: {
+<span class="nc" id="L245">                        PList lType = (PList) field.getDescriptor();</span>
+<span class="nc" id="L246">                        this.currentValue = lType.builder();</span>
+<span class="nc" id="L247">                        break;</span>
+                    }
+                    case SET: {
+<span class="nc" id="L250">                        PSet lType = (PSet) field.getDescriptor();</span>
+<span class="nc" id="L251">                        this.currentValue = lType.builder();</span>
+<span class="nc" id="L252">                        break;</span>
+                    }
+                    default: {
+<span class="nc" id="L255">                        throw new IllegalArgumentException(&quot;Unable to accept addTo on non-list unionField &quot; + field.getName());</span>
+                    }
+                }
+            }
+<span class="nc bnc" id="L259" title="All 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L260">                throw new IllegalArgumentException(&quot;Adding null item to collection &quot; + field.getName());</span>
+            }
+<span class="nc bnc" id="L262" title="All 3 branches missed.">            switch (field.getType()) {</span>
+                case LIST: {
+<span class="nc" id="L264">                    ((PList.Builder) this.currentValue).add(value);</span>
+<span class="nc" id="L265">                    break;</span>
+                }
+                case SET: {
+<span class="nc" id="L268">                    ((PList.Builder) this.currentValue).add(value);</span>
+<span class="nc" id="L269">                    break;</span>
+                }
+                default:
+                    break;
+            }
+<span class="nc" id="L274">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public Builder clear(int key) {
+<span class="nc bnc" id="L280" title="All 4 branches missed.">            if (unionField != null &amp;&amp; unionField.getKey() == key) {</span>
+<span class="nc" id="L281">                this.unionField = null;</span>
+<span class="nc" id="L282">                this.currentValue = null;</span>
+            }
+<span class="nc" id="L284">            return this;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

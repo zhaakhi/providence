@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BlockCommentBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.utils</a> &gt; <span class="el_source">BlockCommentBuilder.java</span></div><h1>BlockCommentBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.utils;
+
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import com.google.common.escape.Escaper;
+import com.google.common.html.HtmlEscapers;
+
+/**
+ * Builds a proper block javadoc-compatible comment.
+ */
+public class BlockCommentBuilder {
+    private final IndentedPrintWriter writer;
+    private final Escaper             html;
+
+<span class="fc" id="L35">    public BlockCommentBuilder(IndentedPrintWriter writer) {</span>
+<span class="fc" id="L36">        this.html = HtmlEscapers.htmlEscaper();</span>
+<span class="fc" id="L37">        this.writer = writer;</span>
+
+<span class="fc" id="L39">        writer.appendln(&quot;/**&quot;)</span>
+<span class="fc" id="L40">              .begin(&quot; *&quot;);</span>
+<span class="fc" id="L41">    }</span>
+
+    public BlockCommentBuilder comment(String comment) {
+<span class="fc" id="L44">        String escaped = html.escape(comment).replaceAll(&quot;[@]&quot;, &quot;&amp;#64;&quot;);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        for (String line : escaped.trim().split(&quot;\r?\n&quot;)) {</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (line.trim().length() == 0) {</span>
+<span class="fc" id="L47">                writer.appendln(&quot; &lt;p&gt;&quot;);</span>
+            } else {
+<span class="fc" id="L49">                writer.appendln(&quot; &quot; + line.replaceAll(&quot;[ ]*$&quot;, &quot;&quot;));</span>
+            }
+        }
+
+<span class="fc" id="L53">        return this;</span>
+    }
+
+    public BlockCommentBuilder newline() {
+<span class="fc" id="L57">        writer.appendln();</span>
+<span class="fc" id="L58">        return this;</span>
+    }
+
+    public BlockCommentBuilder param_(String name, String comment) {
+<span class="fc" id="L62">        writer.formatln(&quot; @param %s %s&quot;, name, html.escape(comment));</span>
+<span class="fc" id="L63">        return this;</span>
+    }
+
+    public BlockCommentBuilder return_(String comment) {
+<span class="fc" id="L67">        writer.formatln(&quot; @return %s&quot;, html.escape(comment));</span>
+<span class="fc" id="L68">        return this;</span>
+    }
+
+    public BlockCommentBuilder throws_(Class&lt;?&gt; klass, String comment) {
+<span class="fc" id="L72">        return throws_(klass.getName().replaceAll(&quot;[$]&quot;, &quot;.&quot;), comment);</span>
+    }
+
+    public BlockCommentBuilder throws_(String klass, String comment) {
+<span class="fc" id="L76">        writer.formatln(&quot; @throws %s %s&quot;,</span>
+                        klass,
+<span class="fc" id="L78">                        html.escape(comment));</span>
+<span class="fc" id="L79">        return this;</span>
+    }
+
+    public BlockCommentBuilder see_(Class&lt;?&gt; klass, String comment) {
+<span class="nc" id="L83">        writer.formatln(&quot; @see %s %s&quot;,</span>
+<span class="nc" id="L84">                        klass.getName().replaceAll(&quot;[$]&quot;, &quot;.&quot;),</span>
+<span class="nc" id="L85">                        html.escape(comment));</span>
+<span class="nc" id="L86">        return this;</span>
+    }
+
+    public BlockCommentBuilder see_(String klass, String comment) {
+<span class="nc" id="L90">        writer.formatln(&quot; @see %s %s&quot;,</span>
+<span class="nc" id="L91">                        html.escape(comment));</span>
+<span class="nc" id="L92">        return this;</span>
+    }
+
+    public void finish() {
+<span class="fc" id="L96">        writer.end()</span>
+<span class="fc" id="L97">              .appendln(&quot; */&quot;);</span>
+<span class="fc" id="L98">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

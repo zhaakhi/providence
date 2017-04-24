@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Testing</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.testing.util</a> &gt; <span class="el_source">MessageGenerator.java</span></div><h1>MessageGenerator.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.testing.util;
+
+import net.morimekta.providence.PEnumValue;
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PMessageVariant;
+import net.morimekta.providence.descriptor.PDescriptor;
+import net.morimekta.providence.descriptor.PEnumDescriptor;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PList;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PRequirement;
+import net.morimekta.providence.descriptor.PSet;
+import net.morimekta.providence.mio.IOMessageReader;
+import net.morimekta.providence.mio.IOMessageWriter;
+import net.morimekta.providence.mio.MessageReader;
+import net.morimekta.providence.mio.MessageWriter;
+import net.morimekta.providence.serializer.PrettySerializer;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.util.Binary;
+
+import com.google.common.collect.ImmutableList;
+import org.jfairy.Fairy;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.function.Supplier;
+
+import static java.lang.Math.abs;
+import static org.junit.Assert.assertNotNull;
+
+/**
+ * Providence message serializer that can be used as a junit rule.
+ *
+ * &lt;pre&gt;{@code
+ * class MyTest {
+ *    {@literal @}Rule
+ *     public MessageGenerator gen = new MessageGenerator()
+ *             .dumpOnFailure()
+ *             .addFactory(f -&gt; f.getName().endsWith(&quot;uuid&quot;) ? () -&gt; UUID.randomUUID().toString() : null);
+ *
+ *    {@literal @}Test
+ *     public testSomething() {
+ *         gen.addFactory(f -&gt; f.equals(MyMessage._Field.NAME) ? () -&gt; &quot;name&quot; : null);
+ *         MyMessage msg = gen.generate(MyMessage.kDescriptor);
+ *         sut.doSomething(msg);
+ *
+ *         assertThat(sut.state() is(SystemToTest.CORRECT));
+ *     }
+ * }
+ * }&lt;/pre&gt;
+ */
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">public class MessageGenerator extends TestWatcher {</span>
+    /**
+     * Factory for value suppliers. The generator can hold any number of value supplier
+     */
+    @FunctionalInterface
+    public interface ValueSupplierFactory {
+        Supplier&lt;Object&gt; get(PField field);
+    }
+
+    /**
+     * Make a simple default message generator.
+     */
+<span class="fc" id="L75">    public MessageGenerator() {</span>
+<span class="fc" id="L76">        this.globalFairy              = this.fairy              = Fairy.create(Locale.ENGLISH);</span>
+<span class="fc" id="L77">        this.globalRandom             = this.random             = new Random();</span>
+<span class="fc" id="L78">        this.globalOutputSerializer   = this.outputSerializer   = new PrettySerializer().config();</span>
+<span class="fc" id="L79">        this.globalMaxCollectionItems = this.maxCollectionItems = 10;</span>
+<span class="fc" id="L80">        this.globalFactories          = this.factories          = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L81">        this.globalDumpOnFailure      = this.dumpOnFailure      = false;</span>
+<span class="fc" id="L82">        this.globalReader             = this.reader             = null;</span>
+<span class="fc" id="L83">        this.globalWriter             = this.writer             = null;</span>
+<span class="fc" id="L84">        this.globalFillRate           = this.fillRate           = 1.0;</span>
+
+<span class="fc" id="L86">        this.defaultFactory = this::getDefaultValueSupplier;</span>
+<span class="fc" id="L87">        this.generated = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L88">        this.started = false;</span>
+<span class="fc" id="L89">    }</span>
+
+    /**
+     * Generate a message with random content.
+     *
+     * @param descriptor Message descriptor to generate message from.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The field type.
+     * @return The generated message.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generate(PMessageDescriptor&lt;M, F&gt; descriptor) {
+        M instance;
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (reader != null) {</span>
+            try {
+<span class="fc" id="L104">                instance = reader.read(descriptor);</span>
+<span class="nc" id="L105">            } catch (IOException e) {</span>
+<span class="nc" id="L106">                throw new AssertionError(e.getMessage(), e);</span>
+<span class="fc" id="L107">            }</span>
+        } else {
+<span class="fc" id="L109">            instance = generateInternal(descriptor);</span>
+        }
+<span class="fc" id="L111">        generated.add(instance);</span>
+<span class="fc" id="L112">        return instance;</span>
+    }
+
+    /**
+     * Get all generated messages. It will return the messages that was *requested*
+     * to be generated with all contained messages, not all messages generated all
+     * over the place.
+     *
+     * @return The list of generated messages.
+     */
+    public List&lt;PMessage&gt; getGenerated() {
+<span class="fc" id="L123">        return ImmutableList.copyOf(generated);</span>
+    }
+
+    /**
+     * Dump all generated messages.
+     *
+     * @throws IOException If writing the messages failed.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public void dumpGeneratedMessages() throws IOException {
+<span class="fc" id="L133">        MessageWriter writer = this.writer;</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (writer == null) {</span>
+<span class="fc" id="L135">            writer = new IOMessageWriter(System.err, outputSerializer);</span>
+        }
+
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (PMessage message : generated) {</span>
+<span class="fc" id="L139">            writer.write(message);</span>
+<span class="fc" id="L140">            writer.separator();</span>
+<span class="fc" id="L141">        }</span>
+<span class="fc" id="L142">    }</span>
+
+    // --- generator setup ---:
+
+    /**
+     * Set the random generator being used.
+     *
+     * @param random The random generator.
+     * @return The message generator.
+     */
+    public MessageGenerator setRandom(Random random) {
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L154">            this.random = random;</span>
+        } else {
+<span class="fc" id="L156">            this.globalRandom = random;</span>
+<span class="fc" id="L157">            this.random = random;</span>
+        }
+<span class="fc" id="L159">        return this;</span>
+    }
+
+    /**
+     * Set the feiry data generator being used.
+     *
+     * @param fairy The fairy data generator.
+     * @return The message generator.
+     */
+    public MessageGenerator setFairy(Fairy fairy) {
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L170">            this.fairy = fairy;</span>
+        } else {
+<span class="fc" id="L172">            this.globalFairy = fairy;</span>
+<span class="fc" id="L173">            this.fairy = fairy;</span>
+        }
+<span class="fc" id="L175">        return this;</span>
+    }
+
+    /**
+     * Set the field fill rate in the range &amp;lt;0.0 .. 1.0].
+     *
+     * @param fillRate The new full rate.
+     * @return The message generator.
+     */
+    public MessageGenerator setFillRate(double fillRate) {
+<span class="pc bpc" id="L185" title="3 of 6 branches missed.">        assert fillRate &gt; 0.0 &amp;&amp; fillRate &lt;= 1.0 : &quot;Fill rate outside the range &lt; 0.0 .. 1.0 ]: &quot; + fillRate;</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L187">            this.fillRate = fillRate;</span>
+        } else {
+<span class="fc" id="L189">            this.globalFillRate = fillRate;</span>
+<span class="fc" id="L190">            this.fillRate = fillRate;</span>
+        }
+<span class="fc" id="L192">        return this;</span>
+    }
+
+    /**
+     * Add a value supplier factory to the generator.
+     *
+     * @param factory The factory.
+     * @return The message generator.
+     */
+    public MessageGenerator addFactory(ValueSupplierFactory factory) {
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L203">            this.factories.add(factory);</span>
+        } else {
+<span class="fc" id="L205">            this.globalFactories.add(factory);</span>
+        }
+<span class="fc" id="L207">        return this;</span>
+    }
+
+    /**
+     * Add value supplier factories to the generator.
+     *
+     * @param factories The factories.
+     * @return The message generator.
+     */
+    public MessageGenerator addFactories(ValueSupplierFactory... factories) {
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L218">            Collections.addAll(this.factories, factories);</span>
+        } else {
+<span class="nc" id="L220">            Collections.addAll(this.globalFactories, factories);</span>
+        }
+<span class="nc" id="L222">        return this;</span>
+    }
+
+    /**
+     * Add a collection of value supplier factories to the generator.
+     *
+     * @param factories The factory.
+     * @return The message generator.
+     */
+    public MessageGenerator addFactories(Collection&lt;ValueSupplierFactory&gt; factories) {
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L233">            this.factories.addAll(factories);</span>
+        } else {
+<span class="nc" id="L235">            this.globalFactories.addAll(factories);</span>
+        }
+<span class="nc" id="L237">        return this;</span>
+    }
+
+    /**
+     * Set the message writer in case of failure.
+     *
+     * @param writer The message writer.
+     * @return The message generator.
+     */
+    public MessageGenerator setMessageWriter(MessageWriter writer) {
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L248">            this.writer = writer;</span>
+        } else {
+<span class="fc" id="L250">            this.globalWriter = writer;</span>
+<span class="fc" id="L251">            this.writer = writer;</span>
+        }
+<span class="fc" id="L253">        return this;</span>
+    }
+
+    /**
+     * Set the message reader for the generator.
+     *
+     * @param reader The message reader. All messages will be read from this
+     * @return The message generator.
+     */
+    public MessageGenerator setMessageReader(MessageReader reader) {
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L264">            this.reader = reader;</span>
+        } else {
+<span class="pc bpc" id="L266" title="2 of 4 branches missed.">            assert globalReader == null : &quot;Generator already contains reader for messages.&quot;;</span>
+<span class="fc" id="L267">            this.globalReader = reader;</span>
+<span class="fc" id="L268">            this.reader = reader;</span>
+        }
+<span class="fc" id="L270">        return this;</span>
+    }
+
+    /**
+     * Read messages from the given resource (pretty formatted).
+     *
+     * @param resource The resource path.
+     * @return The message generator.
+     */
+    public MessageGenerator setResourceReader(String resource) {
+<span class="fc" id="L280">        return setResourceReader(resource, new PrettySerializer());</span>
+    }
+
+    /**
+     * Read messages from the given resource.
+     *
+     * @param resource The resource path.
+     * @param serializer Serializer to use for reading resource.
+     * @return The message generator.
+     */
+    public MessageGenerator setResourceReader(String resource,
+                                              Serializer serializer) {
+<span class="fc" id="L292">        return setMessageReader(new IOMessageReader(</span>
+<span class="fc" id="L293">                getClass().getResourceAsStream(resource),</span>
+                serializer));
+    }
+
+    /**
+     * Set default serializer to standard output. If test case not started and a
+     * writer is already set, this method fails. Not that this will remove any
+     * previously set message writer.
+     *
+     * @param defaultSerializer The new default serializer.
+     * @return The message generator.
+     */
+    public MessageGenerator setOutputSerializer(Serializer defaultSerializer) {
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L307">            this.writer = null;</span>
+<span class="nc" id="L308">            this.outputSerializer = defaultSerializer;</span>
+        } else {
+<span class="pc bpc" id="L310" title="2 of 4 branches missed.">            assert globalWriter == null : &quot;Generator already has a writer.&quot;;</span>
+<span class="fc" id="L311">            this.outputSerializer = defaultSerializer;</span>
+<span class="fc" id="L312">            this.globalOutputSerializer = defaultSerializer;</span>
+        }
+<span class="fc" id="L314">        return this;</span>
+    }
+
+    /**
+     * Set the max collection items for default generated collections.
+     *
+     * @param max The max number of items.
+     * @return The message generator.
+     */
+    public MessageGenerator setMaxCollectionItems(int max) {
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">        if (!started) {</span>
+<span class="fc" id="L325">            this.maxCollectionItems = max;</span>
+        } else {
+<span class="nc" id="L327">            this.globalMaxCollectionItems = max;</span>
+<span class="nc" id="L328">            this.maxCollectionItems = max;</span>
+        }
+<span class="fc" id="L330">        return this;</span>
+    }
+
+    /**
+     * Dump all generated messages on failure for this test only.
+     */
+    public MessageGenerator dumpOnFailure() {
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L338">            this.dumpOnFailure = true;</span>
+        } else {
+<span class="fc" id="L340">            this.globalDumpOnFailure = true;</span>
+<span class="fc" id="L341">            this.dumpOnFailure = true;</span>
+        }
+<span class="fc" id="L343">        return this;</span>
+    }
+
+    /**
+     * Get the default value supplier for the given descriptor.
+     *
+     * @param descriptor The descriptor to make a supplier for.
+     * @return The value supplier.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public Supplier&lt;Object&gt; getValueSupplier(PDescriptor descriptor) {
+<span class="pc bpc" id="L354" title="2 of 15 branches missed.">        switch (descriptor.getType()) {</span>
+            case BOOL:
+<span class="fc" id="L356">                return random::nextBoolean;</span>
+            case BYTE:
+<span class="fc" id="L358">                return () -&gt; (byte) random.nextInt();</span>
+            case I16:
+<span class="fc" id="L360">                return () -&gt; (short) random.nextInt();</span>
+            case I32:
+<span class="fc" id="L362">                return random::nextInt;</span>
+            case I64:
+<span class="fc" id="L364">                return random::nextLong;</span>
+            case DOUBLE:
+<span class="fc" id="L366">                return random::nextDouble;</span>
+            case ENUM: {
+<span class="fc" id="L368">                PEnumDescriptor ed = (PEnumDescriptor) descriptor;</span>
+<span class="fc" id="L369">                PEnumValue[] values = ed.getValues();</span>
+<span class="fc" id="L370">                return () -&gt; values[abs(random.nextInt()) % values.length];</span>
+            }
+            case BINARY: {
+<span class="fc" id="L373">                return () -&gt; {</span>
+<span class="fc" id="L374">                    byte[] tmp = new byte[nextCollectionSize()];</span>
+<span class="fc" id="L375">                    random.nextBytes(tmp);</span>
+<span class="fc" id="L376">                    return Binary.wrap(tmp);</span>
+                };
+            }
+            case STRING:
+<span class="fc" id="L380">                return () -&gt; fairy.textProducer()</span>
+<span class="fc" id="L381">                                  .sentence();</span>
+            case SET: {
+<span class="fc" id="L383">                PSet&lt;Object&gt; set = (PSet&lt;Object&gt;) descriptor;</span>
+<span class="fc" id="L384">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(set.itemDescriptor());</span>
+<span class="fc" id="L385">                return () -&gt; {</span>
+<span class="fc" id="L386">                    int num = nextCollectionSize();</span>
+                    // Maps does not necessary allow conflicting keys.
+<span class="fc" id="L388">                    HashSet&lt;Object&gt; builder = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">                    for (int i = 0; i &lt; num; ++i) {</span>
+<span class="fc" id="L390">                        builder.add(itemSupplier.get());</span>
+                    }
+<span class="fc" id="L392">                    return set.builder()</span>
+<span class="fc" id="L393">                              .addAll(builder)</span>
+<span class="fc" id="L394">                              .build();</span>
+                };
+            }
+            case LIST: {
+<span class="fc" id="L398">                PList&lt;Object&gt; list = (PList&lt;Object&gt;) descriptor;</span>
+<span class="fc" id="L399">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(list.itemDescriptor());</span>
+<span class="fc" id="L400">                return () -&gt; {</span>
+<span class="fc" id="L401">                    int num = nextCollectionSize();</span>
+                    // Maps does not necessary allow conflicting keys.
+<span class="fc" id="L403">                    List&lt;Object&gt; builder = new LinkedList&lt;&gt;();</span>
+<span class="fc bfc" id="L404" title="All 2 branches covered.">                    for (int i = 0; i &lt; num; ++i) {</span>
+<span class="fc" id="L405">                        builder.add(itemSupplier.get());</span>
+                    }
+<span class="fc" id="L407">                    return list.builder()</span>
+<span class="fc" id="L408">                               .addAll(builder)</span>
+<span class="fc" id="L409">                               .build();</span>
+                };
+            }
+            case MAP: {
+<span class="fc" id="L413">                PMap&lt;Object, Object&gt; map = (PMap&lt;Object, Object&gt;) descriptor;</span>
+<span class="fc" id="L414">                Supplier&lt;Object&gt; keySupplier = getValueSupplier(map.keyDescriptor());</span>
+<span class="fc" id="L415">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(map.itemDescriptor());</span>
+<span class="fc" id="L416">                return () -&gt; {</span>
+<span class="fc" id="L417">                    int num = nextCollectionSize();</span>
+                    // Maps does not necessary allow conflicting keys.
+<span class="fc" id="L419">                    HashMap&lt;Object, Object&gt; builder = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L420" title="All 2 branches covered.">                    for (int i = 0; i &lt; num; ++i) {</span>
+<span class="fc" id="L421">                        builder.put(keySupplier.get(), itemSupplier.get());</span>
+                    }
+<span class="fc" id="L423">                    return map.builder()</span>
+<span class="fc" id="L424">                              .putAll(builder)</span>
+<span class="fc" id="L425">                              .build();</span>
+                };
+            }
+            case MESSAGE:
+<span class="fc" id="L429">                return () -&gt; generateInternal((PMessageDescriptor) descriptor);</span>
+            case VOID:
+<span class="nc" id="L431">                return () -&gt; Boolean.TRUE;</span>
+            default:
+<span class="nc" id="L433">                throw new IllegalArgumentException(descriptor.getType() + &quot; field in message&quot;);</span>
+        }
+    }
+
+    // -------------- INHERITED --------------
+
+    @Override
+    protected void starting(Description description) {
+<span class="fc" id="L441">        super.starting(description);</span>
+<span class="pc bpc" id="L442" title="1 of 4 branches missed.">        if (!description.isEmpty() &amp;&amp; description.getMethodName() == null) {</span>
+<span class="nc" id="L443">            throw new AssertionError(&quot;MessageGenerator instantiated as class rule: forbidden&quot;);</span>
+        }
+
+<span class="fc" id="L446">        random = globalRandom;</span>
+<span class="fc" id="L447">        fairy = globalFairy;</span>
+<span class="fc" id="L448">        writer = globalWriter;</span>
+<span class="fc" id="L449">        reader = globalReader;</span>
+<span class="fc" id="L450">        factories = new LinkedList&lt;&gt;(globalFactories);</span>
+<span class="fc" id="L451">        dumpOnFailure = globalDumpOnFailure;</span>
+<span class="fc" id="L452">        outputSerializer = globalOutputSerializer;</span>
+<span class="fc" id="L453">        maxCollectionItems = globalMaxCollectionItems;</span>
+<span class="fc" id="L454">        fillRate = globalFillRate;</span>
+
+        // Reset content.
+<span class="fc" id="L457">        generated = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L458">        started = true;</span>
+<span class="fc" id="L459">    }</span>
+
+    @Override
+    protected void failed(Throwable e, Description description) {
+<span class="fc bfc" id="L463" title="All 2 branches covered.">        if (dumpOnFailure) {</span>
+            try {
+<span class="fc" id="L465">                dumpGeneratedMessages();</span>
+<span class="nc" id="L466">            } catch (IOException e1) {</span>
+<span class="nc" id="L467">                e1.printStackTrace();</span>
+<span class="nc" id="L468">                e.addSuppressed(e1);</span>
+<span class="fc" id="L469">            }</span>
+        }
+<span class="fc" id="L471">    }</span>
+
+    @Override
+    protected void finished(Description description) {
+        // generated kept in case of secondary watchers.
+<span class="fc" id="L476">        started = false;</span>
+
+        // Set some interesting stated back to be the global.
+<span class="fc" id="L479">        dumpOnFailure = globalDumpOnFailure;</span>
+<span class="fc" id="L480">        maxCollectionItems = globalMaxCollectionItems;</span>
+<span class="fc" id="L481">        outputSerializer = globalOutputSerializer;</span>
+<span class="fc" id="L482">        factories = globalFactories;</span>
+<span class="fc" id="L483">        fairy = globalFairy;</span>
+<span class="fc" id="L484">        random = globalRandom;</span>
+<span class="fc" id="L485">        writer = globalWriter;</span>
+<span class="fc" id="L486">        reader = globalReader;</span>
+<span class="fc" id="L487">        fillRate = globalFillRate;</span>
+<span class="fc" id="L488">    }</span>
+
+    // --- PRIVATE ---
+    private final ValueSupplierFactory defaultFactory;
+    // --- Global: set before starting(),
+    //             and copied below in starting().
+    private Random                     globalRandom;
+    private Fairy                      globalFairy;
+    private Serializer                 globalOutputSerializer;
+    private int                        globalMaxCollectionItems;
+    private boolean                    globalDumpOnFailure;
+    private MessageWriter              globalWriter;
+    private MessageReader              globalReader;
+    private List&lt;ValueSupplierFactory&gt; globalFactories;
+    private double                     globalFillRate;
+
+    // --- Per test: set after starting()
+    private Random                     random;
+    private Fairy                      fairy;
+    private Serializer                 outputSerializer;
+    private int                        maxCollectionItems;
+    private boolean                    dumpOnFailure;
+    private MessageWriter              writer;
+    private MessageReader              reader;
+    private List&lt;ValueSupplierFactory&gt; factories;
+    private double                     fillRate;
+
+    // generated during test.
+    private List&lt;PMessage&gt;             generated;
+    private boolean                    started;
+
+    private int nextCollectionSize() {
+<span class="fc" id="L520">        return abs(random.nextInt() % maxCollectionItems);</span>
+    }
+
+    private Supplier&lt;Object&gt; getValueSupplier(PField field) {
+<span class="fc bfc" id="L524" title="All 2 branches covered.">        for (ValueSupplierFactory factory : factories) {</span>
+<span class="fc" id="L525">            Supplier&lt;Object&gt; supplier = factory.get(field);</span>
+<span class="fc bfc" id="L526" title="All 2 branches covered.">            if (supplier != null) {</span>
+<span class="fc" id="L527">                return supplier;</span>
+            }
+<span class="fc" id="L529">        }</span>
+<span class="fc" id="L530">        return defaultFactory.get(field);</span>
+    }
+
+    private Supplier&lt;Object&gt; getDefaultValueSupplier(PField field) {
+<span class="fc bfc" id="L534" title="All 2 branches covered.">        if (field.getRequirement() != PRequirement.REQUIRED) {</span>
+<span class="fc bfc" id="L535" title="All 4 branches covered.">            if (fillRate &lt; 1.0 &amp;&amp; random.nextDouble() &lt; fillRate) {</span>
+<span class="fc" id="L536">                return () -&gt; null;</span>
+            }
+        }
+<span class="fc" id="L539">        return getValueSupplier(field.getDescriptor());</span>
+    }
+
+    private &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generateInternal(PMessageDescriptor&lt;M, F&gt; descriptor) {
+<span class="fc" id="L543">        PMessageBuilder&lt;M, F&gt; builder = descriptor.builder();</span>
+<span class="fc bfc" id="L544" title="All 2 branches covered.">        if (descriptor.getVariant() == PMessageVariant.UNION) {</span>
+<span class="fc" id="L545">            F field = descriptor.getFields()[random.nextInt(descriptor.getFields().length)];</span>
+<span class="fc" id="L546">            Supplier&lt;Object&gt; supplier = getValueSupplier(field);</span>
+<span class="fc" id="L547">            assertNotNull(&quot;No supplier for field: &quot; + descriptor.getQualifiedName() + &quot;.&quot; + field.getName(), supplier);</span>
+
+            // Only non-null values are set.
+<span class="fc" id="L550">            Object value = supplier.get();</span>
+<span class="pc bpc" id="L551" title="1 of 2 branches missed.">            if (value != null) {</span>
+<span class="fc" id="L552">                builder.set(field, value);</span>
+            }
+<span class="fc" id="L554">        } else {</span>
+<span class="fc bfc" id="L555" title="All 2 branches covered.">            for (F field : descriptor.getFields()) {</span>
+<span class="fc" id="L556">                Supplier&lt;Object&gt; supplier = getValueSupplier(field);</span>
+<span class="fc" id="L557">                assertNotNull(&quot;No supplier for field: &quot; + descriptor.getQualifiedName() + &quot;.&quot; + field.getName(),</span>
+                              supplier);
+                // Only non-null values are set.
+<span class="fc" id="L560">                Object value = supplier.get();</span>
+<span class="fc bfc" id="L561" title="All 2 branches covered.">                if (value != null) {</span>
+<span class="fc" id="L562">                    builder.set(field, value);</span>
+                }
+            }
+        }
+<span class="fc" id="L566">        return builder.build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

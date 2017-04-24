@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ParseException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.parser</a> &gt; <span class="el_source">ParseException.java</span></div><h1>ParseException.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect.parser;
+
+import net.morimekta.providence.reflect.parser.internal.Token;
+import net.morimekta.providence.reflect.parser.internal.Tokenizer;
+import net.morimekta.util.Stringable;
+import net.morimekta.util.Strings;
+
+import java.io.IOException;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 24.09.15
+ */
+public class ParseException extends Exception implements Stringable {
+    private final String line;
+    private final Token token;
+
+    public ParseException(Throwable cause, String message, Object... params) {
+<span class="nc" id="L39">        super(String.format(message, params), cause);</span>
+
+<span class="nc" id="L41">        line = null;</span>
+<span class="nc" id="L42">        token = null;</span>
+<span class="nc" id="L43">    }</span>
+
+    public ParseException(String message, Object... params) {
+<span class="nc" id="L46">        super(String.format(message, params));</span>
+
+<span class="nc" id="L48">        line = null;</span>
+<span class="nc" id="L49">        token = null;</span>
+<span class="nc" id="L50">    }</span>
+
+    public ParseException(Tokenizer tokenizer, Token token, String message, Object... params) {
+<span class="fc" id="L53">        super(String.format(message, params));</span>
+
+<span class="fc" id="L55">        String line = null;</span>
+        try {
+<span class="fc" id="L57">            line = tokenizer.getLine(token.getLineNo());</span>
+<span class="nc" id="L58">        }  catch (IOException e) {</span>
+            // Ignore.
+<span class="fc" id="L60">        }</span>
+<span class="fc" id="L61">        this.line = line;</span>
+<span class="fc" id="L62">        this.token = token;</span>
+<span class="fc" id="L63">    }</span>
+
+    public Token getToken() {
+<span class="nc" id="L66">        return token;</span>
+    }
+
+    public String getLine() {
+<span class="nc" id="L70">        return line;</span>
+    }
+
+    @Override
+    public String asString() {
+<span class="pc bpc" id="L75" title="2 of 4 branches missed.">        if (line != null &amp;&amp; token != null) {</span>
+<span class="fc" id="L76">            return String.format(&quot;Parse error on line %d, pos %d: %s%n&quot; +</span>
+                                 &quot;%s%n&quot; +
+                                 &quot;%s^&quot;,
+<span class="fc" id="L79">                                 token.getLineNo(),</span>
+<span class="fc" id="L80">                                 token.getLinePos(),</span>
+<span class="fc" id="L81">                                 getLocalizedMessage(),</span>
+                                 line,
+<span class="fc" id="L83">                                 Strings.times(&quot;-&quot;, token.getLinePos()));</span>
+        } else {
+<span class="nc" id="L85">            return String.format(&quot;Parse error: %s&quot;, getLocalizedMessage());</span>
+        }
+    }
+
+    @Override
+    public String toString() {
+<span class="nc bnc" id="L91" title="All 4 branches missed.">        if (line != null &amp;&amp; token != null) {</span>
+<span class="nc" id="L92">            return String.format(&quot;ParseException(\&quot;%s\&quot;,%d:%d,\&quot;%s\&quot;)&quot;,</span>
+<span class="nc" id="L93">                                 Strings.escape(getLocalizedMessage()),</span>
+<span class="nc" id="L94">                                 token.getLineNo(),</span>
+<span class="nc" id="L95">                                 token.getLinePos(),</span>
+<span class="nc" id="L96">                                 Strings.escape(line));</span>
+        } else {
+<span class="nc" id="L98">            return String.format(&quot;ParseException(\&quot;%s\&quot;)&quot;,</span>
+<span class="nc" id="L99">                                 Strings.escape(getLocalizedMessage()));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

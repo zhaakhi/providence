@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JMessage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.utils</a> &gt; <span class="el_source">JMessage.java</span></div><h1>JMessage.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.utils;
+
+import net.morimekta.providence.PMessageVariant;
+import net.morimekta.providence.PType;
+import net.morimekta.providence.descriptor.PExceptionDescriptor;
+import net.morimekta.providence.descriptor.PExceptionDescriptorProvider;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PStructDescriptor;
+import net.morimekta.providence.descriptor.PStructDescriptorProvider;
+import net.morimekta.providence.descriptor.PUnionDescriptor;
+import net.morimekta.providence.descriptor.PUnionDescriptorProvider;
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.reflect.contained.CAnnotatedDescriptor;
+import net.morimekta.providence.reflect.contained.CField;
+import net.morimekta.providence.reflect.contained.CMessage;
+import net.morimekta.providence.reflect.util.ThriftAnnotation;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
+import static net.morimekta.providence.reflect.contained.CStructDescriptor.MAX_COMPACT_FIELDS;
+
+/**
+ *
+ */
+public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
+    private final PMessageDescriptor&lt;?, ?&gt; descriptor;
+    private final JHelper                  helper;
+    private final ArrayList&lt;JField&gt;        declaredFields;
+    private final ArrayList&lt;JField&gt;        numericalFields;
+
+<span class="fc" id="L54">    public JMessage(PMessageDescriptor&lt;T, CField&gt; descriptor, JHelper helper) {</span>
+<span class="fc" id="L55">        this.descriptor = descriptor;</span>
+<span class="fc" id="L56">        this.helper = helper;</span>
+<span class="fc" id="L57">        this.declaredFields = new ArrayList&lt;&gt;(descriptor.getFields().length);</span>
+
+<span class="fc" id="L59">        CField[] fields = descriptor.getFields();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (int i = 0; i &lt; fields.length; ++i) {</span>
+<span class="fc" id="L61">            this.declaredFields.add(new JField(fields[i], helper, i));</span>
+        }
+        // The same declaredFields, but in ID numerical order.
+<span class="fc" id="L64">        this.numericalFields = new ArrayList&lt;&gt;(this.declaredFields);</span>
+<span class="fc" id="L65">        this.numericalFields.sort(Comparator.comparingInt(JField::id));</span>
+<span class="fc" id="L66">    }</span>
+
+    public PMessageDescriptor&lt;?, ?&gt; descriptor() {
+<span class="fc" id="L69">        return descriptor;</span>
+    }
+
+    public PMessageVariant variant() {
+<span class="fc" id="L73">        return descriptor.getVariant();</span>
+    }
+
+    public boolean isException() {
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        return descriptor.getVariant() == PMessageVariant.EXCEPTION;</span>
+    }
+
+    public boolean isUnion() {
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        return descriptor.getVariant() == PMessageVariant.UNION;</span>
+    }
+
+    public boolean jsonCompactible() {
+        // note: legacy annotation name.
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (descriptor().getVariant() != PMessageVariant.STRUCT) {</span>
+<span class="fc" id="L87">            return false;</span>
+        }
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (!(hasAnnotation(ThriftAnnotation.JSON_COMPACT) ||</span>
+              // legacy annotation version special handling.
+<span class="fc bfc" id="L91" title="All 2 branches covered.">              hasAnnotation(&quot;compact&quot;))) {</span>
+<span class="fc" id="L92">            return false;</span>
+        }
+
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (declaredFields.size() &gt; MAX_COMPACT_FIELDS) {</span>
+<span class="nc" id="L96">            return false;</span>
+        }
+<span class="fc" id="L98">        int next = 1;</span>
+<span class="fc" id="L99">        boolean hasOptional = false;</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (JField field : declaredFields) {</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            if (field.id() != next) {</span>
+<span class="nc" id="L102">                return false;</span>
+            }
+<span class="pc bpc" id="L104" title="3 of 4 branches missed.">            if (hasOptional &amp;&amp; field.isRequired()) {</span>
+<span class="nc" id="L105">                return false;</span>
+            }
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (!field.isRequired()) {</span>
+<span class="fc" id="L108">                hasOptional = true;</span>
+            }
+<span class="fc" id="L110">            next++;</span>
+<span class="fc" id="L111">        }</span>
+<span class="fc" id="L112">        return true;</span>
+
+    }
+
+    /**
+     * The short class name of the message.
+     *
+     * @return The class short name.
+     */
+    public String instanceType() {
+<span class="fc" id="L122">        return JUtils.getClassName(descriptor);</span>
+    }
+
+    public List&lt;JField&gt; declaredOrderFields() {
+<span class="fc" id="L126">        return declaredFields;</span>
+    }
+
+    public List&lt;JField&gt; numericalOrderFields() {
+<span class="fc" id="L130">        return numericalFields;</span>
+    }
+
+    public String getDescriptorClass() throws GeneratorException {
+<span class="pc bpc" id="L134" title="1 of 4 branches missed.">        switch (variant()) {</span>
+            case STRUCT:
+<span class="fc" id="L136">                return PStructDescriptor.class.getName();</span>
+            case UNION:
+<span class="fc" id="L138">                return PUnionDescriptor.class.getName();</span>
+            case EXCEPTION:
+<span class="fc" id="L140">                return PExceptionDescriptor.class.getName();</span>
+            default:
+<span class="nc" id="L142">                throw new GeneratorException(&quot;Unable to determine type class for &quot; + variant());</span>
+        }
+    }
+
+    public String getProviderClass() throws GeneratorException {
+<span class="pc bpc" id="L147" title="1 of 4 branches missed.">        switch (variant()) {</span>
+            case STRUCT:
+<span class="fc" id="L149">                return PStructDescriptorProvider.class.getName();</span>
+            case UNION:
+<span class="fc" id="L151">                return PUnionDescriptorProvider.class.getName();</span>
+            case EXCEPTION:
+<span class="fc" id="L153">                return PExceptionDescriptorProvider.class.getName();</span>
+            default:
+<span class="nc" id="L155">                throw new GeneratorException(&quot;Unable to determine type class for &quot; + variant());</span>
+        }
+    }
+
+    public String extraImplements() {
+<span class="fc" id="L160">        return getAnnotationValue(ThriftAnnotation.JAVA_IMPLEMENTS);</span>
+    }
+
+    public String exceptionBaseClass() {
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (!isException()) {</span>
+<span class="nc" id="L165">            return null;</span>
+        }
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (hasAnnotation(ThriftAnnotation.JAVA_EXCEPTION_CLASS)) {</span>
+<span class="fc" id="L168">            return getAnnotationValue(ThriftAnnotation.JAVA_EXCEPTION_CLASS);</span>
+        }
+<span class="fc" id="L170">        return Exception.class.getSimpleName();</span>
+    }
+
+    /**
+     * If the message has a 'string' field named 'message', which can be used as the 'message' for exceptions.
+     *
+     * @return Optional message field.
+     */
+    public Optional&lt;JField&gt; exceptionMessageField() {
+<span class="pc bpc" id="L179" title="1 of 4 branches missed.">        return numericalOrderFields().stream().filter(f -&gt; f.name().equals(&quot;message&quot;) &amp;&amp; f.type() == PType.STRING).findFirst();</span>
+    }
+
+    /**
+     * Check if the annotation is present.
+     *
+     * @param annotation The annotation to check.
+     * @return True if the annotaiton is present.
+     */
+    public boolean hasAnnotation(ThriftAnnotation annotation) {
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp;</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">               ((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation);</span>
+    }
+
+    /**
+     * Check if the annotation is present.
+     *
+     * @param annotation The annotation to check.
+     * @return True if the annotaiton is present.
+     */
+    public boolean hasAnnotation(String annotation) {
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp;</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">               ((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation);</span>
+    }
+
+    /**
+     * Get the annotation value.
+     * @param annotation The annotation to get.
+     * @return The value of the annotation, or null if not present.
+     */
+    private String getAnnotationValue(ThriftAnnotation annotation) {
+<span class="fc" id="L210">        return getAnnotationValue(annotation.tag);</span>
+    }
+
+    /**
+     * Get the annotation value.
+     * @param annotation The annotation to get.
+     * @return The value of the annotation, or null if not present.
+     */
+    private String getAnnotationValue(String annotation) {
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (descriptor instanceof CAnnotatedDescriptor) {</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">            if (((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation)) {</span>
+<span class="fc" id="L221">                return ((CAnnotatedDescriptor) descriptor).getAnnotationValue(annotation);</span>
+            }
+        }
+<span class="fc" id="L224">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

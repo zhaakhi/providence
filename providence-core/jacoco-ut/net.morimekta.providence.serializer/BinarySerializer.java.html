@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BinarySerializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.serializer</a> &gt; <span class="el_source">BinarySerializer.java</span></div><h1>BinarySerializer.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.serializer;
+
+import net.morimekta.providence.PApplicationException;
+import net.morimekta.providence.PApplicationExceptionType;
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.PServiceCallType;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.descriptor.PServiceMethod;
+import net.morimekta.util.io.BigEndianBinaryReader;
+import net.morimekta.util.io.BigEndianBinaryWriter;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static net.morimekta.providence.serializer.rw.BinaryFormatUtils.readMessage;
+import static net.morimekta.providence.serializer.rw.BinaryFormatUtils.writeMessage;
+
+/**
+ * Compact binary serializer. This usesd a format that is as close the the default
+ * thrift binary protocol as possible.
+ * &lt;p&gt;
+ * See data definition file &lt;code&gt;docs/serializer-binary.md&lt;/code&gt; for format
+ * spec.
+ */
+public class BinarySerializer extends Serializer {
+    public static final String MIME_TYPE = &quot;application/vnd.apache.thrift.binary&quot;;
+    public static final String ALT_MIME_TYPE = &quot;application/x-thrift&quot;;
+
+    private static final int VERSION_MASK = 0xffff0000;
+    private static final int VERSION_1    = 0x80010000;
+    // 255 byte (ASCII char) length for a method name is exceptionally long.
+    private static final int MAX_METHOD_NAME_LEN = 255;
+
+    private final boolean strict;
+    private final boolean versioned;
+
+    /**
+     * Construct a serializer instance.
+     */
+    public BinarySerializer() {
+<span class="fc" id="L67">        this(DEFAULT_STRICT);</span>
+<span class="fc" id="L68">    }</span>
+
+    /**
+     * Construct a serializer instance.
+     *
+     * @param readStrict If the serializer should fail on bad reading.
+     */
+    public BinarySerializer(boolean readStrict) {
+<span class="fc" id="L76">        this(readStrict, true);</span>
+<span class="fc" id="L77">    }</span>
+
+    /**
+     * Construct a serializer instance. The 'versioned' param is equivalent to
+     * to the TBinaryProtocol strict flag.
+     *
+     * @param readStrict If the serializer should fail on reading mismatched data.
+     * @param versioned If the serializer should use the versioned service call format.
+     */
+<span class="fc" id="L86">    public BinarySerializer(boolean readStrict, boolean versioned) {</span>
+<span class="fc" id="L87">        this.strict = readStrict;</span>
+<span class="fc" id="L88">        this.versioned = versioned;</span>
+<span class="fc" id="L89">    }</span>
+
+    @Override
+    public boolean binaryProtocol() {
+<span class="fc" id="L93">        return true;</span>
+    }
+
+    @Override
+    public String mimeType() {
+<span class="fc" id="L98">        return MIME_TYPE;</span>
+    }
+
+    @Override
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    int serialize(OutputStream os, Message message) throws IOException {
+<span class="fc" id="L104">        BigEndianBinaryWriter writer = new BigEndianBinaryWriter(os);</span>
+<span class="fc" id="L105">        return writeMessage(writer, message);</span>
+    }
+
+    @Override
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    int serialize(OutputStream os, PServiceCall&lt;Message, Field&gt; call)
+            throws IOException {
+<span class="fc" id="L112">        BigEndianBinaryWriter out = new BigEndianBinaryWriter(os);</span>
+<span class="fc" id="L113">        byte[] method = call.getMethod().getBytes(UTF_8);</span>
+
+<span class="fc" id="L115">        int len = method.length;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (versioned) {</span>
+<span class="fc" id="L117">            len += out.writeInt(VERSION_1 | call.getType().getValue());</span>
+<span class="fc" id="L118">            len += out.writeInt(method.length);</span>
+<span class="fc" id="L119">            out.write(method);</span>
+        } else {
+<span class="fc" id="L121">            len += out.writeInt(method.length);</span>
+<span class="fc" id="L122">            out.write(method);</span>
+<span class="fc" id="L123">            len += out.writeByte((byte) call.getType().getValue());</span>
+        }
+<span class="fc" id="L125">        len += out.writeInt(call.getSequence());</span>
+<span class="fc" id="L126">        len += writeMessage(out, call.getMessage());</span>
+<span class="fc" id="L127">        return len;</span>
+    }
+
+    @Nonnull
+    @Override
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    Message deserialize(InputStream input, PMessageDescriptor&lt;Message, Field&gt; descriptor)
+            throws IOException {
+<span class="fc" id="L135">        BigEndianBinaryReader reader = new BigEndianBinaryReader(input);</span>
+<span class="fc" id="L136">        return readMessage(reader, descriptor, strict);</span>
+    }
+
+    @Nonnull
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    PServiceCall&lt;Message, Field&gt; deserialize(InputStream is, PService service)
+            throws IOException {
+<span class="fc" id="L145">        BigEndianBinaryReader in = new BigEndianBinaryReader(is);</span>
+<span class="fc" id="L146">        String methodName = null;</span>
+<span class="fc" id="L147">        int sequence = 0;</span>
+<span class="fc" id="L148">        PServiceCallType type = null;</span>
+        try {
+<span class="fc" id="L150">            int methodNameLen = in.expectInt();</span>
+            int typeKey;
+            // Accept both &quot;strict&quot; read mode and non-strict.
+            // versioned
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (methodNameLen &lt;= 0) {</span>
+<span class="fc" id="L155">                int version = methodNameLen &amp; VERSION_MASK;</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">                if (version == VERSION_1) {</span>
+<span class="fc" id="L157">                    typeKey = methodNameLen &amp; 0xFF;</span>
+<span class="fc" id="L158">                    methodNameLen = in.expectInt();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">                    if (methodNameLen &gt; MAX_METHOD_NAME_LEN) {</span>
+<span class="fc" id="L160">                        throw new SerializerException(&quot;Exceptionally long method name of %s bytes&quot;, methodNameLen)</span>
+<span class="fc" id="L161">                                .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR);</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">                    } if (methodNameLen &lt; 1) {</span>
+<span class="fc" id="L163">                        throw new SerializerException(&quot;Exceptionally short method name of %s bytes&quot;, methodNameLen)</span>
+<span class="fc" id="L164">                                .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR);</span>
+                    }
+<span class="fc" id="L166">                    methodName = new String(in.expectBytes(methodNameLen), UTF_8);</span>
+                } else {
+<span class="fc" id="L168">                    throw new SerializerException(&quot;Bad protocol version: %08x&quot;, version &gt;&gt;&gt; 16)</span>
+<span class="fc" id="L169">                            .setExceptionType(PApplicationExceptionType.INVALID_PROTOCOL);</span>
+                }
+<span class="fc" id="L171">            } else {</span>
+<span class="pc bpc" id="L172" title="1 of 4 branches missed.">                if (strict &amp;&amp; versioned) {</span>
+<span class="fc" id="L173">                    throw new SerializerException(&quot;Missing protocol version&quot;)</span>
+<span class="fc" id="L174">                            .setExceptionType(PApplicationExceptionType.INVALID_PROTOCOL);</span>
+                }
+
+<span class="fc bfc" id="L177" title="All 2 branches covered.">                if (methodNameLen &gt; MAX_METHOD_NAME_LEN) {</span>
+<span class="fc" id="L178">                    throw new SerializerException(&quot;Exceptionally long method name of %s bytes&quot;, methodNameLen)</span>
+<span class="fc" id="L179">                            .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR);</span>
+                }
+<span class="fc" id="L181">                methodName = new String(in.expectBytes(methodNameLen), UTF_8);</span>
+<span class="fc" id="L182">                typeKey = in.expectByte();</span>
+            }
+<span class="fc" id="L184">            sequence = in.expectInt();</span>
+
+<span class="fc" id="L186">            type = PServiceCallType.forValue(typeKey);</span>
+<span class="fc" id="L187">            PServiceMethod method = service.getMethod(methodName);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">            if (type == null) {</span>
+<span class="fc" id="L189">                throw new SerializerException(&quot;Invalid call type &quot; + typeKey)</span>
+<span class="fc" id="L190">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
+<span class="nc" id="L192">                PApplicationException ex = readMessage(in, PApplicationException.kDescriptor, strict);</span>
+<span class="nc" id="L193">                return (PServiceCall&lt;Message, Field&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">            } else if (method == null) {</span>
+<span class="fc" id="L195">                throw new SerializerException(&quot;No such method &quot; + methodName + &quot; on &quot; + service.getQualifiedName())</span>
+<span class="fc" id="L196">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
+            }
+
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            PMessageDescriptor&lt;Message, Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
+
+<span class="fc" id="L202">            Message message = readMessage(in, descriptor, strict);</span>
+
+<span class="fc" id="L204">            return new PServiceCall&lt;&gt;(methodName, type, sequence, message);</span>
+<span class="fc" id="L205">        } catch (SerializerException se) {</span>
+<span class="fc" id="L206">            throw new SerializerException(se)</span>
+<span class="fc" id="L207">                    .setMethodName(methodName)</span>
+<span class="fc" id="L208">                    .setCallType(type)</span>
+<span class="fc" id="L209">                    .setSequenceNo(sequence);</span>
+<span class="fc" id="L210">        } catch (IOException e) {</span>
+<span class="fc" id="L211">            throw new SerializerException(e, e.getMessage())</span>
+<span class="fc" id="L212">                    .setMethodName(methodName)</span>
+<span class="fc" id="L213">                    .setCallType(type)</span>
+<span class="fc" id="L214">                    .setSequenceNo(sequence);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

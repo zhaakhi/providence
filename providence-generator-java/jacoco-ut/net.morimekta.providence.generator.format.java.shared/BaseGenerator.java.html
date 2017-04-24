@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BaseGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.shared</a> &gt; <span class="el_source">BaseGenerator.java</span></div><h1>BaseGenerator.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.shared;
+
+import net.morimekta.providence.descriptor.PDeclaredDescriptor;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.generator.Generator;
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.format.java.utils.JHelper;
+import net.morimekta.providence.generator.format.java.utils.JUtils;
+import net.morimekta.providence.generator.util.FileManager;
+import net.morimekta.providence.reflect.contained.CEnumDescriptor;
+import net.morimekta.providence.reflect.contained.CProgram;
+import net.morimekta.providence.reflect.contained.CService;
+import net.morimekta.providence.reflect.util.ProgramRegistry;
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+/**
+ * Base generator for all java classes.
+ */
+public abstract class BaseGenerator extends Generator {
+    protected final JHelper helper;
+
+    public BaseGenerator(FileManager manager, ProgramRegistry registry) throws GeneratorException {
+<span class="fc" id="L46">        super(manager);</span>
+
+<span class="fc" id="L48">        this.helper = new JHelper(registry);</span>
+<span class="fc" id="L49">    }</span>
+
+    protected abstract BaseMessageFormatter messageFormatter(IndentedPrintWriter writer);
+
+    protected abstract BaseEnumFormatter enumFormatter(IndentedPrintWriter writer);
+
+    protected abstract BaseProgramFormatter constFomatter(IndentedPrintWriter writer);
+
+    protected abstract BaseProgramFormatter hazelcastFomatter(IndentedPrintWriter writer);
+
+    protected abstract BaseServiceFormatter serviceFormatter(IndentedPrintWriter writer);
+
+    @Override
+    @SuppressWarnings(&quot;resource&quot;)
+    public void generate(CProgram program) throws IOException, GeneratorException {
+<span class="fc" id="L64">        String javaPackage = JUtils.getJavaPackage(program);</span>
+
+<span class="fc" id="L66">        String path = JUtils.getPackageClassPath(javaPackage);</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (program.getConstants().size() &gt; 0) {</span>
+<span class="fc" id="L69">            String file = helper.getConstantsClassName(program) + &quot;.java&quot;;</span>
+<span class="fc" id="L70">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L72">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+
+<span class="fc" id="L74">                appendFileHeader(writer, program);</span>
+<span class="fc" id="L75">                constFomatter(writer).appendProgramClass(program);</span>
+
+<span class="fc" id="L77">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L79">                try {</span>
+<span class="pc" id="L80">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L81">                } catch (IOException e) {</span>
+<span class="nc" id="L82">                    e.printStackTrace();</span>
+<span class="pc" id="L83">                }</span>
+<span class="nc" id="L84">            }</span>
+        }
+
+<span class="fc" id="L87">        if (program.getConstants()</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                   .stream().anyMatch(t -&gt; t.getName().equals(&quot;FACTORY_ID&quot;))) { //TODO check if hazelcast flag set?</span>
+
+<span class="fc" id="L90">            String file = helper.getHazelcastFactoryClassName(program) + &quot;.java&quot;;</span>
+<span class="fc" id="L91">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L93">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+
+<span class="fc" id="L95">                appendFileHeader(writer, program);</span>
+<span class="fc" id="L96">                hazelcastFomatter(writer).appendProgramClass(program);</span>
+
+<span class="fc" id="L98">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L100">                try {</span>
+<span class="pc" id="L101">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L102">                } catch (IOException e) {</span>
+<span class="nc" id="L103">                    e.printStackTrace();</span>
+<span class="pc" id="L104">                }</span>
+<span class="nc" id="L105">            }</span>
+        }
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        for (PDeclaredDescriptor&lt;?&gt; type : program.getDeclaredTypes()) {</span>
+<span class="fc" id="L109">            String file = JUtils.getClassName(type) + &quot;.java&quot;;</span>
+<span class="fc" id="L110">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L112">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+
+<span class="fc" id="L114">                appendFileHeader(writer, program);</span>
+
+<span class="pc bpc" id="L116" title="1 of 3 branches missed.">                switch (type.getType()) {</span>
+                    case MESSAGE:
+<span class="fc" id="L118">                        messageFormatter(writer).appendMessageClass((PMessageDescriptor&lt;?, ?&gt;) type);</span>
+<span class="fc" id="L119">                        break;</span>
+                    case ENUM:
+<span class="fc" id="L121">                        enumFormatter(writer).appendEnumClass((CEnumDescriptor) type);</span>
+<span class="fc" id="L122">                        break;</span>
+                    default:
+<span class="nc" id="L124">                        throw new GeneratorException(&quot;Unhandled declaration type.&quot;);</span>
+
+                }
+<span class="fc" id="L127">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L129">                try {</span>
+<span class="pc" id="L130">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L131">                } catch (IOException e) {</span>
+<span class="nc" id="L132">                    e.printStackTrace();</span>
+<span class="pc" id="L133">                }</span>
+<span class="nc" id="L134">            }</span>
+<span class="fc" id="L135">        }</span>
+
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        for (CService service : program.getServices()) {</span>
+<span class="fc" id="L138">            String file = JUtils.getClassName(service) + &quot;.java&quot;;</span>
+<span class="fc" id="L139">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L141">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+<span class="fc" id="L142">                appendFileHeader(writer, program);</span>
+<span class="fc" id="L143">                serviceFormatter(writer).appendServiceClass(service);</span>
+<span class="fc" id="L144">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L146">                try {</span>
+<span class="pc" id="L147">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L148">                } catch (IOException e) {</span>
+<span class="nc" id="L149">                    e.printStackTrace();</span>
+<span class="pc" id="L150">                }</span>
+<span class="nc" id="L151">            }</span>
+<span class="fc" id="L152">        }</span>
+<span class="fc" id="L153">    }</span>
+
+    private void appendFileHeader(IndentedPrintWriter writer,
+                                  CProgram document)
+            throws GeneratorException, IOException {
+<span class="fc" id="L158">        writer.format(&quot;package %s;&quot;, helper.getJavaPackage(document))</span>
+<span class="fc" id="L159">              .newline();</span>
+<span class="fc" id="L160">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SerializerException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.serializer</a> &gt; <span class="el_source">SerializerException.java</span></div><h1>SerializerException.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.serializer;
+
+import net.morimekta.providence.PApplicationExceptionType;
+import net.morimekta.providence.PServiceCallType;
+import net.morimekta.util.Stringable;
+
+import com.google.common.base.MoreObjects;
+
+import java.io.IOException;
+
+/**
+ * Exception on serialization or deserialization.
+ */
+public class SerializerException extends IOException implements Stringable {
+    private final static long serialVersionUID = 1442914425369642982L;
+
+    private String                    methodName;
+    private PServiceCallType          callType;
+    private int                       sequenceNo;
+    private PApplicationExceptionType exceptionType;
+
+    public SerializerException(String format, Object... args) {
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        super(args.length == 0 ? format : String.format(format, args));</span>
+<span class="fc" id="L44">        exceptionType = PApplicationExceptionType.PROTOCOL_ERROR;</span>
+<span class="fc" id="L45">    }</span>
+
+    public SerializerException(Throwable cause, String format, Object... args) {
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        super(args.length == 0 ? format : String.format(format, args), cause);</span>
+<span class="fc" id="L49">        exceptionType = PApplicationExceptionType.PROTOCOL_ERROR;</span>
+<span class="fc" id="L50">    }</span>
+
+    public SerializerException(SerializerException cause) {
+<span class="fc" id="L53">        super(cause.getMessage(), cause);</span>
+<span class="fc" id="L54">        setCallType(cause.getCallType());</span>
+<span class="fc" id="L55">        setMethodName(cause.getMethodName());</span>
+<span class="fc" id="L56">        setSequenceNo(cause.getSequenceNo());</span>
+<span class="fc" id="L57">        setExceptionType(cause.getExceptionType());</span>
+<span class="fc" id="L58">    }</span>
+
+    public String getMethodName() {
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        return methodName == null ? &quot;&quot; : methodName;</span>
+    }
+
+    public PServiceCallType getCallType() {
+<span class="fc" id="L65">        return callType;</span>
+    }
+
+    public int getSequenceNo() {
+<span class="fc" id="L69">        return sequenceNo;</span>
+    }
+
+    public PApplicationExceptionType getExceptionType() {
+<span class="fc" id="L73">        return exceptionType;</span>
+    }
+
+    public SerializerException setMethodName(String methodName) {
+<span class="fc" id="L77">        this.methodName = methodName;</span>
+<span class="fc" id="L78">        return this;</span>
+    }
+
+    public SerializerException setCallType(PServiceCallType callType) {
+<span class="fc" id="L82">        this.callType = callType;</span>
+<span class="fc" id="L83">        return this;</span>
+    }
+
+    public SerializerException setSequenceNo(int sequenceNo) {
+<span class="fc" id="L87">        this.sequenceNo = sequenceNo;</span>
+<span class="fc" id="L88">        return this;</span>
+    }
+
+    public SerializerException setExceptionType(PApplicationExceptionType type) {
+<span class="fc" id="L92">        this.exceptionType = type;</span>
+<span class="fc" id="L93">        return this;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L98">        return MoreObjects.toStringHelper(getClass())</span>
+<span class="nc" id="L99">                          .omitNullValues()</span>
+<span class="nc" id="L100">                          .addValue(getMessage())</span>
+<span class="nc" id="L101">                          .add(&quot;method&quot;, getMethodName())</span>
+<span class="nc" id="L102">                          .add(&quot;type&quot;, getCallType())</span>
+<span class="nc" id="L103">                          .add(&quot;seq&quot;, getSequenceNo())</span>
+<span class="nc" id="L104">                          .add(&quot;exception&quot;, getExceptionType())</span>
+<span class="nc" id="L105">                          .toString();</span>
+    }
+
+    @Override
+    public String asString() {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (methodName != null) {</span>
+<span class="nc" id="L111">            return &quot;Error in &quot; + methodName + &quot;: &quot; + getMessage();</span>
+        } else {
+<span class="nc" id="L113">            return &quot;Error: &quot; + getMessage();</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

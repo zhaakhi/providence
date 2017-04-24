@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PMessageDescriptor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.descriptor</a> &gt; <span class="el_source">PMessageDescriptor.java</span></div><h1>PMessageDescriptor.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.descriptor;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PMessageBuilderFactory;
+import net.morimekta.providence.PMessageVariant;
+import net.morimekta.providence.PType;
+
+import javax.annotation.Nonnull;
+import java.util.Objects;
+
+/**
+ * Descriptor base class for all messages.
+ */
+public abstract class PMessageDescriptor&lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; extends PDeclaredDescriptor&lt;T&gt; {
+    private final PMessageBuilderFactory&lt;T, F&gt; factory;
+    private final boolean                      simple;
+
+    public PMessageDescriptor(String programName,
+                              String name,
+                              PMessageBuilderFactory&lt;T, F&gt; factory,
+                              boolean simple) {
+<span class="fc" id="L43">        super(programName, name);</span>
+
+<span class="fc" id="L45">        this.factory = factory;</span>
+<span class="fc" id="L46">        this.simple = simple;</span>
+<span class="fc" id="L47">    }</span>
+
+    /**
+     * @return An unmodifiable list of fields that the struct holds.
+     */
+    @Nonnull
+    public abstract F[] getFields();
+
+    /**
+     * @param name Name of field to get.
+     * @return The field if present.
+     */
+    public abstract F getField(String name);
+
+    /**
+     * @param key The ID of the field to get.
+     * @return The field if present.
+     */
+    public abstract F getField(int key);
+
+    /**
+     * @return The struct variant.
+     */
+    public abstract PMessageVariant getVariant();
+
+    /**
+     * @return True if the message is simple. A simple message contains no
+     *         containers, and no sub-messages.
+     */
+    public boolean isSimple() {
+<span class="fc" id="L77">        return simple;</span>
+    }
+
+    @Nonnull
+    @Override
+    public PType getType() {
+<span class="fc" id="L83">        return PType.MESSAGE;</span>
+    }
+
+    @Override
+    public PMessageBuilder&lt;T, F&gt; builder() {
+<span class="fc" id="L88">        return factory.builder();</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (o == this) return true;</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">        if (o == null || !(o.getClass().equals(getClass()))) {</span>
+<span class="fc" id="L95">            return false;</span>
+        }
+<span class="fc" id="L97">        PMessageDescriptor&lt;?, ?&gt; other = (PMessageDescriptor&lt;?, ?&gt;) o;</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (!getQualifiedName().equals(other.getQualifiedName()) ||</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            !getVariant().equals(other.getVariant()) ||</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            getFields().length != other.getFields().length) {</span>
+<span class="fc" id="L101">            return false;</span>
+        }
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        for (PField field : getFields()) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (!field.equals(other.getField(field.getKey()))) {</span>
+<span class="fc" id="L105">                return false;</span>
+            }
+        }
+<span class="fc" id="L108">        return true;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L113">        int hash = Objects.hash(getClass(),</span>
+<span class="fc" id="L114">                                getQualifiedName(),</span>
+<span class="fc" id="L115">                                getVariant());</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (PField field : getFields()) {</span>
+<span class="fc" id="L117">            hash += Objects.hash(hash, field.hashCode());</span>
+        }
+<span class="fc" id="L119">        return hash;</span>
+    }
+
+    /**
+     * Get the actual builder factory instance. For contained structs only.
+     * @return The builder factory.
+     */
+    protected PMessageBuilderFactory&lt;T, F&gt; getFactoryInternal() {
+<span class="fc" id="L127">        return factory;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

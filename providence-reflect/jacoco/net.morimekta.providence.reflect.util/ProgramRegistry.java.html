@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProgramRegistry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.util</a> &gt; <span class="el_source">ProgramRegistry.java</span></div><h1>ProgramRegistry.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect.util;
+
+import net.morimekta.providence.descriptor.PDescriptor;
+import net.morimekta.providence.descriptor.PDescriptorProvider;
+import net.morimekta.providence.descriptor.PList;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.descriptor.PPrimitive;
+import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.descriptor.PServiceProvider;
+import net.morimekta.providence.descriptor.PSet;
+import net.morimekta.providence.reflect.contained.CProgram;
+import net.morimekta.providence.reflect.parser.ThriftProgramParser;
+import net.morimekta.providence.util.TypeRegistry;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 07.09.15
+ */
+public class ProgramRegistry extends TypeRegistry {
+    private final Map&lt;String, CProgram&gt; documents;
+
+<span class="fc" id="L46">    public ProgramRegistry() {</span>
+<span class="fc" id="L47">        documents = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * Puts the given document into the registry.
+     *
+     * @param path File path the document was found.
+     * @param doc The contained document.
+     * @return True if the document was not already there.
+     */
+    public boolean putDocument(String path, CProgram doc) {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (!documents.containsKey(path)) {</span>
+<span class="nc" id="L59">            documents.put(path, doc);</span>
+<span class="nc" id="L60">            return true;</span>
+        }
+<span class="nc" id="L62">        return false;</span>
+    }
+
+    /**
+     * Gets the document for a given file path.
+     *
+     * @param path The file path.
+     * @return The contained document, or null if not found.
+     */
+    public CProgram getDocument(String path) {
+<span class="nc" id="L72">        return documents.get(path);</span>
+    }
+
+    public CProgram getDocumentForPackage(String packageContext) {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        for (CProgram document : documents.values()) {</span>
+<span class="nc" id="L77">            if (document.getProgramName()</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                        .equals(packageContext)) {</span>
+<span class="nc" id="L79">                return document;</span>
+            }
+<span class="nc" id="L81">        }</span>
+<span class="nc" id="L82">        return null;</span>
+    }
+
+    /**
+     * Given a type name and a package context, fetches the type provider for the given type.
+     *
+     * @param name        Name of type, without any spaces.
+     * @param context     The package context of the type.
+     * @param annotations Annotations on the type.
+     * @return The type provider.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public PDescriptorProvider getProvider(String name, final String context, Map&lt;String, String&gt; annotations) {
+<span class="fc" id="L95">        name = finalTypename(name, context);</span>
+
+        // Prepend package context to name
+<span class="fc" id="L98">        PPrimitive primitive = PPrimitive.findByName(name);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (primitive != null) {</span>
+<span class="nc" id="L100">            return primitive.provider();</span>
+        }
+
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (annotations == null) {</span>
+<span class="nc" id="L104">            annotations = Collections.EMPTY_MAP;</span>
+        }
+
+        // Collection types are a bit complex, so handle it here.
+<span class="pc bpc" id="L108" title="3 of 4 branches missed.">        if (name.startsWith(&quot;map&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
+<span class="nc" id="L109">            String[] parts = name.substring(4, name.length() - 1)</span>
+<span class="nc" id="L110">                                     .split(&quot;,&quot;, 2);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (parts.length != 2) {</span>
+<span class="nc" id="L112">                throw new IllegalArgumentException(name + &quot; is not a valid map descriptor, wrong number of types.&quot;);</span>
+            }
+<span class="nc" id="L114">            String keyType = parts[0];</span>
+<span class="nc" id="L115">            String valueType = parts[1];</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">            switch (ThriftCollection.forName(annotations.get(ThriftAnnotation.CONTAINER.tag))) {</span>
+                case SORTED:
+<span class="nc" id="L118">                    return PMap.sortedProvider(getProvider(keyType, context, null),</span>
+<span class="nc" id="L119">                                               getProvider(valueType, context, null));</span>
+                case ORDERED:
+<span class="nc" id="L121">                    return PMap.orderedProvider(getProvider(keyType, context, null),</span>
+<span class="nc" id="L122">                                                getProvider(valueType, context, null));</span>
+                case DEFAULT:
+<span class="nc" id="L124">                    return PMap.provider(getProvider(keyType, context, null),</span>
+<span class="nc" id="L125">                                         getProvider(valueType, context, null));</span>
+            }
+        }
+<span class="pc bpc" id="L128" title="3 of 4 branches missed.">        if (name.startsWith(&quot;set&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
+<span class="nc" id="L129">            String itemType = name.substring(4, name.length() - 1);</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">            switch (ThriftCollection.forName(annotations.get(ThriftAnnotation.CONTAINER.tag))) {</span>
+                case SORTED:
+<span class="nc" id="L132">                    return PSet.sortedProvider(getProvider(itemType, context, null));</span>
+                case ORDERED:
+<span class="nc" id="L134">                    return PSet.orderedProvider(getProvider(itemType, context, null));</span>
+                case DEFAULT:
+<span class="nc" id="L136">                    return PSet.provider(getProvider(itemType, context, null));</span>
+            }
+        }
+<span class="pc bpc" id="L139" title="3 of 4 branches missed.">        if (name.startsWith(&quot;list&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
+<span class="nc" id="L140">            String itemType = name.substring(5, name.length() - 1);</span>
+<span class="nc" id="L141">            return PList.provider(getProvider(itemType, context, null));</span>
+        }
+
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (!ThriftProgramParser.VALID_IDENTIFIER.matcher(name).matches()) {</span>
+<span class="nc" id="L145">            throw new IllegalArgumentException(name + &quot; is not a valid declared type identifier.&quot;);</span>
+        }
+
+<span class="fc" id="L148">        final String finalName = name;</span>
+
+        // Otherwise it's a declared type.
+<span class="fc" id="L151">        return () -&gt; {</span>
+<span class="fc" id="L152">            PDescriptor descriptor = getDeclaredType(finalName, context);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            if (descriptor == null) {</span>
+<span class="nc" id="L154">                throw new IllegalStateException(&quot;No such type &quot; + finalName + &quot; in context &quot; + context);</span>
+            }
+<span class="fc" id="L156">            return descriptor;</span>
+        };
+    }
+
+    public PServiceProvider getServiceProvider(final String serviceName, final String packageContext) {
+<span class="nc" id="L161">        return () -&gt; {</span>
+<span class="nc" id="L162">            PService service = getService(serviceName, packageContext);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">            if (service == null) {</span>
+<span class="nc" id="L164">                throw new IllegalStateException(&quot;No such service &quot; + serviceName + &quot; in context &quot; + packageContext);</span>
+            }
+<span class="nc" id="L166">            return service;</span>
+        };
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileMessageWriter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio</a> &gt; <span class="el_source">FileMessageWriter.java</span></div><h1>FileMessageWriter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.mio;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.streams.MessageStreams;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+/**
+ * A writer helper class for matching a serializer with an output stream.
+ */
+public class FileMessageWriter implements MessageWriter {
+    private final File       file;
+    private final Serializer serializer;
+    private final boolean    append;
+
+    private OutputStream out;
+
+    public FileMessageWriter(File file, Serializer serializer) {
+<span class="fc" id="L47">        this(file, serializer, false);</span>
+<span class="fc" id="L48">    }</span>
+
+<span class="fc" id="L50">    public FileMessageWriter(File file, Serializer serializer, boolean append) {</span>
+<span class="fc" id="L51">        this.file = file;</span>
+<span class="fc" id="L52">        this.serializer = serializer;</span>
+<span class="fc" id="L53">        this.append = append;</span>
+<span class="fc" id="L54">    }</span>
+
+    @Override
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    int write(Message message) throws IOException {
+<span class="fc" id="L59">        return serializer.serialize(getOutputStream(), message);</span>
+    }
+
+    @Override
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    int write(PServiceCall&lt;Message, Field&gt; call) throws IOException {
+<span class="fc" id="L65">        return serializer.serialize(getOutputStream(), call);</span>
+    }
+
+    @Override
+    public int separator() throws IOException {
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (!serializer.binaryProtocol()) {</span>
+<span class="fc" id="L71">            getOutputStream().write(MessageStreams.READABLE_ENTRY_SEP);</span>
+<span class="fc" id="L72">            return MessageStreams.READABLE_ENTRY_SEP.length;</span>
+        }
+
+<span class="fc" id="L75">        return 0;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (out != null) {</span>
+            try {
+<span class="fc" id="L82">                out.flush();</span>
+<span class="fc" id="L83">                out.close();</span>
+            } finally {
+<span class="pc" id="L85">                out = null;</span>
+<span class="fc" id="L86">            }</span>
+        }
+<span class="fc" id="L88">    }</span>
+
+    private OutputStream getOutputStream() throws FileNotFoundException {
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (out == null) {</span>
+<span class="fc" id="L92">            out = new BufferedOutputStream(new FileOutputStream(file, append));</span>
+        }
+<span class="fc" id="L94">        return out;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

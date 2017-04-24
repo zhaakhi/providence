@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommonOverridesFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.messages</a> &gt; <span class="el_source">CommonOverridesFormatter.java</span></div><h1>CommonOverridesFormatter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.messages;
+
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.format.java.shared.MessageMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.JField;
+import net.morimekta.providence.generator.format.java.utils.JMessage;
+import net.morimekta.util.Strings;
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static net.morimekta.providence.generator.format.java.messages.CoreOverridesFormatter.UNION_FIELD;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 08.01.16.
+ */
+public class CommonOverridesFormatter implements MessageMemberFormatter {
+    protected final IndentedPrintWriter writer;
+
+<span class="fc" id="L47">    public CommonOverridesFormatter(IndentedPrintWriter writer) {</span>
+<span class="fc" id="L48">        this.writer = writer;</span>
+<span class="fc" id="L49">    }</span>
+
+    @Override
+    public Collection&lt;String&gt; getExtraImplements(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L53">        LinkedList&lt;String&gt; impl = new LinkedList&lt;&gt;();</span>
+
+<span class="fc" id="L55">        impl.add(Comparable.class.getSimpleName() + &quot;&lt;&quot; + message.instanceType() + &quot;&gt;&quot;);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (!message.isException()) {</span>
+<span class="fc" id="L57">            impl.add(Serializable.class.getName());</span>
+        }
+
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (!isNullOrEmpty(message.extraImplements())) {</span>
+<span class="nc" id="L61">            String[] extras = message.extraImplements().split(&quot;[,]&quot;);</span>
+            // TODO: Figure out if we need to have a filter here.
+<span class="nc" id="L63">            Arrays.stream(extras)</span>
+<span class="nc" id="L64">                  .map(String::trim)</span>
+<span class="nc" id="L65">                  .forEachOrdered(impl::add);</span>
+        }
+
+<span class="fc" id="L68">        return impl;</span>
+    }
+
+    private String caseFieldConstant(JField field) {
+<span class="fc" id="L72">        return field.fieldEnum();</span>
+    }
+
+    @Override
+    public void appendFields(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L77">        writer.appendln(&quot;private volatile int tHashCode;&quot;)</span>
+<span class="fc" id="L78">              .newline();</span>
+<span class="fc" id="L79">    }</span>
+
+    @Override
+    public void appendMethods(JMessage message) {
+        // Object
+<span class="fc" id="L84">        appendEquals(message);</span>
+<span class="fc" id="L85">        appendHashCode(message);</span>
+<span class="fc" id="L86">        appendToString(message);</span>
+        // Stringable
+<span class="fc" id="L88">        appendAsString(message);</span>
+        // Comparable
+<span class="fc" id="L90">        appendCompareTo(message);</span>
+<span class="fc" id="L91">    }</span>
+
+    private void appendEquals(JMessage&lt;?&gt; message) {
+<span class="fc" id="L94">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L95">              .appendln(&quot;public boolean equals(Object o) {&quot;)</span>
+<span class="fc" id="L96">              .begin()</span>
+<span class="fc" id="L97">              .appendln(&quot;if (o == this) return true;&quot;)</span>
+<span class="fc" id="L98">              .appendln(&quot;if (o == null || !o.getClass().equals(getClass())) return false;&quot;);</span>
+<span class="fc" id="L99">        if (message.numericalOrderFields()</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">                   .size() &gt; 0) {</span>
+<span class="fc" id="L101">            boolean first = true;</span>
+<span class="fc" id="L102">            writer.formatln(&quot;%s other = (%s) o;&quot;, message.instanceType(), message.instanceType())</span>
+<span class="fc" id="L103">                  .appendln(&quot;return &quot;);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (message.isUnion()) {</span>
+<span class="fc" id="L105">                writer.format(&quot;%s.equals(%s, other.%s)&quot;,</span>
+<span class="fc" id="L106">                              Objects.class.getName(),</span>
+                              UNION_FIELD,
+                              UNION_FIELD);
+<span class="fc" id="L109">                first = false;</span>
+            }
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">                if (field.isVoid()) continue;</span>
+
+<span class="fc bfc" id="L114" title="All 2 branches covered.">                if (first) {</span>
+<span class="fc" id="L115">                    first = false;</span>
+                } else {
+<span class="fc" id="L117">                    writer.append(&quot; &amp;&amp;&quot;)</span>
+<span class="fc" id="L118">                          .appendln(&quot;       &quot;);</span>
+                }
+<span class="fc" id="L120">                writer.format(&quot;%s.equals(%s, other.%s)&quot;,</span>
+<span class="fc" id="L121">                              Objects.class.getName(),</span>
+<span class="fc" id="L122">                              field.member(), field.member());</span>
+<span class="fc" id="L123">            }</span>
+<span class="fc" id="L124">            writer.append(';');</span>
+<span class="fc" id="L125">        } else {</span>
+<span class="fc" id="L126">            writer.appendln(&quot;return true;&quot;);</span>
+        }
+<span class="fc" id="L128">        writer.end()</span>
+<span class="fc" id="L129">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L130">              .newline();</span>
+<span class="fc" id="L131">    }</span>
+
+    private void appendHashCode(JMessage&lt;?&gt; message) {
+<span class="fc" id="L134">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L135">              .appendln(&quot;public int hashCode() {&quot;)</span>
+<span class="fc" id="L136">              .begin()</span>
+<span class="fc" id="L137">              .appendln(&quot;if (tHashCode == 0) {&quot;)</span>
+<span class="fc" id="L138">              .begin()</span>
+<span class="fc" id="L139">              .formatln(&quot;tHashCode = %s.hash(&quot;,</span>
+<span class="fc" id="L140">                        Objects.class.getName())</span>
+<span class="fc" id="L141">              .begin(&quot;        &quot;)</span>
+<span class="fc" id="L142">              .formatln(&quot;%s.class&quot;, message.instanceType());</span>
+<span class="fc" id="L143">        message.numericalOrderFields()</span>
+<span class="fc" id="L144">               .stream()</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">               .filter(field -&gt; !field.isVoid())</span>
+<span class="fc" id="L146">               .forEach(field -&gt; {</span>
+<span class="fc" id="L147">                   writer.append(&quot;,&quot;);</span>
+<span class="fc" id="L148">                   writer.formatln(&quot;_Field.%s, %s&quot;, field.fieldEnum(), field.member());</span>
+<span class="fc" id="L149">               });</span>
+
+<span class="fc" id="L151">        writer.end()</span>
+<span class="fc" id="L152">              .append(&quot;);&quot;)</span>
+<span class="fc" id="L153">              .end()</span>
+<span class="fc" id="L154">              .appendln('}')</span>
+<span class="fc" id="L155">              .appendln(&quot;return tHashCode;&quot;)</span>
+<span class="fc" id="L156">              .end()</span>
+<span class="fc" id="L157">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L158">              .newline();</span>
+<span class="fc" id="L159">    }</span>
+
+    private void appendToString(JMessage&lt;?&gt; message) {
+<span class="fc" id="L162">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L163">              .appendln(&quot;public String toString() {&quot;)</span>
+<span class="fc" id="L164">              .begin()</span>
+<span class="fc" id="L165">              .formatln(&quot;return \&quot;%s\&quot; + asString();&quot;,</span>
+<span class="fc" id="L166">                        message.descriptor()</span>
+<span class="fc" id="L167">                               .getQualifiedName())</span>
+<span class="fc" id="L168">              .end()</span>
+<span class="fc" id="L169">              .appendln('}')</span>
+<span class="fc" id="L170">              .newline();</span>
+<span class="fc" id="L171">    }</span>
+
+    private void appendAsString(JMessage&lt;?&gt; message) {
+<span class="fc" id="L174">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L175">              .appendln(&quot;public String asString() {&quot;)</span>
+<span class="fc" id="L176">              .begin()</span>
+<span class="fc" id="L177">              .appendln(&quot;StringBuilder out = new StringBuilder();&quot;)</span>
+<span class="fc" id="L178">              .appendln(&quot;out.append(\&quot;{\&quot;);&quot;)</span>
+<span class="fc" id="L179">              .newline();</span>
+
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (message.isUnion()) {</span>
+<span class="fc" id="L182">            writer.formatln(&quot;switch (%s) {&quot;, UNION_FIELD)</span>
+<span class="fc" id="L183">                  .begin();</span>
+
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L186">                writer.formatln(&quot;case %s: {&quot;, caseFieldConstant(field))</span>
+<span class="fc" id="L187">                      .begin()</span>
+<span class="fc" id="L188">                      .formatln(&quot;out.append(\&quot;%s:\&quot;)&quot;, field.name());</span>
+
+<span class="pc bpc" id="L190" title="1 of 8 branches missed.">                switch (field.type()) {</span>
+                    case VOID:
+<span class="fc" id="L192">                        writer.formatln(&quot;   .append(\&quot;true\&quot;);&quot;);</span>
+<span class="fc" id="L193">                        break;</span>
+                    case BOOL:
+                    case I32:
+                    case I64:
+<span class="fc" id="L197">                        writer.formatln(&quot;   .append(%s);&quot;, field.member());</span>
+<span class="fc" id="L198">                        break;</span>
+                    case BYTE:
+                    case I16:
+<span class="fc" id="L201">                        writer.formatln(&quot;   .append((int) %s);&quot;, field.member());</span>
+<span class="fc" id="L202">                        break;</span>
+                    case DOUBLE:
+                    case SET:
+                    case LIST:
+                    case MAP:
+<span class="fc" id="L207">                        writer.formatln(&quot;   .append(%s.asString(%s));&quot;,</span>
+<span class="fc" id="L208">                                        Strings.class.getName(),</span>
+<span class="fc" id="L209">                                        field.member());</span>
+<span class="fc" id="L210">                        break;</span>
+                    case STRING:
+<span class="fc" id="L212">                        writer.formatln(&quot;   .append('\\\&quot;').append(%s.escape(%s)).append('\\\&quot;');&quot;,</span>
+<span class="fc" id="L213">                                        Strings.class.getName(),</span>
+<span class="fc" id="L214">                                        field.member());</span>
+<span class="fc" id="L215">                        break;</span>
+                    case BINARY:
+<span class="fc" id="L217">                        writer.formatln(&quot;   .append(\&quot;b64(\&quot;).append(%s.toBase64()).append(')');&quot;, field.member());</span>
+<span class="fc" id="L218">                        break;</span>
+                    case MESSAGE:
+                    case ENUM:
+<span class="fc" id="L221">                        writer.formatln(&quot;   .append(%s.asString());&quot;, field.member());</span>
+<span class="fc" id="L222">                        break;</span>
+                    default:
+<span class="nc" id="L224">                        writer.formatln(&quot;   .append(%s.toString());&quot;, field.member());</span>
+                        break;
+                }
+
+<span class="fc" id="L228">                writer.appendln(&quot;break;&quot;)</span>
+<span class="fc" id="L229">                      .end()</span>
+<span class="fc" id="L230">                      .appendln('}');</span>
+<span class="fc" id="L231">            }</span>
+<span class="fc" id="L232">            writer.end()</span>
+<span class="fc" id="L233">                  .appendln('}');</span>
+        } else {
+<span class="fc" id="L235">            boolean firstFirstCheck = true;</span>
+<span class="fc" id="L236">            boolean alwaysAfter = false;</span>
+            boolean last, first;
+
+<span class="fc" id="L239">            List&lt;JField&gt; fieldList = message.declaredOrderFields();</span>
+
+<span class="fc" id="L241">            JField[] fields = fieldList.toArray(new JField[fieldList.size()]);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">            for (int i = 0; i &lt; fields.length; ++i) {</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">                first = i == 0;</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">                last  = i == (fields.length - 1);</span>
+
+<span class="fc" id="L246">                JField field = fields[i];</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc bfc" id="L248" title="All 6 branches covered.">                    if (!alwaysAfter &amp;&amp; firstFirstCheck &amp;&amp; !last) {</span>
+<span class="fc" id="L249">                        writer.appendln(&quot;boolean first = true;&quot;);</span>
+                    }
+<span class="fc" id="L251">                    writer.formatln(&quot;if (%s()) {&quot;, field.presence());</span>
+<span class="fc" id="L252">                    writer.begin();</span>
+                }
+
+<span class="fc bfc" id="L255" title="All 2 branches covered.">                if (alwaysAfter) {</span>
+<span class="fc" id="L256">                    writer.appendln(&quot;out.append(',');&quot;);</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">                } else if (!field.alwaysPresent()) {</span>
+<span class="pc bpc" id="L258" title="1 of 4 branches missed.">                    if (firstFirstCheck || first) {</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">                        if (!last) {</span>
+<span class="fc" id="L260">                            writer.appendln(&quot;first = false;&quot;);</span>
+                        }
+<span class="fc bfc" id="L262" title="All 2 branches covered.">                    } else if (last) {</span>
+<span class="fc" id="L263">                        writer.appendln(&quot;if (!first) out.append(',');&quot;);</span>
+                    } else {
+<span class="fc" id="L265">                        writer.appendln(&quot;if (first) first = false;&quot;)</span>
+<span class="fc" id="L266">                              .appendln(&quot;else out.append(',');&quot;);</span>
+                    }
+                }
+
+<span class="fc" id="L270">                writer.formatln(&quot;out.append(\&quot;%s:\&quot;)&quot;, field.name());</span>
+<span class="pc bpc" id="L271" title="1 of 7 branches missed.">                switch (field.type()) {</span>
+                    case BOOL:
+                    case I32:
+                    case I64:
+<span class="fc" id="L275">                        writer.formatln(&quot;   .append(%s);&quot;, field.member());</span>
+<span class="fc" id="L276">                        break;</span>
+                    case BYTE:
+                    case I16:
+<span class="fc" id="L279">                        writer.formatln(&quot;   .append((int) %s);&quot;, field.member());</span>
+<span class="fc" id="L280">                        break;</span>
+                    case DOUBLE:
+                    case MAP:
+                    case SET:
+                    case LIST:
+<span class="fc" id="L285">                        writer.formatln(&quot;   .append(%s.asString(%s));&quot;,</span>
+<span class="fc" id="L286">                                        Strings.class.getName(),</span>
+<span class="fc" id="L287">                                        field.member());</span>
+<span class="fc" id="L288">                        break;</span>
+                    case STRING:
+<span class="fc" id="L290">                        writer.appendln(&quot;   .append('\\\&quot;')&quot;)</span>
+<span class="fc" id="L291">                              .formatln(&quot;   .append(%s.escape(%s))&quot;,</span>
+<span class="fc" id="L292">                                        Strings.class.getName(),</span>
+<span class="fc" id="L293">                                        field.member())</span>
+<span class="fc" id="L294">                              .appendln(&quot;   .append('\\\&quot;');&quot;);</span>
+<span class="fc" id="L295">                        break;</span>
+                    case BINARY:
+<span class="fc" id="L297">                        writer.appendln(&quot;   .append(\&quot;b64(\&quot;)&quot;)</span>
+<span class="fc" id="L298">                              .formatln(&quot;   .append(%s.toBase64())&quot;, field.member())</span>
+<span class="fc" id="L299">                              .appendln(&quot;   .append(')');&quot;);</span>
+<span class="fc" id="L300">                        break;</span>
+                    case MESSAGE:
+                    case ENUM:
+<span class="fc" id="L303">                        writer.formatln(&quot;   .append(%s.asString());&quot;, field.member());</span>
+<span class="fc" id="L304">                        break;</span>
+                    default:
+<span class="nc" id="L306">                        writer.formatln(&quot;   .append(%s.toString());&quot;, field.member());</span>
+                        break;
+                }
+
+<span class="fc bfc" id="L310" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L311">                    writer.end()</span>
+<span class="fc" id="L312">                          .appendln('}');</span>
+<span class="fc bfc" id="L313" title="All 4 branches covered.">                    if (!alwaysAfter &amp;&amp; firstFirstCheck) {</span>
+<span class="fc" id="L314">                        firstFirstCheck = false;</span>
+                    }
+                } else {
+<span class="fc" id="L317">                    alwaysAfter = true;</span>
+                }
+            }
+        }
+
+<span class="fc" id="L322">        writer.appendln(&quot;out.append('}');&quot;)</span>
+<span class="fc" id="L323">              .appendln(&quot;return out.toString();&quot;)</span>
+<span class="fc" id="L324">              .end()</span>
+<span class="fc" id="L325">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L326">              .newline();</span>
+<span class="fc" id="L327">    }</span>
+
+    private void appendCompareTo(JMessage&lt;?&gt; message) {
+<span class="fc" id="L330">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L331">              .formatln(&quot;public int compareTo(%s other) {&quot;, message.instanceType())</span>
+<span class="fc" id="L332">              .begin();</span>
+
+<span class="fc bfc" id="L334" title="All 2 branches covered.">        if (message.isUnion()) {</span>
+<span class="fc" id="L335">            writer.formatln(&quot;int c = %s.compareTo(other.%s);&quot;,</span>
+                            UNION_FIELD, UNION_FIELD)
+<span class="fc" id="L337">                  .appendln(&quot;if (c != 0) return c;&quot;)</span>
+<span class="fc" id="L338">                  .newline()</span>
+<span class="fc" id="L339">                  .formatln(&quot;switch (%s) {&quot;, UNION_FIELD)</span>
+<span class="fc" id="L340">                  .begin();</span>
+
+<span class="fc bfc" id="L342" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L343">                writer.formatln(&quot;case %s:&quot;, caseFieldConstant(field))</span>
+<span class="fc" id="L344">                      .begin();</span>
+
+<span class="fc bfc" id="L346" title="All 10 branches covered.">                switch (field.type()) {</span>
+                    case BOOL:
+<span class="fc" id="L348">                        writer.formatln(&quot;return Boolean.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L349">                        break;</span>
+                    case BYTE:
+<span class="fc" id="L351">                        writer.formatln(&quot;return Byte.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L352">                        break;</span>
+                    case I16:
+<span class="fc" id="L354">                        writer.formatln(&quot;return Short.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L355">                        break;</span>
+                    case I32:
+<span class="fc" id="L357">                        writer.formatln(&quot;return Integer.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L358">                        break;</span>
+                    case I64:
+<span class="fc" id="L360">                        writer.formatln(&quot;return Long.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L361">                        break;</span>
+                    case DOUBLE:
+<span class="fc" id="L363">                        writer.formatln(&quot;return Double.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L364">                        break;</span>
+                    case STRING:
+                    case BINARY:
+                    case MESSAGE:
+<span class="fc" id="L368">                        writer.formatln(&quot;return %s.compareTo(other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L369">                        break;</span>
+                    case ENUM:
+<span class="fc" id="L371">                        writer.formatln(&quot;return Integer.compare(%s.getValue(), other.%s.getValue());&quot;,</span>
+<span class="fc" id="L372">                                        field.member(),</span>
+<span class="fc" id="L373">                                        field.member());</span>
+<span class="fc" id="L374">                        break;</span>
+                    case SET:
+                    case LIST:
+                    case MAP:
+                        // containers aren't really comparable, just make some consistent comparison.
+<span class="fc" id="L379">                        writer.formatln(&quot;return Integer.compare(%s.hashCode(), other.%s.hashCode());&quot;,</span>
+<span class="fc" id="L380">                                        field.member(),</span>
+<span class="fc" id="L381">                                        field.member());</span>
+<span class="fc" id="L382">                        break;</span>
+                    default:
+                        break;
+                }
+
+<span class="fc" id="L387">                writer.end();</span>
+<span class="fc" id="L388">            }</span>
+<span class="fc" id="L389">            writer.appendln(&quot;default: return 0;&quot;)</span>
+<span class="fc" id="L390">                  .end()</span>
+<span class="fc" id="L391">                  .appendln('}');</span>
+        } else {
+<span class="fc" id="L393">            writer.appendln(&quot;int c;&quot;);</span>
+
+<span class="fc bfc" id="L395" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L396">                writer.newline();</span>
+
+<span class="fc bfc" id="L398" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L399">                    writer.formatln(&quot;c = Boolean.compare(%s != null, other.%s != null);&quot;,</span>
+<span class="fc" id="L400">                                    field.member(),</span>
+<span class="fc" id="L401">                                    field.member())</span>
+<span class="fc" id="L402">                          .appendln(&quot;if (c != 0) return c;&quot;)</span>
+<span class="fc" id="L403">                          .formatln(&quot;if (%s != null) {&quot;, field.member())</span>
+<span class="fc" id="L404">                          .begin();</span>
+                }
+<span class="pc bpc" id="L406" title="1 of 10 branches missed.">                switch (field.type()) {</span>
+                    case BOOL:
+<span class="fc" id="L408">                        writer.formatln(&quot;c = Boolean.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L409">                        break;</span>
+                    case BYTE:
+<span class="fc" id="L411">                        writer.formatln(&quot;c = Byte.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L412">                        break;</span>
+                    case I16:
+<span class="fc" id="L414">                        writer.formatln(&quot;c = Short.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L415">                        break;</span>
+                    case I32:
+<span class="fc" id="L417">                        writer.formatln(&quot;c = Integer.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L418">                        break;</span>
+                    case I64:
+<span class="fc" id="L420">                        writer.formatln(&quot;c = Long.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L421">                        break;</span>
+                    case DOUBLE:
+<span class="fc" id="L423">                        writer.formatln(&quot;c = Double.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L424">                        break;</span>
+                    case STRING:
+                    case BINARY:
+                    case MESSAGE:
+<span class="fc" id="L428">                        writer.formatln(&quot;c = %s.compareTo(other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L429">                        break;</span>
+                    case ENUM:
+<span class="fc" id="L431">                        writer.formatln(&quot;c = Integer.compare(%s.ordinal(), %s.ordinal());&quot;,</span>
+<span class="fc" id="L432">                                        field.member(),</span>
+<span class="fc" id="L433">                                        field.member());</span>
+<span class="fc" id="L434">                        break;</span>
+                    case SET:
+                    case LIST:
+                    case MAP:
+<span class="fc" id="L438">                        writer.formatln(&quot;c = Integer.compare(%s.hashCode(), other.%s.hashCode());&quot;,</span>
+<span class="fc" id="L439">                                        field.member(),</span>
+<span class="fc" id="L440">                                        field.member());</span>
+<span class="fc" id="L441">                        break;</span>
+                    default:
+                        break;
+                }
+<span class="fc" id="L445">                writer.appendln(&quot;if (c != 0) return c;&quot;);</span>
+
+<span class="fc bfc" id="L447" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L448">                    writer.end()</span>
+<span class="fc" id="L449">                          .appendln('}');</span>
+                }
+<span class="fc" id="L451">            }</span>
+<span class="fc" id="L452">            writer.newline()</span>
+<span class="fc" id="L453">                  .appendln(&quot;return 0;&quot;);</span>
+        }
+
+<span class="fc" id="L456">        writer.end()</span>
+<span class="fc" id="L457">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L458">              .newline();</span>
+<span class="fc" id="L459">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PMessageBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence</a> &gt; <span class="el_source">PMessageBuilder.java</span></div><h1>PMessageBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence;
+
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+/**
+ * Base class for message builders.
+ */
+<span class="nc" id="L34">public abstract class PMessageBuilder&lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt;</span>
+        implements PBuilder&lt;T&gt; {
+    /**
+     * Checks if the current set data is enough to make a valid struct. It
+     * will check for all required fields, and if any are missing it will
+     * return false.
+     *
+     * @return True for a valid message.
+     */
+    public abstract boolean valid();
+
+    /**
+     * Checks if the current set data is enough to make a valid struct. It
+     * will check for all required fields, and if any are missing it will
+     * throw an {@link IllegalStateException} with an appropriate error
+     * message.
+     *
+     * @throws IllegalStateException When the builder will not generate a
+     *         valid message model object.
+     */
+    public abstract void validate() throws IllegalStateException;
+
+    /**
+     * Set the provided field value.
+     *
+     * @param key The key of the field to set.
+     * @param value The value to be set.
+     * @return The message builder.
+     */
+    @Nonnull
+    public abstract PMessageBuilder&lt;T, F&gt; set(int key, Object value);
+
+    /**
+     * Set the provided field value.
+     *
+     * @param field The field to set.
+     * @param value The value to be set.
+     * @return True if the field is set.
+     */
+    @Nonnull
+    public PMessageBuilder&lt;T, F&gt; set(@Nonnull F field, Object value) {
+<span class="nc" id="L75">        return set(field.getKey(), value);</span>
+    }
+
+    /**
+     * Checks if a specific field is set on the builder.
+     *
+     * @param key The key of the field to check.
+     * @return True if the field is set.
+     */
+    public abstract boolean isSet(int key);
+
+    /**
+     * Checks if a specific field is set on the builder.
+     *
+     * @param field The field to check.
+     * @return True if the field is set.
+     */
+    public boolean isSet(@Nonnull F field) {
+<span class="nc" id="L93">        return isSet(field.getKey());</span>
+    }
+
+    /**
+     * Get a Collection of F with fields set on the builder.
+     *
+     * Unusual naming because it avoids conflict with generated methods.
+     *
+     * @return Collection of F
+     */
+    @Nonnull
+    public Collection&lt;F&gt; collectSetFields() {
+<span class="nc" id="L105">           return Arrays.stream(descriptor().getFields())</span>
+<span class="nc" id="L106">                        .filter(this::isSet)</span>
+<span class="nc" id="L107">                        .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Checks if a specific field is modified on the builder.
+     *
+     * @param key The key of the field to check.
+     * @return True if the field is modified.
+     */
+    public abstract boolean isModified(int key);
+
+    /**
+     * Checks if a specific field is modified on the builder.
+     *
+     * @param field The field to check.
+     * @return True if the field is modified.
+     */
+    public boolean isModified(@Nonnull F field) {
+<span class="nc" id="L125">        return isModified(field.getKey());</span>
+    }
+
+    /**
+     * Get a Collection of F with fields Modified since creation of the builder.
+     *
+     * @return Collection of F
+     */
+    @Nonnull
+    public Collection&lt;F&gt; modifiedFields() {
+<span class="nc" id="L135">           return Arrays.stream(descriptor().getFields())</span>
+<span class="nc" id="L136">                        .filter(this::isModified)</span>
+<span class="nc" id="L137">                        .collect(Collectors.toList());</span>
+     }
+
+    /**
+     * Adds a value to a set or list container.
+     *
+     * @param key The key of the container field to add too.
+     * @param value The value to add.
+     * @return The message builder.
+     * @throws IllegalArgumentException if the field is not a list or set.
+     */
+    @Nonnull
+    public abstract PMessageBuilder&lt;T, F&gt; addTo(int key, Object value);
+
+    /**
+     * Checks if a specific field is set on the builder.
+     *
+     * @param field The container field to add too.
+     * @param value The value to add.
+     * @return True if the field is set.
+     */
+    @Nonnull
+    public PMessageBuilder&lt;T, F&gt; addTo(@Nonnull F field, Object value) {
+<span class="nc" id="L160">        return addTo(field.getKey(), value);</span>
+    }
+
+    /**
+     * Clear the provided field value.
+     *
+     * @param key The key of the field to clear.
+     * @return The message builder.
+     */
+    @Nonnull
+    public abstract PMessageBuilder&lt;T, F&gt; clear(int key);
+
+
+    /**
+     * Clear the provided field value.
+     *
+     * @param field The field to clear.
+     * @return The message builder.
+     */
+    @Nonnull
+    public PMessageBuilder&lt;T, F&gt; clear(@Nonnull F field) {
+<span class="nc" id="L181">        return clear(field.getKey());</span>
+    }
+
+
+    /**
+     * Merges the provided message into the builder. Contained messages should
+     * in turn be merged and not replaced wholesale. Sets are unioned (addAll)
+     * and maps will overwrite / replace on a per-key basis (putAll).
+     *
+     * @param from The message to merge values from.
+     * @return The message builder.
+     */
+    @Nonnull
+    public abstract PMessageBuilder&lt;T, F&gt; merge(T from);
+
+    /**
+     * Get the builder for the given message contained in this builder. If
+     * the sub-builder does not exist, create, either from existing instance
+     * or from scratch.
+     *
+     * @param key The field key.
+     * @return The field builder.
+     * @throws IllegalArgumentException if field is not a message field.
+     */
+    @Nonnull
+    public abstract PMessageBuilder mutator(int key);
+
+    /**
+     * Get the builder for the given message contained in this builder. If
+     * the sub-builder does not exist, create, either from existing instance
+     * or from scratch.
+     *
+     * @param field The field to mutate.
+     * @return The field builder.
+     * @throws IllegalArgumentException if field is not a message field.
+     */
+    @Nonnull
+    public PMessageBuilder mutator(@Nonnull F field) {
+<span class="nc" id="L219">        return mutator(field.getKey());</span>
+    }
+
+    /**
+     * Get the descriptor for the message being built.
+     *
+     * @return The struct descriptor.
+     */
+    @Nonnull
+    public abstract PMessageDescriptor&lt;T, F&gt; descriptor();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

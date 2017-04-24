@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TypeLoader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect</a> &gt; <span class="el_source">TypeLoader.java</span></div><h1>TypeLoader.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect;
+
+import net.morimekta.providence.model.ProgramType;
+import net.morimekta.providence.reflect.contained.CProgram;
+import net.morimekta.providence.reflect.parser.ParseException;
+import net.morimekta.providence.reflect.parser.ProgramParser;
+import net.morimekta.providence.reflect.util.ProgramConverter;
+import net.morimekta.providence.reflect.util.ProgramRegistry;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 07.09.15
+ */
+public class TypeLoader {
+    private final ProgramRegistry registry;
+
+    private final ProgramConverter         converter;
+    private final ProgramParser            parser;
+    private final Map&lt;String, ProgramType&gt; loadedDocuments;
+    private final Collection&lt;File&gt;         includes;
+
+    /**
+     * Construct a type loader for file types matches with the given parser.
+     *
+     * @param includes List of files with include path roots. For includes
+     *                 search these in order.
+     * @param parser   The thrift file parser.
+     */
+    public TypeLoader(Collection&lt;File&gt; includes, ProgramParser parser) {
+<span class="nc" id="L61">        this(includes, parser, new ProgramRegistry());</span>
+<span class="nc" id="L62">    }</span>
+
+    /**
+     * Intermediate constructor.
+     *
+     * @param includes List of files with include path roots. For includes
+     *                 search these in order.
+     * @param parser   The thrift file parser.
+     * @param registry Type registry to keep parsed types in.
+     */
+    private TypeLoader(Collection&lt;File&gt; includes, ProgramParser parser, ProgramRegistry registry) {
+<span class="nc" id="L73">        this(includes, parser, registry, new ProgramConverter(registry));</span>
+<span class="nc" id="L74">    }</span>
+
+    /**
+     * Constructor with injected functionality.
+     *
+     * @param includes  List of files with include path roots. For includes
+     *                  search these in order.
+     * @param parser    The thrift file parser.
+     * @param registry  The type registry.
+     * @param converter The document converter
+     */
+<span class="nc" id="L85">    protected TypeLoader(Collection&lt;File&gt; includes, ProgramParser parser, ProgramRegistry registry, ProgramConverter converter) {</span>
+<span class="nc" id="L86">        this.includes = includes;</span>
+<span class="nc" id="L87">        this.parser = parser;</span>
+<span class="nc" id="L88">        this.registry = registry;</span>
+<span class="nc" id="L89">        this.converter = converter;</span>
+
+<span class="nc" id="L91">        loadedDocuments = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L92">    }</span>
+
+    /**
+     * @return Set of loaded documents.
+     */
+    public Collection&lt;ProgramType&gt; loadedPrograms() {
+<span class="nc" id="L98">        return loadedDocuments.values();</span>
+    }
+
+    /**
+     * Load a thrift definition from file including all it's dependencies.
+     *
+     * @param file The file to load.
+     * @return The loaded contained document.
+     * @throws IOException If the file could not be read.
+     * @throws ParseException If the file could not be parsed.
+     */
+    public CProgram load(File file) throws IOException, ParseException {
+<span class="nc" id="L110">        file = file.getCanonicalFile();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (!file.exists()) {</span>
+<span class="nc" id="L112">            throw new IllegalArgumentException(&quot;No such file &quot; + file.getCanonicalPath());</span>
+        }
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (file.isDirectory()) {</span>
+<span class="nc" id="L115">            throw new IllegalArgumentException(</span>
+<span class="nc" id="L116">                    &quot;Unable to load thrift definition from directory: &quot; + file.getCanonicalPath());</span>
+        }
+
+<span class="nc" id="L119">        CProgram cdoc = registry.getDocument(file.getCanonicalPath());</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (cdoc != null) {</span>
+<span class="nc" id="L121">            return cdoc;</span>
+        }
+
+<span class="nc" id="L124">        InputStream in = new BufferedInputStream(new FileInputStream(file));</span>
+<span class="nc" id="L125">        ProgramType doc = parser.parse(in, file, includes);</span>
+
+<span class="nc" id="L127">        LinkedList&lt;File&gt; queue = new LinkedList&lt;&gt;();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (doc.hasIncludes()) {</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            for (String include : doc.getIncludes()) {</span>
+<span class="nc" id="L130">                File location = new File(file.getParent(), include).getCanonicalFile();</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                if (!location.exists()) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                    for (File inc : includes) {</span>
+<span class="nc" id="L133">                        File i = new File(inc, include);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                        if (i.exists()) {</span>
+<span class="nc" id="L135">                            location = i.getCanonicalFile();</span>
+<span class="nc" id="L136">                            break;</span>
+                        }
+<span class="nc" id="L138">                    }</span>
+                }
+
+<span class="nc bnc" id="L141" title="All 4 branches missed.">                if (location.exists() &amp;&amp; !queue.contains(location)) {</span>
+<span class="nc" id="L142">                    queue.add(location);</span>
+                }
+<span class="nc" id="L144">            }</span>
+        }
+
+        // Load includes in reverse order, in case of serial dependencies.
+<span class="nc" id="L148">        Collections.reverse(queue);</span>
+
+<span class="nc" id="L150">        loadedDocuments.put(file.getCanonicalPath(), doc);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        for (File include : queue) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            if (!loadedDocuments.containsKey(include.getCanonicalPath())) {</span>
+<span class="nc" id="L153">                load(include);</span>
+            }
+<span class="nc" id="L155">        }</span>
+
+        // Now everything it depends on is loaded.
+
+<span class="nc" id="L159">        cdoc = converter.convert(doc);</span>
+<span class="nc" id="L160">        registry.putDocument(file.getCanonicalPath(), cdoc);</span>
+<span class="nc" id="L161">        return cdoc;</span>
+    }
+
+    /**
+     * @return The local registry.
+     */
+    public ProgramRegistry getRegistry() {
+<span class="nc" id="L168">        return registry;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

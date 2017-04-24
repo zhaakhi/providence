@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CProgram.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.contained</a> &gt; <span class="el_source">CProgram.java</span></div><h1>CProgram.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect.contained;
+
+import net.morimekta.providence.descriptor.PDeclaredDescriptor;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Contained document. It contains everything that is parsed out of a single
+ * thrift file.
+ */
+@SuppressWarnings(&quot;unused&quot;)
+public class CProgram {
+    private final String                       comment;
+    private final String                       programName;
+    private final Set&lt;String&gt;                  includedPrograms;
+    private final List&lt;String&gt;                 includedFiles;
+    private final Map&lt;String, String&gt;          namespaces;
+    private final Map&lt;String, String&gt;          typedefs;
+    private final List&lt;PDeclaredDescriptor&lt;?&gt;&gt; declaredTypes;
+    private final List&lt;CService&gt;               services;
+    private final List&lt;CConst&gt;                 constants;
+
+    public CProgram(String comment,
+                    String programName,
+                    Map&lt;String, String&gt; namespaces,
+                    Collection&lt;String&gt; includedPrograms,
+                    Collection&lt;String&gt; includedFiles,
+                    Map&lt;String, String&gt; typedefs,
+                    Collection&lt;PDeclaredDescriptor&lt;?&gt;&gt; declaredTypes,
+                    Collection&lt;CService&gt; services,
+<span class="nc" id="L58">                    Collection&lt;CConst&gt; constants) {</span>
+<span class="nc" id="L59">        this.comment          = comment;</span>
+<span class="nc" id="L60">        this.programName      = programName;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        this.namespaces       = namespaces       == null ? ImmutableMap.of()  : ImmutableMap.copyOf(namespaces);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        this.includedPrograms = includedPrograms == null ? ImmutableSet.of()  : ImmutableSet.copyOf(includedPrograms);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        this.includedFiles    = includedFiles    == null ? ImmutableList.of() : ImmutableList.copyOf(includedFiles);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        this.typedefs         = typedefs         == null ? ImmutableMap.of()  : ImmutableMap.copyOf(typedefs);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        this.declaredTypes    = declaredTypes    == null ? ImmutableList.of() : ImmutableList.copyOf(declaredTypes);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        this.services         = services         == null ? ImmutableList.of() : ImmutableList.copyOf(services);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        this.constants        = constants        == null ? ImmutableList.of() : ImmutableList.copyOf(constants);</span>
+<span class="nc" id="L68">    }</span>
+
+    public String getComment() {
+<span class="nc" id="L71">        return comment;</span>
+    }
+
+    public String getProgramName() {
+<span class="nc" id="L75">        return programName;</span>
+    }
+
+    public Set&lt;String&gt; getIncludedPrograms() {
+<span class="nc" id="L79">        return includedPrograms;</span>
+    }
+
+    public List&lt;String&gt; getIncludedFiles() {
+<span class="nc" id="L83">        return includedFiles;</span>
+    }
+
+    public Map&lt;String, String&gt; getNamespaces() {
+<span class="nc" id="L87">        return namespaces;</span>
+    }
+
+    public Map&lt;String, String&gt; getTypedefs() {
+<span class="nc" id="L91">        return typedefs;</span>
+    }
+
+    public List&lt;PDeclaredDescriptor&lt;?&gt;&gt; getDeclaredTypes() {
+<span class="nc" id="L95">        return declaredTypes;</span>
+    }
+
+    public List&lt;CService&gt; getServices() {
+<span class="nc" id="L99">        return services;</span>
+    }
+
+    public List&lt;CConst&gt; getConstants() {
+<span class="nc" id="L103">        return constants;</span>
+    }
+
+    // --- Extra methods.
+
+    public String getNamespaceForLanguage(String language) {
+<span class="nc" id="L109">        return namespaces.get(language);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

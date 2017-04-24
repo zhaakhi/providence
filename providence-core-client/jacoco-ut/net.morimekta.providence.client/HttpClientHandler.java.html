@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpClientHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core : Clients</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.client</a> &gt; <span class="el_source">HttpClientHandler.java</span></div><h1>HttpClientHandler.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.client;
+
+import net.morimekta.providence.PApplicationException;
+import net.morimekta.providence.PApplicationExceptionType;
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.PServiceCallHandler;
+import net.morimekta.providence.PServiceCallType;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.serializer.SerializerProvider;
+
+import com.google.api.client.http.ByteArrayContent;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import org.apache.http.HttpHost;
+import org.apache.http.conn.HttpHostConnectException;
+
+import javax.annotation.Nonnull;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.ConnectException;
+import java.util.function.Supplier;
+
+/**
+ * HTTP client handler using the google HTTP client interface.
+ */
+public class HttpClientHandler implements PServiceCallHandler {
+    private final HttpRequestFactory   factory;
+    private final SerializerProvider   serializerProvider;
+    private final Serializer           requestSerializer;
+    private final Supplier&lt;GenericUrl&gt; urlSupplier;
+
+<span class="fc" id="L57">    public HttpClientHandler(Supplier&lt;GenericUrl&gt; urlSupplier, HttpRequestFactory factory, SerializerProvider serializerProvider) {</span>
+<span class="fc" id="L58">        this.urlSupplier = urlSupplier;</span>
+<span class="fc" id="L59">        this.factory = factory;</span>
+<span class="fc" id="L60">        this.serializerProvider = serializerProvider;</span>
+<span class="fc" id="L61">        this.requestSerializer = serializerProvider.getDefault();</span>
+<span class="fc" id="L62">    }</span>
+
+    @Override
+    public &lt;Request extends PMessage&lt;Request, RequestField&gt;,
+            Response extends PMessage&lt;Response, ResponseField&gt;,
+            RequestField extends PField,
+            ResponseField extends PField&gt;
+    PServiceCall&lt;Response, ResponseField&gt; handleCall(PServiceCall&lt;Request, RequestField&gt; call,
+                                                     PService service) throws IOException {
+<span class="pc bpc" id="L71" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
+<span class="nc" id="L72">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
+                                            PApplicationExceptionType.INVALID_MESSAGE_TYPE);
+        }
+
+<span class="fc" id="L76">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L77">        requestSerializer.serialize(baos, call);</span>
+
+<span class="fc" id="L79">        ByteArrayContent content = new ByteArrayContent(requestSerializer.mimeType(), baos.toByteArray());</span>
+
+        @Nonnull
+<span class="fc" id="L82">        GenericUrl url = urlSupplier.get();</span>
+        try {
+<span class="fc" id="L84">            HttpRequest request = factory.buildPostRequest(url, content);</span>
+<span class="fc" id="L85">            request.getHeaders()</span>
+<span class="fc" id="L86">                   .setAccept(requestSerializer.mimeType());</span>
+<span class="fc" id="L87">            HttpResponse response = request.execute();</span>
+
+<span class="fc" id="L89">            Serializer responseSerializer = requestSerializer;</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">            if (response.getContentType() != null) {</span>
+                try {
+<span class="fc" id="L92">                    responseSerializer = serializerProvider.getSerializer(response.getContentType());</span>
+<span class="nc" id="L93">                } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L94">                    throw new PApplicationException(&quot;Unknown content-type in response: &quot; + response.getContentType(),</span>
+                                                    PApplicationExceptionType.INVALID_PROTOCOL)
+<span class="nc" id="L96">                            .initCause(e);</span>
+<span class="fc" id="L97">                }</span>
+            }
+
+<span class="fc" id="L100">            PServiceCall&lt;Response, ResponseField&gt; reply = null;</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            if (call.getType() == PServiceCallType.CALL) {</span>
+                // non 200 responses should have triggered a HttpResponseException,
+                // so this is safe.
+<span class="fc" id="L104">                reply = responseSerializer.deserialize(response.getContent(), service);</span>
+
+<span class="pc bpc" id="L106" title="2 of 4 branches missed.">                if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
+<span class="nc" id="L107">                    throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
+                                                    PApplicationExceptionType.INVALID_MESSAGE_TYPE);
+                }
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">                if (reply.getSequence() != call.getSequence()) {</span>
+<span class="nc" id="L111">                    throw new PApplicationException(</span>
+<span class="nc" id="L112">                            &quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
+                            PApplicationExceptionType.BAD_SEQUENCE_ID);
+                }
+            }
+
+<span class="fc" id="L117">            return reply;</span>
+<span class="nc" id="L118">        } catch (HttpHostConnectException e) {</span>
+<span class="nc" id="L119">            throw e;</span>
+<span class="fc" id="L120">        } catch (ConnectException e) {</span>
+            // Normalize connection refused exceptions to HttpHostConnectException.
+            // The native exception is not helpful (for when using NetHttpTransport).
+<span class="fc" id="L123">            throw new HttpHostConnectException(e, new HttpHost(url.getHost(), url.getPort(), url.getScheme()));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

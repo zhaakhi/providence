@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CStruct.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.contained</a> &gt; <span class="el_source">CStruct.java</span></div><h1>CStruct.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect.contained;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PType;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PList;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.descriptor.PRequirement;
+import net.morimekta.providence.descriptor.PSet;
+import net.morimekta.providence.descriptor.PStructDescriptor;
+
+import com.google.common.collect.ImmutableMap;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 26.08.15
+ */
+public class CStruct extends CMessage&lt;CStruct,CField&gt; {
+    CStructDescriptor descriptor;
+
+    private CStruct(Builder builder) {
+<span class="fc" id="L49">        super(builder.getValueMap());</span>
+<span class="fc" id="L50">        descriptor = builder.descriptor;</span>
+<span class="fc" id="L51">    }</span>
+
+    @Override
+    public PMessageBuilder&lt;CStruct,CField&gt; mutate() {
+<span class="nc" id="L55">        return new Builder(descriptor);</span>
+    }
+
+    @Nonnull
+    @Override
+    public CStructDescriptor descriptor() {
+<span class="fc" id="L61">        return descriptor;</span>
+    }
+
+    public static class Builder extends PMessageBuilder&lt;CStruct,CField&gt; {
+        private final CStructDescriptor    descriptor;
+        private final Map&lt;Integer, Object&gt; values;
+
+<span class="fc" id="L68">        public Builder(CStructDescriptor descriptor) {</span>
+<span class="fc" id="L69">            this.descriptor = descriptor;</span>
+<span class="fc" id="L70">            this.values = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L71">        }</span>
+        
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public Builder merge(CStruct from) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">            for (PField field : descriptor.getFields()) {</span>
+<span class="nc" id="L78">                int key = field.getKey();</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                if (from.has(key)) {</span>
+<span class="pc bnc" id="L80" title="All 4 branches missed.">                    switch (field.getType()) {</span>
+                        case MESSAGE:
+<span class="nc" id="L82">                            ((PMessageBuilder) mutator(key)).merge((PMessage) from.get(key));</span>
+<span class="nc" id="L83">                            break;</span>
+                        case SET:
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                            if (values.containsKey(key)) {</span>
+<span class="nc" id="L86">                                ((PSet.Builder&lt;Object&gt;) values.get(key)).addAll((Collection&lt;Object&gt;) from.get(key));</span>
+                            } else {
+<span class="nc" id="L88">                                set(key, from.get(key));</span>
+                            }
+<span class="nc" id="L90">                            break;</span>
+                        case MAP:
+<span class="nc bnc" id="L92" title="All 2 branches missed.">                            if (values.containsKey(key)) {</span>
+<span class="nc" id="L93">                                ((PMap.Builder&lt;Object, Object&gt;) values.get(key)).putAll((Map&lt;Object, Object&gt;) from.get(key));</span>
+                            } else {
+<span class="nc" id="L95">                                set(key, from.get(key));</span>
+                            }
+<span class="nc" id="L97">                            break;</span>
+                        default:
+<span class="nc" id="L99">                            set(key, from.get(key));</span>
+                            break;
+                    }
+                }
+            }
+            
+<span class="nc" id="L105">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public PMessageBuilder mutator(int key) {
+<span class="nc" id="L112">            CField field = descriptor.getField(key);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (field == null) {</span>
+<span class="nc" id="L114">                throw new IllegalArgumentException(&quot;No such field ID &quot; + key);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            } else if (field.getType() != PType.MESSAGE) {</span>
+<span class="nc" id="L116">                throw new IllegalArgumentException(&quot;Not a message field ID &quot; + key + &quot;: &quot; + field.getName());</span>
+            }
+
+<span class="nc" id="L119">            Object current = values.get(key);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (current == null) {</span>
+<span class="nc" id="L121">                current = ((PStructDescriptor) field.getDescriptor()).builder();</span>
+<span class="nc" id="L122">                values.put(key, current);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            } else if (current instanceof PMessage) {</span>
+<span class="nc" id="L124">                current = ((PMessage) current).mutate();</span>
+<span class="nc" id="L125">                values.put(key, current);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            } else if (!(current instanceof PMessageBuilder)) {</span>
+                // This should in theory not be possible. This is just a safe-guard.
+<span class="nc" id="L128">                throw new IllegalArgumentException(&quot;Invalid value in map on message type: &quot; + current.getClass().getSimpleName());</span>
+            }
+
+<span class="nc" id="L131">            return (PMessageBuilder) current;</span>
+        }
+
+        @Nonnull
+        @Override
+        public PStructDescriptor&lt;CStruct, CField&gt; descriptor() {
+<span class="nc" id="L137">            return descriptor;</span>
+        }
+
+        @Nonnull
+        @Override
+        public CStruct build() {
+<span class="fc" id="L143">            return new CStruct(this);</span>
+        }
+
+        @Override
+        public boolean valid() {
+<span class="nc bnc" id="L148" title="All 2 branches missed.">            for (PField field : descriptor.getFields()) {</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                if (field.getRequirement() == PRequirement.REQUIRED) {</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                    if (!values.containsKey(field.getKey())) {</span>
+<span class="nc" id="L151">                        return false;</span>
+                    }
+                }
+            }
+
+<span class="nc" id="L156">            return true;</span>
+        }
+
+        @Override
+        public void validate() {
+<span class="nc" id="L161">            LinkedList&lt;String&gt; missing = new LinkedList&lt;&gt;();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">            for (PField field : descriptor.getFields()) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                if (field.getRequirement() == PRequirement.REQUIRED) {</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                    if (!values.containsKey(field.getKey())) {</span>
+<span class="nc" id="L165">                        missing.add(field.getName());</span>
+                    }
+                }
+            }
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (missing.size() &gt; 0) {</span>
+<span class="nc" id="L171">                throw new IllegalStateException(</span>
+                        &quot;Missing required fields &quot; +
+<span class="nc" id="L173">                        String.join(&quot;,&quot;, missing) +</span>
+<span class="nc" id="L174">                        &quot; in message &quot; + descriptor().getQualifiedName());</span>
+            }
+<span class="nc" id="L176">        }</span>
+
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public Builder set(int key, Object value) {
+<span class="fc" id="L182">            PField field = descriptor.getField(key);</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">            if (field == null) {</span>
+<span class="nc" id="L184">                return this; // soft ignoring unsupported fields.</span>
+            }
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L187">                values.remove(key);</span>
+            } else {
+<span class="pc bpc" id="L189" title="3 of 4 branches missed.">                switch (field.getType()) {</span>
+                    case LIST: {
+<span class="nc" id="L191">                        PList.Builder builder = ((PList) field.getDescriptor()).builder();</span>
+<span class="nc" id="L192">                        builder.addAll((Collection&lt;Object&gt;) value);</span>
+<span class="nc" id="L193">                        values.put(key, builder);</span>
+<span class="nc" id="L194">                        break;</span>
+                    }
+                    case SET: {
+<span class="nc" id="L197">                        PSet.Builder builder = ((PSet) field.getDescriptor()).builder();</span>
+<span class="nc" id="L198">                        builder.addAll((Collection&lt;Object&gt;) value);</span>
+<span class="nc" id="L199">                        values.put(key, builder);</span>
+<span class="nc" id="L200">                        break;</span>
+                    }
+                    case MAP: {
+<span class="nc" id="L203">                        PMap.Builder builder = ((PMap) field.getDescriptor()).builder();</span>
+<span class="nc" id="L204">                        builder.putAll((Map&lt;Object, Object&gt;) value);</span>
+<span class="nc" id="L205">                        values.put(key, builder);</span>
+<span class="nc" id="L206">                        break;</span>
+                    }
+                    default:
+<span class="fc" id="L209">                        values.put(key, value);</span>
+                        break;
+                }
+            }
+
+<span class="fc" id="L214">            return this;</span>
+        }
+
+        @Override
+        public boolean isSet(int key) {
+<span class="nc" id="L219">            return values.containsKey(key);</span>
+        }
+
+        @Override
+        public boolean isModified(int key) {
+<span class="nc" id="L224">            return false;</span>
+        }
+
+        @Nonnull
+        @Override
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public Builder addTo(int key, Object value) {
+<span class="nc" id="L231">            PField field = descriptor.getField(key);</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">            if (field == null) {</span>
+<span class="nc" id="L233">                return this; // soft ignoring unsupported fields.</span>
+            }
+<span class="nc bnc" id="L235" title="All 2 branches missed.">            if (value != null) {</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">                if (field.getType() == PType.LIST) {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L238">                    PList.Builder&lt;Object&gt; list = (PList.Builder&lt;Object&gt;) values.get(field.getKey());</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                    if (list == null) {</span>
+<span class="nc" id="L240">                        list = ((PList) field.getDescriptor()).builder();</span>
+<span class="nc" id="L241">                        values.put(field.getKey(), list);</span>
+                    }
+<span class="nc" id="L243">                    list.add(value);</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                } else if (field.getType() == PType.SET) {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L246">                    PSet.Builder&lt;Object&gt; set = (PSet.Builder&lt;Object&gt;) values.get(field.getKey());</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">                    if (set == null) {</span>
+<span class="nc" id="L248">                        set = ((PSet) field.getDescriptor()).builder();</span>
+<span class="nc" id="L249">                        values.put(field.getKey(), set);</span>
+                    }
+<span class="nc" id="L251">                    set.add(value);</span>
+<span class="nc" id="L252">                } else {</span>
+<span class="nc" id="L253">                    throw new IllegalArgumentException(&quot;Key &quot; + key + &quot; is not a collection: &quot; + field.getType());</span>
+                }
+            }
+<span class="nc" id="L256">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public Builder clear(int key) {
+<span class="nc" id="L262">            values.remove(key);</span>
+<span class="nc" id="L263">            return this;</span>
+        }
+
+        @SuppressWarnings(&quot;unchecked&quot;)
+        private Map&lt;Integer, Object&gt; getValueMap() {
+<span class="fc" id="L268">            ImmutableMap.Builder&lt;Integer, Object&gt; out = ImmutableMap.builder();</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">            for (CField field : descriptor.getFields()) {</span>
+<span class="fc" id="L270">                int key = field.getKey();</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">                if (values.containsKey(key)) {</span>
+<span class="pc bpc" id="L272" title="3 of 5 branches missed.">                    switch (field.getType()) {</span>
+                        case SET:
+<span class="nc" id="L274">                            out.put(key, ((PSet.Builder&lt;Object&gt;) values.get(key)).build());</span>
+<span class="nc" id="L275">                            break;</span>
+                        case LIST:
+<span class="nc" id="L277">                            out.put(key, ((PList.Builder&lt;Object&gt;) values.get(key)).build());</span>
+<span class="nc" id="L278">                            break;</span>
+                        case MAP:
+<span class="nc" id="L280">                            out.put(key, ((PMap.Builder&lt;Object, Object&gt;) values.get(key)).build());</span>
+<span class="nc" id="L281">                            break;</span>
+                        case MESSAGE:
+<span class="fc" id="L283">                            Object current = values.get(key);</span>
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">                            if (current instanceof PMessageBuilder) {</span>
+<span class="nc" id="L285">                                out.put(key, ((PMessageBuilder) current).build());</span>
+                            } else {
+<span class="fc" id="L287">                                out.put(key, current);</span>
+                            }
+<span class="fc" id="L289">                            break;</span>
+                        default:
+<span class="fc" id="L291">                            out.put(key, values.get(key));</span>
+                            break;
+                    }
+                }
+            }
+<span class="fc" id="L296">            return out.build();</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PApplicationExceptionType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence</a> &gt; <span class="el_source">PApplicationExceptionType.java</span></div><h1>PApplicationExceptionType.java</h1><pre class="source lang-java linenums">package net.morimekta.providence;
+
+/**
+ * General type of exception on the application level.
+ */
+<span class="nc" id="L6">public enum PApplicationExceptionType</span>
+        implements net.morimekta.providence.PEnumValue&lt;PApplicationExceptionType&gt; {
+    /**
+     * Unknown or unidentified exception, should usually not be uased.
+     */
+<span class="nc" id="L11">    UNKNOWN(0, &quot;UNKNOWN&quot;),</span>
+    /**
+     * There is no such method defined on the service.
+     */
+<span class="nc" id="L15">    UNKNOWN_METHOD(1, &quot;UNKNOWN_METHOD&quot;),</span>
+    /**
+     * The service call type does not make sense, or is plain wrong, e.g.
+     * sending &amp;#39;reply&amp;#39; or &amp;#39;exception&amp;#39; as the request.
+     */
+<span class="nc" id="L20">    INVALID_MESSAGE_TYPE(2, &quot;INVALID_MESSAGE_TYPE&quot;),</span>
+    /**
+     * The response came back with a non-matching method name.
+     */
+<span class="nc" id="L24">    WRONG_METHOD_NAME(3, &quot;WRONG_METHOD_NAME&quot;),</span>
+    /**
+     * The response came back with a non-matching sequence ID.
+     */
+<span class="nc" id="L28">    BAD_SEQUENCE_ID(4, &quot;BAD_SEQUENCE_ID&quot;),</span>
+    /**
+     * The response did not have a defined non-null result.
+     * &lt;p&gt;
+     * NOTE: This is the default behavior from thrift, and we may need to keep
+     * it this way as long as thrift compatibility is expected.
+     */
+<span class="nc" id="L35">    MISSING_RESULT(5, &quot;MISSING_RESULT&quot;),</span>
+    /**
+     * The service handler or client handler experienced internal problem.
+     */
+<span class="nc" id="L39">    INTERNAL_ERROR(6, &quot;INTERNAL_ERROR&quot;),</span>
+    /**
+     * Serialization or deserialization failed or the deserialized content was
+     * not valid for the requested message.
+     * &lt;p&gt;
+     * NOTE: In providence this is valid for server (processor) side
+     * serialization errors.
+     */
+<span class="nc" id="L47">    PROTOCOL_ERROR(7, &quot;PROTOCOL_ERROR&quot;),</span>
+    /**
+     * NOTE: This value is apparently not in use in thrift.
+     */
+<span class="nc" id="L51">    INVALID_TRANSFORM(8, &quot;INVALID_TRANSFORM&quot;),</span>
+    /**
+     * The requested protocol (or version) is not supported.
+     */
+<span class="nc" id="L55">    INVALID_PROTOCOL(9, &quot;INVALID_PROTOCOL&quot;),</span>
+    /**
+     * NOTE: This value is apparently not in use in thrift.
+     */
+<span class="nc" id="L59">    UNSUPPORTED_CLIENT_TYPE(10, &quot;UNSUPPORTED_CLIENT_TYPE&quot;),</span>
+    ;
+
+    private final int mValue;
+    private final String mName;
+
+<span class="nc" id="L65">    PApplicationExceptionType(int value, String name) {</span>
+<span class="nc" id="L66">        mValue = value;</span>
+<span class="nc" id="L67">        mName = name;</span>
+<span class="nc" id="L68">    }</span>
+
+    @Override
+    public int getValue() {
+<span class="nc" id="L72">        return mValue;</span>
+    }
+
+    @Override
+    public String getName() {
+<span class="nc" id="L77">        return mName;</span>
+    }
+
+    @Override
+    public int asInteger() {
+<span class="nc" id="L82">        return mValue;</span>
+    }
+
+    @Override
+    public String asString() {
+<span class="nc" id="L87">        return mName;</span>
+    }
+
+    public static PApplicationExceptionType forValue(int value) {
+<span class="nc bnc" id="L91" title="All 12 branches missed.">        switch (value) {</span>
+<span class="nc" id="L92">            case 0: return PApplicationExceptionType.UNKNOWN;</span>
+<span class="nc" id="L93">            case 1: return PApplicationExceptionType.UNKNOWN_METHOD;</span>
+<span class="nc" id="L94">            case 2: return PApplicationExceptionType.INVALID_MESSAGE_TYPE;</span>
+<span class="nc" id="L95">            case 3: return PApplicationExceptionType.WRONG_METHOD_NAME;</span>
+<span class="nc" id="L96">            case 4: return PApplicationExceptionType.BAD_SEQUENCE_ID;</span>
+<span class="nc" id="L97">            case 5: return PApplicationExceptionType.MISSING_RESULT;</span>
+<span class="nc" id="L98">            case 6: return PApplicationExceptionType.INTERNAL_ERROR;</span>
+<span class="nc" id="L99">            case 7: return PApplicationExceptionType.PROTOCOL_ERROR;</span>
+<span class="nc" id="L100">            case 8: return PApplicationExceptionType.INVALID_TRANSFORM;</span>
+<span class="nc" id="L101">            case 9: return PApplicationExceptionType.INVALID_PROTOCOL;</span>
+<span class="nc" id="L102">            case 10: return PApplicationExceptionType.UNSUPPORTED_CLIENT_TYPE;</span>
+<span class="nc" id="L103">            default: return null;</span>
+        }
+    }
+
+    public static PApplicationExceptionType forName(String name) {
+<span class="nc bnc" id="L108" title="All 46 branches missed.">        switch (name) {</span>
+<span class="nc" id="L109">            case &quot;UNKNOWN&quot;: return PApplicationExceptionType.UNKNOWN;</span>
+<span class="nc" id="L110">            case &quot;UNKNOWN_METHOD&quot;: return PApplicationExceptionType.UNKNOWN_METHOD;</span>
+<span class="nc" id="L111">            case &quot;INVALID_MESSAGE_TYPE&quot;: return PApplicationExceptionType.INVALID_MESSAGE_TYPE;</span>
+<span class="nc" id="L112">            case &quot;WRONG_METHOD_NAME&quot;: return PApplicationExceptionType.WRONG_METHOD_NAME;</span>
+<span class="nc" id="L113">            case &quot;BAD_SEQUENCE_ID&quot;: return PApplicationExceptionType.BAD_SEQUENCE_ID;</span>
+<span class="nc" id="L114">            case &quot;MISSING_RESULT&quot;: return PApplicationExceptionType.MISSING_RESULT;</span>
+<span class="nc" id="L115">            case &quot;INTERNAL_ERROR&quot;: return PApplicationExceptionType.INTERNAL_ERROR;</span>
+<span class="nc" id="L116">            case &quot;PROTOCOL_ERROR&quot;: return PApplicationExceptionType.PROTOCOL_ERROR;</span>
+<span class="nc" id="L117">            case &quot;INVALID_TRANSFORM&quot;: return PApplicationExceptionType.INVALID_TRANSFORM;</span>
+<span class="nc" id="L118">            case &quot;INVALID_PROTOCOL&quot;: return PApplicationExceptionType.INVALID_PROTOCOL;</span>
+<span class="nc" id="L119">            case &quot;UNSUPPORTED_CLIENT_TYPE&quot;: return PApplicationExceptionType.UNSUPPORTED_CLIENT_TYPE;</span>
+<span class="nc" id="L120">            default: return null;</span>
+        }
+    }
+
+<span class="nc" id="L124">    public static class _Builder extends net.morimekta.providence.PEnumBuilder&lt;PApplicationExceptionType&gt; {</span>
+        PApplicationExceptionType mValue;
+
+        @Override
+        public _Builder setByValue(int value) {
+<span class="nc" id="L129">            mValue = PApplicationExceptionType.forValue(value);</span>
+<span class="nc" id="L130">            return this;</span>
+        }
+
+        @Override
+        public _Builder setByName(String name) {
+<span class="nc" id="L135">            mValue = PApplicationExceptionType.forName(name);</span>
+<span class="nc" id="L136">            return this;</span>
+        }
+
+        @Override
+        public boolean valid() {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            return mValue != null;</span>
+        }
+
+        @Override
+        public PApplicationExceptionType build() {
+<span class="nc" id="L146">            return mValue;</span>
+        }
+    }
+
+    public static final net.morimekta.providence.descriptor.PEnumDescriptor&lt;PApplicationExceptionType&gt; kDescriptor;
+
+    @Override
+    public net.morimekta.providence.descriptor.PEnumDescriptor&lt;PApplicationExceptionType&gt; descriptor() {
+<span class="nc" id="L154">        return kDescriptor;</span>
+    }
+
+    public static net.morimekta.providence.descriptor.PEnumDescriptorProvider&lt;PApplicationExceptionType&gt; provider() {
+<span class="nc" id="L158">        return new net.morimekta.providence.descriptor.PEnumDescriptorProvider&lt;PApplicationExceptionType&gt;(kDescriptor);</span>
+    }
+
+<span class="nc" id="L161">    private static class _Factory</span>
+            extends net.morimekta.providence.PEnumBuilderFactory&lt;PApplicationExceptionType&gt; {
+        @Override
+        public PApplicationExceptionType._Builder builder() {
+<span class="nc" id="L165">            return new PApplicationExceptionType._Builder();</span>
+        }
+    }
+
+    private static class _Descriptor
+            extends net.morimekta.providence.descriptor.PEnumDescriptor&lt;PApplicationExceptionType&gt; {
+        public _Descriptor() {
+<span class="nc" id="L172">            super(&quot;service&quot;, &quot;PApplicationExceptionType&quot;, new _Factory());</span>
+<span class="nc" id="L173">        }</span>
+
+        @Override
+        public PApplicationExceptionType[] getValues() {
+<span class="nc" id="L177">            return PApplicationExceptionType.values();</span>
+        }
+
+        @Override
+        public PApplicationExceptionType getValueById(int id) {
+<span class="nc" id="L182">            return PApplicationExceptionType.forValue(id);</span>
+        }
+
+        @Override
+        public PApplicationExceptionType getValueByName(String name) {
+<span class="nc" id="L187">            return PApplicationExceptionType.forName(name);</span>
+        }
+    }
+
+    static {
+<span class="nc" id="L192">        kDescriptor = new _Descriptor();</span>
+<span class="nc" id="L193">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

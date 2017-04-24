@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BinaryWriterFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.messages.extras</a> &gt; <span class="el_source">BinaryWriterFormatter.java</span></div><h1>BinaryWriterFormatter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.messages.extras;
+
+import net.morimekta.providence.descriptor.PContainer;
+import net.morimekta.providence.descriptor.PDescriptor;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.format.java.shared.MessageMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.JField;
+import net.morimekta.providence.generator.format.java.utils.JHelper;
+import net.morimekta.providence.generator.format.java.utils.JMessage;
+import net.morimekta.providence.serializer.rw.BinaryFormatUtils;
+import net.morimekta.providence.serializer.rw.BinaryType;
+import net.morimekta.providence.serializer.rw.BinaryWriter;
+import net.morimekta.util.Binary;
+import net.morimekta.util.io.BigEndianBinaryWriter;
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.morimekta.providence.generator.format.java.messages.CoreOverridesFormatter.UNION_FIELD;
+import static net.morimekta.providence.serializer.rw.BinaryType.forType;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 08.01.16.
+ */
+public class BinaryWriterFormatter implements MessageMemberFormatter {
+<span class="fc" id="L54">    private final AtomicInteger nextId = new AtomicInteger(1);</span>
+
+    private final IndentedPrintWriter writer;
+    private final JHelper helper;
+
+<span class="fc" id="L59">    public BinaryWriterFormatter(IndentedPrintWriter writer, JHelper helper) {</span>
+<span class="fc" id="L60">        this.writer = writer;</span>
+<span class="fc" id="L61">        this.helper = helper;</span>
+<span class="fc" id="L62">    }</span>
+
+    @Override
+    public Collection&lt;String&gt; getExtraImplements(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L66">        return ImmutableList.of(BinaryWriter.class.getName());</span>
+    }
+
+    private void appendWriteFieldValue(String member, PDescriptor descriptor) {
+<span class="pc bpc" id="L70" title="1 of 14 branches missed.">        switch (descriptor.getType()) {</span>
+            case VOID:
+<span class="fc" id="L72">                break;</span>
+            case BOOL:
+<span class="fc" id="L74">                writer.formatln(&quot;length += writer.writeUInt8(%s ? (byte) 1 : (byte) 0);&quot;, member);</span>
+<span class="fc" id="L75">                break;</span>
+            case BYTE:
+<span class="fc" id="L77">                writer.formatln(&quot;length += writer.writeByte(%s);&quot;, member);</span>
+<span class="fc" id="L78">                break;</span>
+            case I16:
+<span class="fc" id="L80">                writer.formatln(&quot;length += writer.writeShort(%s);&quot;, member);</span>
+<span class="fc" id="L81">                break;</span>
+            case I32:
+<span class="fc" id="L83">                writer.formatln(&quot;length += writer.writeInt(%s);&quot;, member);</span>
+<span class="fc" id="L84">                break;</span>
+            case I64:
+<span class="fc" id="L86">                writer.formatln(&quot;length += writer.writeLong(%s);&quot;, member);</span>
+<span class="fc" id="L87">                break;</span>
+            case DOUBLE:
+<span class="fc" id="L89">                writer.formatln(&quot;length += writer.writeDouble(%s);&quot;, member);</span>
+<span class="fc" id="L90">                break;</span>
+            case BINARY:
+<span class="fc" id="L92">                writer.formatln(&quot;length += writer.writeUInt32(%s.length());&quot;, member);</span>
+<span class="fc" id="L93">                writer.formatln(&quot;length += writer.writeBinary(%s);&quot;, member);</span>
+<span class="fc" id="L94">                break;</span>
+            case STRING: {
+<span class="fc" id="L96">                String tmpName = &quot;tmp_&quot; + nextId.getAndIncrement();</span>
+
+<span class="fc" id="L98">                writer.formatln(&quot;%s %s = %s.wrap(%s.getBytes(%s.UTF_8));&quot;,</span>
+<span class="fc" id="L99">                                Binary.class.getName(),</span>
+                                tmpName,
+<span class="fc" id="L101">                                Binary.class.getName(),</span>
+                                member,
+<span class="fc" id="L103">                                StandardCharsets.class.getName());</span>
+<span class="fc" id="L104">                writer.formatln(&quot;length += writer.writeUInt32(%s.length());&quot;, tmpName);</span>
+<span class="fc" id="L105">                writer.formatln(&quot;length += writer.writeBinary(%s);&quot;, tmpName);</span>
+<span class="fc" id="L106">                break;</span>
+            }
+            case ENUM:
+<span class="fc" id="L109">                writer.formatln(&quot;length += writer.writeInt(%s.getValue());&quot;, member);</span>
+<span class="fc" id="L110">                break;</span>
+            case MAP: {
+<span class="fc" id="L112">                PMap&lt;?, ?&gt; pMap = (PMap&lt;?, ?&gt;) descriptor;</span>
+<span class="fc" id="L113">                String entryName = &quot;entry_&quot; + nextId.getAndIncrement();</span>
+
+<span class="fc" id="L115">                writer.formatln(&quot;length += writer.writeByte((byte) %d);&quot;, forType(pMap.keyDescriptor().getType()))</span>
+<span class="fc" id="L116">                      .formatln(&quot;length += writer.writeByte((byte) %d);&quot;, forType(pMap.itemDescriptor().getType()))</span>
+<span class="fc" id="L117">                      .formatln(&quot;length += writer.writeUInt32(%s.size());&quot;, member)</span>
+<span class="fc" id="L118">                      .formatln(&quot;for (%s.Entry&lt;%s,%s&gt; %s : %s.entrySet()) {&quot;,</span>
+<span class="fc" id="L119">                                Map.class.getName(),</span>
+<span class="fc" id="L120">                                helper.getFieldType(pMap.keyDescriptor()),</span>
+<span class="fc" id="L121">                                helper.getFieldType(pMap.itemDescriptor()),</span>
+                                entryName, member)
+<span class="fc" id="L123">                      .begin();</span>
+
+<span class="fc" id="L125">                appendWriteFieldValue(entryName + &quot;.getKey()&quot;, pMap.keyDescriptor());</span>
+<span class="fc" id="L126">                appendWriteFieldValue(entryName + &quot;.getValue()&quot;, pMap.itemDescriptor());</span>
+
+<span class="fc" id="L128">                writer.end()</span>
+<span class="fc" id="L129">                      .appendln('}');</span>
+<span class="fc" id="L130">                break;</span>
+            }
+            case LIST:
+            case SET: {
+<span class="fc" id="L134">                PContainer&lt;?&gt; pContainer = (PContainer&lt;?&gt;) descriptor;</span>
+<span class="fc" id="L135">                String entryName = &quot;entry_&quot; + nextId.getAndIncrement();</span>
+
+<span class="fc" id="L137">                writer.formatln(&quot;length += writer.writeByte((byte) %d);&quot;, forType(pContainer.itemDescriptor().getType()))</span>
+<span class="fc" id="L138">                      .formatln(&quot;length += writer.writeUInt32(%s.size());&quot;, member)</span>
+<span class="fc" id="L139">                      .formatln(&quot;for (%s %s : %s) {&quot;,</span>
+<span class="fc" id="L140">                                helper.getFieldType(pContainer.itemDescriptor()),</span>
+                                entryName,
+                                member)
+<span class="fc" id="L143">                      .begin();</span>
+
+<span class="fc" id="L145">                appendWriteFieldValue(entryName, pContainer.itemDescriptor());</span>
+
+<span class="fc" id="L147">                writer.end()</span>
+<span class="fc" id="L148">                      .appendln('}');</span>
+<span class="fc" id="L149">                break;</span>
+            }
+            case MESSAGE: {
+                // Since the referred class may not implement the BinaryWriter interface (yet)
+<span class="fc" id="L153">                writer.formatln(&quot;length += %s.writeMessage(writer, %s);&quot;,</span>
+<span class="fc" id="L154">                                BinaryFormatUtils.class.getName(),</span>
+                                member);
+<span class="fc" id="L156">                break;</span>
+            }
+            default:
+<span class="nc" id="L159">                throw new GeneratorException(&quot;Unsupported binary writer type: &quot; + descriptor.getQualifiedName());</span>
+        }
+
+<span class="fc" id="L162">    }</span>
+
+    @Override
+    public void appendMethods(JMessage&lt;?&gt; message) {
+<span class="fc" id="L166">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L167">              .formatln(&quot;public int writeBinary(%s writer) throws %s {&quot;,</span>
+<span class="fc" id="L168">                        BigEndianBinaryWriter.class.getName(),</span>
+<span class="fc" id="L169">                        IOException.class.getName())</span>
+<span class="fc" id="L170">              .begin()</span>
+<span class="fc" id="L171">              .appendln(&quot;int length = 0;&quot;)</span>
+<span class="fc" id="L172">              .newline();</span>
+
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (message.isUnion()) {</span>
+<span class="fc" id="L175">            writer.formatln(&quot;if (%s != null) {&quot;, UNION_FIELD)</span>
+<span class="fc" id="L176">                  .begin()</span>
+<span class="fc" id="L177">                  .formatln(&quot;switch (%s) {&quot;, UNION_FIELD)</span>
+<span class="fc" id="L178">                  .begin();</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L180">                writer.formatln(&quot;case %s: {&quot;, field.fieldEnum())</span>
+<span class="fc" id="L181">                      .begin()</span>
+<span class="fc" id="L182">                      .formatln(&quot;length += writer.writeByte((byte) %d);&quot;, forType(field.type()))</span>
+<span class="fc" id="L183">                      .formatln(&quot;length += writer.writeShort((short) %d);&quot;, field.id());</span>
+
+<span class="fc" id="L185">                appendWriteFieldValue(field.member(),</span>
+<span class="fc" id="L186">                                      field.field()</span>
+<span class="fc" id="L187">                                           .getDescriptor());</span>
+
+<span class="fc" id="L189">                writer.appendln(&quot;break;&quot;)</span>
+<span class="fc" id="L190">                      .end()</span>
+<span class="fc" id="L191">                      .appendln('}');</span>
+<span class="fc" id="L192">            }</span>
+<span class="fc" id="L193">            writer.appendln(&quot;default: break;&quot;)</span>
+<span class="fc" id="L194">                  .end()</span>
+<span class="fc" id="L195">                  .appendln('}')</span>
+<span class="fc" id="L196">                  .end()</span>
+<span class="fc" id="L197">                  .appendln('}');</span>
+        } else {
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L201">                    writer.formatln(&quot;if (%s()) {&quot;, field.presence())</span>
+<span class="fc" id="L202">                          .begin();</span>
+                }
+
+<span class="fc" id="L205">                writer.formatln(&quot;length += writer.writeByte((byte) %d);&quot;, forType(field.type()))</span>
+<span class="fc" id="L206">                      .formatln(&quot;length += writer.writeShort((short) %d);&quot;, field.id());</span>
+
+<span class="fc" id="L208">                appendWriteFieldValue(field.member(),</span>
+<span class="fc" id="L209">                                      field.field()</span>
+<span class="fc" id="L210">                                           .getDescriptor());</span>
+
+<span class="fc bfc" id="L212" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L213">                    writer.end()</span>
+<span class="fc" id="L214">                          .appendln('}');</span>
+                }
+
+<span class="fc" id="L217">                writer.newline();</span>
+<span class="fc" id="L218">            }</span>
+        }
+
+<span class="fc" id="L221">        writer.formatln(&quot;length += writer.writeByte((byte) %d);&quot;, BinaryType.STOP);</span>
+
+<span class="fc" id="L223">        writer.appendln(&quot;return length;&quot;)</span>
+<span class="fc" id="L224">              .end()</span>
+<span class="fc" id="L225">              .appendln('}')</span>
+<span class="fc" id="L226">              .newline();</span>
+<span class="fc" id="L227">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
