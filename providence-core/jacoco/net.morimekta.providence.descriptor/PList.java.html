@@ -27,7 +27,9 @@ import net.morimekta.providence.PType;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -38,50 +40,58 @@ public class PList&lt;Item&gt; extends PContainer&lt;List&lt;Item&gt;&gt; {
 
     public PList(PDescriptorProvider itemType,
                  BuilderFactory&lt;Item&gt; builderFactory) {
-<span class="fc" id="L41">        super(itemType);</span>
-<span class="fc" id="L42">        this.builderFactory = builderFactory;</span>
-<span class="fc" id="L43">    }</span>
+<span class="fc" id="L43">        super(itemType);</span>
+<span class="fc" id="L44">        this.builderFactory = builderFactory;</span>
+<span class="fc" id="L45">    }</span>
 
     @Nonnull
     @Override
     public String getName() {
-<span class="fc" id="L48">        return &quot;list&lt;&quot; + itemDescriptor().getName() + &quot;&gt;&quot;;</span>
+<span class="fc" id="L50">        return &quot;list&lt;&quot; + itemDescriptor().getName() + &quot;&gt;&quot;;</span>
     }
 
     @Nonnull
     @Override
     public String getQualifiedName(String programContext) {
-<span class="fc" id="L54">        return &quot;list&lt;&quot; + itemDescriptor().getQualifiedName(programContext) + &quot;&gt;&quot;;</span>
+<span class="fc" id="L56">        return &quot;list&lt;&quot; + itemDescriptor().getQualifiedName(programContext) + &quot;&gt;&quot;;</span>
     }
 
     @Nonnull
     @Override
     public PType getType() {
-<span class="fc" id="L60">        return PType.LIST;</span>
+<span class="fc" id="L62">        return PType.LIST;</span>
+    }
+
+    @Nullable
+    @Override
+    public Object getDefaultValue() {
+<span class="nc" id="L68">        return Collections.EMPTY_LIST;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="pc bpc" id="L65" title="1 of 4 branches missed.">        if (o == null || !(o instanceof PList)) {</span>
-<span class="fc" id="L66">            return false;</span>
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">        if (o == null || !(o instanceof PList)) {</span>
+<span class="fc" id="L74">            return false;</span>
         }
-<span class="fc" id="L68">        PList&lt;?&gt; other = (PList&lt;?&gt;) o;</span>
-<span class="fc" id="L69">        return other.itemDescriptor()</span>
-<span class="fc" id="L70">                    .equals(itemDescriptor());</span>
+<span class="fc" id="L76">        PList&lt;?&gt; other = (PList&lt;?&gt;) o;</span>
+<span class="fc" id="L77">        return other.itemDescriptor()</span>
+<span class="fc" id="L78">                    .equals(itemDescriptor());</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L75">        return PList.class.hashCode() + itemDescriptor().hashCode();</span>
+<span class="fc" id="L83">        return PList.class.hashCode() + itemDescriptor().hashCode();</span>
     }
 
     public interface Builder&lt;I&gt; extends PBuilder&lt;List&lt;I&gt;&gt; {
         @Nonnull
-        Builder&lt;I&gt; add(I value);
+        Builder&lt;I&gt; add(@Nonnull I value);
         @Nonnull
-        Builder&lt;I&gt; addAll(Collection&lt;I&gt; items);
+        Builder&lt;I&gt; addAll(@Nonnull Collection&lt;I&gt; items);
         @Nonnull
         Builder&lt;I&gt; clear();
+
+        int size();
 
         @Nonnull
         @Override
@@ -96,51 +106,59 @@ public class PList&lt;Item&gt; extends PContainer&lt;List&lt;Item&gt;&gt; {
 
     public static class ImmutableListBuilder&lt;I&gt; implements Builder&lt;I&gt; {
         private ImmutableList.Builder&lt;I&gt; builder;
+        private int size;
 
-<span class="fc" id="L100">        public ImmutableListBuilder() {</span>
-<span class="fc" id="L101">            builder = ImmutableList.builder();</span>
-<span class="fc" id="L102">        }</span>
+<span class="fc" id="L111">        public ImmutableListBuilder() {</span>
+<span class="fc" id="L112">            builder = ImmutableList.builder();</span>
+<span class="fc" id="L113">        }</span>
 
         @Nonnull
         @Override
-        public ImmutableListBuilder&lt;I&gt; add(I value) {
-<span class="fc" id="L107">            builder.add(value);</span>
-<span class="fc" id="L108">            return this;</span>
+        public ImmutableListBuilder&lt;I&gt; add(@Nonnull I value) {
+<span class="fc" id="L118">            builder.add(value);</span>
+<span class="fc" id="L119">            ++size;</span>
+<span class="fc" id="L120">            return this;</span>
         }
 
         @Nonnull
         @Override
-        public ImmutableListBuilder&lt;I&gt; addAll(Collection&lt;I&gt; items) {
-<span class="fc" id="L114">            builder.addAll(items);</span>
-<span class="fc" id="L115">            return this;</span>
+        public ImmutableListBuilder&lt;I&gt; addAll(@Nonnull Collection&lt;I&gt; items) {
+<span class="fc" id="L126">            builder.addAll(items);</span>
+<span class="fc" id="L127">            size += items.size();</span>
+<span class="fc" id="L128">            return this;</span>
         }
 
         @Nonnull
         @Override
         public ImmutableListBuilder&lt;I&gt; clear() {
-<span class="fc" id="L121">            builder = ImmutableList.builder();</span>
-<span class="fc" id="L122">            return this;</span>
+<span class="fc" id="L134">            builder = ImmutableList.builder();</span>
+<span class="fc" id="L135">            size = 0;</span>
+<span class="fc" id="L136">            return this;</span>
+        }
+
+        public int size() {
+<span class="nc" id="L140">            return size;</span>
         }
 
         @Nonnull
         @Override
         public List&lt;I&gt; build() {
-<span class="fc" id="L128">            return builder.build();</span>
+<span class="fc" id="L146">            return builder.build();</span>
         }
     }
 
     @Override
     public Builder&lt;Item&gt; builder() {
-<span class="fc" id="L134">        return builderFactory.builder();</span>
+<span class="fc" id="L152">        return builderFactory.builder();</span>
     }
 
     public static &lt;I&gt; PContainerProvider&lt;List&lt;I&gt;, PList&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc) {
-<span class="fc" id="L138">        return provider(itemDesc, ImmutableListBuilder::new);</span>
+<span class="fc" id="L156">        return provider(itemDesc, ImmutableListBuilder::new);</span>
     }
 
     public static &lt;I&gt; PContainerProvider&lt;List&lt;I&gt;, PList&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc,
                                                                      BuilderFactory&lt;I&gt; builderFactory) {
-<span class="fc" id="L143">        return new PContainerProvider&lt;&gt;(new PList&lt;&gt;(itemDesc, builderFactory));</span>
+<span class="fc" id="L161">        return new PContainerProvider&lt;&gt;(new PList&lt;&gt;(itemDesc, builderFactory));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

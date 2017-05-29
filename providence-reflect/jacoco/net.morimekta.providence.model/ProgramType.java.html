@@ -11,6 +11,12 @@ public class ProgramType
                    net.morimekta.providence.serializer.rw.BinaryWriter {
     private final static long serialVersionUID = 2224801959218006031L;
 
+    private final static String kDefaultProgramName = &quot;&quot;;
+<span class="fc" id="L15">    private final static java.util.Map&lt;String,String&gt; kDefaultNamespaces = new net.morimekta.providence.descriptor.PMap.ImmutableMapBuilder&lt;String,String&gt;()</span>
+<span class="fc" id="L16">                .build();</span>
+<span class="fc" id="L17">    private final static java.util.List&lt;net.morimekta.providence.model.Declaration&gt; kDefaultDecl = new net.morimekta.providence.descriptor.PList.ImmutableListBuilder&lt;net.morimekta.providence.model.Declaration&gt;()</span>
+<span class="fc" id="L18">                .build();</span>
+
     private final String mDocumentation;
     private final String mProgramName;
     private final java.util.List&lt;String&gt; mIncludes;
@@ -23,48 +29,56 @@ public class ProgramType
                        String pProgramName,
                        java.util.List&lt;String&gt; pIncludes,
                        java.util.Map&lt;String,String&gt; pNamespaces,
-<span class="nc" id="L26">                       java.util.List&lt;net.morimekta.providence.model.Declaration&gt; pDecl) {</span>
-<span class="nc" id="L27">        mDocumentation = pDocumentation;</span>
-<span class="nc" id="L28">        mProgramName = pProgramName;</span>
-<span class="nc bnc" id="L29" title="All 2 branches missed.">        if (pIncludes != null) {</span>
-<span class="nc" id="L30">            mIncludes = com.google.common.collect.ImmutableList.copyOf(pIncludes);</span>
+<span class="nc" id="L32">                       java.util.List&lt;net.morimekta.providence.model.Declaration&gt; pDecl) {</span>
+<span class="nc" id="L33">        mDocumentation = pDocumentation;</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (pProgramName != null) {</span>
+<span class="nc" id="L35">            mProgramName = pProgramName;</span>
         } else {
-<span class="nc" id="L32">            mIncludes = null;</span>
+<span class="nc" id="L37">            mProgramName = kDefaultProgramName;</span>
         }
-<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (pNamespaces != null) {</span>
-<span class="nc" id="L35">            mNamespaces = com.google.common.collect.ImmutableMap.copyOf(pNamespaces);</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (pIncludes != null) {</span>
+<span class="nc" id="L40">            mIncludes = com.google.common.collect.ImmutableList.copyOf(pIncludes);</span>
         } else {
-<span class="nc" id="L37">            mNamespaces = null;</span>
+<span class="nc" id="L42">            mIncludes = null;</span>
         }
-<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (pDecl != null) {</span>
-<span class="nc" id="L40">            mDecl = com.google.common.collect.ImmutableList.copyOf(pDecl);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (pNamespaces != null) {</span>
+<span class="nc" id="L45">            mNamespaces = com.google.common.collect.ImmutableMap.copyOf(pNamespaces);</span>
         } else {
-<span class="nc" id="L42">            mDecl = null;</span>
+<span class="nc" id="L47">            mNamespaces = kDefaultNamespaces;</span>
         }
-<span class="nc" id="L44">    }</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (pDecl != null) {</span>
+<span class="nc" id="L50">            mDecl = com.google.common.collect.ImmutableList.copyOf(pDecl);</span>
+        } else {
+<span class="nc" id="L52">            mDecl = kDefaultDecl;</span>
+        }
+<span class="nc" id="L54">    }</span>
 
-<span class="fc" id="L46">    private ProgramType(_Builder builder) {</span>
-<span class="fc" id="L47">        mDocumentation = builder.mDocumentation;</span>
-<span class="fc" id="L48">        mProgramName = builder.mProgramName;</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (builder.isSetIncludes()) {</span>
-<span class="fc" id="L50">            mIncludes = builder.mIncludes.build();</span>
+<span class="fc" id="L56">    private ProgramType(_Builder builder) {</span>
+<span class="fc" id="L57">        mDocumentation = builder.mDocumentation;</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (builder.isSetProgramName()) {</span>
+<span class="fc" id="L59">            mProgramName = builder.mProgramName;</span>
         } else {
-<span class="fc" id="L52">            mIncludes = null;</span>
+<span class="nc" id="L61">            mProgramName = kDefaultProgramName;</span>
         }
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if (builder.isSetNamespaces()) {</span>
-<span class="fc" id="L55">            mNamespaces = builder.mNamespaces.build();</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (builder.isSetIncludes()) {</span>
+<span class="fc" id="L64">            mIncludes = builder.mIncludes.build();</span>
         } else {
-<span class="nc" id="L57">            mNamespaces = null;</span>
+<span class="fc" id="L66">            mIncludes = null;</span>
         }
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (builder.isSetDecl()) {</span>
-<span class="fc" id="L60">            mDecl = builder.mDecl.build();</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (builder.isSetNamespaces()) {</span>
+<span class="fc" id="L69">            mNamespaces = builder.mNamespaces.build();</span>
         } else {
-<span class="nc" id="L62">            mDecl = null;</span>
+<span class="nc" id="L71">            mNamespaces = kDefaultNamespaces;</span>
         }
-<span class="fc" id="L64">    }</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if (builder.isSetDecl()) {</span>
+<span class="fc" id="L74">            mDecl = builder.mDecl.build();</span>
+        } else {
+<span class="nc" id="L76">            mDecl = kDefaultDecl;</span>
+        }
+<span class="fc" id="L78">    }</span>
 
     public boolean hasDocumentation() {
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        return mDocumentation != null;</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        return mDocumentation != null;</span>
     }
 
     /**
@@ -73,11 +87,11 @@ public class ProgramType
      * @return The field value
      */
     public String getDocumentation() {
-<span class="nc" id="L76">        return mDocumentation;</span>
+<span class="fc" id="L90">        return mDocumentation;</span>
     }
 
     public boolean hasProgramName() {
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        return mProgramName != null;</span>
+<span class="nc" id="L94">        return true;</span>
     }
 
     /**
@@ -86,15 +100,15 @@ public class ProgramType
      * @return The field value
      */
     public String getProgramName() {
-<span class="fc" id="L89">        return mProgramName;</span>
+<span class="fc" id="L103">        return mProgramName;</span>
     }
 
     public int numIncludes() {
-<span class="nc bnc" id="L93" title="All 2 branches missed.">        return mIncludes != null ? mIncludes.size() : 0;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        return mIncludes != null ? mIncludes.size() : 0;</span>
     }
 
     public boolean hasIncludes() {
-<span class="fc bfc" id="L97" title="All 2 branches covered.">        return mIncludes != null;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        return mIncludes != null;</span>
     }
 
     /**
@@ -105,15 +119,15 @@ public class ProgramType
      * @return The field value
      */
     public java.util.List&lt;String&gt; getIncludes() {
-<span class="fc" id="L108">        return mIncludes;</span>
+<span class="fc" id="L122">        return mIncludes;</span>
     }
 
     public int numNamespaces() {
-<span class="nc bnc" id="L112" title="All 2 branches missed.">        return mNamespaces != null ? mNamespaces.size() : 0;</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        return mNamespaces != null ? mNamespaces.size() : 0;</span>
     }
 
     public boolean hasNamespaces() {
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        return mNamespaces != null;</span>
+<span class="nc" id="L130">        return true;</span>
     }
 
     /**
@@ -124,15 +138,15 @@ public class ProgramType
      * @return The field value
      */
     public java.util.Map&lt;String,String&gt; getNamespaces() {
-<span class="fc" id="L127">        return mNamespaces;</span>
+<span class="fc" id="L141">        return mNamespaces;</span>
     }
 
     public int numDecl() {
-<span class="nc bnc" id="L131" title="All 2 branches missed.">        return mDecl != null ? mDecl.size() : 0;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        return mDecl != null ? mDecl.size() : 0;</span>
     }
 
     public boolean hasDecl() {
-<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        return mDecl != null;</span>
+<span class="nc" id="L149">        return true;</span>
     }
 
     /**
@@ -141,61 +155,61 @@ public class ProgramType
      * @return The field value
      */
     public java.util.List&lt;net.morimekta.providence.model.Declaration&gt; getDecl() {
-<span class="fc" id="L144">        return mDecl;</span>
+<span class="fc" id="L158">        return mDecl;</span>
     }
 
     @Override
     public boolean has(int key) {
-<span class="pc bpc" id="L149" title="1 of 6 branches missed.">        switch(key) {</span>
-<span class="fc" id="L150">            case 1: return hasDocumentation();</span>
-<span class="fc" id="L151">            case 2: return hasProgramName();</span>
-<span class="fc" id="L152">            case 3: return hasIncludes();</span>
-<span class="fc" id="L153">            case 4: return hasNamespaces();</span>
-<span class="fc" id="L154">            case 5: return hasDecl();</span>
-<span class="nc" id="L155">            default: return false;</span>
+<span class="pc bpc" id="L163" title="1 of 6 branches missed.">        switch(key) {</span>
+<span class="fc" id="L164">            case 1: return hasDocumentation();</span>
+<span class="fc" id="L165">            case 2: return true;</span>
+<span class="fc" id="L166">            case 3: return hasIncludes();</span>
+<span class="fc" id="L167">            case 4: return true;</span>
+<span class="fc" id="L168">            case 5: return true;</span>
+<span class="nc" id="L169">            default: return false;</span>
         }
     }
 
     @Override
     public int num(int key) {
-<span class="nc bnc" id="L161" title="All 6 branches missed.">        switch(key) {</span>
-<span class="nc bnc" id="L162" title="All 2 branches missed.">            case 1: return hasDocumentation() ? 1 : 0;</span>
-<span class="nc bnc" id="L163" title="All 2 branches missed.">            case 2: return hasProgramName() ? 1 : 0;</span>
-<span class="nc" id="L164">            case 3: return numIncludes();</span>
-<span class="nc" id="L165">            case 4: return numNamespaces();</span>
-<span class="nc" id="L166">            case 5: return numDecl();</span>
-<span class="nc" id="L167">            default: return 0;</span>
+<span class="nc bnc" id="L175" title="All 6 branches missed.">        switch(key) {</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            case 1: return hasDocumentation() ? 1 : 0;</span>
+<span class="nc" id="L177">            case 2: return 1;</span>
+<span class="nc" id="L178">            case 3: return numIncludes();</span>
+<span class="nc" id="L179">            case 4: return numNamespaces();</span>
+<span class="nc" id="L180">            case 5: return numDecl();</span>
+<span class="nc" id="L181">            default: return 0;</span>
         }
     }
 
     @Override
     public Object get(int key) {
-<span class="pc bpc" id="L173" title="2 of 6 branches missed.">        switch(key) {</span>
-<span class="nc" id="L174">            case 1: return getDocumentation();</span>
-<span class="fc" id="L175">            case 2: return getProgramName();</span>
-<span class="fc" id="L176">            case 3: return getIncludes();</span>
-<span class="fc" id="L177">            case 4: return getNamespaces();</span>
-<span class="fc" id="L178">            case 5: return getDecl();</span>
-<span class="nc" id="L179">            default: return null;</span>
+<span class="pc bpc" id="L187" title="2 of 6 branches missed.">        switch(key) {</span>
+<span class="nc" id="L188">            case 1: return getDocumentation();</span>
+<span class="fc" id="L189">            case 2: return getProgramName();</span>
+<span class="fc" id="L190">            case 3: return getIncludes();</span>
+<span class="fc" id="L191">            case 4: return getNamespaces();</span>
+<span class="fc" id="L192">            case 5: return getDecl();</span>
+<span class="nc" id="L193">            default: return null;</span>
         }
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (o == this) return true;</span>
-<span class="nc bnc" id="L186" title="All 4 branches missed.">        if (o == null || !o.getClass().equals(getClass())) return false;</span>
-<span class="nc" id="L187">        ProgramType other = (ProgramType) o;</span>
-<span class="nc bnc" id="L188" title="All 2 branches missed.">        return java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
-<span class="nc bnc" id="L189" title="All 2 branches missed.">               java.util.Objects.equals(mProgramName, other.mProgramName) &amp;&amp;</span>
-<span class="nc bnc" id="L190" title="All 2 branches missed.">               java.util.Objects.equals(mIncludes, other.mIncludes) &amp;&amp;</span>
-<span class="nc bnc" id="L191" title="All 2 branches missed.">               java.util.Objects.equals(mNamespaces, other.mNamespaces) &amp;&amp;</span>
-<span class="nc bnc" id="L192" title="All 2 branches missed.">               java.util.Objects.equals(mDecl, other.mDecl);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (o == this) return true;</span>
+<span class="nc bnc" id="L200" title="All 4 branches missed.">        if (o == null || !o.getClass().equals(getClass())) return false;</span>
+<span class="nc" id="L201">        ProgramType other = (ProgramType) o;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        return java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">               java.util.Objects.equals(mProgramName, other.mProgramName) &amp;&amp;</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">               java.util.Objects.equals(mIncludes, other.mIncludes) &amp;&amp;</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">               java.util.Objects.equals(mNamespaces, other.mNamespaces) &amp;&amp;</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">               java.util.Objects.equals(mDecl, other.mDecl);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (tHashCode == 0) {</span>
-<span class="nc" id="L198">            tHashCode = java.util.Objects.hash(</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">        if (tHashCode == 0) {</span>
+<span class="nc" id="L212">            tHashCode = java.util.Objects.hash(</span>
                     ProgramType.class,
                     _Field.DOCUMENTATION, mDocumentation,
                     _Field.PROGRAM_NAME, mProgramName,
@@ -203,172 +217,145 @@ public class ProgramType
                     _Field.NAMESPACES, mNamespaces,
                     _Field.DECL, mDecl);
         }
-<span class="nc" id="L206">        return tHashCode;</span>
+<span class="nc" id="L220">        return tHashCode;</span>
     }
 
     @Override
     public String toString() {
-<span class="nc" id="L211">        return &quot;model.ProgramType&quot; + asString();</span>
+<span class="nc" id="L225">        return &quot;model.ProgramType&quot; + asString();</span>
     }
 
     @Override
     public String asString() {
-<span class="nc" id="L216">        StringBuilder out = new StringBuilder();</span>
-<span class="nc" id="L217">        out.append(&quot;{&quot;);</span>
+<span class="nc" id="L230">        StringBuilder out = new StringBuilder();</span>
+<span class="nc" id="L231">        out.append(&quot;{&quot;);</span>
 
-<span class="nc" id="L219">        boolean first = true;</span>
-<span class="nc bnc" id="L220" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
-<span class="nc" id="L221">            first = false;</span>
-<span class="nc" id="L222">            out.append(&quot;documentation:&quot;)</span>
-<span class="nc" id="L223">               .append('\&quot;')</span>
-<span class="nc" id="L224">               .append(net.morimekta.util.Strings.escape(mDocumentation))</span>
-<span class="nc" id="L225">               .append('\&quot;');</span>
+<span class="nc" id="L233">        boolean first = true;</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
+<span class="nc" id="L235">            first = false;</span>
+<span class="nc" id="L236">            out.append(&quot;documentation:&quot;)</span>
+<span class="nc" id="L237">               .append('\&quot;')</span>
+<span class="nc" id="L238">               .append(net.morimekta.util.Strings.escape(mDocumentation))</span>
+<span class="nc" id="L239">               .append('\&quot;');</span>
         }
-<span class="nc bnc" id="L227" title="All 2 branches missed.">        if (hasProgramName()) {</span>
-<span class="nc bnc" id="L228" title="All 2 branches missed.">            if (first) first = false;</span>
-<span class="nc" id="L229">            else out.append(',');</span>
-<span class="nc" id="L230">            out.append(&quot;program_name:&quot;)</span>
-<span class="nc" id="L231">               .append('\&quot;')</span>
-<span class="nc" id="L232">               .append(net.morimekta.util.Strings.escape(mProgramName))</span>
-<span class="nc" id="L233">               .append('\&quot;');</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">        if (!first) out.append(',');</span>
+<span class="nc" id="L242">        out.append(&quot;program_name:&quot;)</span>
+<span class="nc" id="L243">           .append('\&quot;')</span>
+<span class="nc" id="L244">           .append(net.morimekta.util.Strings.escape(mProgramName))</span>
+<span class="nc" id="L245">           .append('\&quot;');</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">        if (hasIncludes()) {</span>
+<span class="nc" id="L247">            out.append(',');</span>
+<span class="nc" id="L248">            out.append(&quot;includes:&quot;)</span>
+<span class="nc" id="L249">               .append(net.morimekta.util.Strings.asString(mIncludes));</span>
         }
-<span class="nc bnc" id="L235" title="All 2 branches missed.">        if (hasIncludes()) {</span>
-<span class="nc bnc" id="L236" title="All 2 branches missed.">            if (first) first = false;</span>
-<span class="nc" id="L237">            else out.append(',');</span>
-<span class="nc" id="L238">            out.append(&quot;includes:&quot;)</span>
-<span class="nc" id="L239">               .append(net.morimekta.util.Strings.asString(mIncludes));</span>
-        }
-<span class="nc bnc" id="L241" title="All 2 branches missed.">        if (hasNamespaces()) {</span>
-<span class="nc bnc" id="L242" title="All 2 branches missed.">            if (first) first = false;</span>
-<span class="nc" id="L243">            else out.append(',');</span>
-<span class="nc" id="L244">            out.append(&quot;namespaces:&quot;)</span>
-<span class="nc" id="L245">               .append(net.morimekta.util.Strings.asString(mNamespaces));</span>
-        }
-<span class="nc bnc" id="L247" title="All 2 branches missed.">        if (hasDecl()) {</span>
-<span class="nc bnc" id="L248" title="All 2 branches missed.">            if (!first) out.append(',');</span>
-<span class="nc" id="L249">            out.append(&quot;decl:&quot;)</span>
-<span class="nc" id="L250">               .append(net.morimekta.util.Strings.asString(mDecl));</span>
-        }
-<span class="nc" id="L252">        out.append('}');</span>
-<span class="nc" id="L253">        return out.toString();</span>
+<span class="nc" id="L251">        out.append(',');</span>
+<span class="nc" id="L252">        out.append(&quot;namespaces:&quot;)</span>
+<span class="nc" id="L253">           .append(net.morimekta.util.Strings.asString(mNamespaces));</span>
+<span class="nc" id="L254">        out.append(',');</span>
+<span class="nc" id="L255">        out.append(&quot;decl:&quot;)</span>
+<span class="nc" id="L256">           .append(net.morimekta.util.Strings.asString(mDecl));</span>
+<span class="nc" id="L257">        out.append('}');</span>
+<span class="nc" id="L258">        return out.toString();</span>
     }
 
     @Override
     public int compareTo(ProgramType other) {
         int c;
 
-<span class="nc bnc" id="L260" title="All 4 branches missed.">        c = Boolean.compare(mDocumentation != null, other.mDocumentation != null);</span>
-<span class="nc bnc" id="L261" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L262" title="All 2 branches missed.">        if (mDocumentation != null) {</span>
-<span class="nc" id="L263">            c = mDocumentation.compareTo(other.mDocumentation);</span>
-<span class="nc bnc" id="L264" title="All 2 branches missed.">            if (c != 0) return c;</span>
+<span class="nc bnc" id="L265" title="All 4 branches missed.">        c = Boolean.compare(mDocumentation != null, other.mDocumentation != null);</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (c != 0) return c;</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">        if (mDocumentation != null) {</span>
+<span class="nc" id="L268">            c = mDocumentation.compareTo(other.mDocumentation);</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">            if (c != 0) return c;</span>
         }
 
-<span class="nc bnc" id="L267" title="All 4 branches missed.">        c = Boolean.compare(mProgramName != null, other.mProgramName != null);</span>
-<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L269" title="All 2 branches missed.">        if (mProgramName != null) {</span>
-<span class="nc" id="L270">            c = mProgramName.compareTo(other.mProgramName);</span>
-<span class="nc bnc" id="L271" title="All 2 branches missed.">            if (c != 0) return c;</span>
+<span class="nc" id="L272">        c = mProgramName.compareTo(other.mProgramName);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        if (c != 0) return c;</span>
+
+<span class="nc bnc" id="L275" title="All 4 branches missed.">        c = Boolean.compare(mIncludes != null, other.mIncludes != null);</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        if (c != 0) return c;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        if (mIncludes != null) {</span>
+<span class="nc" id="L278">            c = Integer.compare(mIncludes.hashCode(), other.mIncludes.hashCode());</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">            if (c != 0) return c;</span>
         }
 
-<span class="nc bnc" id="L274" title="All 4 branches missed.">        c = Boolean.compare(mIncludes != null, other.mIncludes != null);</span>
-<span class="nc bnc" id="L275" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L276" title="All 2 branches missed.">        if (mIncludes != null) {</span>
-<span class="nc" id="L277">            c = Integer.compare(mIncludes.hashCode(), other.mIncludes.hashCode());</span>
-<span class="nc bnc" id="L278" title="All 2 branches missed.">            if (c != 0) return c;</span>
-        }
+<span class="nc" id="L282">        c = Integer.compare(mNamespaces.hashCode(), other.mNamespaces.hashCode());</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (c != 0) return c;</span>
 
-<span class="nc bnc" id="L281" title="All 4 branches missed.">        c = Boolean.compare(mNamespaces != null, other.mNamespaces != null);</span>
-<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (mNamespaces != null) {</span>
-<span class="nc" id="L284">            c = Integer.compare(mNamespaces.hashCode(), other.mNamespaces.hashCode());</span>
-<span class="nc bnc" id="L285" title="All 2 branches missed.">            if (c != 0) return c;</span>
-        }
+<span class="nc" id="L285">        c = Integer.compare(mDecl.hashCode(), other.mDecl.hashCode());</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (c != 0) return c;</span>
 
-<span class="nc bnc" id="L288" title="All 4 branches missed.">        c = Boolean.compare(mDecl != null, other.mDecl != null);</span>
-<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (mDecl != null) {</span>
-<span class="nc" id="L291">            c = Integer.compare(mDecl.hashCode(), other.mDecl.hashCode());</span>
-<span class="nc bnc" id="L292" title="All 2 branches missed.">            if (c != 0) return c;</span>
-        }
-
-<span class="nc" id="L295">        return 0;</span>
+<span class="nc" id="L288">        return 0;</span>
     }
 
     @Override
     public int writeBinary(net.morimekta.util.io.BigEndianBinaryWriter writer) throws java.io.IOException {
-<span class="nc" id="L300">        int length = 0;</span>
+<span class="nc" id="L293">        int length = 0;</span>
 
-<span class="nc bnc" id="L302" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
-<span class="nc" id="L303">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L304">            length += writer.writeShort((short) 1);</span>
-<span class="nc" id="L305">            net.morimekta.util.Binary tmp_1 = net.morimekta.util.Binary.wrap(mDocumentation.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L306">            length += writer.writeUInt32(tmp_1.length());</span>
-<span class="nc" id="L307">            length += writer.writeBinary(tmp_1);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
+<span class="nc" id="L296">            length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L297">            length += writer.writeShort((short) 1);</span>
+<span class="nc" id="L298">            net.morimekta.util.Binary tmp_1 = net.morimekta.util.Binary.wrap(mDocumentation.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L299">            length += writer.writeUInt32(tmp_1.length());</span>
+<span class="nc" id="L300">            length += writer.writeBinary(tmp_1);</span>
         }
 
-<span class="nc bnc" id="L310" title="All 2 branches missed.">        if (hasProgramName()) {</span>
-<span class="nc" id="L311">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L312">            length += writer.writeShort((short) 2);</span>
-<span class="nc" id="L313">            net.morimekta.util.Binary tmp_2 = net.morimekta.util.Binary.wrap(mProgramName.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L314">            length += writer.writeUInt32(tmp_2.length());</span>
-<span class="nc" id="L315">            length += writer.writeBinary(tmp_2);</span>
+<span class="nc" id="L303">        length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L304">        length += writer.writeShort((short) 2);</span>
+<span class="nc" id="L305">        net.morimekta.util.Binary tmp_2 = net.morimekta.util.Binary.wrap(mProgramName.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L306">        length += writer.writeUInt32(tmp_2.length());</span>
+<span class="nc" id="L307">        length += writer.writeBinary(tmp_2);</span>
+
+<span class="nc bnc" id="L309" title="All 2 branches missed.">        if (hasIncludes()) {</span>
+<span class="nc" id="L310">            length += writer.writeByte((byte) 15);</span>
+<span class="nc" id="L311">            length += writer.writeShort((short) 3);</span>
+<span class="nc" id="L312">            length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L313">            length += writer.writeUInt32(mIncludes.size());</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">            for (String entry_3 : mIncludes) {</span>
+<span class="nc" id="L315">                net.morimekta.util.Binary tmp_4 = net.morimekta.util.Binary.wrap(entry_3.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L316">                length += writer.writeUInt32(tmp_4.length());</span>
+<span class="nc" id="L317">                length += writer.writeBinary(tmp_4);</span>
+<span class="nc" id="L318">            }</span>
         }
 
-<span class="nc bnc" id="L318" title="All 2 branches missed.">        if (hasIncludes()) {</span>
-<span class="nc" id="L319">            length += writer.writeByte((byte) 15);</span>
-<span class="nc" id="L320">            length += writer.writeShort((short) 3);</span>
-<span class="nc" id="L321">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L322">            length += writer.writeUInt32(mIncludes.size());</span>
-<span class="nc bnc" id="L323" title="All 2 branches missed.">            for (String entry_3 : mIncludes) {</span>
-<span class="nc" id="L324">                net.morimekta.util.Binary tmp_4 = net.morimekta.util.Binary.wrap(entry_3.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L325">                length += writer.writeUInt32(tmp_4.length());</span>
-<span class="nc" id="L326">                length += writer.writeBinary(tmp_4);</span>
-<span class="nc" id="L327">            }</span>
-        }
+<span class="nc" id="L321">        length += writer.writeByte((byte) 13);</span>
+<span class="nc" id="L322">        length += writer.writeShort((short) 4);</span>
+<span class="nc" id="L323">        length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L324">        length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L325">        length += writer.writeUInt32(mNamespaces.size());</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">        for (java.util.Map.Entry&lt;String,String&gt; entry_5 : mNamespaces.entrySet()) {</span>
+<span class="nc" id="L327">            net.morimekta.util.Binary tmp_6 = net.morimekta.util.Binary.wrap(entry_5.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L328">            length += writer.writeUInt32(tmp_6.length());</span>
+<span class="nc" id="L329">            length += writer.writeBinary(tmp_6);</span>
+<span class="nc" id="L330">            net.morimekta.util.Binary tmp_7 = net.morimekta.util.Binary.wrap(entry_5.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L331">            length += writer.writeUInt32(tmp_7.length());</span>
+<span class="nc" id="L332">            length += writer.writeBinary(tmp_7);</span>
+<span class="nc" id="L333">        }</span>
 
-<span class="nc bnc" id="L330" title="All 2 branches missed.">        if (hasNamespaces()) {</span>
-<span class="nc" id="L331">            length += writer.writeByte((byte) 13);</span>
-<span class="nc" id="L332">            length += writer.writeShort((short) 4);</span>
-<span class="nc" id="L333">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L334">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L335">            length += writer.writeUInt32(mNamespaces.size());</span>
-<span class="nc bnc" id="L336" title="All 2 branches missed.">            for (java.util.Map.Entry&lt;String,String&gt; entry_5 : mNamespaces.entrySet()) {</span>
-<span class="nc" id="L337">                net.morimekta.util.Binary tmp_6 = net.morimekta.util.Binary.wrap(entry_5.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L338">                length += writer.writeUInt32(tmp_6.length());</span>
-<span class="nc" id="L339">                length += writer.writeBinary(tmp_6);</span>
-<span class="nc" id="L340">                net.morimekta.util.Binary tmp_7 = net.morimekta.util.Binary.wrap(entry_5.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L341">                length += writer.writeUInt32(tmp_7.length());</span>
-<span class="nc" id="L342">                length += writer.writeBinary(tmp_7);</span>
-<span class="nc" id="L343">            }</span>
-        }
+<span class="nc" id="L335">        length += writer.writeByte((byte) 15);</span>
+<span class="nc" id="L336">        length += writer.writeShort((short) 5);</span>
+<span class="nc" id="L337">        length += writer.writeByte((byte) 12);</span>
+<span class="nc" id="L338">        length += writer.writeUInt32(mDecl.size());</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">        for (net.morimekta.providence.model.Declaration entry_8 : mDecl) {</span>
+<span class="nc" id="L340">            length += net.morimekta.providence.serializer.rw.BinaryFormatUtils.writeMessage(writer, entry_8);</span>
+<span class="nc" id="L341">        }</span>
 
-<span class="nc bnc" id="L346" title="All 2 branches missed.">        if (hasDecl()) {</span>
-<span class="nc" id="L347">            length += writer.writeByte((byte) 15);</span>
-<span class="nc" id="L348">            length += writer.writeShort((short) 5);</span>
-<span class="nc" id="L349">            length += writer.writeByte((byte) 12);</span>
-<span class="nc" id="L350">            length += writer.writeUInt32(mDecl.size());</span>
-<span class="nc bnc" id="L351" title="All 2 branches missed.">            for (net.morimekta.providence.model.Declaration entry_8 : mDecl) {</span>
-<span class="nc" id="L352">                length += net.morimekta.providence.serializer.rw.BinaryFormatUtils.writeMessage(writer, entry_8);</span>
-<span class="nc" id="L353">            }</span>
-        }
-
-<span class="nc" id="L356">        length += writer.writeByte((byte) 0);</span>
-<span class="nc" id="L357">        return length;</span>
+<span class="nc" id="L343">        length += writer.writeByte((byte) 0);</span>
+<span class="nc" id="L344">        return length;</span>
     }
 
     @javax.annotation.Nonnull
     @Override
     public _Builder mutate() {
-<span class="nc" id="L363">        return new _Builder(this);</span>
+<span class="nc" id="L350">        return new _Builder(this);</span>
     }
 
-<span class="pc" id="L366">    public enum _Field implements net.morimekta.providence.descriptor.PField {</span>
-<span class="fc" id="L367">        DOCUMENTATION(1, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;documentation&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
-<span class="fc" id="L368">        PROGRAM_NAME(2, net.morimekta.providence.descriptor.PRequirement.REQUIRED, &quot;program_name&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
-<span class="fc" id="L369">        INCLUDES(3, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;includes&quot;, net.morimekta.providence.descriptor.PList.provider(net.morimekta.providence.descriptor.PPrimitive.STRING.provider()), null),</span>
-<span class="fc" id="L370">        NAMESPACES(4, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;namespaces&quot;, net.morimekta.providence.descriptor.PMap.provider(net.morimekta.providence.descriptor.PPrimitive.STRING.provider(),net.morimekta.providence.descriptor.PPrimitive.STRING.provider()), null),</span>
-<span class="fc" id="L371">        DECL(5, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;decl&quot;, net.morimekta.providence.descriptor.PList.provider(net.morimekta.providence.model.Declaration.provider()), null),</span>
+<span class="pc" id="L353">    public enum _Field implements net.morimekta.providence.descriptor.PField {</span>
+<span class="fc" id="L354">        DOCUMENTATION(1, net.morimekta.providence.descriptor.PRequirement.OPTIONAL, &quot;documentation&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
+<span class="fc" id="L355">        PROGRAM_NAME(2, net.morimekta.providence.descriptor.PRequirement.REQUIRED, &quot;program_name&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
+<span class="fc" id="L356">        INCLUDES(3, net.morimekta.providence.descriptor.PRequirement.OPTIONAL, &quot;includes&quot;, net.morimekta.providence.descriptor.PList.provider(net.morimekta.providence.descriptor.PPrimitive.STRING.provider()), null),</span>
+<span class="fc" id="L357">        NAMESPACES(4, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;namespaces&quot;, net.morimekta.providence.descriptor.PMap.provider(net.morimekta.providence.descriptor.PPrimitive.STRING.provider(),net.morimekta.providence.descriptor.PPrimitive.STRING.provider()), null),</span>
+<span class="fc" id="L358">        DECL(5, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;decl&quot;, net.morimekta.providence.descriptor.PList.provider(net.morimekta.providence.model.Declaration.provider()), null),</span>
         ;
 
         private final int mKey;
@@ -377,69 +364,69 @@ public class ProgramType
         private final net.morimekta.providence.descriptor.PDescriptorProvider mTypeProvider;
         private final net.morimekta.providence.descriptor.PValueProvider&lt;?&gt; mDefaultValue;
 
-<span class="fc" id="L380">        _Field(int key, net.morimekta.providence.descriptor.PRequirement required, String name, net.morimekta.providence.descriptor.PDescriptorProvider typeProvider, net.morimekta.providence.descriptor.PValueProvider&lt;?&gt; defaultValue) {</span>
-<span class="fc" id="L381">            mKey = key;</span>
-<span class="fc" id="L382">            mRequired = required;</span>
-<span class="fc" id="L383">            mName = name;</span>
-<span class="fc" id="L384">            mTypeProvider = typeProvider;</span>
-<span class="fc" id="L385">            mDefaultValue = defaultValue;</span>
-<span class="fc" id="L386">        }</span>
+<span class="fc" id="L367">        _Field(int key, net.morimekta.providence.descriptor.PRequirement required, String name, net.morimekta.providence.descriptor.PDescriptorProvider typeProvider, net.morimekta.providence.descriptor.PValueProvider&lt;?&gt; defaultValue) {</span>
+<span class="fc" id="L368">            mKey = key;</span>
+<span class="fc" id="L369">            mRequired = required;</span>
+<span class="fc" id="L370">            mName = name;</span>
+<span class="fc" id="L371">            mTypeProvider = typeProvider;</span>
+<span class="fc" id="L372">            mDefaultValue = defaultValue;</span>
+<span class="fc" id="L373">        }</span>
 
         @Override
-<span class="fc" id="L389">        public int getKey() { return mKey; }</span>
+<span class="fc" id="L376">        public int getKey() { return mKey; }</span>
 
         @Override
-<span class="nc" id="L392">        public net.morimekta.providence.descriptor.PRequirement getRequirement() { return mRequired; }</span>
+<span class="nc" id="L379">        public net.morimekta.providence.descriptor.PRequirement getRequirement() { return mRequired; }</span>
 
         @Override
-<span class="fc" id="L395">        public net.morimekta.providence.descriptor.PDescriptor getDescriptor() { return mTypeProvider.descriptor(); }</span>
+<span class="fc" id="L382">        public net.morimekta.providence.descriptor.PDescriptor getDescriptor() { return mTypeProvider.descriptor(); }</span>
 
         @Override
-<span class="fc" id="L398">        public String getName() { return mName; }</span>
+<span class="fc" id="L385">        public String getName() { return mName; }</span>
 
         @Override
-<span class="nc bnc" id="L401" title="All 2 branches missed.">        public boolean hasDefaultValue() { return mDefaultValue != null; }</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        public boolean hasDefaultValue() { return mDefaultValue != null; }</span>
 
         @Override
         public Object getDefaultValue() {
-<span class="nc bnc" id="L405" title="All 2 branches missed.">            return hasDefaultValue() ? mDefaultValue.get() : null;</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">            return hasDefaultValue() ? mDefaultValue.get() : null;</span>
         }
 
         @Override
         public String toString() {
-<span class="nc" id="L410">            return net.morimekta.providence.descriptor.PField.asString(this);</span>
+<span class="nc" id="L397">            return net.morimekta.providence.descriptor.PField.asString(this);</span>
         }
 
         public static _Field forKey(int key) {
-<span class="nc bnc" id="L414" title="All 6 branches missed.">            switch (key) {</span>
-<span class="nc" id="L415">                case 1: return _Field.DOCUMENTATION;</span>
-<span class="nc" id="L416">                case 2: return _Field.PROGRAM_NAME;</span>
-<span class="nc" id="L417">                case 3: return _Field.INCLUDES;</span>
-<span class="nc" id="L418">                case 4: return _Field.NAMESPACES;</span>
-<span class="nc" id="L419">                case 5: return _Field.DECL;</span>
+<span class="nc bnc" id="L401" title="All 6 branches missed.">            switch (key) {</span>
+<span class="nc" id="L402">                case 1: return _Field.DOCUMENTATION;</span>
+<span class="nc" id="L403">                case 2: return _Field.PROGRAM_NAME;</span>
+<span class="nc" id="L404">                case 3: return _Field.INCLUDES;</span>
+<span class="nc" id="L405">                case 4: return _Field.NAMESPACES;</span>
+<span class="nc" id="L406">                case 5: return _Field.DECL;</span>
             }
-<span class="nc" id="L421">            return null;</span>
+<span class="nc" id="L408">            return null;</span>
         }
 
         public static _Field forName(String name) {
-<span class="nc bnc" id="L425" title="All 22 branches missed.">            switch (name) {</span>
-<span class="nc" id="L426">                case &quot;documentation&quot;: return _Field.DOCUMENTATION;</span>
-<span class="nc" id="L427">                case &quot;program_name&quot;: return _Field.PROGRAM_NAME;</span>
-<span class="nc" id="L428">                case &quot;includes&quot;: return _Field.INCLUDES;</span>
-<span class="nc" id="L429">                case &quot;namespaces&quot;: return _Field.NAMESPACES;</span>
-<span class="nc" id="L430">                case &quot;decl&quot;: return _Field.DECL;</span>
+<span class="nc bnc" id="L412" title="All 22 branches missed.">            switch (name) {</span>
+<span class="nc" id="L413">                case &quot;documentation&quot;: return _Field.DOCUMENTATION;</span>
+<span class="nc" id="L414">                case &quot;program_name&quot;: return _Field.PROGRAM_NAME;</span>
+<span class="nc" id="L415">                case &quot;includes&quot;: return _Field.INCLUDES;</span>
+<span class="nc" id="L416">                case &quot;namespaces&quot;: return _Field.NAMESPACES;</span>
+<span class="nc" id="L417">                case &quot;decl&quot;: return _Field.DECL;</span>
             }
-<span class="nc" id="L432">            return null;</span>
+<span class="nc" id="L419">            return null;</span>
         }
     }
 
     public static net.morimekta.providence.descriptor.PStructDescriptorProvider&lt;ProgramType,_Field&gt; provider() {
-<span class="nc" id="L437">        return new _Provider();</span>
+<span class="nc" id="L424">        return new _Provider();</span>
     }
 
     @Override
     public net.morimekta.providence.descriptor.PStructDescriptor&lt;ProgramType,_Field&gt; descriptor() {
-<span class="fc" id="L442">        return kDescriptor;</span>
+<span class="fc" id="L429">        return kDescriptor;</span>
     }
 
     public static final net.morimekta.providence.descriptor.PStructDescriptor&lt;ProgramType,_Field&gt; kDescriptor;
@@ -447,41 +434,41 @@ public class ProgramType
     private static class _Descriptor
             extends net.morimekta.providence.descriptor.PStructDescriptor&lt;ProgramType,_Field&gt; {
         public _Descriptor() {
-<span class="fc" id="L450">            super(&quot;model&quot;, &quot;ProgramType&quot;, new _Factory(), false);</span>
-<span class="fc" id="L451">        }</span>
+<span class="fc" id="L437">            super(&quot;model&quot;, &quot;ProgramType&quot;, new _Factory(), false);</span>
+<span class="fc" id="L438">        }</span>
 
         @Override
         public _Field[] getFields() {
-<span class="fc" id="L455">            return _Field.values();</span>
+<span class="fc" id="L442">            return _Field.values();</span>
         }
 
         @Override
         public _Field getField(String name) {
-<span class="nc" id="L460">            return _Field.forName(name);</span>
+<span class="nc" id="L447">            return _Field.forName(name);</span>
         }
 
         @Override
         public _Field getField(int key) {
-<span class="nc" id="L465">            return _Field.forKey(key);</span>
+<span class="nc" id="L452">            return _Field.forKey(key);</span>
         }
     }
 
     static {
-<span class="fc" id="L470">        kDescriptor = new _Descriptor();</span>
-<span class="fc" id="L471">    }</span>
+<span class="fc" id="L457">        kDescriptor = new _Descriptor();</span>
+<span class="fc" id="L458">    }</span>
 
-<span class="nc" id="L473">    private final static class _Provider extends net.morimekta.providence.descriptor.PStructDescriptorProvider&lt;ProgramType,_Field&gt; {</span>
+<span class="nc" id="L460">    private final static class _Provider extends net.morimekta.providence.descriptor.PStructDescriptorProvider&lt;ProgramType,_Field&gt; {</span>
         @Override
         public net.morimekta.providence.descriptor.PStructDescriptor&lt;ProgramType,_Field&gt; descriptor() {
-<span class="nc" id="L476">            return kDescriptor;</span>
+<span class="nc" id="L463">            return kDescriptor;</span>
         }
     }
 
-<span class="fc" id="L480">    private final static class _Factory</span>
+<span class="fc" id="L467">    private final static class _Factory</span>
             extends net.morimekta.providence.PMessageBuilderFactory&lt;ProgramType,_Field&gt; {
         @Override
         public _Builder builder() {
-<span class="nc" id="L484">            return new _Builder();</span>
+<span class="nc" id="L471">            return new _Builder();</span>
         }
     }
 
@@ -490,7 +477,7 @@ public class ProgramType
      * @return The builder instance.
      */
     public static _Builder builder() {
-<span class="fc" id="L493">        return new _Builder();</span>
+<span class="fc" id="L480">        return new _Builder();</span>
     }
 
     /**
@@ -511,13 +498,14 @@ public class ProgramType
         /**
          * Make a model.ProgramType builder.
          */
-<span class="fc" id="L514">        public _Builder() {</span>
-<span class="fc" id="L515">            optionals = new java.util.BitSet(5);</span>
-<span class="fc" id="L516">            modified = new java.util.BitSet(5);</span>
-<span class="fc" id="L517">            mIncludes = new net.morimekta.providence.descriptor.PList.ImmutableListBuilder&lt;&gt;();</span>
-<span class="fc" id="L518">            mNamespaces = new net.morimekta.providence.descriptor.PMap.ImmutableMapBuilder&lt;&gt;();</span>
-<span class="fc" id="L519">            mDecl = new net.morimekta.providence.descriptor.PList.ImmutableListBuilder&lt;&gt;();</span>
-<span class="fc" id="L520">        }</span>
+<span class="fc" id="L501">        public _Builder() {</span>
+<span class="fc" id="L502">            optionals = new java.util.BitSet(5);</span>
+<span class="fc" id="L503">            modified = new java.util.BitSet(5);</span>
+<span class="fc" id="L504">            mProgramName = kDefaultProgramName;</span>
+<span class="fc" id="L505">            mIncludes = new net.morimekta.providence.descriptor.PList.ImmutableListBuilder&lt;&gt;();</span>
+<span class="fc" id="L506">            mNamespaces = new net.morimekta.providence.descriptor.PMap.ImmutableMapBuilder&lt;&gt;();</span>
+<span class="fc" id="L507">            mDecl = new net.morimekta.providence.descriptor.PList.ImmutableListBuilder&lt;&gt;();</span>
+<span class="fc" id="L508">        }</span>
 
         /**
          * Make a mutating builder off a base model.ProgramType.
@@ -525,65 +513,53 @@ public class ProgramType
          * @param base The base ProgramType
          */
         public _Builder(ProgramType base) {
-<span class="nc" id="L528">            this();</span>
+<span class="nc" id="L516">            this();</span>
 
-<span class="nc bnc" id="L530" title="All 2 branches missed.">            if (base.hasDocumentation()) {</span>
-<span class="nc" id="L531">                optionals.set(0);</span>
-<span class="nc" id="L532">                mDocumentation = base.mDocumentation;</span>
+<span class="nc bnc" id="L518" title="All 2 branches missed.">            if (base.hasDocumentation()) {</span>
+<span class="nc" id="L519">                optionals.set(0);</span>
+<span class="nc" id="L520">                mDocumentation = base.mDocumentation;</span>
             }
-<span class="nc bnc" id="L534" title="All 2 branches missed.">            if (base.hasProgramName()) {</span>
-<span class="nc" id="L535">                optionals.set(1);</span>
-<span class="nc" id="L536">                mProgramName = base.mProgramName;</span>
+<span class="nc" id="L522">            optionals.set(1);</span>
+<span class="nc" id="L523">            mProgramName = base.mProgramName;</span>
+<span class="nc bnc" id="L524" title="All 2 branches missed.">            if (base.hasIncludes()) {</span>
+<span class="nc" id="L525">                optionals.set(2);</span>
+<span class="nc" id="L526">                mIncludes.addAll(base.mIncludes);</span>
             }
-<span class="nc bnc" id="L538" title="All 2 branches missed.">            if (base.hasIncludes()) {</span>
-<span class="nc" id="L539">                optionals.set(2);</span>
-<span class="nc" id="L540">                mIncludes.addAll(base.mIncludes);</span>
-            }
-<span class="nc bnc" id="L542" title="All 2 branches missed.">            if (base.hasNamespaces()) {</span>
-<span class="nc" id="L543">                optionals.set(3);</span>
-<span class="nc" id="L544">                mNamespaces.putAll(base.mNamespaces);</span>
-            }
-<span class="nc bnc" id="L546" title="All 2 branches missed.">            if (base.hasDecl()) {</span>
-<span class="nc" id="L547">                optionals.set(4);</span>
-<span class="nc" id="L548">                mDecl.addAll(base.mDecl);</span>
-            }
-<span class="nc" id="L550">        }</span>
+<span class="nc" id="L528">            optionals.set(3);</span>
+<span class="nc" id="L529">            mNamespaces.putAll(base.mNamespaces);</span>
+<span class="nc" id="L530">            optionals.set(4);</span>
+<span class="nc" id="L531">            mDecl.addAll(base.mDecl);</span>
+<span class="nc" id="L532">        }</span>
 
         @javax.annotation.Nonnull
         @Override
         public _Builder merge(ProgramType from) {
-<span class="nc bnc" id="L555" title="All 2 branches missed.">            if (from.hasDocumentation()) {</span>
-<span class="nc" id="L556">                optionals.set(0);</span>
-<span class="nc" id="L557">                modified.set(0);</span>
-<span class="nc" id="L558">                mDocumentation = from.getDocumentation();</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">            if (from.hasDocumentation()) {</span>
+<span class="nc" id="L538">                optionals.set(0);</span>
+<span class="nc" id="L539">                modified.set(0);</span>
+<span class="nc" id="L540">                mDocumentation = from.getDocumentation();</span>
             }
 
-<span class="nc bnc" id="L561" title="All 2 branches missed.">            if (from.hasProgramName()) {</span>
-<span class="nc" id="L562">                optionals.set(1);</span>
-<span class="nc" id="L563">                modified.set(1);</span>
-<span class="nc" id="L564">                mProgramName = from.getProgramName();</span>
+<span class="nc" id="L543">            optionals.set(1);</span>
+<span class="nc" id="L544">            modified.set(1);</span>
+<span class="nc" id="L545">            mProgramName = from.getProgramName();</span>
+
+<span class="nc bnc" id="L547" title="All 2 branches missed.">            if (from.hasIncludes()) {</span>
+<span class="nc" id="L548">                optionals.set(2);</span>
+<span class="nc" id="L549">                modified.set(2);</span>
+<span class="nc" id="L550">                mIncludes.clear();</span>
+<span class="nc" id="L551">                mIncludes.addAll(from.getIncludes());</span>
             }
 
-<span class="nc bnc" id="L567" title="All 2 branches missed.">            if (from.hasIncludes()) {</span>
-<span class="nc" id="L568">                optionals.set(2);</span>
-<span class="nc" id="L569">                modified.set(2);</span>
-<span class="nc" id="L570">                mIncludes.clear();</span>
-<span class="nc" id="L571">                mIncludes.addAll(from.getIncludes());</span>
-            }
+<span class="nc" id="L554">            optionals.set(3);</span>
+<span class="nc" id="L555">            modified.set(3);</span>
+<span class="nc" id="L556">            mNamespaces.putAll(from.getNamespaces());</span>
 
-<span class="nc bnc" id="L574" title="All 2 branches missed.">            if (from.hasNamespaces()) {</span>
-<span class="nc" id="L575">                optionals.set(3);</span>
-<span class="nc" id="L576">                modified.set(3);</span>
-<span class="nc" id="L577">                mNamespaces.putAll(from.getNamespaces());</span>
-            }
-
-<span class="nc bnc" id="L580" title="All 2 branches missed.">            if (from.hasDecl()) {</span>
-<span class="nc" id="L581">                optionals.set(4);</span>
-<span class="nc" id="L582">                modified.set(4);</span>
-<span class="nc" id="L583">                mDecl.clear();</span>
-<span class="nc" id="L584">                mDecl.addAll(from.getDecl());</span>
-            }
-<span class="nc" id="L586">            return this;</span>
+<span class="nc" id="L558">            optionals.set(4);</span>
+<span class="nc" id="L559">            modified.set(4);</span>
+<span class="nc" id="L560">            mDecl.clear();</span>
+<span class="nc" id="L561">            mDecl.addAll(from.getDecl());</span>
+<span class="nc" id="L562">            return this;</span>
         }
 
         /**
@@ -594,10 +570,14 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder setDocumentation(String value) {
-<span class="fc" id="L597">            optionals.set(0);</span>
-<span class="fc" id="L598">            modified.set(0);</span>
-<span class="fc" id="L599">            mDocumentation = value;</span>
-<span class="fc" id="L600">            return this;</span>
+<span class="pc bpc" id="L573" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L574">                return clearDocumentation();</span>
+            }
+
+<span class="fc" id="L577">            optionals.set(0);</span>
+<span class="fc" id="L578">            modified.set(0);</span>
+<span class="fc" id="L579">            mDocumentation = value;</span>
+<span class="fc" id="L580">            return this;</span>
         }
 
         /**
@@ -606,7 +586,7 @@ public class ProgramType
          * @return True if documentation has been set.
          */
         public boolean isSetDocumentation() {
-<span class="nc" id="L609">            return optionals.get(0);</span>
+<span class="nc" id="L589">            return optionals.get(0);</span>
         }
 
         /**
@@ -615,7 +595,7 @@ public class ProgramType
          * @return True if documentation has been modified.
          */
         public boolean isModifiedDocumentation() {
-<span class="nc" id="L618">            return modified.get(0);</span>
+<span class="nc" id="L598">            return modified.get(0);</span>
         }
 
         /**
@@ -625,10 +605,10 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder clearDocumentation() {
-<span class="nc" id="L628">            optionals.clear(0);</span>
-<span class="nc" id="L629">            modified.set(0);</span>
-<span class="nc" id="L630">            mDocumentation = null;</span>
-<span class="nc" id="L631">            return this;</span>
+<span class="nc" id="L608">            optionals.clear(0);</span>
+<span class="nc" id="L609">            modified.set(0);</span>
+<span class="nc" id="L610">            mDocumentation = null;</span>
+<span class="nc" id="L611">            return this;</span>
         }
 
         /**
@@ -637,7 +617,7 @@ public class ProgramType
          * @return The field value
          */
         public String getDocumentation() {
-<span class="nc" id="L640">            return mDocumentation;</span>
+<span class="nc" id="L620">            return mDocumentation;</span>
         }
 
         /**
@@ -648,10 +628,14 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder setProgramName(String value) {
-<span class="fc" id="L651">            optionals.set(1);</span>
-<span class="fc" id="L652">            modified.set(1);</span>
-<span class="fc" id="L653">            mProgramName = value;</span>
-<span class="fc" id="L654">            return this;</span>
+<span class="pc bpc" id="L631" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L632">                return clearProgramName();</span>
+            }
+
+<span class="fc" id="L635">            optionals.set(1);</span>
+<span class="fc" id="L636">            modified.set(1);</span>
+<span class="fc" id="L637">            mProgramName = value;</span>
+<span class="fc" id="L638">            return this;</span>
         }
 
         /**
@@ -660,7 +644,7 @@ public class ProgramType
          * @return True if program_name has been set.
          */
         public boolean isSetProgramName() {
-<span class="nc" id="L663">            return optionals.get(1);</span>
+<span class="fc" id="L647">            return optionals.get(1);</span>
         }
 
         /**
@@ -669,7 +653,7 @@ public class ProgramType
          * @return True if program_name has been modified.
          */
         public boolean isModifiedProgramName() {
-<span class="nc" id="L672">            return modified.get(1);</span>
+<span class="nc" id="L656">            return modified.get(1);</span>
         }
 
         /**
@@ -679,10 +663,10 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder clearProgramName() {
-<span class="nc" id="L682">            optionals.clear(1);</span>
-<span class="nc" id="L683">            modified.set(1);</span>
-<span class="nc" id="L684">            mProgramName = null;</span>
-<span class="nc" id="L685">            return this;</span>
+<span class="nc" id="L666">            optionals.clear(1);</span>
+<span class="nc" id="L667">            modified.set(1);</span>
+<span class="nc" id="L668">            mProgramName = kDefaultProgramName;</span>
+<span class="nc" id="L669">            return this;</span>
         }
 
         /**
@@ -691,7 +675,7 @@ public class ProgramType
          * @return The field value
          */
         public String getProgramName() {
-<span class="nc" id="L694">            return mProgramName;</span>
+<span class="nc" id="L678">            return mProgramName;</span>
         }
 
         /**
@@ -704,11 +688,15 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder setIncludes(java.util.Collection&lt;String&gt; value) {
-<span class="fc" id="L707">            optionals.set(2);</span>
-<span class="fc" id="L708">            modified.set(2);</span>
-<span class="fc" id="L709">            mIncludes.clear();</span>
-<span class="fc" id="L710">            mIncludes.addAll(value);</span>
-<span class="fc" id="L711">            return this;</span>
+<span class="pc bpc" id="L691" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L692">                return clearIncludes();</span>
+            }
+
+<span class="fc" id="L695">            optionals.set(2);</span>
+<span class="fc" id="L696">            modified.set(2);</span>
+<span class="fc" id="L697">            mIncludes.clear();</span>
+<span class="fc" id="L698">            mIncludes.addAll(value);</span>
+<span class="fc" id="L699">            return this;</span>
         }
 
         /**
@@ -721,12 +709,12 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder addToIncludes(String... values) {
-<span class="nc" id="L724">            optionals.set(2);</span>
-<span class="nc" id="L725">            modified.set(2);</span>
-<span class="nc bnc" id="L726" title="All 2 branches missed.">            for (String item : values) {</span>
-<span class="nc" id="L727">                mIncludes.add(item);</span>
+<span class="nc" id="L712">            optionals.set(2);</span>
+<span class="nc" id="L713">            modified.set(2);</span>
+<span class="nc bnc" id="L714" title="All 2 branches missed.">            for (String item : values) {</span>
+<span class="nc" id="L715">                mIncludes.add(item);</span>
             }
-<span class="nc" id="L729">            return this;</span>
+<span class="nc" id="L717">            return this;</span>
         }
 
         /**
@@ -737,7 +725,7 @@ public class ProgramType
          * @return True if includes has been set.
          */
         public boolean isSetIncludes() {
-<span class="fc" id="L740">            return optionals.get(2);</span>
+<span class="fc" id="L728">            return optionals.get(2);</span>
         }
 
         /**
@@ -748,7 +736,7 @@ public class ProgramType
          * @return True if includes has been modified.
          */
         public boolean isModifiedIncludes() {
-<span class="nc" id="L751">            return modified.get(2);</span>
+<span class="nc" id="L739">            return modified.get(2);</span>
         }
 
         /**
@@ -760,10 +748,10 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder clearIncludes() {
-<span class="nc" id="L763">            optionals.clear(2);</span>
-<span class="nc" id="L764">            modified.set(2);</span>
-<span class="nc" id="L765">            mIncludes.clear();</span>
-<span class="nc" id="L766">            return this;</span>
+<span class="nc" id="L751">            optionals.clear(2);</span>
+<span class="nc" id="L752">            modified.set(2);</span>
+<span class="nc" id="L753">            mIncludes.clear();</span>
+<span class="nc" id="L754">            return this;</span>
         }
 
         /**
@@ -774,9 +762,9 @@ public class ProgramType
          * @return The field builder
          */
         public net.morimekta.providence.descriptor.PList.Builder&lt;String&gt; mutableIncludes() {
-<span class="nc" id="L777">            optionals.set(2);</span>
-<span class="nc" id="L778">            modified.set(2);</span>
-<span class="nc" id="L779">            return mIncludes;</span>
+<span class="nc" id="L765">            optionals.set(2);</span>
+<span class="nc" id="L766">            modified.set(2);</span>
+<span class="nc" id="L767">            return mIncludes;</span>
         }
 
         /**
@@ -789,11 +777,15 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder setNamespaces(java.util.Map&lt;String,String&gt; value) {
-<span class="fc" id="L792">            optionals.set(3);</span>
-<span class="fc" id="L793">            modified.set(3);</span>
-<span class="fc" id="L794">            mNamespaces.clear();</span>
-<span class="fc" id="L795">            mNamespaces.putAll(value);</span>
-<span class="fc" id="L796">            return this;</span>
+<span class="pc bpc" id="L780" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L781">                return clearNamespaces();</span>
+            }
+
+<span class="fc" id="L784">            optionals.set(3);</span>
+<span class="fc" id="L785">            modified.set(3);</span>
+<span class="fc" id="L786">            mNamespaces.clear();</span>
+<span class="fc" id="L787">            mNamespaces.putAll(value);</span>
+<span class="fc" id="L788">            return this;</span>
         }
 
         /**
@@ -807,10 +799,10 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder putInNamespaces(String key, String value) {
-<span class="nc" id="L810">            optionals.set(3);</span>
-<span class="nc" id="L811">            modified.set(3);</span>
-<span class="nc" id="L812">            mNamespaces.put(key, value);</span>
-<span class="nc" id="L813">            return this;</span>
+<span class="nc" id="L802">            optionals.set(3);</span>
+<span class="nc" id="L803">            modified.set(3);</span>
+<span class="nc" id="L804">            mNamespaces.put(key, value);</span>
+<span class="nc" id="L805">            return this;</span>
         }
 
         /**
@@ -821,7 +813,7 @@ public class ProgramType
          * @return True if namespaces has been set.
          */
         public boolean isSetNamespaces() {
-<span class="fc" id="L824">            return optionals.get(3);</span>
+<span class="fc" id="L816">            return optionals.get(3);</span>
         }
 
         /**
@@ -832,7 +824,7 @@ public class ProgramType
          * @return True if namespaces has been modified.
          */
         public boolean isModifiedNamespaces() {
-<span class="nc" id="L835">            return modified.get(3);</span>
+<span class="nc" id="L827">            return modified.get(3);</span>
         }
 
         /**
@@ -844,10 +836,10 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder clearNamespaces() {
-<span class="nc" id="L847">            optionals.clear(3);</span>
-<span class="nc" id="L848">            modified.set(3);</span>
-<span class="nc" id="L849">            mNamespaces.clear();</span>
-<span class="nc" id="L850">            return this;</span>
+<span class="nc" id="L839">            optionals.clear(3);</span>
+<span class="nc" id="L840">            modified.set(3);</span>
+<span class="nc" id="L841">            mNamespaces.clear();</span>
+<span class="nc" id="L842">            return this;</span>
         }
 
         /**
@@ -858,9 +850,9 @@ public class ProgramType
          * @return The field builder
          */
         public net.morimekta.providence.descriptor.PMap.Builder&lt;String,String&gt; mutableNamespaces() {
-<span class="nc" id="L861">            optionals.set(3);</span>
-<span class="nc" id="L862">            modified.set(3);</span>
-<span class="nc" id="L863">            return mNamespaces;</span>
+<span class="nc" id="L853">            optionals.set(3);</span>
+<span class="nc" id="L854">            modified.set(3);</span>
+<span class="nc" id="L855">            return mNamespaces;</span>
         }
 
         /**
@@ -871,11 +863,15 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder setDecl(java.util.Collection&lt;net.morimekta.providence.model.Declaration&gt; value) {
-<span class="fc" id="L874">            optionals.set(4);</span>
-<span class="fc" id="L875">            modified.set(4);</span>
-<span class="fc" id="L876">            mDecl.clear();</span>
-<span class="fc" id="L877">            mDecl.addAll(value);</span>
-<span class="fc" id="L878">            return this;</span>
+<span class="pc bpc" id="L866" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L867">                return clearDecl();</span>
+            }
+
+<span class="fc" id="L870">            optionals.set(4);</span>
+<span class="fc" id="L871">            modified.set(4);</span>
+<span class="fc" id="L872">            mDecl.clear();</span>
+<span class="fc" id="L873">            mDecl.addAll(value);</span>
+<span class="fc" id="L874">            return this;</span>
         }
 
         /**
@@ -886,12 +882,12 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder addToDecl(net.morimekta.providence.model.Declaration... values) {
-<span class="nc" id="L889">            optionals.set(4);</span>
-<span class="nc" id="L890">            modified.set(4);</span>
-<span class="nc bnc" id="L891" title="All 2 branches missed.">            for (net.morimekta.providence.model.Declaration item : values) {</span>
-<span class="nc" id="L892">                mDecl.add(item);</span>
+<span class="nc" id="L885">            optionals.set(4);</span>
+<span class="nc" id="L886">            modified.set(4);</span>
+<span class="nc bnc" id="L887" title="All 2 branches missed.">            for (net.morimekta.providence.model.Declaration item : values) {</span>
+<span class="nc" id="L888">                mDecl.add(item);</span>
             }
-<span class="nc" id="L894">            return this;</span>
+<span class="nc" id="L890">            return this;</span>
         }
 
         /**
@@ -900,7 +896,7 @@ public class ProgramType
          * @return True if decl has been set.
          */
         public boolean isSetDecl() {
-<span class="fc" id="L903">            return optionals.get(4);</span>
+<span class="fc" id="L899">            return optionals.get(4);</span>
         }
 
         /**
@@ -909,7 +905,7 @@ public class ProgramType
          * @return True if decl has been modified.
          */
         public boolean isModifiedDecl() {
-<span class="nc" id="L912">            return modified.get(4);</span>
+<span class="nc" id="L908">            return modified.get(4);</span>
         }
 
         /**
@@ -919,10 +915,10 @@ public class ProgramType
          */
         @javax.annotation.Nonnull
         public _Builder clearDecl() {
-<span class="nc" id="L922">            optionals.clear(4);</span>
-<span class="nc" id="L923">            modified.set(4);</span>
-<span class="nc" id="L924">            mDecl.clear();</span>
-<span class="nc" id="L925">            return this;</span>
+<span class="nc" id="L918">            optionals.clear(4);</span>
+<span class="nc" id="L919">            modified.set(4);</span>
+<span class="nc" id="L920">            mDecl.clear();</span>
+<span class="nc" id="L921">            return this;</span>
         }
 
         /**
@@ -931,27 +927,27 @@ public class ProgramType
          * @return The field builder
          */
         public net.morimekta.providence.descriptor.PList.Builder&lt;net.morimekta.providence.model.Declaration&gt; mutableDecl() {
-<span class="nc" id="L934">            optionals.set(4);</span>
-<span class="nc" id="L935">            modified.set(4);</span>
-<span class="nc" id="L936">            return mDecl;</span>
+<span class="nc" id="L930">            optionals.set(4);</span>
+<span class="nc" id="L931">            modified.set(4);</span>
+<span class="nc" id="L932">            return mDecl;</span>
         }
 
         @Override
         public boolean equals(Object o) {
-<span class="nc bnc" id="L941" title="All 2 branches missed.">            if (o == this) return true;</span>
-<span class="nc bnc" id="L942" title="All 4 branches missed.">            if (o == null || !o.getClass().equals(getClass())) return false;</span>
-<span class="nc" id="L943">            ProgramType._Builder other = (ProgramType._Builder) o;</span>
-<span class="nc bnc" id="L944" title="All 2 branches missed.">            return java.util.Objects.equals(optionals, other.optionals) &amp;&amp;</span>
-<span class="nc bnc" id="L945" title="All 2 branches missed.">                   java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
-<span class="nc bnc" id="L946" title="All 2 branches missed.">                   java.util.Objects.equals(mProgramName, other.mProgramName) &amp;&amp;</span>
-<span class="nc bnc" id="L947" title="All 2 branches missed.">                   java.util.Objects.equals(mIncludes, other.mIncludes) &amp;&amp;</span>
-<span class="nc bnc" id="L948" title="All 2 branches missed.">                   java.util.Objects.equals(mNamespaces, other.mNamespaces) &amp;&amp;</span>
-<span class="nc bnc" id="L949" title="All 2 branches missed.">                   java.util.Objects.equals(mDecl, other.mDecl);</span>
+<span class="nc bnc" id="L937" title="All 2 branches missed.">            if (o == this) return true;</span>
+<span class="nc bnc" id="L938" title="All 4 branches missed.">            if (o == null || !o.getClass().equals(getClass())) return false;</span>
+<span class="nc" id="L939">            ProgramType._Builder other = (ProgramType._Builder) o;</span>
+<span class="nc bnc" id="L940" title="All 2 branches missed.">            return java.util.Objects.equals(optionals, other.optionals) &amp;&amp;</span>
+<span class="nc bnc" id="L941" title="All 2 branches missed.">                   java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
+<span class="nc bnc" id="L942" title="All 2 branches missed.">                   java.util.Objects.equals(mProgramName, other.mProgramName) &amp;&amp;</span>
+<span class="nc bnc" id="L943" title="All 2 branches missed.">                   java.util.Objects.equals(mIncludes, other.mIncludes) &amp;&amp;</span>
+<span class="nc bnc" id="L944" title="All 2 branches missed.">                   java.util.Objects.equals(mNamespaces, other.mNamespaces) &amp;&amp;</span>
+<span class="nc bnc" id="L945" title="All 2 branches missed.">                   java.util.Objects.equals(mDecl, other.mDecl);</span>
         }
 
         @Override
         public int hashCode() {
-<span class="nc" id="L954">            return java.util.Objects.hash(</span>
+<span class="nc" id="L950">            return java.util.Objects.hash(</span>
                     ProgramType.class, optionals,
                     _Field.DOCUMENTATION, mDocumentation,
                     _Field.PROGRAM_NAME, mProgramName,
@@ -963,8 +959,8 @@ public class ProgramType
         @Override
         @SuppressWarnings(&quot;unchecked&quot;)
         public net.morimekta.providence.PMessageBuilder mutator(int key) {
-<span class="nc" id="L966">            switch (key) {</span>
-<span class="nc" id="L967">                default: throw new IllegalArgumentException(&quot;Not a message field ID: &quot; + key);</span>
+<span class="nc" id="L962">            switch (key) {</span>
+<span class="nc" id="L963">                default: throw new IllegalArgumentException(&quot;Not a message field ID: &quot; + key);</span>
             }
         }
 
@@ -972,199 +968,195 @@ public class ProgramType
         @Override
         @SuppressWarnings(&quot;unchecked&quot;)
         public _Builder set(int key, Object value) {
-<span class="nc bnc" id="L975" title="All 2 branches missed.">            if (value == null) return clear(key);</span>
-<span class="nc bnc" id="L976" title="All 6 branches missed.">            switch (key) {</span>
-<span class="nc" id="L977">                case 1: setDocumentation((String) value); break;</span>
-<span class="nc" id="L978">                case 2: setProgramName((String) value); break;</span>
-<span class="nc" id="L979">                case 3: setIncludes((java.util.List&lt;String&gt;) value); break;</span>
-<span class="nc" id="L980">                case 4: setNamespaces((java.util.Map&lt;String,String&gt;) value); break;</span>
-<span class="nc" id="L981">                case 5: setDecl((java.util.List&lt;net.morimekta.providence.model.Declaration&gt;) value); break;</span>
+<span class="nc bnc" id="L971" title="All 2 branches missed.">            if (value == null) return clear(key);</span>
+<span class="nc bnc" id="L972" title="All 6 branches missed.">            switch (key) {</span>
+<span class="nc" id="L973">                case 1: setDocumentation((String) value); break;</span>
+<span class="nc" id="L974">                case 2: setProgramName((String) value); break;</span>
+<span class="nc" id="L975">                case 3: setIncludes((java.util.List&lt;String&gt;) value); break;</span>
+<span class="nc" id="L976">                case 4: setNamespaces((java.util.Map&lt;String,String&gt;) value); break;</span>
+<span class="nc" id="L977">                case 5: setDecl((java.util.List&lt;net.morimekta.providence.model.Declaration&gt;) value); break;</span>
                 default: break;
             }
-<span class="nc" id="L984">            return this;</span>
+<span class="nc" id="L980">            return this;</span>
         }
 
         @Override
         public boolean isSet(int key) {
-<span class="nc bnc" id="L989" title="All 6 branches missed.">            switch (key) {</span>
-<span class="nc" id="L990">                case 1: return optionals.get(0);</span>
-<span class="nc" id="L991">                case 2: return optionals.get(1);</span>
-<span class="nc" id="L992">                case 3: return optionals.get(2);</span>
-<span class="nc" id="L993">                case 4: return optionals.get(3);</span>
-<span class="nc" id="L994">                case 5: return optionals.get(4);</span>
+<span class="nc bnc" id="L985" title="All 6 branches missed.">            switch (key) {</span>
+<span class="nc" id="L986">                case 1: return optionals.get(0);</span>
+<span class="nc" id="L987">                case 2: return optionals.get(1);</span>
+<span class="nc" id="L988">                case 3: return optionals.get(2);</span>
+<span class="nc" id="L989">                case 4: return optionals.get(3);</span>
+<span class="nc" id="L990">                case 5: return optionals.get(4);</span>
                 default: break;
             }
-<span class="nc" id="L997">            return false;</span>
+<span class="nc" id="L993">            return false;</span>
         }
 
         @Override
         public boolean isModified(int key) {
-<span class="nc bnc" id="L1002" title="All 6 branches missed.">            switch (key) {</span>
-<span class="nc" id="L1003">                case 1: return modified.get(0);</span>
-<span class="nc" id="L1004">                case 2: return modified.get(1);</span>
-<span class="nc" id="L1005">                case 3: return modified.get(2);</span>
-<span class="nc" id="L1006">                case 4: return modified.get(3);</span>
-<span class="nc" id="L1007">                case 5: return modified.get(4);</span>
+<span class="nc bnc" id="L998" title="All 6 branches missed.">            switch (key) {</span>
+<span class="nc" id="L999">                case 1: return modified.get(0);</span>
+<span class="nc" id="L1000">                case 2: return modified.get(1);</span>
+<span class="nc" id="L1001">                case 3: return modified.get(2);</span>
+<span class="nc" id="L1002">                case 4: return modified.get(3);</span>
+<span class="nc" id="L1003">                case 5: return modified.get(4);</span>
                 default: break;
             }
-<span class="nc" id="L1010">            return false;</span>
+<span class="nc" id="L1006">            return false;</span>
         }
 
         @Override
         public _Builder addTo(int key, Object value) {
-<span class="nc bnc" id="L1015" title="All 3 branches missed.">            switch (key) {</span>
-<span class="nc" id="L1016">                case 3: addToIncludes((String) value); break;</span>
-<span class="nc" id="L1017">                case 5: addToDecl((net.morimekta.providence.model.Declaration) value); break;</span>
+<span class="nc bnc" id="L1011" title="All 3 branches missed.">            switch (key) {</span>
+<span class="nc" id="L1012">                case 3: addToIncludes((String) value); break;</span>
+<span class="nc" id="L1013">                case 5: addToDecl((net.morimekta.providence.model.Declaration) value); break;</span>
                 default: break;
             }
-<span class="nc" id="L1020">            return this;</span>
+<span class="nc" id="L1016">            return this;</span>
         }
 
         @javax.annotation.Nonnull
         @Override
         public _Builder clear(int key) {
-<span class="nc bnc" id="L1026" title="All 6 branches missed.">            switch (key) {</span>
-<span class="nc" id="L1027">                case 1: clearDocumentation(); break;</span>
-<span class="nc" id="L1028">                case 2: clearProgramName(); break;</span>
-<span class="nc" id="L1029">                case 3: clearIncludes(); break;</span>
-<span class="nc" id="L1030">                case 4: clearNamespaces(); break;</span>
-<span class="nc" id="L1031">                case 5: clearDecl(); break;</span>
+<span class="nc bnc" id="L1022" title="All 6 branches missed.">            switch (key) {</span>
+<span class="nc" id="L1023">                case 1: clearDocumentation(); break;</span>
+<span class="nc" id="L1024">                case 2: clearProgramName(); break;</span>
+<span class="nc" id="L1025">                case 3: clearIncludes(); break;</span>
+<span class="nc" id="L1026">                case 4: clearNamespaces(); break;</span>
+<span class="nc" id="L1027">                case 5: clearDecl(); break;</span>
                 default: break;
             }
-<span class="nc" id="L1034">            return this;</span>
+<span class="nc" id="L1030">            return this;</span>
         }
 
         @Override
         public boolean valid() {
-<span class="nc" id="L1039">            return optionals.get(1);</span>
+<span class="nc" id="L1035">            return optionals.get(1);</span>
         }
 
         @Override
         public void validate() {
-<span class="nc bnc" id="L1044" title="All 2 branches missed.">            if (!valid()) {</span>
-<span class="nc" id="L1045">                java.util.LinkedList&lt;String&gt; missing = new java.util.LinkedList&lt;&gt;();</span>
+<span class="nc bnc" id="L1040" title="All 2 branches missed.">            if (!valid()) {</span>
+<span class="nc" id="L1041">                java.util.LinkedList&lt;String&gt; missing = new java.util.LinkedList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L1047" title="All 2 branches missed.">                if (!optionals.get(1)) {</span>
-<span class="nc" id="L1048">                    missing.add(&quot;program_name&quot;);</span>
+<span class="nc bnc" id="L1043" title="All 2 branches missed.">                if (!optionals.get(1)) {</span>
+<span class="nc" id="L1044">                    missing.add(&quot;program_name&quot;);</span>
                 }
 
-<span class="nc" id="L1051">                throw new java.lang.IllegalStateException(</span>
+<span class="nc" id="L1047">                throw new java.lang.IllegalStateException(</span>
                         &quot;Missing required fields &quot; +
-<span class="nc" id="L1053">                        String.join(&quot;,&quot;, missing) +</span>
+<span class="nc" id="L1049">                        String.join(&quot;,&quot;, missing) +</span>
                         &quot; in message model.ProgramType&quot;);
             }
-<span class="nc" id="L1056">        }</span>
+<span class="nc" id="L1052">        }</span>
 
         @javax.annotation.Nonnull
         @Override
         public net.morimekta.providence.descriptor.PStructDescriptor&lt;ProgramType,_Field&gt; descriptor() {
-<span class="nc" id="L1061">            return kDescriptor;</span>
+<span class="nc" id="L1057">            return kDescriptor;</span>
         }
 
         @Override
         public void readBinary(net.morimekta.util.io.BigEndianBinaryReader reader, boolean strict) throws java.io.IOException {
-<span class="nc" id="L1066">            byte type = reader.expectByte();</span>
-<span class="nc bnc" id="L1067" title="All 2 branches missed.">            while (type != 0) {</span>
-<span class="nc" id="L1068">                int field = reader.expectShort();</span>
-<span class="nc bnc" id="L1069" title="All 6 branches missed.">                switch (field) {</span>
+<span class="nc" id="L1062">            byte type = reader.expectByte();</span>
+<span class="nc bnc" id="L1063" title="All 2 branches missed.">            while (type != 0) {</span>
+<span class="nc" id="L1064">                int field = reader.expectShort();</span>
+<span class="nc bnc" id="L1065" title="All 6 branches missed.">                switch (field) {</span>
                     case 1: {
-<span class="nc bnc" id="L1071" title="All 2 branches missed.">                        if (type == 11) {</span>
-<span class="nc" id="L1072">                            int len_1 = reader.expectUInt32();</span>
-<span class="nc" id="L1073">                            mDocumentation = new String(reader.expectBytes(len_1), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L1074">                            optionals.set(0);</span>
-<span class="nc" id="L1075">                        } else {</span>
-<span class="nc" id="L1076">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.documentation, should be struct(12)&quot;);</span>
+<span class="nc bnc" id="L1067" title="All 2 branches missed.">                        if (type == 11) {</span>
+<span class="nc" id="L1068">                            int len_1 = reader.expectUInt32();</span>
+<span class="nc" id="L1069">                            mDocumentation = new String(reader.expectBytes(len_1), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L1070">                            optionals.set(0);</span>
+<span class="nc" id="L1071">                        } else {</span>
+<span class="nc" id="L1072">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.documentation, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     case 2: {
-<span class="nc bnc" id="L1081" title="All 2 branches missed.">                        if (type == 11) {</span>
-<span class="nc" id="L1082">                            int len_2 = reader.expectUInt32();</span>
-<span class="nc" id="L1083">                            mProgramName = new String(reader.expectBytes(len_2), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L1084">                            optionals.set(1);</span>
-<span class="nc" id="L1085">                        } else {</span>
-<span class="nc" id="L1086">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.program_name, should be struct(12)&quot;);</span>
+<span class="nc bnc" id="L1077" title="All 2 branches missed.">                        if (type == 11) {</span>
+<span class="nc" id="L1078">                            int len_2 = reader.expectUInt32();</span>
+<span class="nc" id="L1079">                            mProgramName = new String(reader.expectBytes(len_2), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L1080">                            optionals.set(1);</span>
+<span class="nc" id="L1081">                        } else {</span>
+<span class="nc" id="L1082">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.program_name, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     case 3: {
-<span class="nc bnc" id="L1091" title="All 2 branches missed.">                        if (type == 15) {</span>
-<span class="nc" id="L1092">                            byte t_4 = reader.expectByte();</span>
-<span class="nc bnc" id="L1093" title="All 2 branches missed.">                            if (t_4 == 11) {</span>
-<span class="nc" id="L1094">                                final int len_3 = reader.expectUInt32();</span>
-<span class="nc bnc" id="L1095" title="All 2 branches missed.">                                for (int i_5 = 0; i_5 &lt; len_3; ++i_5) {</span>
-<span class="nc" id="L1096">                                    int len_7 = reader.expectUInt32();</span>
-<span class="nc" id="L1097">                                    String key_6 = new String(reader.expectBytes(len_7), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L1098">                                    mIncludes.add(key_6);</span>
+<span class="nc bnc" id="L1087" title="All 2 branches missed.">                        if (type == 15) {</span>
+<span class="nc" id="L1088">                            byte t_4 = reader.expectByte();</span>
+<span class="nc bnc" id="L1089" title="All 2 branches missed.">                            if (t_4 == 11) {</span>
+<span class="nc" id="L1090">                                final int len_3 = reader.expectUInt32();</span>
+<span class="nc bnc" id="L1091" title="All 2 branches missed.">                                for (int i_5 = 0; i_5 &lt; len_3; ++i_5) {</span>
+<span class="nc" id="L1092">                                    int len_7 = reader.expectUInt32();</span>
+<span class="nc" id="L1093">                                    String key_6 = new String(reader.expectBytes(len_7), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L1094">                                    mIncludes.add(key_6);</span>
                                 }
-<span class="nc" id="L1100">                            } else {</span>
-<span class="nc" id="L1101">                                throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong item type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_4) + &quot; for model.ProgramType.includes, should be string(11)&quot;);</span>
+<span class="nc" id="L1096">                            } else {</span>
+<span class="nc" id="L1097">                                throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong item type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_4) + &quot; for model.ProgramType.includes, should be string(11)&quot;);</span>
                             }
-<span class="nc" id="L1103">                            optionals.set(2);</span>
-<span class="nc" id="L1104">                        } else {</span>
-<span class="nc" id="L1105">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.includes, should be struct(12)&quot;);</span>
+<span class="nc" id="L1099">                            optionals.set(2);</span>
+<span class="nc" id="L1100">                        } else {</span>
+<span class="nc" id="L1101">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.includes, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     case 4: {
-<span class="nc bnc" id="L1110" title="All 2 branches missed.">                        if (type == 13) {</span>
-<span class="nc" id="L1111">                            byte t_9 = reader.expectByte();</span>
-<span class="nc" id="L1112">                            byte t_10 = reader.expectByte();</span>
-<span class="nc bnc" id="L1113" title="All 4 branches missed.">                            if (t_9 == 11 &amp;&amp; t_10 == 11) {</span>
-<span class="nc" id="L1114">                                final int len_8 = reader.expectUInt32();</span>
-<span class="nc bnc" id="L1115" title="All 2 branches missed.">                                for (int i_11 = 0; i_11 &lt; len_8; ++i_11) {</span>
-<span class="nc" id="L1116">                                    int len_14 = reader.expectUInt32();</span>
-<span class="nc" id="L1117">                                    String key_12 = new String(reader.expectBytes(len_14), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L1118">                                    int len_15 = reader.expectUInt32();</span>
-<span class="nc" id="L1119">                                    String val_13 = new String(reader.expectBytes(len_15), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L1120">                                    mNamespaces.put(key_12, val_13);</span>
+<span class="nc bnc" id="L1106" title="All 2 branches missed.">                        if (type == 13) {</span>
+<span class="nc" id="L1107">                            byte t_9 = reader.expectByte();</span>
+<span class="nc" id="L1108">                            byte t_10 = reader.expectByte();</span>
+<span class="nc bnc" id="L1109" title="All 4 branches missed.">                            if (t_9 == 11 &amp;&amp; t_10 == 11) {</span>
+<span class="nc" id="L1110">                                final int len_8 = reader.expectUInt32();</span>
+<span class="nc bnc" id="L1111" title="All 2 branches missed.">                                for (int i_11 = 0; i_11 &lt; len_8; ++i_11) {</span>
+<span class="nc" id="L1112">                                    int len_14 = reader.expectUInt32();</span>
+<span class="nc" id="L1113">                                    String key_12 = new String(reader.expectBytes(len_14), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L1114">                                    int len_15 = reader.expectUInt32();</span>
+<span class="nc" id="L1115">                                    String val_13 = new String(reader.expectBytes(len_15), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L1116">                                    mNamespaces.put(key_12, val_13);</span>
                                 }
-<span class="nc" id="L1122">                            } else {</span>
-<span class="nc" id="L1123">                                throw new net.morimekta.providence.serializer.SerializerException(</span>
-<span class="nc" id="L1124">                                        &quot;Wrong key type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_9) +</span>
-<span class="nc" id="L1125">                                        &quot; or value type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_10) +</span>
+<span class="nc" id="L1118">                            } else {</span>
+<span class="nc" id="L1119">                                throw new net.morimekta.providence.serializer.SerializerException(</span>
+<span class="nc" id="L1120">                                        &quot;Wrong key type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_9) +</span>
+<span class="nc" id="L1121">                                        &quot; or value type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_10) +</span>
                                         &quot; for model.ProgramType.namespaces, should be string(11) and string(11)&quot;);
                             }
-<span class="nc" id="L1128">                            optionals.set(3);</span>
-<span class="nc" id="L1129">                        } else {</span>
-<span class="nc" id="L1130">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.namespaces, should be struct(12)&quot;);</span>
+<span class="nc" id="L1124">                            optionals.set(3);</span>
+<span class="nc" id="L1125">                        } else {</span>
+<span class="nc" id="L1126">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.namespaces, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     case 5: {
-<span class="nc bnc" id="L1135" title="All 2 branches missed.">                        if (type == 15) {</span>
-<span class="nc" id="L1136">                            byte t_17 = reader.expectByte();</span>
-<span class="nc bnc" id="L1137" title="All 2 branches missed.">                            if (t_17 == 12) {</span>
-<span class="nc" id="L1138">                                final int len_16 = reader.expectUInt32();</span>
-<span class="nc bnc" id="L1139" title="All 2 branches missed.">                                for (int i_18 = 0; i_18 &lt; len_16; ++i_18) {</span>
-<span class="nc" id="L1140">                                    net.morimekta.providence.model.Declaration key_19 = net.morimekta.providence.serializer.rw.BinaryFormatUtils.readMessage(reader, net.morimekta.providence.model.Declaration.kDescriptor, strict);</span>
-<span class="nc" id="L1141">                                    mDecl.add(key_19);</span>
+<span class="nc bnc" id="L1131" title="All 2 branches missed.">                        if (type == 15) {</span>
+<span class="nc" id="L1132">                            byte t_17 = reader.expectByte();</span>
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">                            if (t_17 == 12) {</span>
+<span class="nc" id="L1134">                                final int len_16 = reader.expectUInt32();</span>
+<span class="nc bnc" id="L1135" title="All 2 branches missed.">                                for (int i_18 = 0; i_18 &lt; len_16; ++i_18) {</span>
+<span class="nc" id="L1136">                                    net.morimekta.providence.model.Declaration key_19 = net.morimekta.providence.serializer.rw.BinaryFormatUtils.readMessage(reader, net.morimekta.providence.model.Declaration.kDescriptor, strict);</span>
+<span class="nc" id="L1137">                                    mDecl.add(key_19);</span>
                                 }
-<span class="nc" id="L1143">                            } else {</span>
-<span class="nc" id="L1144">                                throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong item type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_17) + &quot; for model.ProgramType.decl, should be struct(12)&quot;);</span>
+<span class="nc" id="L1139">                            } else {</span>
+<span class="nc" id="L1140">                                throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong item type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_17) + &quot; for model.ProgramType.decl, should be struct(12)&quot;);</span>
                             }
-<span class="nc" id="L1146">                            optionals.set(4);</span>
-<span class="nc" id="L1147">                        } else {</span>
-<span class="nc" id="L1148">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.decl, should be struct(12)&quot;);</span>
+<span class="nc" id="L1142">                            optionals.set(4);</span>
+<span class="nc" id="L1143">                        } else {</span>
+<span class="nc" id="L1144">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.ProgramType.decl, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     default: {
-<span class="nc bnc" id="L1153" title="All 2 branches missed.">                        if (strict) {</span>
-<span class="nc" id="L1154">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;No field with id &quot; + field + &quot; exists in model.ProgramType&quot;);</span>
-                        } else {
-<span class="nc" id="L1156">                            net.morimekta.providence.serializer.rw.BinaryFormatUtils.readFieldValue(reader, new net.morimekta.providence.serializer.rw.BinaryFormatUtils.FieldInfo(field, type), null, false);</span>
-                        }
+<span class="nc" id="L1149">                        net.morimekta.providence.serializer.rw.BinaryFormatUtils.readFieldValue(reader, new net.morimekta.providence.serializer.rw.BinaryFormatUtils.FieldInfo(field, type), null, false);</span>
                         break;
                     }
                 }
-<span class="nc" id="L1161">                type = reader.expectByte();</span>
-<span class="nc" id="L1162">            }</span>
-<span class="nc" id="L1163">        }</span>
+<span class="nc" id="L1153">                type = reader.expectByte();</span>
+<span class="nc" id="L1154">            }</span>
+<span class="nc" id="L1155">        }</span>
 
         @Override
         public ProgramType build() {
-<span class="fc" id="L1167">            return new ProgramType(this);</span>
+<span class="fc" id="L1159">            return new ProgramType(this);</span>
         }
     }
 }

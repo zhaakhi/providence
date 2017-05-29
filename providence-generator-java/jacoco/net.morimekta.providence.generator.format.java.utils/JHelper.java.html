@@ -129,11 +129,11 @@ public class JHelper {
     }
 
     public String getConstantsClassName(CProgram document) {
-<span class="fc" id="L132">        return camelCase(&quot;&quot;, document.getProgramName()) + &quot;_Constants&quot;;</span>
+<span class="fc" id="L132">        return camelCase(document.getProgramName()) + &quot;_Constants&quot;;</span>
     }
 
     public String getHazelcastFactoryClassName(CProgram document) {
-<span class="fc" id="L136">        return camelCase(&quot;&quot;, document.getProgramName())  + &quot;_Factory&quot;;</span>
+<span class="fc" id="L136">        return camelCase(document.getProgramName())  + &quot;_Factory&quot;;</span>
     }
 
     public String getHazelcastOptionalName(JMessage&lt;?&gt; message) {
@@ -185,83 +185,78 @@ public class JHelper {
     }
 
     public String getFieldType(PDescriptor type) throws GeneratorException {
-<span class="pc bpc" id="L188" title="2 of 14 branches missed.">        switch (type.getType()) {</span>
-            case VOID:
-<span class="nc" id="L190">                return Void.class.getSimpleName();</span>
+<span class="pc bpc" id="L188" title="1 of 13 branches missed.">        switch (type.getType()) {</span>
             case BOOL:
-<span class="fc" id="L192">                return Boolean.class.getSimpleName();</span>
+<span class="fc" id="L190">                return Boolean.class.getSimpleName();</span>
             case BYTE:
-<span class="fc" id="L194">                return Byte.class.getSimpleName();</span>
+<span class="fc" id="L192">                return Byte.class.getSimpleName();</span>
             case I16:
-<span class="fc" id="L196">                return Short.class.getSimpleName();</span>
+<span class="fc" id="L194">                return Short.class.getSimpleName();</span>
             case I32:
-<span class="fc" id="L198">                return Integer.class.getSimpleName();</span>
+<span class="fc" id="L196">                return Integer.class.getSimpleName();</span>
             case I64:
-<span class="fc" id="L200">                return Long.class.getSimpleName();</span>
+<span class="fc" id="L198">                return Long.class.getSimpleName();</span>
             case DOUBLE:
-<span class="fc" id="L202">                return Double.class.getSimpleName();</span>
+<span class="fc" id="L200">                return Double.class.getSimpleName();</span>
             case STRING:
-<span class="fc" id="L204">                return String.class.getSimpleName();</span>
+<span class="fc" id="L202">                return String.class.getSimpleName();</span>
             case BINARY:
-<span class="fc" id="L206">                return Binary.class.getName();</span>
+<span class="fc" id="L204">                return Binary.class.getName();</span>
             case MAP:
-<span class="fc" id="L208">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) type;</span>
-<span class="fc" id="L209">                return String.format(&quot;%s&lt;%s,%s&gt;&quot;,</span>
-<span class="fc" id="L210">                                     Map.class.getName(),</span>
-<span class="fc" id="L211">                                     getFieldType(mType.keyDescriptor()),</span>
-<span class="fc" id="L212">                                     getFieldType(mType.itemDescriptor()));</span>
+<span class="fc" id="L206">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) type;</span>
+<span class="fc" id="L207">                return String.format(&quot;%s&lt;%s,%s&gt;&quot;,</span>
+<span class="fc" id="L208">                                     Map.class.getName(),</span>
+<span class="fc" id="L209">                                     getFieldType(mType.keyDescriptor()),</span>
+<span class="fc" id="L210">                                     getFieldType(mType.itemDescriptor()));</span>
             case SET:
-<span class="fc" id="L214">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) type;</span>
-<span class="fc" id="L215">                return String.format(&quot;%s&lt;%s&gt;&quot;, Set.class.getName(), getFieldType(sType.itemDescriptor()));</span>
+<span class="fc" id="L212">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) type;</span>
+<span class="fc" id="L213">                return String.format(&quot;%s&lt;%s&gt;&quot;, Set.class.getName(), getFieldType(sType.itemDescriptor()));</span>
             case LIST:
-<span class="fc" id="L217">                PList&lt;?&gt; lType = (PList&lt;?&gt;) type;</span>
-<span class="fc" id="L218">                return String.format(&quot;%s&lt;%s&gt;&quot;, List.class.getName(), getFieldType(lType.itemDescriptor()));</span>
+<span class="fc" id="L215">                PList&lt;?&gt; lType = (PList&lt;?&gt;) type;</span>
+<span class="fc" id="L216">                return String.format(&quot;%s&lt;%s&gt;&quot;, List.class.getName(), getFieldType(lType.itemDescriptor()));</span>
             case ENUM:
             case MESSAGE:
-<span class="fc" id="L221">                PDeclaredDescriptor&lt;?&gt; dt = (PDeclaredDescriptor&lt;?&gt;) type;</span>
-<span class="fc" id="L222">                return getJavaPackage(dt) + packageSeparator + JUtils.getClassName(dt);</span>
+<span class="fc" id="L219">                PDeclaredDescriptor&lt;?&gt; dt = (PDeclaredDescriptor&lt;?&gt;) type;</span>
+<span class="fc" id="L220">                return getJavaPackage(dt) + packageSeparator + JUtils.getClassName(dt);</span>
         }
-<span class="nc" id="L224">        throw new IllegalArgumentException(&quot;Unhandled type group&quot; + type.getType());</span>
+<span class="nc" id="L222">        throw new IllegalArgumentException(&quot;Unhandled field type group &quot; + type.getType());</span>
     }
 
     public Object getDefaultValue(PField field) {
-<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (field.hasDefaultValue()) {</span>
-<span class="fc" id="L229">            return field.getDefaultValue();</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if (field.hasDefaultValue()) {</span>
+<span class="fc" id="L227">            return field.getDefaultValue();</span>
         }
-<span class="fc bfc" id="L231" title="All 2 branches covered.">        if (field.getDescriptor() instanceof PPrimitive) {</span>
-<span class="fc" id="L232">            return ((PPrimitive) field.getDescriptor()).getDefaultValue();</span>
-        }
-<span class="fc" id="L234">        return null;</span>
+<span class="fc" id="L229">        return field.getDescriptor().getDefaultValue();</span>
     }
 
     public String getProviderName(PDescriptor type) throws GeneratorException {
-<span class="pc bpc" id="L238" title="2 of 5 branches missed.">        switch (type.getType()) {</span>
+<span class="pc bpc" id="L233" title="2 of 5 branches missed.">        switch (type.getType()) {</span>
             case ENUM:
             case MESSAGE:
-<span class="fc" id="L241">                return String.format(&quot;%s.provider()&quot;, getFieldType(type));</span>
+<span class="fc" id="L236">                return String.format(&quot;%s.provider()&quot;, getFieldType(type));</span>
             case LIST:
-<span class="fc" id="L243">                PList&lt;?&gt; lType = (PList&lt;?&gt;) type;</span>
-<span class="fc" id="L244">                return String.format(&quot;%s.provider(%s)&quot;,</span>
-<span class="fc" id="L245">                                     PList.class.getName(),</span>
-<span class="fc" id="L246">                                     getProviderName(lType.itemDescriptor()));</span>
+<span class="fc" id="L238">                PList&lt;?&gt; lType = (PList&lt;?&gt;) type;</span>
+<span class="fc" id="L239">                return String.format(&quot;%s.provider(%s)&quot;,</span>
+<span class="fc" id="L240">                                     PList.class.getName(),</span>
+<span class="fc" id="L241">                                     getProviderName(lType.itemDescriptor()));</span>
             case SET:
-<span class="nc" id="L248">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) type;</span>
-<span class="nc" id="L249">                return String.format(&quot;%s.provider(%s)&quot;,</span>
-<span class="nc" id="L250">                                     PSet.class.getName(),</span>
-<span class="nc" id="L251">                                     getProviderName(sType.itemDescriptor()));</span>
+<span class="nc" id="L243">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) type;</span>
+<span class="nc" id="L244">                return String.format(&quot;%s.provider(%s)&quot;,</span>
+<span class="nc" id="L245">                                     PSet.class.getName(),</span>
+<span class="nc" id="L246">                                     getProviderName(sType.itemDescriptor()));</span>
             case MAP:
-<span class="nc" id="L253">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) type;</span>
-<span class="nc" id="L254">                return String.format(&quot;%s.provider(%s,%s)&quot;,</span>
-<span class="nc" id="L255">                                     PMap.class.getName(),</span>
-<span class="nc" id="L256">                                     getProviderName(mType.keyDescriptor()),</span>
-<span class="nc" id="L257">                                     getProviderName(mType.itemDescriptor()));</span>
+<span class="nc" id="L248">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) type;</span>
+<span class="nc" id="L249">                return String.format(&quot;%s.provider(%s,%s)&quot;,</span>
+<span class="nc" id="L250">                                     PMap.class.getName(),</span>
+<span class="nc" id="L251">                                     getProviderName(mType.keyDescriptor()),</span>
+<span class="nc" id="L252">                                     getProviderName(mType.itemDescriptor()));</span>
             default:
-<span class="pc bpc" id="L259" title="1 of 2 branches missed.">                if (!(type instanceof PPrimitive)) {</span>
-<span class="nc" id="L260">                    throw new IllegalArgumentException(&quot;Unhandled type group &quot; + type.getType());</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">                if (!(type instanceof PPrimitive)) {</span>
+<span class="nc" id="L255">                    throw new IllegalArgumentException(&quot;Unhandled type group &quot; + type.getType());</span>
                 }
-<span class="fc" id="L262">                return String.format(&quot;%s.%s.provider()&quot;,</span>
-<span class="fc" id="L263">                                     PPrimitive.class.getName(),</span>
-<span class="fc" id="L264">                                     type.getName().toUpperCase());</span>
+<span class="fc" id="L257">                return String.format(&quot;%s.%s.provider()&quot;,</span>
+<span class="fc" id="L258">                                     PPrimitive.class.getName(),</span>
+<span class="fc" id="L259">                                     type.getName().toUpperCase());</span>
         }
     }
 }

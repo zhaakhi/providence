@@ -169,7 +169,7 @@ public class BinarySerializer extends Serializer {
 <span class="fc" id="L169">                            .setExceptionType(PApplicationExceptionType.INVALID_PROTOCOL);</span>
                 }
 <span class="fc" id="L171">            } else {</span>
-<span class="pc bpc" id="L172" title="1 of 4 branches missed.">                if (strict &amp;&amp; versioned) {</span>
+<span class="fc bfc" id="L172" title="All 4 branches covered.">                if (strict &amp;&amp; versioned) {</span>
 <span class="fc" id="L173">                    throw new SerializerException(&quot;Missing protocol version&quot;)</span>
 <span class="fc" id="L174">                            .setExceptionType(PApplicationExceptionType.INVALID_PROTOCOL);</span>
                 }
@@ -188,16 +188,16 @@ public class BinarySerializer extends Serializer {
 <span class="fc bfc" id="L188" title="All 2 branches covered.">            if (type == null) {</span>
 <span class="fc" id="L189">                throw new SerializerException(&quot;Invalid call type &quot; + typeKey)</span>
 <span class="fc" id="L190">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
-<span class="pc bpc" id="L191" title="1 of 2 branches missed.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
-<span class="nc" id="L192">                PApplicationException ex = readMessage(in, PApplicationException.kDescriptor, strict);</span>
-<span class="nc" id="L193">                return (PServiceCall&lt;Message, Field&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
+<span class="fc" id="L192">                PApplicationException ex = readMessage(in, PApplicationException.kDescriptor, strict);</span>
+<span class="fc" id="L193">                return (PServiceCall&lt;Message, Field&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
 <span class="fc bfc" id="L194" title="All 2 branches covered.">            } else if (method == null) {</span>
 <span class="fc" id="L195">                throw new SerializerException(&quot;No such method &quot; + methodName + &quot; on &quot; + service.getQualifiedName())</span>
 <span class="fc" id="L196">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
 
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            PMessageDescriptor&lt;Message, Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">            PMessageDescriptor&lt;Message, Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
 
 <span class="fc" id="L202">            Message message = readMessage(in, descriptor, strict);</span>
 

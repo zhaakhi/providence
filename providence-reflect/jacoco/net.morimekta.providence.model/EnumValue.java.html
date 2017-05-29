@@ -11,11 +11,12 @@ public class EnumValue
                    net.morimekta.providence.serializer.rw.BinaryWriter {
     private final static long serialVersionUID = -4079600082644582517L;
 
+    private final static String kDefaultName = &quot;&quot;;
     private final static int kDefaultValue = 0;
 
     private final String mDocumentation;
     private final String mName;
-    private final int mValue;
+    private final Integer mValue;
     private final java.util.Map&lt;String,String&gt; mAnnotations;
 
     private volatile int tHashCode;
@@ -23,260 +24,264 @@ public class EnumValue
     public EnumValue(String pDocumentation,
                      String pName,
                      Integer pValue,
-<span class="nc" id="L26">                     java.util.Map&lt;String,String&gt; pAnnotations) {</span>
-<span class="nc" id="L27">        mDocumentation = pDocumentation;</span>
-<span class="nc" id="L28">        mName = pName;</span>
-<span class="nc bnc" id="L29" title="All 2 branches missed.">        if (pValue != null) {</span>
-<span class="nc" id="L30">            mValue = pValue;</span>
+<span class="nc" id="L27">                     java.util.Map&lt;String,String&gt; pAnnotations) {</span>
+<span class="nc" id="L28">        mDocumentation = pDocumentation;</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">        if (pName != null) {</span>
+<span class="nc" id="L30">            mName = pName;</span>
         } else {
-<span class="nc" id="L32">            mValue = kDefaultValue;</span>
+<span class="nc" id="L32">            mName = kDefaultName;</span>
         }
-<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (pAnnotations != null) {</span>
-<span class="nc" id="L35">            mAnnotations = com.google.common.collect.ImmutableMap.copyOf(pAnnotations);</span>
+<span class="nc" id="L34">        mValue = pValue;</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (pAnnotations != null) {</span>
+<span class="nc" id="L36">            mAnnotations = com.google.common.collect.ImmutableMap.copyOf(pAnnotations);</span>
         } else {
-<span class="nc" id="L37">            mAnnotations = null;</span>
+<span class="nc" id="L38">            mAnnotations = null;</span>
         }
-<span class="nc" id="L39">    }</span>
+<span class="nc" id="L40">    }</span>
 
-<span class="fc" id="L41">    private EnumValue(_Builder builder) {</span>
-<span class="fc" id="L42">        mDocumentation = builder.mDocumentation;</span>
-<span class="fc" id="L43">        mName = builder.mName;</span>
-<span class="fc" id="L44">        mValue = builder.mValue;</span>
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (builder.isSetAnnotations()) {</span>
-<span class="fc" id="L46">            mAnnotations = builder.mAnnotations.build();</span>
+<span class="fc" id="L42">    private EnumValue(_Builder builder) {</span>
+<span class="fc" id="L43">        mDocumentation = builder.mDocumentation;</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (builder.isSetName()) {</span>
+<span class="fc" id="L45">            mName = builder.mName;</span>
         } else {
-<span class="fc" id="L48">            mAnnotations = null;</span>
+<span class="nc" id="L47">            mName = kDefaultName;</span>
         }
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L49">        mValue = builder.mValue;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (builder.isSetAnnotations()) {</span>
+<span class="fc" id="L51">            mAnnotations = builder.mAnnotations.build();</span>
+        } else {
+<span class="fc" id="L53">            mAnnotations = null;</span>
+        }
+<span class="fc" id="L55">    }</span>
 
     public boolean hasDocumentation() {
-<span class="fc bfc" id="L53" title="All 2 branches covered.">        return mDocumentation != null;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        return mDocumentation != null;</span>
     }
 
     /**
      * @return The field value
      */
     public String getDocumentation() {
-<span class="fc" id="L60">        return mDocumentation;</span>
+<span class="fc" id="L65">        return mDocumentation;</span>
     }
 
     public boolean hasName() {
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        return mName != null;</span>
+<span class="nc" id="L69">        return true;</span>
     }
 
     /**
      * @return The field value
      */
     public String getName() {
-<span class="fc" id="L71">        return mName;</span>
+<span class="fc" id="L76">        return mName;</span>
     }
 
     public boolean hasValue() {
-<span class="nc" id="L75">        return true;</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        return mValue != null;</span>
     }
 
     /**
      * @return The field value
      */
     public int getValue() {
-<span class="fc" id="L82">        return mValue;</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        return hasValue() ? mValue : kDefaultValue;</span>
     }
 
     public int numAnnotations() {
-<span class="nc bnc" id="L86" title="All 2 branches missed.">        return mAnnotations != null ? mAnnotations.size() : 0;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        return mAnnotations != null ? mAnnotations.size() : 0;</span>
     }
 
     public boolean hasAnnotations() {
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        return mAnnotations != null;</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        return mAnnotations != null;</span>
     }
 
     /**
      * @return The field value
      */
     public java.util.Map&lt;String,String&gt; getAnnotations() {
-<span class="fc" id="L97">        return mAnnotations;</span>
+<span class="fc" id="L102">        return mAnnotations;</span>
     }
 
     @Override
     public boolean has(int key) {
-<span class="pc bpc" id="L102" title="1 of 5 branches missed.">        switch(key) {</span>
-<span class="fc" id="L103">            case 1: return hasDocumentation();</span>
-<span class="fc" id="L104">            case 2: return hasName();</span>
-<span class="fc" id="L105">            case 3: return true;</span>
-<span class="fc" id="L106">            case 4: return hasAnnotations();</span>
-<span class="nc" id="L107">            default: return false;</span>
+<span class="pc bpc" id="L107" title="1 of 5 branches missed.">        switch(key) {</span>
+<span class="fc" id="L108">            case 1: return hasDocumentation();</span>
+<span class="fc" id="L109">            case 2: return true;</span>
+<span class="fc" id="L110">            case 3: return hasValue();</span>
+<span class="fc" id="L111">            case 4: return hasAnnotations();</span>
+<span class="nc" id="L112">            default: return false;</span>
         }
     }
 
     @Override
     public int num(int key) {
-<span class="nc bnc" id="L113" title="All 5 branches missed.">        switch(key) {</span>
-<span class="nc bnc" id="L114" title="All 2 branches missed.">            case 1: return hasDocumentation() ? 1 : 0;</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">            case 2: return hasName() ? 1 : 0;</span>
-<span class="nc" id="L116">            case 3: return 1;</span>
-<span class="nc" id="L117">            case 4: return numAnnotations();</span>
-<span class="nc" id="L118">            default: return 0;</span>
+<span class="nc bnc" id="L118" title="All 5 branches missed.">        switch(key) {</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            case 1: return hasDocumentation() ? 1 : 0;</span>
+<span class="nc" id="L120">            case 2: return 1;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            case 3: return hasValue() ? 1 : 0;</span>
+<span class="nc" id="L122">            case 4: return numAnnotations();</span>
+<span class="nc" id="L123">            default: return 0;</span>
         }
     }
 
     @Override
     public Object get(int key) {
-<span class="pc bpc" id="L124" title="1 of 5 branches missed.">        switch(key) {</span>
-<span class="fc" id="L125">            case 1: return getDocumentation();</span>
-<span class="fc" id="L126">            case 2: return getName();</span>
-<span class="fc" id="L127">            case 3: return getValue();</span>
-<span class="fc" id="L128">            case 4: return getAnnotations();</span>
-<span class="nc" id="L129">            default: return null;</span>
+<span class="pc bpc" id="L129" title="1 of 5 branches missed.">        switch(key) {</span>
+<span class="fc" id="L130">            case 1: return getDocumentation();</span>
+<span class="fc" id="L131">            case 2: return getName();</span>
+<span class="fc" id="L132">            case 3: return getValue();</span>
+<span class="fc" id="L133">            case 4: return getAnnotations();</span>
+<span class="nc" id="L134">            default: return null;</span>
         }
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (o == this) return true;</span>
-<span class="nc bnc" id="L136" title="All 4 branches missed.">        if (o == null || !o.getClass().equals(getClass())) return false;</span>
-<span class="nc" id="L137">        EnumValue other = (EnumValue) o;</span>
-<span class="nc bnc" id="L138" title="All 2 branches missed.">        return java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
-<span class="nc bnc" id="L139" title="All 2 branches missed.">               java.util.Objects.equals(mName, other.mName) &amp;&amp;</span>
-<span class="nc bnc" id="L140" title="All 2 branches missed.">               java.util.Objects.equals(mValue, other.mValue) &amp;&amp;</span>
-<span class="nc bnc" id="L141" title="All 2 branches missed.">               java.util.Objects.equals(mAnnotations, other.mAnnotations);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (o == this) return true;</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">        if (o == null || !o.getClass().equals(getClass())) return false;</span>
+<span class="nc" id="L142">        EnumValue other = (EnumValue) o;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        return java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">               java.util.Objects.equals(mName, other.mName) &amp;&amp;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">               java.util.Objects.equals(mValue, other.mValue) &amp;&amp;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">               java.util.Objects.equals(mAnnotations, other.mAnnotations);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (tHashCode == 0) {</span>
-<span class="nc" id="L147">            tHashCode = java.util.Objects.hash(</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        if (tHashCode == 0) {</span>
+<span class="nc" id="L152">            tHashCode = java.util.Objects.hash(</span>
                     EnumValue.class,
                     _Field.DOCUMENTATION, mDocumentation,
                     _Field.NAME, mName,
-<span class="nc" id="L151">                    _Field.VALUE, mValue,</span>
+                    _Field.VALUE, mValue,
                     _Field.ANNOTATIONS, mAnnotations);
         }
-<span class="nc" id="L154">        return tHashCode;</span>
+<span class="nc" id="L159">        return tHashCode;</span>
     }
 
     @Override
     public String toString() {
-<span class="nc" id="L159">        return &quot;model.EnumValue&quot; + asString();</span>
+<span class="nc" id="L164">        return &quot;model.EnumValue&quot; + asString();</span>
     }
 
     @Override
     public String asString() {
-<span class="nc" id="L164">        StringBuilder out = new StringBuilder();</span>
-<span class="nc" id="L165">        out.append(&quot;{&quot;);</span>
+<span class="nc" id="L169">        StringBuilder out = new StringBuilder();</span>
+<span class="nc" id="L170">        out.append(&quot;{&quot;);</span>
 
-<span class="nc" id="L167">        boolean first = true;</span>
-<span class="nc bnc" id="L168" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
-<span class="nc" id="L169">            first = false;</span>
-<span class="nc" id="L170">            out.append(&quot;documentation:&quot;)</span>
-<span class="nc" id="L171">               .append('\&quot;')</span>
-<span class="nc" id="L172">               .append(net.morimekta.util.Strings.escape(mDocumentation))</span>
-<span class="nc" id="L173">               .append('\&quot;');</span>
+<span class="nc" id="L172">        boolean first = true;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
+<span class="nc" id="L174">            first = false;</span>
+<span class="nc" id="L175">            out.append(&quot;documentation:&quot;)</span>
+<span class="nc" id="L176">               .append('\&quot;')</span>
+<span class="nc" id="L177">               .append(net.morimekta.util.Strings.escape(mDocumentation))</span>
+<span class="nc" id="L178">               .append('\&quot;');</span>
         }
-<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (hasName()) {</span>
-<span class="nc bnc" id="L176" title="All 2 branches missed.">            if (first) first = false;</span>
-<span class="nc" id="L177">            else out.append(',');</span>
-<span class="nc" id="L178">            out.append(&quot;name:&quot;)</span>
-<span class="nc" id="L179">               .append('\&quot;')</span>
-<span class="nc" id="L180">               .append(net.morimekta.util.Strings.escape(mName))</span>
-<span class="nc" id="L181">               .append('\&quot;');</span>
-        }
-<span class="nc" id="L183">        out.append(&quot;value:&quot;)</span>
-<span class="nc" id="L184">           .append(mValue);</span>
-<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (hasAnnotations()) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        if (!first) out.append(',');</span>
+<span class="nc" id="L181">        out.append(&quot;name:&quot;)</span>
+<span class="nc" id="L182">           .append('\&quot;')</span>
+<span class="nc" id="L183">           .append(net.morimekta.util.Strings.escape(mName))</span>
+<span class="nc" id="L184">           .append('\&quot;');</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (hasValue()) {</span>
 <span class="nc" id="L186">            out.append(',');</span>
-<span class="nc" id="L187">            out.append(&quot;annotations:&quot;)</span>
-<span class="nc" id="L188">               .append(net.morimekta.util.Strings.asString(mAnnotations));</span>
+<span class="nc" id="L187">            out.append(&quot;value:&quot;)</span>
+<span class="nc" id="L188">               .append(mValue);</span>
         }
-<span class="nc" id="L190">        out.append('}');</span>
-<span class="nc" id="L191">        return out.toString();</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        if (hasAnnotations()) {</span>
+<span class="nc" id="L191">            out.append(',');</span>
+<span class="nc" id="L192">            out.append(&quot;annotations:&quot;)</span>
+<span class="nc" id="L193">               .append(net.morimekta.util.Strings.asString(mAnnotations));</span>
+        }
+<span class="nc" id="L195">        out.append('}');</span>
+<span class="nc" id="L196">        return out.toString();</span>
     }
 
     @Override
     public int compareTo(EnumValue other) {
         int c;
 
-<span class="nc bnc" id="L198" title="All 4 branches missed.">        c = Boolean.compare(mDocumentation != null, other.mDocumentation != null);</span>
-<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L200" title="All 2 branches missed.">        if (mDocumentation != null) {</span>
-<span class="nc" id="L201">            c = mDocumentation.compareTo(other.mDocumentation);</span>
-<span class="nc bnc" id="L202" title="All 2 branches missed.">            if (c != 0) return c;</span>
+<span class="nc bnc" id="L203" title="All 4 branches missed.">        c = Boolean.compare(mDocumentation != null, other.mDocumentation != null);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if (c != 0) return c;</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        if (mDocumentation != null) {</span>
+<span class="nc" id="L206">            c = mDocumentation.compareTo(other.mDocumentation);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">            if (c != 0) return c;</span>
         }
 
-<span class="nc bnc" id="L205" title="All 4 branches missed.">        c = Boolean.compare(mName != null, other.mName != null);</span>
-<span class="nc bnc" id="L206" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L207" title="All 2 branches missed.">        if (mName != null) {</span>
-<span class="nc" id="L208">            c = mName.compareTo(other.mName);</span>
-<span class="nc bnc" id="L209" title="All 2 branches missed.">            if (c != 0) return c;</span>
+<span class="nc" id="L210">        c = mName.compareTo(other.mName);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">        if (c != 0) return c;</span>
+
+<span class="nc bnc" id="L213" title="All 4 branches missed.">        c = Boolean.compare(mValue != null, other.mValue != null);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (c != 0) return c;</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (mValue != null) {</span>
+<span class="nc" id="L216">            c = Integer.compare(mValue, other.mValue);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">            if (c != 0) return c;</span>
         }
 
-<span class="nc" id="L212">        c = Integer.compare(mValue, other.mValue);</span>
-<span class="nc bnc" id="L213" title="All 2 branches missed.">        if (c != 0) return c;</span>
-
-<span class="nc bnc" id="L215" title="All 4 branches missed.">        c = Boolean.compare(mAnnotations != null, other.mAnnotations != null);</span>
-<span class="nc bnc" id="L216" title="All 2 branches missed.">        if (c != 0) return c;</span>
-<span class="nc bnc" id="L217" title="All 2 branches missed.">        if (mAnnotations != null) {</span>
-<span class="nc" id="L218">            c = Integer.compare(mAnnotations.hashCode(), other.mAnnotations.hashCode());</span>
-<span class="nc bnc" id="L219" title="All 2 branches missed.">            if (c != 0) return c;</span>
+<span class="nc bnc" id="L220" title="All 4 branches missed.">        c = Boolean.compare(mAnnotations != null, other.mAnnotations != null);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        if (c != 0) return c;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        if (mAnnotations != null) {</span>
+<span class="nc" id="L223">            c = Integer.compare(mAnnotations.hashCode(), other.mAnnotations.hashCode());</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">            if (c != 0) return c;</span>
         }
 
-<span class="nc" id="L222">        return 0;</span>
+<span class="nc" id="L227">        return 0;</span>
     }
 
     @Override
     public int writeBinary(net.morimekta.util.io.BigEndianBinaryWriter writer) throws java.io.IOException {
-<span class="nc" id="L227">        int length = 0;</span>
+<span class="nc" id="L232">        int length = 0;</span>
 
-<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
-<span class="nc" id="L230">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L231">            length += writer.writeShort((short) 1);</span>
-<span class="nc" id="L232">            net.morimekta.util.Binary tmp_1 = net.morimekta.util.Binary.wrap(mDocumentation.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L233">            length += writer.writeUInt32(tmp_1.length());</span>
-<span class="nc" id="L234">            length += writer.writeBinary(tmp_1);</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">        if (hasDocumentation()) {</span>
+<span class="nc" id="L235">            length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L236">            length += writer.writeShort((short) 1);</span>
+<span class="nc" id="L237">            net.morimekta.util.Binary tmp_1 = net.morimekta.util.Binary.wrap(mDocumentation.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L238">            length += writer.writeUInt32(tmp_1.length());</span>
+<span class="nc" id="L239">            length += writer.writeBinary(tmp_1);</span>
         }
 
-<span class="nc bnc" id="L237" title="All 2 branches missed.">        if (hasName()) {</span>
-<span class="nc" id="L238">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L239">            length += writer.writeShort((short) 2);</span>
-<span class="nc" id="L240">            net.morimekta.util.Binary tmp_2 = net.morimekta.util.Binary.wrap(mName.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L241">            length += writer.writeUInt32(tmp_2.length());</span>
-<span class="nc" id="L242">            length += writer.writeBinary(tmp_2);</span>
+<span class="nc" id="L242">        length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L243">        length += writer.writeShort((short) 2);</span>
+<span class="nc" id="L244">        net.morimekta.util.Binary tmp_2 = net.morimekta.util.Binary.wrap(mName.getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L245">        length += writer.writeUInt32(tmp_2.length());</span>
+<span class="nc" id="L246">        length += writer.writeBinary(tmp_2);</span>
+
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        if (hasValue()) {</span>
+<span class="nc" id="L249">            length += writer.writeByte((byte) 8);</span>
+<span class="nc" id="L250">            length += writer.writeShort((short) 3);</span>
+<span class="nc" id="L251">            length += writer.writeInt(mValue);</span>
         }
 
-<span class="nc" id="L245">        length += writer.writeByte((byte) 8);</span>
-<span class="nc" id="L246">        length += writer.writeShort((short) 3);</span>
-<span class="nc" id="L247">        length += writer.writeInt(mValue);</span>
-
-<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (hasAnnotations()) {</span>
-<span class="nc" id="L250">            length += writer.writeByte((byte) 13);</span>
-<span class="nc" id="L251">            length += writer.writeShort((short) 4);</span>
-<span class="nc" id="L252">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L253">            length += writer.writeByte((byte) 11);</span>
-<span class="nc" id="L254">            length += writer.writeUInt32(mAnnotations.size());</span>
-<span class="nc bnc" id="L255" title="All 2 branches missed.">            for (java.util.Map.Entry&lt;String,String&gt; entry_3 : mAnnotations.entrySet()) {</span>
-<span class="nc" id="L256">                net.morimekta.util.Binary tmp_4 = net.morimekta.util.Binary.wrap(entry_3.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L257">                length += writer.writeUInt32(tmp_4.length());</span>
-<span class="nc" id="L258">                length += writer.writeBinary(tmp_4);</span>
-<span class="nc" id="L259">                net.morimekta.util.Binary tmp_5 = net.morimekta.util.Binary.wrap(entry_3.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
-<span class="nc" id="L260">                length += writer.writeUInt32(tmp_5.length());</span>
-<span class="nc" id="L261">                length += writer.writeBinary(tmp_5);</span>
-<span class="nc" id="L262">            }</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        if (hasAnnotations()) {</span>
+<span class="nc" id="L255">            length += writer.writeByte((byte) 13);</span>
+<span class="nc" id="L256">            length += writer.writeShort((short) 4);</span>
+<span class="nc" id="L257">            length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L258">            length += writer.writeByte((byte) 11);</span>
+<span class="nc" id="L259">            length += writer.writeUInt32(mAnnotations.size());</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">            for (java.util.Map.Entry&lt;String,String&gt; entry_3 : mAnnotations.entrySet()) {</span>
+<span class="nc" id="L261">                net.morimekta.util.Binary tmp_4 = net.morimekta.util.Binary.wrap(entry_3.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L262">                length += writer.writeUInt32(tmp_4.length());</span>
+<span class="nc" id="L263">                length += writer.writeBinary(tmp_4);</span>
+<span class="nc" id="L264">                net.morimekta.util.Binary tmp_5 = net.morimekta.util.Binary.wrap(entry_3.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));</span>
+<span class="nc" id="L265">                length += writer.writeUInt32(tmp_5.length());</span>
+<span class="nc" id="L266">                length += writer.writeBinary(tmp_5);</span>
+<span class="nc" id="L267">            }</span>
         }
 
-<span class="nc" id="L265">        length += writer.writeByte((byte) 0);</span>
-<span class="nc" id="L266">        return length;</span>
+<span class="nc" id="L270">        length += writer.writeByte((byte) 0);</span>
+<span class="nc" id="L271">        return length;</span>
     }
 
     @javax.annotation.Nonnull
     @Override
     public _Builder mutate() {
-<span class="nc" id="L272">        return new _Builder(this);</span>
+<span class="nc" id="L277">        return new _Builder(this);</span>
     }
 
-<span class="pc" id="L275">    public enum _Field implements net.morimekta.providence.descriptor.PField {</span>
-<span class="fc" id="L276">        DOCUMENTATION(1, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;documentation&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
-<span class="fc" id="L277">        NAME(2, net.morimekta.providence.descriptor.PRequirement.REQUIRED, &quot;name&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
-<span class="fc" id="L278">        VALUE(3, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;value&quot;, net.morimekta.providence.descriptor.PPrimitive.I32.provider(), null),</span>
-<span class="fc" id="L279">        ANNOTATIONS(4, net.morimekta.providence.descriptor.PRequirement.DEFAULT, &quot;annotations&quot;, net.morimekta.providence.descriptor.PMap.provider(net.morimekta.providence.descriptor.PPrimitive.STRING.provider(),net.morimekta.providence.descriptor.PPrimitive.STRING.provider()), null),</span>
+<span class="pc" id="L280">    public enum _Field implements net.morimekta.providence.descriptor.PField {</span>
+<span class="fc" id="L281">        DOCUMENTATION(1, net.morimekta.providence.descriptor.PRequirement.OPTIONAL, &quot;documentation&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
+<span class="fc" id="L282">        NAME(2, net.morimekta.providence.descriptor.PRequirement.REQUIRED, &quot;name&quot;, net.morimekta.providence.descriptor.PPrimitive.STRING.provider(), null),</span>
+<span class="fc" id="L283">        VALUE(3, net.morimekta.providence.descriptor.PRequirement.OPTIONAL, &quot;value&quot;, net.morimekta.providence.descriptor.PPrimitive.I32.provider(), null),</span>
+<span class="fc" id="L284">        ANNOTATIONS(4, net.morimekta.providence.descriptor.PRequirement.OPTIONAL, &quot;annotations&quot;, net.morimekta.providence.descriptor.PMap.provider(net.morimekta.providence.descriptor.PPrimitive.STRING.provider(),net.morimekta.providence.descriptor.PPrimitive.STRING.provider()), null),</span>
         ;
 
         private final int mKey;
@@ -285,67 +290,67 @@ public class EnumValue
         private final net.morimekta.providence.descriptor.PDescriptorProvider mTypeProvider;
         private final net.morimekta.providence.descriptor.PValueProvider&lt;?&gt; mDefaultValue;
 
-<span class="fc" id="L288">        _Field(int key, net.morimekta.providence.descriptor.PRequirement required, String name, net.morimekta.providence.descriptor.PDescriptorProvider typeProvider, net.morimekta.providence.descriptor.PValueProvider&lt;?&gt; defaultValue) {</span>
-<span class="fc" id="L289">            mKey = key;</span>
-<span class="fc" id="L290">            mRequired = required;</span>
-<span class="fc" id="L291">            mName = name;</span>
-<span class="fc" id="L292">            mTypeProvider = typeProvider;</span>
-<span class="fc" id="L293">            mDefaultValue = defaultValue;</span>
-<span class="fc" id="L294">        }</span>
+<span class="fc" id="L293">        _Field(int key, net.morimekta.providence.descriptor.PRequirement required, String name, net.morimekta.providence.descriptor.PDescriptorProvider typeProvider, net.morimekta.providence.descriptor.PValueProvider&lt;?&gt; defaultValue) {</span>
+<span class="fc" id="L294">            mKey = key;</span>
+<span class="fc" id="L295">            mRequired = required;</span>
+<span class="fc" id="L296">            mName = name;</span>
+<span class="fc" id="L297">            mTypeProvider = typeProvider;</span>
+<span class="fc" id="L298">            mDefaultValue = defaultValue;</span>
+<span class="fc" id="L299">        }</span>
 
         @Override
-<span class="fc" id="L297">        public int getKey() { return mKey; }</span>
+<span class="fc" id="L302">        public int getKey() { return mKey; }</span>
 
         @Override
-<span class="nc" id="L300">        public net.morimekta.providence.descriptor.PRequirement getRequirement() { return mRequired; }</span>
+<span class="nc" id="L305">        public net.morimekta.providence.descriptor.PRequirement getRequirement() { return mRequired; }</span>
 
         @Override
-<span class="fc" id="L303">        public net.morimekta.providence.descriptor.PDescriptor getDescriptor() { return mTypeProvider.descriptor(); }</span>
+<span class="fc" id="L308">        public net.morimekta.providence.descriptor.PDescriptor getDescriptor() { return mTypeProvider.descriptor(); }</span>
 
         @Override
-<span class="fc" id="L306">        public String getName() { return mName; }</span>
+<span class="fc" id="L311">        public String getName() { return mName; }</span>
 
         @Override
-<span class="nc bnc" id="L309" title="All 2 branches missed.">        public boolean hasDefaultValue() { return mDefaultValue != null; }</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">        public boolean hasDefaultValue() { return mDefaultValue != null; }</span>
 
         @Override
         public Object getDefaultValue() {
-<span class="nc bnc" id="L313" title="All 2 branches missed.">            return hasDefaultValue() ? mDefaultValue.get() : null;</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">            return hasDefaultValue() ? mDefaultValue.get() : null;</span>
         }
 
         @Override
         public String toString() {
-<span class="nc" id="L318">            return net.morimekta.providence.descriptor.PField.asString(this);</span>
+<span class="nc" id="L323">            return net.morimekta.providence.descriptor.PField.asString(this);</span>
         }
 
         public static _Field forKey(int key) {
-<span class="nc bnc" id="L322" title="All 5 branches missed.">            switch (key) {</span>
-<span class="nc" id="L323">                case 1: return _Field.DOCUMENTATION;</span>
-<span class="nc" id="L324">                case 2: return _Field.NAME;</span>
-<span class="nc" id="L325">                case 3: return _Field.VALUE;</span>
-<span class="nc" id="L326">                case 4: return _Field.ANNOTATIONS;</span>
+<span class="nc bnc" id="L327" title="All 5 branches missed.">            switch (key) {</span>
+<span class="nc" id="L328">                case 1: return _Field.DOCUMENTATION;</span>
+<span class="nc" id="L329">                case 2: return _Field.NAME;</span>
+<span class="nc" id="L330">                case 3: return _Field.VALUE;</span>
+<span class="nc" id="L331">                case 4: return _Field.ANNOTATIONS;</span>
             }
-<span class="nc" id="L328">            return null;</span>
+<span class="nc" id="L333">            return null;</span>
         }
 
         public static _Field forName(String name) {
-<span class="nc bnc" id="L332" title="All 18 branches missed.">            switch (name) {</span>
-<span class="nc" id="L333">                case &quot;documentation&quot;: return _Field.DOCUMENTATION;</span>
-<span class="nc" id="L334">                case &quot;name&quot;: return _Field.NAME;</span>
-<span class="nc" id="L335">                case &quot;value&quot;: return _Field.VALUE;</span>
-<span class="nc" id="L336">                case &quot;annotations&quot;: return _Field.ANNOTATIONS;</span>
+<span class="nc bnc" id="L337" title="All 18 branches missed.">            switch (name) {</span>
+<span class="nc" id="L338">                case &quot;documentation&quot;: return _Field.DOCUMENTATION;</span>
+<span class="nc" id="L339">                case &quot;name&quot;: return _Field.NAME;</span>
+<span class="nc" id="L340">                case &quot;value&quot;: return _Field.VALUE;</span>
+<span class="nc" id="L341">                case &quot;annotations&quot;: return _Field.ANNOTATIONS;</span>
             }
-<span class="nc" id="L338">            return null;</span>
+<span class="nc" id="L343">            return null;</span>
         }
     }
 
     public static net.morimekta.providence.descriptor.PStructDescriptorProvider&lt;EnumValue,_Field&gt; provider() {
-<span class="fc" id="L343">        return new _Provider();</span>
+<span class="fc" id="L348">        return new _Provider();</span>
     }
 
     @Override
     public net.morimekta.providence.descriptor.PStructDescriptor&lt;EnumValue,_Field&gt; descriptor() {
-<span class="fc" id="L348">        return kDescriptor;</span>
+<span class="fc" id="L353">        return kDescriptor;</span>
     }
 
     public static final net.morimekta.providence.descriptor.PStructDescriptor&lt;EnumValue,_Field&gt; kDescriptor;
@@ -353,41 +358,41 @@ public class EnumValue
     private static class _Descriptor
             extends net.morimekta.providence.descriptor.PStructDescriptor&lt;EnumValue,_Field&gt; {
         public _Descriptor() {
-<span class="fc" id="L356">            super(&quot;model&quot;, &quot;EnumValue&quot;, new _Factory(), false);</span>
-<span class="fc" id="L357">        }</span>
+<span class="fc" id="L361">            super(&quot;model&quot;, &quot;EnumValue&quot;, new _Factory(), false);</span>
+<span class="fc" id="L362">        }</span>
 
         @Override
         public _Field[] getFields() {
-<span class="fc" id="L361">            return _Field.values();</span>
+<span class="fc" id="L366">            return _Field.values();</span>
         }
 
         @Override
         public _Field getField(String name) {
-<span class="nc" id="L366">            return _Field.forName(name);</span>
+<span class="nc" id="L371">            return _Field.forName(name);</span>
         }
 
         @Override
         public _Field getField(int key) {
-<span class="nc" id="L371">            return _Field.forKey(key);</span>
+<span class="nc" id="L376">            return _Field.forKey(key);</span>
         }
     }
 
     static {
-<span class="fc" id="L376">        kDescriptor = new _Descriptor();</span>
-<span class="fc" id="L377">    }</span>
+<span class="fc" id="L381">        kDescriptor = new _Descriptor();</span>
+<span class="fc" id="L382">    }</span>
 
-<span class="fc" id="L379">    private final static class _Provider extends net.morimekta.providence.descriptor.PStructDescriptorProvider&lt;EnumValue,_Field&gt; {</span>
+<span class="fc" id="L384">    private final static class _Provider extends net.morimekta.providence.descriptor.PStructDescriptorProvider&lt;EnumValue,_Field&gt; {</span>
         @Override
         public net.morimekta.providence.descriptor.PStructDescriptor&lt;EnumValue,_Field&gt; descriptor() {
-<span class="fc" id="L382">            return kDescriptor;</span>
+<span class="fc" id="L387">            return kDescriptor;</span>
         }
     }
 
-<span class="fc" id="L386">    private final static class _Factory</span>
+<span class="fc" id="L391">    private final static class _Factory</span>
             extends net.morimekta.providence.PMessageBuilderFactory&lt;EnumValue,_Field&gt; {
         @Override
         public _Builder builder() {
-<span class="nc" id="L390">            return new _Builder();</span>
+<span class="nc" id="L395">            return new _Builder();</span>
         }
     }
 
@@ -396,7 +401,7 @@ public class EnumValue
      * @return The builder instance.
      */
     public static _Builder builder() {
-<span class="fc" id="L399">        return new _Builder();</span>
+<span class="fc" id="L404">        return new _Builder();</span>
     }
 
     /**
@@ -410,18 +415,18 @@ public class EnumValue
 
         private String mDocumentation;
         private String mName;
-        private int mValue;
+        private Integer mValue;
         private net.morimekta.providence.descriptor.PMap.Builder&lt;String,String&gt; mAnnotations;
 
         /**
          * Make a model.EnumValue builder.
          */
-<span class="fc" id="L419">        public _Builder() {</span>
-<span class="fc" id="L420">            optionals = new java.util.BitSet(4);</span>
-<span class="fc" id="L421">            modified = new java.util.BitSet(4);</span>
-<span class="fc" id="L422">            mValue = kDefaultValue;</span>
-<span class="fc" id="L423">            mAnnotations = new net.morimekta.providence.descriptor.PMap.ImmutableMapBuilder&lt;&gt;();</span>
-<span class="fc" id="L424">        }</span>
+<span class="fc" id="L424">        public _Builder() {</span>
+<span class="fc" id="L425">            optionals = new java.util.BitSet(4);</span>
+<span class="fc" id="L426">            modified = new java.util.BitSet(4);</span>
+<span class="fc" id="L427">            mName = kDefaultName;</span>
+<span class="fc" id="L428">            mAnnotations = new net.morimekta.providence.descriptor.PMap.ImmutableMapBuilder&lt;&gt;();</span>
+<span class="fc" id="L429">        }</span>
 
         /**
          * Make a mutating builder off a base model.EnumValue.
@@ -429,49 +434,49 @@ public class EnumValue
          * @param base The base EnumValue
          */
         public _Builder(EnumValue base) {
-<span class="nc" id="L432">            this();</span>
+<span class="nc" id="L437">            this();</span>
 
-<span class="nc bnc" id="L434" title="All 2 branches missed.">            if (base.hasDocumentation()) {</span>
-<span class="nc" id="L435">                optionals.set(0);</span>
-<span class="nc" id="L436">                mDocumentation = base.mDocumentation;</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">            if (base.hasDocumentation()) {</span>
+<span class="nc" id="L440">                optionals.set(0);</span>
+<span class="nc" id="L441">                mDocumentation = base.mDocumentation;</span>
             }
-<span class="nc bnc" id="L438" title="All 2 branches missed.">            if (base.hasName()) {</span>
-<span class="nc" id="L439">                optionals.set(1);</span>
-<span class="nc" id="L440">                mName = base.mName;</span>
+<span class="nc" id="L443">            optionals.set(1);</span>
+<span class="nc" id="L444">            mName = base.mName;</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">            if (base.hasValue()) {</span>
+<span class="nc" id="L446">                optionals.set(2);</span>
+<span class="nc" id="L447">                mValue = base.mValue;</span>
             }
-<span class="nc" id="L442">            optionals.set(2);</span>
-<span class="nc" id="L443">            mValue = base.mValue;</span>
-<span class="nc bnc" id="L444" title="All 2 branches missed.">            if (base.hasAnnotations()) {</span>
-<span class="nc" id="L445">                optionals.set(3);</span>
-<span class="nc" id="L446">                mAnnotations.putAll(base.mAnnotations);</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">            if (base.hasAnnotations()) {</span>
+<span class="nc" id="L450">                optionals.set(3);</span>
+<span class="nc" id="L451">                mAnnotations.putAll(base.mAnnotations);</span>
             }
-<span class="nc" id="L448">        }</span>
+<span class="nc" id="L453">        }</span>
 
         @javax.annotation.Nonnull
         @Override
         public _Builder merge(EnumValue from) {
-<span class="nc bnc" id="L453" title="All 2 branches missed.">            if (from.hasDocumentation()) {</span>
-<span class="nc" id="L454">                optionals.set(0);</span>
-<span class="nc" id="L455">                modified.set(0);</span>
-<span class="nc" id="L456">                mDocumentation = from.getDocumentation();</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">            if (from.hasDocumentation()) {</span>
+<span class="nc" id="L459">                optionals.set(0);</span>
+<span class="nc" id="L460">                modified.set(0);</span>
+<span class="nc" id="L461">                mDocumentation = from.getDocumentation();</span>
             }
 
-<span class="nc bnc" id="L459" title="All 2 branches missed.">            if (from.hasName()) {</span>
-<span class="nc" id="L460">                optionals.set(1);</span>
-<span class="nc" id="L461">                modified.set(1);</span>
-<span class="nc" id="L462">                mName = from.getName();</span>
+<span class="nc" id="L464">            optionals.set(1);</span>
+<span class="nc" id="L465">            modified.set(1);</span>
+<span class="nc" id="L466">            mName = from.getName();</span>
+
+<span class="nc bnc" id="L468" title="All 2 branches missed.">            if (from.hasValue()) {</span>
+<span class="nc" id="L469">                optionals.set(2);</span>
+<span class="nc" id="L470">                modified.set(2);</span>
+<span class="nc" id="L471">                mValue = from.getValue();</span>
             }
 
-<span class="nc" id="L465">            optionals.set(2);</span>
-<span class="nc" id="L466">            modified.set(2);</span>
-<span class="nc" id="L467">            mValue = from.getValue();</span>
-
-<span class="nc bnc" id="L469" title="All 2 branches missed.">            if (from.hasAnnotations()) {</span>
-<span class="nc" id="L470">                optionals.set(3);</span>
-<span class="nc" id="L471">                modified.set(3);</span>
-<span class="nc" id="L472">                mAnnotations.putAll(from.getAnnotations());</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">            if (from.hasAnnotations()) {</span>
+<span class="nc" id="L475">                optionals.set(3);</span>
+<span class="nc" id="L476">                modified.set(3);</span>
+<span class="nc" id="L477">                mAnnotations.putAll(from.getAnnotations());</span>
             }
-<span class="nc" id="L474">            return this;</span>
+<span class="nc" id="L479">            return this;</span>
         }
 
         /**
@@ -482,10 +487,14 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder setDocumentation(String value) {
-<span class="fc" id="L485">            optionals.set(0);</span>
-<span class="fc" id="L486">            modified.set(0);</span>
-<span class="fc" id="L487">            mDocumentation = value;</span>
-<span class="fc" id="L488">            return this;</span>
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L491">                return clearDocumentation();</span>
+            }
+
+<span class="fc" id="L494">            optionals.set(0);</span>
+<span class="fc" id="L495">            modified.set(0);</span>
+<span class="fc" id="L496">            mDocumentation = value;</span>
+<span class="fc" id="L497">            return this;</span>
         }
 
         /**
@@ -494,7 +503,7 @@ public class EnumValue
          * @return True if documentation has been set.
          */
         public boolean isSetDocumentation() {
-<span class="nc" id="L497">            return optionals.get(0);</span>
+<span class="nc" id="L506">            return optionals.get(0);</span>
         }
 
         /**
@@ -503,7 +512,7 @@ public class EnumValue
          * @return True if documentation has been modified.
          */
         public boolean isModifiedDocumentation() {
-<span class="nc" id="L506">            return modified.get(0);</span>
+<span class="nc" id="L515">            return modified.get(0);</span>
         }
 
         /**
@@ -513,10 +522,10 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder clearDocumentation() {
-<span class="nc" id="L516">            optionals.clear(0);</span>
-<span class="nc" id="L517">            modified.set(0);</span>
-<span class="nc" id="L518">            mDocumentation = null;</span>
-<span class="nc" id="L519">            return this;</span>
+<span class="nc" id="L525">            optionals.clear(0);</span>
+<span class="nc" id="L526">            modified.set(0);</span>
+<span class="nc" id="L527">            mDocumentation = null;</span>
+<span class="nc" id="L528">            return this;</span>
         }
 
         /**
@@ -525,7 +534,7 @@ public class EnumValue
          * @return The field value
          */
         public String getDocumentation() {
-<span class="nc" id="L528">            return mDocumentation;</span>
+<span class="nc" id="L537">            return mDocumentation;</span>
         }
 
         /**
@@ -536,10 +545,14 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder setName(String value) {
-<span class="fc" id="L539">            optionals.set(1);</span>
-<span class="fc" id="L540">            modified.set(1);</span>
-<span class="fc" id="L541">            mName = value;</span>
-<span class="fc" id="L542">            return this;</span>
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L549">                return clearName();</span>
+            }
+
+<span class="fc" id="L552">            optionals.set(1);</span>
+<span class="fc" id="L553">            modified.set(1);</span>
+<span class="fc" id="L554">            mName = value;</span>
+<span class="fc" id="L555">            return this;</span>
         }
 
         /**
@@ -548,7 +561,7 @@ public class EnumValue
          * @return True if name has been set.
          */
         public boolean isSetName() {
-<span class="nc" id="L551">            return optionals.get(1);</span>
+<span class="fc" id="L564">            return optionals.get(1);</span>
         }
 
         /**
@@ -557,7 +570,7 @@ public class EnumValue
          * @return True if name has been modified.
          */
         public boolean isModifiedName() {
-<span class="nc" id="L560">            return modified.get(1);</span>
+<span class="nc" id="L573">            return modified.get(1);</span>
         }
 
         /**
@@ -567,10 +580,10 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder clearName() {
-<span class="nc" id="L570">            optionals.clear(1);</span>
-<span class="nc" id="L571">            modified.set(1);</span>
-<span class="nc" id="L572">            mName = null;</span>
-<span class="nc" id="L573">            return this;</span>
+<span class="nc" id="L583">            optionals.clear(1);</span>
+<span class="nc" id="L584">            modified.set(1);</span>
+<span class="nc" id="L585">            mName = kDefaultName;</span>
+<span class="nc" id="L586">            return this;</span>
         }
 
         /**
@@ -579,7 +592,7 @@ public class EnumValue
          * @return The field value
          */
         public String getName() {
-<span class="nc" id="L582">            return mName;</span>
+<span class="nc" id="L595">            return mName;</span>
         }
 
         /**
@@ -590,10 +603,10 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder setValue(int value) {
-<span class="fc" id="L593">            optionals.set(2);</span>
-<span class="fc" id="L594">            modified.set(2);</span>
-<span class="fc" id="L595">            mValue = value;</span>
-<span class="fc" id="L596">            return this;</span>
+<span class="fc" id="L606">            optionals.set(2);</span>
+<span class="fc" id="L607">            modified.set(2);</span>
+<span class="fc" id="L608">            mValue = value;</span>
+<span class="fc" id="L609">            return this;</span>
         }
 
         /**
@@ -602,7 +615,7 @@ public class EnumValue
          * @return True if value has been set.
          */
         public boolean isSetValue() {
-<span class="nc" id="L605">            return optionals.get(2);</span>
+<span class="nc" id="L618">            return optionals.get(2);</span>
         }
 
         /**
@@ -611,7 +624,7 @@ public class EnumValue
          * @return True if value has been modified.
          */
         public boolean isModifiedValue() {
-<span class="nc" id="L614">            return modified.get(2);</span>
+<span class="nc" id="L627">            return modified.get(2);</span>
         }
 
         /**
@@ -621,10 +634,10 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder clearValue() {
-<span class="nc" id="L624">            optionals.clear(2);</span>
-<span class="nc" id="L625">            modified.set(2);</span>
-<span class="nc" id="L626">            mValue = kDefaultValue;</span>
-<span class="nc" id="L627">            return this;</span>
+<span class="nc" id="L637">            optionals.clear(2);</span>
+<span class="nc" id="L638">            modified.set(2);</span>
+<span class="nc" id="L639">            mValue = null;</span>
+<span class="nc" id="L640">            return this;</span>
         }
 
         /**
@@ -633,7 +646,7 @@ public class EnumValue
          * @return The field value
          */
         public int getValue() {
-<span class="nc" id="L636">            return mValue;</span>
+<span class="nc bnc" id="L649" title="All 2 branches missed.">            return isSetValue() ? mValue : kDefaultValue;</span>
         }
 
         /**
@@ -644,11 +657,15 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder setAnnotations(java.util.Map&lt;String,String&gt; value) {
-<span class="nc" id="L647">            optionals.set(3);</span>
-<span class="nc" id="L648">            modified.set(3);</span>
-<span class="nc" id="L649">            mAnnotations.clear();</span>
-<span class="nc" id="L650">            mAnnotations.putAll(value);</span>
-<span class="nc" id="L651">            return this;</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L661">                return clearAnnotations();</span>
+            }
+
+<span class="nc" id="L664">            optionals.set(3);</span>
+<span class="nc" id="L665">            modified.set(3);</span>
+<span class="nc" id="L666">            mAnnotations.clear();</span>
+<span class="nc" id="L667">            mAnnotations.putAll(value);</span>
+<span class="nc" id="L668">            return this;</span>
         }
 
         /**
@@ -660,10 +677,10 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder putInAnnotations(String key, String value) {
-<span class="fc" id="L663">            optionals.set(3);</span>
-<span class="fc" id="L664">            modified.set(3);</span>
-<span class="fc" id="L665">            mAnnotations.put(key, value);</span>
-<span class="fc" id="L666">            return this;</span>
+<span class="fc" id="L680">            optionals.set(3);</span>
+<span class="fc" id="L681">            modified.set(3);</span>
+<span class="fc" id="L682">            mAnnotations.put(key, value);</span>
+<span class="fc" id="L683">            return this;</span>
         }
 
         /**
@@ -672,7 +689,7 @@ public class EnumValue
          * @return True if annotations has been set.
          */
         public boolean isSetAnnotations() {
-<span class="fc" id="L675">            return optionals.get(3);</span>
+<span class="fc" id="L692">            return optionals.get(3);</span>
         }
 
         /**
@@ -681,7 +698,7 @@ public class EnumValue
          * @return True if annotations has been modified.
          */
         public boolean isModifiedAnnotations() {
-<span class="nc" id="L684">            return modified.get(3);</span>
+<span class="nc" id="L701">            return modified.get(3);</span>
         }
 
         /**
@@ -691,10 +708,10 @@ public class EnumValue
          */
         @javax.annotation.Nonnull
         public _Builder clearAnnotations() {
-<span class="nc" id="L694">            optionals.clear(3);</span>
-<span class="nc" id="L695">            modified.set(3);</span>
-<span class="nc" id="L696">            mAnnotations.clear();</span>
-<span class="nc" id="L697">            return this;</span>
+<span class="nc" id="L711">            optionals.clear(3);</span>
+<span class="nc" id="L712">            modified.set(3);</span>
+<span class="nc" id="L713">            mAnnotations.clear();</span>
+<span class="nc" id="L714">            return this;</span>
         }
 
         /**
@@ -703,38 +720,38 @@ public class EnumValue
          * @return The field builder
          */
         public net.morimekta.providence.descriptor.PMap.Builder&lt;String,String&gt; mutableAnnotations() {
-<span class="nc" id="L706">            optionals.set(3);</span>
-<span class="nc" id="L707">            modified.set(3);</span>
-<span class="nc" id="L708">            return mAnnotations;</span>
+<span class="nc" id="L723">            optionals.set(3);</span>
+<span class="nc" id="L724">            modified.set(3);</span>
+<span class="nc" id="L725">            return mAnnotations;</span>
         }
 
         @Override
         public boolean equals(Object o) {
-<span class="nc bnc" id="L713" title="All 2 branches missed.">            if (o == this) return true;</span>
-<span class="nc bnc" id="L714" title="All 4 branches missed.">            if (o == null || !o.getClass().equals(getClass())) return false;</span>
-<span class="nc" id="L715">            EnumValue._Builder other = (EnumValue._Builder) o;</span>
-<span class="nc bnc" id="L716" title="All 2 branches missed.">            return java.util.Objects.equals(optionals, other.optionals) &amp;&amp;</span>
-<span class="nc bnc" id="L717" title="All 2 branches missed.">                   java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
-<span class="nc bnc" id="L718" title="All 2 branches missed.">                   java.util.Objects.equals(mName, other.mName) &amp;&amp;</span>
-<span class="nc bnc" id="L719" title="All 2 branches missed.">                   java.util.Objects.equals(mValue, other.mValue) &amp;&amp;</span>
-<span class="nc bnc" id="L720" title="All 2 branches missed.">                   java.util.Objects.equals(mAnnotations, other.mAnnotations);</span>
+<span class="nc bnc" id="L730" title="All 2 branches missed.">            if (o == this) return true;</span>
+<span class="nc bnc" id="L731" title="All 4 branches missed.">            if (o == null || !o.getClass().equals(getClass())) return false;</span>
+<span class="nc" id="L732">            EnumValue._Builder other = (EnumValue._Builder) o;</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">            return java.util.Objects.equals(optionals, other.optionals) &amp;&amp;</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">                   java.util.Objects.equals(mDocumentation, other.mDocumentation) &amp;&amp;</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">                   java.util.Objects.equals(mName, other.mName) &amp;&amp;</span>
+<span class="nc bnc" id="L736" title="All 2 branches missed.">                   java.util.Objects.equals(mValue, other.mValue) &amp;&amp;</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">                   java.util.Objects.equals(mAnnotations, other.mAnnotations);</span>
         }
 
         @Override
         public int hashCode() {
-<span class="nc" id="L725">            return java.util.Objects.hash(</span>
+<span class="nc" id="L742">            return java.util.Objects.hash(</span>
                     EnumValue.class, optionals,
                     _Field.DOCUMENTATION, mDocumentation,
                     _Field.NAME, mName,
-<span class="nc" id="L729">                    _Field.VALUE, mValue,</span>
+                    _Field.VALUE, mValue,
                     _Field.ANNOTATIONS, mAnnotations);
         }
 
         @Override
         @SuppressWarnings(&quot;unchecked&quot;)
         public net.morimekta.providence.PMessageBuilder mutator(int key) {
-<span class="nc" id="L736">            switch (key) {</span>
-<span class="nc" id="L737">                default: throw new IllegalArgumentException(&quot;Not a message field ID: &quot; + key);</span>
+<span class="nc" id="L753">            switch (key) {</span>
+<span class="nc" id="L754">                default: throw new IllegalArgumentException(&quot;Not a message field ID: &quot; + key);</span>
             }
         }
 
@@ -742,165 +759,161 @@ public class EnumValue
         @Override
         @SuppressWarnings(&quot;unchecked&quot;)
         public _Builder set(int key, Object value) {
-<span class="nc bnc" id="L745" title="All 2 branches missed.">            if (value == null) return clear(key);</span>
-<span class="nc bnc" id="L746" title="All 5 branches missed.">            switch (key) {</span>
-<span class="nc" id="L747">                case 1: setDocumentation((String) value); break;</span>
-<span class="nc" id="L748">                case 2: setName((String) value); break;</span>
-<span class="nc" id="L749">                case 3: setValue((int) value); break;</span>
-<span class="nc" id="L750">                case 4: setAnnotations((java.util.Map&lt;String,String&gt;) value); break;</span>
+<span class="nc bnc" id="L762" title="All 2 branches missed.">            if (value == null) return clear(key);</span>
+<span class="nc bnc" id="L763" title="All 5 branches missed.">            switch (key) {</span>
+<span class="nc" id="L764">                case 1: setDocumentation((String) value); break;</span>
+<span class="nc" id="L765">                case 2: setName((String) value); break;</span>
+<span class="nc" id="L766">                case 3: setValue((int) value); break;</span>
+<span class="nc" id="L767">                case 4: setAnnotations((java.util.Map&lt;String,String&gt;) value); break;</span>
                 default: break;
             }
-<span class="nc" id="L753">            return this;</span>
+<span class="nc" id="L770">            return this;</span>
         }
 
         @Override
         public boolean isSet(int key) {
-<span class="nc bnc" id="L758" title="All 5 branches missed.">            switch (key) {</span>
-<span class="nc" id="L759">                case 1: return optionals.get(0);</span>
-<span class="nc" id="L760">                case 2: return optionals.get(1);</span>
-<span class="nc" id="L761">                case 3: return optionals.get(2);</span>
-<span class="nc" id="L762">                case 4: return optionals.get(3);</span>
+<span class="nc bnc" id="L775" title="All 5 branches missed.">            switch (key) {</span>
+<span class="nc" id="L776">                case 1: return optionals.get(0);</span>
+<span class="nc" id="L777">                case 2: return optionals.get(1);</span>
+<span class="nc" id="L778">                case 3: return optionals.get(2);</span>
+<span class="nc" id="L779">                case 4: return optionals.get(3);</span>
                 default: break;
             }
-<span class="nc" id="L765">            return false;</span>
+<span class="nc" id="L782">            return false;</span>
         }
 
         @Override
         public boolean isModified(int key) {
-<span class="nc bnc" id="L770" title="All 5 branches missed.">            switch (key) {</span>
-<span class="nc" id="L771">                case 1: return modified.get(0);</span>
-<span class="nc" id="L772">                case 2: return modified.get(1);</span>
-<span class="nc" id="L773">                case 3: return modified.get(2);</span>
-<span class="nc" id="L774">                case 4: return modified.get(3);</span>
+<span class="nc bnc" id="L787" title="All 5 branches missed.">            switch (key) {</span>
+<span class="nc" id="L788">                case 1: return modified.get(0);</span>
+<span class="nc" id="L789">                case 2: return modified.get(1);</span>
+<span class="nc" id="L790">                case 3: return modified.get(2);</span>
+<span class="nc" id="L791">                case 4: return modified.get(3);</span>
                 default: break;
             }
-<span class="nc" id="L777">            return false;</span>
+<span class="nc" id="L794">            return false;</span>
         }
 
         @Override
         public _Builder addTo(int key, Object value) {
-<span class="nc" id="L782">            switch (key) {</span>
+<span class="nc" id="L799">            switch (key) {</span>
                 default: break;
             }
-<span class="nc" id="L785">            return this;</span>
+<span class="nc" id="L802">            return this;</span>
         }
 
         @javax.annotation.Nonnull
         @Override
         public _Builder clear(int key) {
-<span class="nc bnc" id="L791" title="All 5 branches missed.">            switch (key) {</span>
-<span class="nc" id="L792">                case 1: clearDocumentation(); break;</span>
-<span class="nc" id="L793">                case 2: clearName(); break;</span>
-<span class="nc" id="L794">                case 3: clearValue(); break;</span>
-<span class="nc" id="L795">                case 4: clearAnnotations(); break;</span>
+<span class="nc bnc" id="L808" title="All 5 branches missed.">            switch (key) {</span>
+<span class="nc" id="L809">                case 1: clearDocumentation(); break;</span>
+<span class="nc" id="L810">                case 2: clearName(); break;</span>
+<span class="nc" id="L811">                case 3: clearValue(); break;</span>
+<span class="nc" id="L812">                case 4: clearAnnotations(); break;</span>
                 default: break;
             }
-<span class="nc" id="L798">            return this;</span>
+<span class="nc" id="L815">            return this;</span>
         }
 
         @Override
         public boolean valid() {
-<span class="nc" id="L803">            return optionals.get(1);</span>
+<span class="nc" id="L820">            return optionals.get(1);</span>
         }
 
         @Override
         public void validate() {
-<span class="nc bnc" id="L808" title="All 2 branches missed.">            if (!valid()) {</span>
-<span class="nc" id="L809">                java.util.LinkedList&lt;String&gt; missing = new java.util.LinkedList&lt;&gt;();</span>
+<span class="nc bnc" id="L825" title="All 2 branches missed.">            if (!valid()) {</span>
+<span class="nc" id="L826">                java.util.LinkedList&lt;String&gt; missing = new java.util.LinkedList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L811" title="All 2 branches missed.">                if (!optionals.get(1)) {</span>
-<span class="nc" id="L812">                    missing.add(&quot;name&quot;);</span>
+<span class="nc bnc" id="L828" title="All 2 branches missed.">                if (!optionals.get(1)) {</span>
+<span class="nc" id="L829">                    missing.add(&quot;name&quot;);</span>
                 }
 
-<span class="nc" id="L815">                throw new java.lang.IllegalStateException(</span>
+<span class="nc" id="L832">                throw new java.lang.IllegalStateException(</span>
                         &quot;Missing required fields &quot; +
-<span class="nc" id="L817">                        String.join(&quot;,&quot;, missing) +</span>
+<span class="nc" id="L834">                        String.join(&quot;,&quot;, missing) +</span>
                         &quot; in message model.EnumValue&quot;);
             }
-<span class="nc" id="L820">        }</span>
+<span class="nc" id="L837">        }</span>
 
         @javax.annotation.Nonnull
         @Override
         public net.morimekta.providence.descriptor.PStructDescriptor&lt;EnumValue,_Field&gt; descriptor() {
-<span class="nc" id="L825">            return kDescriptor;</span>
+<span class="nc" id="L842">            return kDescriptor;</span>
         }
 
         @Override
         public void readBinary(net.morimekta.util.io.BigEndianBinaryReader reader, boolean strict) throws java.io.IOException {
-<span class="nc" id="L830">            byte type = reader.expectByte();</span>
-<span class="nc bnc" id="L831" title="All 2 branches missed.">            while (type != 0) {</span>
-<span class="nc" id="L832">                int field = reader.expectShort();</span>
-<span class="nc bnc" id="L833" title="All 5 branches missed.">                switch (field) {</span>
+<span class="nc" id="L847">            byte type = reader.expectByte();</span>
+<span class="nc bnc" id="L848" title="All 2 branches missed.">            while (type != 0) {</span>
+<span class="nc" id="L849">                int field = reader.expectShort();</span>
+<span class="nc bnc" id="L850" title="All 5 branches missed.">                switch (field) {</span>
                     case 1: {
-<span class="nc bnc" id="L835" title="All 2 branches missed.">                        if (type == 11) {</span>
-<span class="nc" id="L836">                            int len_1 = reader.expectUInt32();</span>
-<span class="nc" id="L837">                            mDocumentation = new String(reader.expectBytes(len_1), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L838">                            optionals.set(0);</span>
-<span class="nc" id="L839">                        } else {</span>
-<span class="nc" id="L840">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.documentation, should be struct(12)&quot;);</span>
+<span class="nc bnc" id="L852" title="All 2 branches missed.">                        if (type == 11) {</span>
+<span class="nc" id="L853">                            int len_1 = reader.expectUInt32();</span>
+<span class="nc" id="L854">                            mDocumentation = new String(reader.expectBytes(len_1), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L855">                            optionals.set(0);</span>
+<span class="nc" id="L856">                        } else {</span>
+<span class="nc" id="L857">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.documentation, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     case 2: {
-<span class="nc bnc" id="L845" title="All 2 branches missed.">                        if (type == 11) {</span>
-<span class="nc" id="L846">                            int len_2 = reader.expectUInt32();</span>
-<span class="nc" id="L847">                            mName = new String(reader.expectBytes(len_2), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L848">                            optionals.set(1);</span>
-<span class="nc" id="L849">                        } else {</span>
-<span class="nc" id="L850">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.name, should be struct(12)&quot;);</span>
+<span class="nc bnc" id="L862" title="All 2 branches missed.">                        if (type == 11) {</span>
+<span class="nc" id="L863">                            int len_2 = reader.expectUInt32();</span>
+<span class="nc" id="L864">                            mName = new String(reader.expectBytes(len_2), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L865">                            optionals.set(1);</span>
+<span class="nc" id="L866">                        } else {</span>
+<span class="nc" id="L867">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.name, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     case 3: {
-<span class="nc bnc" id="L855" title="All 2 branches missed.">                        if (type == 8) {</span>
-<span class="nc" id="L856">                            mValue = reader.expectInt();</span>
-<span class="nc" id="L857">                            optionals.set(2);</span>
+<span class="nc bnc" id="L872" title="All 2 branches missed.">                        if (type == 8) {</span>
+<span class="nc" id="L873">                            mValue = reader.expectInt();</span>
+<span class="nc" id="L874">                            optionals.set(2);</span>
                         } else {
-<span class="nc" id="L859">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.value, should be struct(12)&quot;);</span>
+<span class="nc" id="L876">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.value, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     case 4: {
-<span class="nc bnc" id="L864" title="All 2 branches missed.">                        if (type == 13) {</span>
-<span class="nc" id="L865">                            byte t_4 = reader.expectByte();</span>
-<span class="nc" id="L866">                            byte t_5 = reader.expectByte();</span>
-<span class="nc bnc" id="L867" title="All 4 branches missed.">                            if (t_4 == 11 &amp;&amp; t_5 == 11) {</span>
-<span class="nc" id="L868">                                final int len_3 = reader.expectUInt32();</span>
-<span class="nc bnc" id="L869" title="All 2 branches missed.">                                for (int i_6 = 0; i_6 &lt; len_3; ++i_6) {</span>
-<span class="nc" id="L870">                                    int len_9 = reader.expectUInt32();</span>
-<span class="nc" id="L871">                                    String key_7 = new String(reader.expectBytes(len_9), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L872">                                    int len_10 = reader.expectUInt32();</span>
-<span class="nc" id="L873">                                    String val_8 = new String(reader.expectBytes(len_10), java.nio.charset.StandardCharsets.UTF_8);</span>
-<span class="nc" id="L874">                                    mAnnotations.put(key_7, val_8);</span>
+<span class="nc bnc" id="L881" title="All 2 branches missed.">                        if (type == 13) {</span>
+<span class="nc" id="L882">                            byte t_4 = reader.expectByte();</span>
+<span class="nc" id="L883">                            byte t_5 = reader.expectByte();</span>
+<span class="nc bnc" id="L884" title="All 4 branches missed.">                            if (t_4 == 11 &amp;&amp; t_5 == 11) {</span>
+<span class="nc" id="L885">                                final int len_3 = reader.expectUInt32();</span>
+<span class="nc bnc" id="L886" title="All 2 branches missed.">                                for (int i_6 = 0; i_6 &lt; len_3; ++i_6) {</span>
+<span class="nc" id="L887">                                    int len_9 = reader.expectUInt32();</span>
+<span class="nc" id="L888">                                    String key_7 = new String(reader.expectBytes(len_9), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L889">                                    int len_10 = reader.expectUInt32();</span>
+<span class="nc" id="L890">                                    String val_8 = new String(reader.expectBytes(len_10), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L891">                                    mAnnotations.put(key_7, val_8);</span>
                                 }
-<span class="nc" id="L876">                            } else {</span>
-<span class="nc" id="L877">                                throw new net.morimekta.providence.serializer.SerializerException(</span>
-<span class="nc" id="L878">                                        &quot;Wrong key type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_4) +</span>
-<span class="nc" id="L879">                                        &quot; or value type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_5) +</span>
+<span class="nc" id="L893">                            } else {</span>
+<span class="nc" id="L894">                                throw new net.morimekta.providence.serializer.SerializerException(</span>
+<span class="nc" id="L895">                                        &quot;Wrong key type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_4) +</span>
+<span class="nc" id="L896">                                        &quot; or value type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(t_5) +</span>
                                         &quot; for model.EnumValue.annotations, should be string(11) and string(11)&quot;);
                             }
-<span class="nc" id="L882">                            optionals.set(3);</span>
-<span class="nc" id="L883">                        } else {</span>
-<span class="nc" id="L884">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.annotations, should be struct(12)&quot;);</span>
+<span class="nc" id="L899">                            optionals.set(3);</span>
+<span class="nc" id="L900">                        } else {</span>
+<span class="nc" id="L901">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;Wrong type &quot; + net.morimekta.providence.serializer.rw.BinaryType.asString(type) + &quot; for model.EnumValue.annotations, should be struct(12)&quot;);</span>
                         }
                         break;
                     }
                     default: {
-<span class="nc bnc" id="L889" title="All 2 branches missed.">                        if (strict) {</span>
-<span class="nc" id="L890">                            throw new net.morimekta.providence.serializer.SerializerException(&quot;No field with id &quot; + field + &quot; exists in model.EnumValue&quot;);</span>
-                        } else {
-<span class="nc" id="L892">                            net.morimekta.providence.serializer.rw.BinaryFormatUtils.readFieldValue(reader, new net.morimekta.providence.serializer.rw.BinaryFormatUtils.FieldInfo(field, type), null, false);</span>
-                        }
+<span class="nc" id="L906">                        net.morimekta.providence.serializer.rw.BinaryFormatUtils.readFieldValue(reader, new net.morimekta.providence.serializer.rw.BinaryFormatUtils.FieldInfo(field, type), null, false);</span>
                         break;
                     }
                 }
-<span class="nc" id="L897">                type = reader.expectByte();</span>
-<span class="nc" id="L898">            }</span>
-<span class="nc" id="L899">        }</span>
+<span class="nc" id="L910">                type = reader.expectByte();</span>
+<span class="nc" id="L911">            }</span>
+<span class="nc" id="L912">        }</span>
 
         @Override
         public EnumValue build() {
-<span class="fc" id="L903">            return new EnumValue(this);</span>
+<span class="fc" id="L916">            return new EnumValue(this);</span>
         }
     }
 }

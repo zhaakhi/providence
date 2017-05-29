@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -41,50 +42,58 @@ public class PSet&lt;Item&gt; extends PContainer&lt;Set&lt;Item&gt;&gt; {
 
     public PSet(PDescriptorProvider itemType,
                 BuilderFactory&lt;Item&gt; builderFactory) {
-<span class="fc" id="L44">        super(itemType);</span>
-<span class="fc" id="L45">        this.builderFactory = builderFactory;</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L45">        super(itemType);</span>
+<span class="fc" id="L46">        this.builderFactory = builderFactory;</span>
+<span class="fc" id="L47">    }</span>
 
     @Nonnull
     @Override
     public String getName() {
-<span class="fc" id="L51">        return &quot;set&lt;&quot; + itemDescriptor().getName() + &quot;&gt;&quot;;</span>
+<span class="fc" id="L52">        return &quot;set&lt;&quot; + itemDescriptor().getName() + &quot;&gt;&quot;;</span>
     }
 
     @Nonnull
     @Override
     public String getQualifiedName(String programContext) {
-<span class="fc" id="L57">        return &quot;set&lt;&quot; + itemDescriptor().getQualifiedName(programContext) + &quot;&gt;&quot;;</span>
+<span class="fc" id="L58">        return &quot;set&lt;&quot; + itemDescriptor().getQualifiedName(programContext) + &quot;&gt;&quot;;</span>
     }
 
     @Nonnull
     @Override
     public PType getType() {
-<span class="fc" id="L63">        return PType.SET;</span>
+<span class="fc" id="L64">        return PType.SET;</span>
+    }
+
+    @Nullable
+    @Override
+    public Object getDefaultValue() {
+<span class="nc" id="L70">        return Collections.EMPTY_SET;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="pc bpc" id="L68" title="1 of 4 branches missed.">        if (o == null || !(o instanceof PSet)) {</span>
-<span class="fc" id="L69">            return false;</span>
+<span class="pc bpc" id="L75" title="1 of 4 branches missed.">        if (o == null || !(o instanceof PSet)) {</span>
+<span class="fc" id="L76">            return false;</span>
         }
-<span class="fc" id="L71">        PSet&lt;?&gt; other = (PSet&lt;?&gt;) o;</span>
-<span class="fc" id="L72">        return other.itemDescriptor()</span>
-<span class="fc" id="L73">                    .equals(itemDescriptor());</span>
+<span class="fc" id="L78">        PSet&lt;?&gt; other = (PSet&lt;?&gt;) o;</span>
+<span class="fc" id="L79">        return other.itemDescriptor()</span>
+<span class="fc" id="L80">                    .equals(itemDescriptor());</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L78">        return PSet.class.hashCode() + itemDescriptor().hashCode();</span>
+<span class="fc" id="L85">        return PSet.class.hashCode() + itemDescriptor().hashCode();</span>
     }
 
     public interface Builder&lt;I&gt; extends PBuilder&lt;Set&lt;I&gt;&gt; {
         @Nonnull
-        Builder&lt;I&gt; add(I value);
+        Builder&lt;I&gt; add(@Nonnull I value);
         @Nonnull
-        Builder&lt;I&gt; addAll(Collection&lt;I&gt; items);
+        Builder&lt;I&gt; addAll(@Nonnull Collection&lt;I&gt; items);
         @Nonnull
         Builder&lt;I&gt; clear();
+
+        int size();
 
         @Nonnull
         @Override
@@ -97,131 +106,81 @@ public class PSet&lt;Item&gt; extends PContainer&lt;Set&lt;Item&gt;&gt; {
         Builder&lt;I&gt; builder();
     }
 
-    public static class ImmutableSetBuilder&lt;I&gt; implements Builder&lt;I&gt; {
-        private ImmutableSet.Builder&lt;I&gt; builder;
-
-<span class="fc" id="L103">        public ImmutableSetBuilder() {</span>
-<span class="fc" id="L104">            this.builder = ImmutableSet.builder();</span>
-<span class="fc" id="L105">        }</span>
-
-        @Nonnull
-        @Override
-        public ImmutableSetBuilder&lt;I&gt; add(I value) {
-<span class="fc" id="L110">            builder.add(value);</span>
-<span class="fc" id="L111">            return this;</span>
-        }
-
-        @Nonnull
-        @Override
-        public ImmutableSetBuilder&lt;I&gt; addAll(Collection&lt;I&gt; items) {
-<span class="fc" id="L117">            builder.addAll(items);</span>
-<span class="fc" id="L118">            return this;</span>
-        }
-
-        @Nonnull
-        @Override
-        public ImmutableSetBuilder&lt;I&gt; clear() {
-<span class="fc" id="L124">            builder = ImmutableSet.builder();</span>
-<span class="fc" id="L125">            return this;</span>
-        }
-
+<span class="fc" id="L109">    public static class ImmutableSetBuilder&lt;I&gt; extends LinkedHashSetBuilder&lt;I&gt; {</span>
         @Nonnull
         @Override
         public Set&lt;I&gt; build() {
-<span class="fc" id="L131">            return builder.build();</span>
+<span class="fc" id="L113">            return ImmutableSet.copyOf(builder);</span>
         }
     }
 
-    public static class ImmutableSortedSetBuilder&lt;I extends Comparable&lt;I&gt;&gt; implements Builder&lt;I&gt; {
-        private ImmutableSortedSet.Builder&lt;I&gt; builder;
-
-<span class="fc" id="L138">        public ImmutableSortedSetBuilder() {</span>
-<span class="fc" id="L139">            this.builder = ImmutableSortedSet.naturalOrder();</span>
-<span class="fc" id="L140">        }</span>
-
-        @Nonnull
-        @Override
-        public ImmutableSortedSetBuilder&lt;I&gt; add(I value) {
-<span class="fc" id="L145">            builder.add(value);</span>
-<span class="fc" id="L146">            return this;</span>
-        }
-
-        @Nonnull
-        @Override
-        public ImmutableSortedSetBuilder&lt;I&gt; addAll(Collection&lt;I&gt; items) {
-<span class="fc" id="L152">            builder.addAll(items);</span>
-<span class="fc" id="L153">            return this;</span>
-        }
-
-        @Nonnull
-        @Override
-        public ImmutableSortedSetBuilder&lt;I&gt; clear() {
-<span class="fc" id="L159">            builder = ImmutableSortedSet.naturalOrder();</span>
-<span class="fc" id="L160">            return this;</span>
-        }
-
+<span class="fc" id="L117">    public static class ImmutableSortedSetBuilder&lt;I extends Comparable&lt;I&gt;&gt; extends LinkedHashSetBuilder&lt;I&gt; {</span>
         @Nonnull
         @Override
         public Set&lt;I&gt; build() {
-<span class="fc" id="L166">            return builder.build();</span>
+<span class="fc" id="L121">            return ImmutableSortedSet.copyOf(builder);</span>
         }
     }
 
     public static class LinkedHashSetBuilder&lt;I&gt; implements Builder&lt;I&gt; {
-        private final LinkedHashSet&lt;I&gt; builder;
+        final LinkedHashSet&lt;I&gt; builder;
 
-<span class="fc" id="L173">        public LinkedHashSetBuilder() {</span>
-<span class="fc" id="L174">            this.builder = new LinkedHashSet&lt;&gt;();</span>
-<span class="fc" id="L175">        }</span>
+<span class="fc" id="L128">        public LinkedHashSetBuilder() {</span>
+<span class="fc" id="L129">            this.builder = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L130">        }</span>
 
         @Nonnull
         @Override
-        public LinkedHashSetBuilder&lt;I&gt; add(I value) {
-<span class="fc" id="L180">            builder.add(value);</span>
-<span class="fc" id="L181">            return this;</span>
+        public LinkedHashSetBuilder&lt;I&gt; add(@Nonnull I value) {
+<span class="fc" id="L135">            builder.add(value);</span>
+<span class="fc" id="L136">            return this;</span>
         }
 
         @Nonnull
         @Override
-        public LinkedHashSetBuilder&lt;I&gt; addAll(Collection&lt;I&gt; items) {
-<span class="fc" id="L187">            builder.addAll(items);</span>
-<span class="fc" id="L188">            return this;</span>
+        public LinkedHashSetBuilder&lt;I&gt; addAll(@Nonnull Collection&lt;I&gt; items) {
+<span class="fc" id="L142">            builder.addAll(items);</span>
+<span class="fc" id="L143">            return this;</span>
         }
 
         @Nonnull
         @Override
         public LinkedHashSetBuilder&lt;I&gt; clear() {
-<span class="fc" id="L194">            builder.clear();</span>
-<span class="fc" id="L195">            return this;</span>
+<span class="fc" id="L149">            builder.clear();</span>
+<span class="fc" id="L150">            return this;</span>
+        }
+
+        public int size() {
+<span class="nc" id="L154">            return builder.size();</span>
         }
 
         @Nonnull
         @Override
         public Set&lt;I&gt; build() {
-<span class="fc" id="L201">            return Collections.unmodifiableSet(builder);</span>
+<span class="fc" id="L160">            return Collections.unmodifiableSet(builder);</span>
         }
     }
 
     @Override
     public Builder&lt;Item&gt; builder() {
-<span class="fc" id="L207">        return builderFactory.builder();</span>
+<span class="fc" id="L166">        return builderFactory.builder();</span>
     }
 
     public static &lt;I&gt; PContainerProvider&lt;Set&lt;I&gt;, PSet&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc) {
-<span class="fc" id="L211">        return provider(itemDesc, ImmutableSetBuilder::new);</span>
+<span class="fc" id="L170">        return provider(itemDesc, ImmutableSetBuilder::new);</span>
     }
 
     public static &lt;I extends Comparable&lt;I&gt;&gt; PContainerProvider&lt;Set&lt;I&gt;, PSet&lt;I&gt;&gt; sortedProvider(PDescriptorProvider itemDesc) {
-<span class="fc" id="L215">        return provider(itemDesc, ImmutableSortedSetBuilder::new);</span>
+<span class="fc" id="L174">        return provider(itemDesc, ImmutableSortedSetBuilder::new);</span>
     }
 
     public static &lt;I extends Comparable&lt;I&gt;&gt; PContainerProvider&lt;Set&lt;I&gt;, PSet&lt;I&gt;&gt; orderedProvider(PDescriptorProvider itemDesc) {
-<span class="fc" id="L219">        return provider(itemDesc, LinkedHashSetBuilder::new);</span>
+<span class="fc" id="L178">        return provider(itemDesc, LinkedHashSetBuilder::new);</span>
     }
 
     private static &lt;I&gt; PContainerProvider&lt;Set&lt;I&gt;, PSet&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc,
                                                                       BuilderFactory&lt;I&gt; builderFactory) {
-<span class="fc" id="L224">        return new PContainerProvider&lt;&gt;(new PSet&lt;&gt;(itemDesc, builderFactory));</span>
+<span class="fc" id="L183">        return new PContainerProvider&lt;&gt;(new PSet&lt;&gt;(itemDesc, builderFactory));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

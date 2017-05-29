@@ -25,10 +25,12 @@ import net.morimekta.providence.descriptor.PContainer;
 import net.morimekta.providence.descriptor.PDeclaredDescriptor;
 import net.morimekta.providence.descriptor.PDescriptor;
 import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMap;
 import net.morimekta.providence.descriptor.PMessageDescriptor;
 import net.morimekta.providence.descriptor.PPrimitive;
 import net.morimekta.providence.descriptor.PService;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,40 +43,41 @@ import java.util.Map;
  */
 public class TypeRegistry {
     private final Map&lt;String, PDeclaredDescriptor&lt;?&gt;&gt; declaredTypes;
-    private final HashSet&lt;String&gt;                     knownPackages;
+    private final HashSet&lt;String&gt;                     knownPrograms;
     private final Map&lt;String, String&gt;                 typedefs;
     private final Map&lt;String, PService&gt;               services;
 
-<span class="fc" id="L48">    public TypeRegistry() {</span>
-<span class="fc" id="L49">        knownPackages = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L50">        declaredTypes = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L51">        typedefs      = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L52">        services      = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L53">    }</span>
+<span class="fc" id="L50">    public TypeRegistry() {</span>
+<span class="fc" id="L51">        knownPrograms = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L52">        declaredTypes = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L53">        typedefs      = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L54">        services      = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L55">    }</span>
 
     /**
      * Get the declared type with the given name and package context.
      *
      * @param name    Name of type, without any spaces.
-     * @param context The package context of the type.
+     * @param context The program context of the type.
      * @param &lt;T&gt;     The described type.
      * @return The type descriptor.
      */
     @SuppressWarnings(&quot;unchecked&quot;)
-    public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(String name, String context) {
-<span class="fc" id="L65">        String declaredTypeName = finalTypename(name, context);</span>
+    public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String name,
+                                                                @Nonnull String context) {
+<span class="fc" id="L68">        String declaredTypeName = finalTypename(name, context);</span>
 
-<span class="fc" id="L67">        context = declaredTypeName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
-<span class="fc" id="L68">        name = declaredTypeName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
+<span class="fc" id="L70">        context = declaredTypeName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
+<span class="fc" id="L71">        name = declaredTypeName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
 
-<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
-<span class="fc" id="L71">            return (T) declaredTypes.get(declaredTypeName);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
+<span class="fc" id="L74">            return (T) declaredTypes.get(declaredTypeName);</span>
         }
 
-<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (knownPackages.contains(context)) {</span>
-<span class="nc" id="L75">            throw new IllegalArgumentException(&quot;No such type \&quot;&quot; + name + &quot;\&quot; in package \&quot;&quot; + context + &quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (knownPrograms.contains(context)) {</span>
+<span class="fc" id="L78">            throw new IllegalArgumentException(&quot;No such type \&quot;&quot; + name + &quot;\&quot; in package \&quot;&quot; + context + &quot;\&quot;&quot;);</span>
         } else {
-<span class="nc" id="L77">            throw new IllegalArgumentException(&quot;No such package \&quot;&quot; + context + &quot;\&quot; exists for type \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L80">            throw new IllegalArgumentException(&quot;No such package \&quot;&quot; + context + &quot;\&quot; exists for type \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
         }
     }
 
@@ -85,11 +88,15 @@ public class TypeRegistry {
      * @param &lt;T&gt;  The described type.
      * @return The type descriptor.
      */
-    public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(String name) {
-<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (!name.contains(&quot;.&quot;)) {</span>
-<span class="nc" id="L90">            throw new IllegalArgumentException(&quot;Global typename without package: \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
+    public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String name) {
+<span class="fc" id="L92">        String[] parts = name.split(&quot;\\.&quot;);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (parts.length &lt; 2) {</span>
+<span class="fc" id="L94">            throw new IllegalArgumentException(&quot;Requesting global typename without package: \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        } else if (parts.length &gt; 2) {</span>
+<span class="fc" id="L96">            throw new IllegalArgumentException(&quot;Invalid declared type: \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
         }
-<span class="nc" id="L92">        return getDeclaredType(name, name.replaceAll(&quot;\\..*&quot;, &quot;&quot;));</span>
+<span class="fc" id="L98">        return getDeclaredType(parts[1],</span>
+                               parts[0]);
     }
 
     /**
@@ -99,13 +106,13 @@ public class TypeRegistry {
      * @param &lt;T&gt; The descriptor object type.
      */
     public &lt;T&gt; void putDeclaredType(PDeclaredDescriptor&lt;T&gt; declaredType) {
-<span class="fc" id="L102">        String declaredTypeName = declaredType.getQualifiedName();</span>
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
-<span class="nc" id="L104">            throw new IllegalStateException(&quot;Type &quot; + declaredTypeName + &quot; already exists&quot;);</span>
+<span class="fc" id="L109">        String declaredTypeName = declaredType.getQualifiedName();</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
+<span class="nc" id="L111">            throw new IllegalStateException(&quot;Type &quot; + declaredTypeName + &quot; already exists&quot;);</span>
         }
-<span class="fc" id="L106">        knownPackages.add(declaredType.getProgramName());</span>
-<span class="fc" id="L107">        declaredTypes.put(declaredTypeName, declaredType);</span>
-<span class="fc" id="L108">    }</span>
+<span class="fc" id="L113">        knownPrograms.add(declaredType.getProgramName());</span>
+<span class="fc" id="L114">        declaredTypes.put(declaredTypeName, declaredType);</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * Services are not handled as &quot;declared types&quot;, so they need to be registered
@@ -114,17 +121,17 @@ public class TypeRegistry {
      * @param service the service to register.
      */
     public void putService(PService service) {
-<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (service == null) {</span>
-<span class="nc" id="L118">            throw new IllegalArgumentException(&quot;No service to register&quot;);</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (service == null) {</span>
+<span class="fc" id="L125">            throw new IllegalArgumentException(&quot;No service to register&quot;);</span>
         }
         // Services cannot be aliased with typedefs, so no need to resolve the
         // qualified or final name.
-<span class="nc" id="L122">        String name = service.getQualifiedName();</span>
-<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (services.containsKey(name)) {</span>
-<span class="nc" id="L124">            throw new IllegalStateException(&quot;Service &quot; + name + &quot; already registered&quot;);</span>
+<span class="fc" id="L129">        String name = service.getQualifiedName();</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (services.containsKey(name)) {</span>
+<span class="fc" id="L131">            throw new IllegalStateException(&quot;Service &quot; + name + &quot; already registered&quot;);</span>
         }
-<span class="nc" id="L126">        services.put(name, service);</span>
-<span class="nc" id="L127">    }</span>
+<span class="fc" id="L133">        services.put(name, service);</span>
+<span class="fc" id="L134">    }</span>
 
     /**
      * Get a service definition from the name and context.
@@ -134,8 +141,8 @@ public class TypeRegistry {
      * @return The service or null if not found.
      */
     @Nullable
-    public PService getService(String name, final String context) {
-<span class="nc" id="L138">        return services.get(qualifiedName(name, context));</span>
+    public PService getService(String name, String context) {
+<span class="fc" id="L145">        return services.get(qualifiedName(name, context));</span>
     }
 
     /**
@@ -146,24 +153,24 @@ public class TypeRegistry {
      * @param &lt;T&gt; The declared java type.
      */
     public &lt;T&gt; void registerRecursively(PDeclaredDescriptor&lt;T&gt; declaredType) {
-<span class="fc" id="L149">        String declaredTypeName = declaredType.getQualifiedName();</span>
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
-<span class="fc" id="L151">            return;</span>
+<span class="fc" id="L156">        String declaredTypeName = declaredType.getQualifiedName();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
+<span class="fc" id="L158">            return;</span>
         }
-<span class="fc" id="L153">        putDeclaredType(declaredType);</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (declaredType instanceof PMessageDescriptor) {</span>
-<span class="fc" id="L155">            PMessageDescriptor descriptor = (PMessageDescriptor) declaredType;</span>
-<span class="fc bfc" id="L156" title="All 2 branches covered.">            for (PField field : descriptor.getFields()) {</span>
-<span class="fc bfc" id="L157" title="All 4 branches covered.">                if (field.getType() == PType.ENUM || field.getType() == PType.MESSAGE) {</span>
-<span class="fc" id="L158">                    registerRecursively((PDeclaredDescriptor&lt;?&gt;) field.getDescriptor());</span>
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">                } else if (field.getType() == PType.MAP ||</span>
-<span class="fc bfc" id="L160" title="All 2 branches covered.">                           field.getType() == PType.LIST ||</span>
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">                           field.getType() == PType.SET) {</span>
-<span class="fc" id="L162">                    registerListType((PContainer) field.getDescriptor());</span>
+<span class="fc" id="L160">        putDeclaredType(declaredType);</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (declaredType instanceof PMessageDescriptor) {</span>
+<span class="fc" id="L162">            PMessageDescriptor descriptor = (PMessageDescriptor) declaredType;</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            for (PField field : descriptor.getFields()) {</span>
+<span class="fc bfc" id="L164" title="All 4 branches covered.">                if (field.getType() == PType.ENUM || field.getType() == PType.MESSAGE) {</span>
+<span class="fc" id="L165">                    registerRecursively((PDeclaredDescriptor&lt;?&gt;) field.getDescriptor());</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">                } else if (field.getType() == PType.MAP ||</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">                           field.getType() == PType.LIST ||</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">                           field.getType() == PType.SET) {</span>
+<span class="fc" id="L169">                    registerListType((PContainer) field.getDescriptor());</span>
                 }
             }
         }
-<span class="fc" id="L166">    }</span>
+<span class="fc" id="L173">    }</span>
 
     /**
      * Registers a typedef definition.
@@ -173,14 +180,14 @@ public class TypeRegistry {
      * @param target The qualified name that the name represents.
      */
     public void putTypedef(String identifier, String context, String target) {
-<span class="pc bpc" id="L176" title="3 of 6 branches missed.">        if (identifier == null || context == null || target == null) {</span>
-<span class="nc" id="L177">            throw new IllegalArgumentException(&quot;Null argument to putTypedef&quot;);</span>
+<span class="pc bpc" id="L183" title="3 of 6 branches missed.">        if (identifier == null || context == null || target == null) {</span>
+<span class="nc" id="L184">            throw new IllegalArgumentException(&quot;Null argument to putTypedef&quot;);</span>
         }
 
-<span class="fc" id="L180">        identifier = qualifiedTypename(identifier, context);</span>
-<span class="fc" id="L181">        target = qualifiedTypename(target, context);</span>
-<span class="fc" id="L182">        typedefs.put(identifier, target);</span>
-<span class="fc" id="L183">    }</span>
+<span class="fc" id="L187">        identifier = qualifiedTypename(identifier, context);</span>
+<span class="fc" id="L188">        target = qualifiedTypename(target, context);</span>
+<span class="fc" id="L189">        typedefs.put(identifier, target);</span>
+<span class="fc" id="L190">    }</span>
 
     /**
      * Get the final typename of the given identifier within the context.
@@ -190,12 +197,12 @@ public class TypeRegistry {
      * @return The final typename.
      */
     protected String finalTypename(String name, String context) {
-<span class="fc" id="L193">        String typename = qualifiedTypename(name, context);</span>
-<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (typedefs.containsKey(typename)) {</span>
-<span class="fc" id="L195">            typename = typedefs.get(typename);</span>
-<span class="fc" id="L196">            return finalTypename(typename, context);</span>
+<span class="fc" id="L200">        String typename = qualifiedTypename(name, context);</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (typedefs.containsKey(typename)) {</span>
+<span class="fc" id="L202">            typename = typedefs.get(typename);</span>
+<span class="fc" id="L203">            return finalTypename(typename, context);</span>
         }
-<span class="fc" id="L198">        return typename;</span>
+<span class="fc" id="L205">        return typename;</span>
     }
 
     /**
@@ -207,46 +214,53 @@ public class TypeRegistry {
      * @return The qualified typename.
      */
     private String qualifiedTypename(String name, String context) {
-<span class="pc bpc" id="L210" title="2 of 4 branches missed.">        if (name == null || context == null) {</span>
-<span class="nc" id="L211">            throw new IllegalArgumentException(&quot;Null argument for qualified typename&quot;);</span>
+<span class="pc bpc" id="L217" title="2 of 4 branches missed.">        if (name == null || context == null) {</span>
+<span class="nc" id="L218">            throw new IllegalArgumentException(&quot;Null argument for qualified typename&quot;);</span>
         }
-<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (PPrimitive.findByName(name) != null) return name;</span>
-<span class="pc bpc" id="L214" title="3 of 4 branches missed.">        if (name.startsWith(&quot;map&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="nc" id="L215">            String[] generic = name.substring(4, name.length() - 1).split(&quot;,&quot;);</span>
-<span class="nc bnc" id="L216" title="All 2 branches missed.">            if (generic.length != 2) {</span>
-<span class="nc" id="L217">                throw new IllegalArgumentException();</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        if (PPrimitive.findByName(name) != null) return name;</span>
+<span class="pc bpc" id="L221" title="3 of 4 branches missed.">        if (name.startsWith(&quot;map&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
+<span class="nc" id="L222">            String[] generic = name.substring(4, name.length() - 1).split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">            if (generic.length != 2) {</span>
+<span class="nc" id="L224">                throw new IllegalArgumentException();</span>
             }
-<span class="nc" id="L219">            return &quot;map&lt;&quot; + finalTypename(generic[0].trim(), context) +</span>
-<span class="nc" id="L220">                   &quot;,&quot; + finalTypename(generic[1].trim(), context) + &quot;&gt;&quot;;</span>
-<span class="pc bpc" id="L221" title="1 of 4 branches missed.">        } else if (name.startsWith(&quot;set&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="fc" id="L222">            String generic = name.substring(4, name.length() - 1);</span>
-<span class="fc" id="L223">            return &quot;set&lt;&quot; + finalTypename(generic.trim(), context) + &quot;&gt;&quot;;</span>
-<span class="pc bpc" id="L224" title="1 of 4 branches missed.">        } else if (name.startsWith(&quot;list&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="fc" id="L225">            String generic = name.substring(5, name.length() - 1);</span>
-<span class="fc" id="L226">            return &quot;list&lt;&quot; + finalTypename(generic.trim(), context) + &quot;&gt;&quot;;</span>
+<span class="nc" id="L226">            return &quot;map&lt;&quot; + finalTypename(generic[0].trim(), context) +</span>
+<span class="nc" id="L227">                   &quot;,&quot; + finalTypename(generic[1].trim(), context) + &quot;&gt;&quot;;</span>
+<span class="pc bpc" id="L228" title="1 of 4 branches missed.">        } else if (name.startsWith(&quot;set&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
+<span class="fc" id="L229">            String generic = name.substring(4, name.length() - 1);</span>
+<span class="fc" id="L230">            return &quot;set&lt;&quot; + finalTypename(generic.trim(), context) + &quot;&gt;&quot;;</span>
+<span class="pc bpc" id="L231" title="1 of 4 branches missed.">        } else if (name.startsWith(&quot;list&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
+<span class="fc" id="L232">            String generic = name.substring(5, name.length() - 1);</span>
+<span class="fc" id="L233">            return &quot;list&lt;&quot; + finalTypename(generic.trim(), context) + &quot;&gt;&quot;;</span>
         } else {
-<span class="fc" id="L228">            return qualifiedName(name, context);</span>
+<span class="fc" id="L235">            return qualifiedName(name, context);</span>
         }
     }
 
     private void registerListType(PContainer containerType) {
-<span class="fc" id="L233">        PDescriptor itemType = containerType.itemDescriptor();</span>
-<span class="pc bpc" id="L234" title="1 of 2 branches missed.">        if (itemType.getType() == PType.MAP ||</span>
-<span class="pc bpc" id="L235" title="1 of 2 branches missed.">            itemType.getType() == PType.LIST ||</span>
-<span class="pc bpc" id="L236" title="1 of 2 branches missed.">            itemType.getType() == PType.SET) {</span>
-<span class="nc" id="L237">            registerListType((PContainer) itemType);</span>
-<span class="pc bpc" id="L238" title="1 of 2 branches missed.">        } else if (itemType.getType() == PType.ENUM ||</span>
-<span class="pc bpc" id="L239" title="1 of 2 branches missed.">                   itemType.getType() == PType.MESSAGE){</span>
-<span class="fc" id="L240">            registerRecursively((PDeclaredDescriptor&lt;?&gt;) itemType);</span>
+<span class="fc" id="L240">        PDescriptor itemType = containerType.itemDescriptor();</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">        if (itemType.getType() == PType.MAP ||</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            itemType.getType() == PType.LIST ||</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">            itemType.getType() == PType.SET) {</span>
+<span class="nc" id="L244">            registerListType((PContainer) itemType);</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        } else if (itemType.getType() == PType.ENUM ||</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">                   itemType.getType() == PType.MESSAGE){</span>
+<span class="fc" id="L247">            registerRecursively((PDeclaredDescriptor&lt;?&gt;) itemType);</span>
+        }
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">        if (containerType instanceof PMap) {</span>
+<span class="nc" id="L250">            PDescriptor keyType = containerType.itemDescriptor();</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">            if (keyType.getType() == PType.ENUM ||</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">                keyType.getType() == PType.MESSAGE){</span>
+<span class="nc" id="L253">                registerRecursively((PDeclaredDescriptor&lt;?&gt;) keyType);</span>
+            }
         }
         // Else ignore.
-<span class="fc" id="L243">    }</span>
+<span class="fc" id="L257">    }</span>
 
     private static String qualifiedName(String name, String context) {
-<span class="fc bfc" id="L246" title="All 2 branches covered.">        if (!name.contains(&quot;.&quot;)) {</span>
-<span class="fc" id="L247">            return context + &quot;.&quot; + name;</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        if (!name.contains(&quot;.&quot;)) {</span>
+<span class="fc" id="L261">            return context + &quot;.&quot; + name;</span>
         }
-<span class="fc" id="L249">        return name;</span>
+<span class="fc" id="L263">        return name;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

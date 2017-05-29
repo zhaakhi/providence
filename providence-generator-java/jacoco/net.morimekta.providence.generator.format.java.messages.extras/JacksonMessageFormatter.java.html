@@ -382,10 +382,10 @@ public class JacksonMessageFormatter implements MessageMemberFormatter {
 <span class="fc" id="L382">                int ifStack = 0;</span>
 
 <span class="fc bfc" id="L384" title="All 2 branches covered.">                for (JField field : message.numericalOrderFields()) {</span>
-<span class="fc bfc" id="L385" title="All 4 branches covered.">                    if (!(field.alwaysPresent() || field.isRequired())) {</span>
-<span class="fc" id="L386">                        writer.formatln(&quot;if (instance.%s != null) {&quot;, field.member())</span>
-<span class="fc" id="L387">                              .begin();</span>
-<span class="fc" id="L388">                        ++ifStack;</span>
+<span class="pc bpc" id="L385" title="3 of 4 branches missed.">                    if (!(field.alwaysPresent() || field.isRequired())) {</span>
+<span class="nc" id="L386">                        writer.formatln(&quot;if (instance.%s != null) {&quot;, field.member())</span>
+<span class="nc" id="L387">                              .begin();</span>
+<span class="nc" id="L388">                        ++ifStack;</span>
                     }
 
 <span class="pc bpc" id="L391" title="1 of 2 branches missed.">                    switch (field.type()) {</span>
@@ -400,9 +400,9 @@ public class JacksonMessageFormatter implements MessageMemberFormatter {
                     }
 <span class="fc" id="L401">                }</span>
 
-<span class="fc bfc" id="L403" title="All 2 branches covered.">                while (ifStack-- &gt; 0) {</span>
-<span class="fc" id="L404">                    writer.end()</span>
-<span class="fc" id="L405">                          .appendln('}');</span>
+<span class="pc bpc" id="L403" title="1 of 2 branches missed.">                while (ifStack-- &gt; 0) {</span>
+<span class="nc" id="L404">                    writer.end()</span>
+<span class="nc" id="L405">                          .appendln('}');</span>
                 }
 
 <span class="fc" id="L408">                writer.formatln(&quot;generator.writeEndArray();&quot;);</span>

@@ -69,12 +69,10 @@ import static java.util.Objects.requireNonNull;
  * &lt;p&gt;
  * There is also the strict mode. If strict is OFF:
  * - Unknown enum values will be ignored (as field missing).
- * - Unknown fields will be ignored.
- * - Struct validity will be ignored.
+ * - Message validity will be ignored.
  * If strict more is ON:
- * - Unknown enum values will fail the deserialization.
- * - Unknown fields will fail the deserialization.
- * - Struct validity will fail both serialization and deserialization.
+ * - Unknown enum values will fail deserialization.
+ * - Message invalidity will fail deserialization.
  * &lt;p&gt;
  * Format is like this:
  * &lt;pre&gt;
@@ -103,67 +101,59 @@ public class JsonSerializer extends Serializer {
     public static final String JSON_MIME_TYPE = &quot;application/json&quot;;
 
     public JsonSerializer() {
-<span class="fc" id="L106">        this(DEFAULT_STRICT, false, IdType.ID, IdType.ID);</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L104">        this(DEFAULT_STRICT, false, IdType.ID, IdType.ID);</span>
+<span class="fc" id="L105">    }</span>
 
     public JsonSerializer(boolean strict) {
-<span class="fc" id="L110">        this(strict, false, IdType.ID, IdType.ID);</span>
-<span class="fc" id="L111">    }</span>
+<span class="fc" id="L108">        this(strict, false, IdType.ID, IdType.ID);</span>
+<span class="fc" id="L109">    }</span>
 
     public JsonSerializer pretty() {
-<span class="fc" id="L114">        return new JsonSerializer(readStrict, true, IdType.NAME, IdType.NAME);</span>
+<span class="fc" id="L112">        return new JsonSerializer(readStrict, true, IdType.NAME, IdType.NAME);</span>
     }
 
     public JsonSerializer named() {
-<span class="fc" id="L118">        return withNamedEnums().withNamedFields();</span>
+<span class="fc" id="L116">        return withNamedEnums().withNamedFields();</span>
     }
 
     public JsonSerializer withNamedFields() {
-<span class="fc" id="L122">        return new JsonSerializer(readStrict, prettyPrint, IdType.NAME, enumValueType);</span>
+<span class="fc" id="L120">        return new JsonSerializer(readStrict, prettyPrint, IdType.NAME, enumValueType);</span>
     }
 
     public JsonSerializer withNamedEnums() {
-<span class="fc" id="L126">        return new JsonSerializer(readStrict, prettyPrint, fieldIdType, IdType.NAME);</span>
+<span class="fc" id="L124">        return new JsonSerializer(readStrict, prettyPrint, fieldIdType, IdType.NAME);</span>
     }
 
     @Override
     public &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; int serialize(OutputStream output, T message) throws IOException {
-<span class="fc" id="L131">        CountingOutputStream counter = new CountingOutputStream(output);</span>
-<span class="fc bfc" id="L132" title="All 2 branches covered.">        JsonWriter jsonWriter = prettyPrint ? new PrettyJsonWriter(counter) : new JsonWriter(counter);</span>
-        try {
-<span class="fc" id="L134">            appendMessage(jsonWriter, message);</span>
-<span class="fc" id="L135">            jsonWriter.flush();</span>
-<span class="fc" id="L136">            counter.flush();</span>
-<span class="fc" id="L137">            return counter.getByteCount();</span>
-<span class="nc" id="L138">        } catch (JsonException e) {</span>
-<span class="nc" id="L139">            throw new SerializerException(e, &quot;Unable to serialize JSON&quot;);</span>
-        }
+<span class="fc" id="L129">        CountingOutputStream counter = new CountingOutputStream(output);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        JsonWriter jsonWriter = prettyPrint ? new PrettyJsonWriter(counter) : new JsonWriter(counter);</span>
+<span class="fc" id="L131">        appendMessage(jsonWriter, message);</span>
+<span class="fc" id="L132">        jsonWriter.flush();</span>
+<span class="fc" id="L133">        counter.flush();</span>
+<span class="fc" id="L134">        return counter.getByteCount();</span>
     }
 
     @Override
     public &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; int serialize(OutputStream output, PServiceCall&lt;T, F&gt; call)
             throws IOException {
-<span class="fc" id="L146">        CountingOutputStream counter = new CountingOutputStream(output);</span>
-<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        JsonWriter jsonWriter = prettyPrint ? new PrettyJsonWriter(counter) : new JsonWriter(counter);</span>
-        try {
-<span class="fc" id="L149">            jsonWriter.array()</span>
-<span class="fc" id="L150">                      .value(call.getMethod());</span>
-<span class="fc bfc" id="L151" title="All 2 branches covered.">            if (enumValueType == IdType.ID) {</span>
-<span class="fc" id="L152">                jsonWriter.value(call.getType().getValue());</span>
-            } else {
-<span class="fc" id="L154">                jsonWriter.value(call.getType().getName());</span>
-            }
-<span class="fc" id="L156">            jsonWriter.value(call.getSequence());</span>
+<span class="fc" id="L140">        CountingOutputStream counter = new CountingOutputStream(output);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        JsonWriter jsonWriter = prettyPrint ? new PrettyJsonWriter(counter) : new JsonWriter(counter);</span>
 
-<span class="fc" id="L158">            appendMessage(jsonWriter, call.getMessage());</span>
-
-<span class="fc" id="L160">            jsonWriter.endArray()</span>
-<span class="fc" id="L161">                      .flush();</span>
-<span class="fc" id="L162">            counter.flush();</span>
-<span class="fc" id="L163">            return counter.getByteCount();</span>
-<span class="nc" id="L164">        } catch (JsonException e) {</span>
-<span class="nc" id="L165">            throw new SerializerException(e, &quot;Unable to serialize JSON&quot;);</span>
+<span class="fc" id="L143">        jsonWriter.array().value(call.getMethod());</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (enumValueType == IdType.ID) {</span>
+<span class="fc" id="L145">            jsonWriter.value(call.getType().getValue());</span>
+        } else {
+<span class="fc" id="L147">            jsonWriter.value(call.getType().getName());</span>
         }
+<span class="fc" id="L149">        jsonWriter.value(call.getSequence());</span>
+
+<span class="fc" id="L151">        appendMessage(jsonWriter, call.getMessage());</span>
+
+<span class="fc" id="L153">        jsonWriter.endArray().flush();</span>
+<span class="fc" id="L154">        counter.flush();</span>
+<span class="fc" id="L155">        return counter.getByteCount();</span>
+
     }
 
     @Nonnull
@@ -172,13 +162,13 @@ public class JsonSerializer extends Serializer {
     public &lt;T extends PMessage&lt;T, TF&gt;, TF extends PField&gt; T deserialize(
             InputStream input, PMessageDescriptor&lt;T, TF&gt; type) throws IOException {
         try {
-<span class="fc" id="L175">            JsonTokenizer tokenizer = new JsonTokenizer(input);</span>
-<span class="fc bfc" id="L176" title="All 2 branches covered.">            if (!tokenizer.hasNext()) {</span>
-<span class="fc" id="L177">                throw new SerializerException(&quot;Empty json body&quot;);</span>
+<span class="fc" id="L165">            JsonTokenizer tokenizer = new JsonTokenizer(input);</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">            if (!tokenizer.hasNext()) {</span>
+<span class="fc" id="L167">                throw new SerializerException(&quot;Empty json body&quot;);</span>
             }
-<span class="fc" id="L179">            return requireNonNull((T) parseTypedValue(tokenizer.next(), tokenizer, type, false));</span>
-<span class="nc" id="L180">        } catch (JsonException e) {</span>
-<span class="nc" id="L181">            throw new SerializerException(e, &quot;Unable to parse JSON&quot;);</span>
+<span class="fc" id="L169">            return requireNonNull((T) parseTypedValue(tokenizer.next(), tokenizer, type, false));</span>
+<span class="fc" id="L170">        } catch (JsonException e) {</span>
+<span class="fc" id="L171">            throw new JsonSerializerException(e);</span>
         }
     }
 
@@ -186,34 +176,34 @@ public class JsonSerializer extends Serializer {
     @Override
     public &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; PServiceCall&lt;T, F&gt; deserialize(InputStream input, PService service)
             throws IOException {
-<span class="fc" id="L189">        JsonTokenizer tokenizer = new JsonTokenizer(input);</span>
-<span class="fc" id="L190">        return parseServiceCall(tokenizer, service);</span>
+<span class="fc" id="L179">        JsonTokenizer tokenizer = new JsonTokenizer(input);</span>
+<span class="fc" id="L180">        return parseServiceCall(tokenizer, service);</span>
     }
 
     @Override
     public boolean binaryProtocol() {
-<span class="fc" id="L195">        return false;</span>
+<span class="fc" id="L185">        return false;</span>
     }
 
     @Override
     public String mimeType() {
-<span class="fc" id="L200">        return MIME_TYPE;</span>
+<span class="fc" id="L190">        return MIME_TYPE;</span>
     }
 
     // ------------------- PRIVATE ONLY ------------------
 
-<span class="fc" id="L205">    private JsonSerializer(boolean readStrict, boolean prettyPrint, IdType fieldIdType, IdType enumValueType) {</span>
-<span class="fc" id="L206">        this.readStrict = readStrict;</span>
-<span class="fc" id="L207">        this.prettyPrint = prettyPrint;</span>
-<span class="fc" id="L208">        this.fieldIdType = fieldIdType;</span>
-<span class="fc" id="L209">        this.enumValueType = enumValueType;</span>
-<span class="fc" id="L210">    }</span>
+<span class="fc" id="L195">    private JsonSerializer(boolean readStrict, boolean prettyPrint, IdType fieldIdType, IdType enumValueType) {</span>
+<span class="fc" id="L196">        this.readStrict = readStrict;</span>
+<span class="fc" id="L197">        this.prettyPrint = prettyPrint;</span>
+<span class="fc" id="L198">        this.fieldIdType = fieldIdType;</span>
+<span class="fc" id="L199">        this.enumValueType = enumValueType;</span>
+<span class="fc" id="L200">    }</span>
 
-<span class="pc" id="L212">    private enum IdType {</span>
+<span class="pc" id="L202">    private enum IdType {</span>
         // print field or enums as numeric IDs and values.
-<span class="fc" id="L214">        ID,</span>
+<span class="fc" id="L204">        ID,</span>
         // print field or enums as field name and enum name.
-<span class="fc" id="L216">        NAME</span>
+<span class="fc" id="L206">        NAME</span>
     }
 
     private final boolean readStrict;
@@ -224,574 +214,576 @@ public class JsonSerializer extends Serializer {
     @SuppressWarnings(&quot;unchecked&quot;)
     private &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; PServiceCall&lt;T, F&gt; parseServiceCall(JsonTokenizer tokenizer, PService service)
             throws IOException {
-<span class="fc" id="L227">        PServiceCallType type = null;</span>
-<span class="fc" id="L228">        String methodName = null;</span>
-<span class="fc" id="L229">        int sequence = 0;</span>
+<span class="fc" id="L217">        PServiceCallType type = null;</span>
+<span class="fc" id="L218">        String methodName = null;</span>
+<span class="fc" id="L219">        int sequence = 0;</span>
         try {
-<span class="fc" id="L231">            tokenizer.expectSymbol(&quot;service call start&quot;, JsonToken.kListStart);</span>
+<span class="fc" id="L221">            tokenizer.expectSymbol(&quot;service call start&quot;, JsonToken.kListStart);</span>
 
-<span class="fc" id="L233">            methodName = tokenizer.expectString(&quot;method name&quot;)</span>
-<span class="fc" id="L234">                                  .decodeJsonLiteral();</span>
+<span class="fc" id="L223">            methodName = tokenizer.expectString(&quot;method name&quot;)</span>
+<span class="fc" id="L224">                                  .decodeJsonLiteral();</span>
 
-<span class="fc" id="L236">            tokenizer.expectSymbol(&quot;entry sep&quot;, JsonToken.kListSep);</span>
+<span class="fc" id="L226">            tokenizer.expectSymbol(&quot;entry sep&quot;, JsonToken.kListSep);</span>
 
-<span class="fc" id="L238">            JsonToken callTypeToken = tokenizer.expect(&quot;call type&quot;);</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">            if (callTypeToken.isInteger()) {</span>
-<span class="fc" id="L240">                int typeKey = callTypeToken.byteValue();</span>
-<span class="fc" id="L241">                type = PServiceCallType.forValue(typeKey);</span>
-<span class="fc bfc" id="L242" title="All 2 branches covered.">                if (type == null) {</span>
-<span class="fc" id="L243">                    throw new SerializerException(&quot;Service call type &quot; + typeKey + &quot; is not valid&quot;)</span>
-<span class="fc" id="L244">                            .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
+<span class="fc" id="L228">            JsonToken callTypeToken = tokenizer.expect(&quot;call type&quot;);</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (callTypeToken.isInteger()) {</span>
+<span class="fc" id="L230">                int typeKey = callTypeToken.byteValue();</span>
+<span class="fc" id="L231">                type = PServiceCallType.forValue(typeKey);</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">                if (type == null) {</span>
+<span class="fc" id="L233">                    throw new SerializerException(&quot;Service call type &quot; + typeKey + &quot; is not valid&quot;)</span>
+<span class="fc" id="L234">                            .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
                 }
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">            } else if (callTypeToken.isLiteral()) {</span>
-<span class="fc" id="L247">                String typeName = callTypeToken.decodeJsonLiteral();</span>
-<span class="fc" id="L248">                type = PServiceCallType.forName(typeName);</span>
-<span class="pc bpc" id="L249" title="1 of 2 branches missed.">                if (type == null) {</span>
-<span class="nc" id="L250">                    throw new SerializerException(&quot;Service call type &quot; + typeName + &quot; is not valid&quot;)</span>
-<span class="nc" id="L251">                            .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">            } else if (callTypeToken.isLiteral()) {</span>
+<span class="fc" id="L237">                String typeName = callTypeToken.decodeJsonLiteral();</span>
+<span class="fc" id="L238">                type = PServiceCallType.forName(typeName);</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">                if (type == null) {</span>
+<span class="fc" id="L240">                    throw new SerializerException(&quot;Service call type \&quot;&quot; + Strings.escape(typeName) + &quot;\&quot; is not valid&quot;)</span>
+<span class="fc" id="L241">                            .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
                 }
-<span class="fc" id="L253">            } else {</span>
-<span class="nc" id="L254">                throw new SerializerException(&quot;Invalid service call type token &quot; + callTypeToken.asString())</span>
-<span class="nc" id="L255">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
+<span class="fc" id="L243">            } else {</span>
+<span class="fc" id="L244">                throw new SerializerException(&quot;Invalid service call type token &quot; + callTypeToken.asString())</span>
+<span class="fc" id="L245">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
             }
 
-<span class="fc" id="L258">            tokenizer.expectSymbol(&quot;entry sep&quot;, JsonToken.kListSep);</span>
+<span class="fc" id="L248">            tokenizer.expectSymbol(&quot;entry sep&quot;, JsonToken.kListSep);</span>
 
-<span class="fc" id="L260">            sequence = tokenizer.expectNumber(&quot;Service call sequence&quot;)</span>
-<span class="fc" id="L261">                                .intValue();</span>
+<span class="fc" id="L250">            sequence = tokenizer.expectNumber(&quot;Service call sequence&quot;)</span>
+<span class="fc" id="L251">                                .intValue();</span>
 
-<span class="fc" id="L263">            tokenizer.expectSymbol(&quot;entry sep&quot;, JsonToken.kListSep);</span>
+<span class="fc" id="L253">            tokenizer.expectSymbol(&quot;entry sep&quot;, JsonToken.kListSep);</span>
 
-<span class="pc bpc" id="L265" title="1 of 2 branches missed.">            if (type == PServiceCallType.EXCEPTION) {</span>
-<span class="nc" id="L266">                PApplicationException ex = (PApplicationException) parseTypedValue(tokenizer.expect(&quot;Message start&quot;),</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">            if (type == PServiceCallType.EXCEPTION) {</span>
+<span class="fc" id="L256">                PApplicationException ex = (PApplicationException) parseTypedValue(tokenizer.expect(&quot;Message start&quot;),</span>
                                                                                    tokenizer,
                                                                                    PApplicationException.kDescriptor,
                                                                                    false);
 
-<span class="nc" id="L271">                tokenizer.expectSymbol(&quot;service call end&quot;, JsonToken.kListEnd);</span>
+<span class="fc" id="L261">                tokenizer.expectSymbol(&quot;service call end&quot;, JsonToken.kListEnd);</span>
 
-<span class="nc" id="L273">                return (PServiceCall&lt;T, F&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
+<span class="fc" id="L263">                return (PServiceCall&lt;T, F&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
             }
 
-<span class="fc" id="L276">            PServiceMethod method = service.getMethod(methodName);</span>
-<span class="pc bpc" id="L277" title="1 of 2 branches missed.">            if (method == null) {</span>
-<span class="nc" id="L278">                throw new SerializerException(&quot;No such method &quot; + methodName + &quot; on &quot; + service.getQualifiedName())</span>
-<span class="nc" id="L279">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
+<span class="fc" id="L266">            PServiceMethod method = service.getMethod(methodName);</span>
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">            if (method == null) {</span>
+<span class="nc" id="L268">                throw new SerializerException(&quot;No such method &quot; + methodName + &quot; on &quot; + service.getQualifiedName())</span>
+<span class="nc" id="L269">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
 
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc bfc" id="L283" title="All 2 branches covered.">            PMessageDescriptor&lt;T, F&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
-<span class="fc bfc" id="L284" title="All 2 branches covered.">            if (descriptor == null) {</span>
-<span class="fc" id="L285">                throw new SerializerException(&quot;No %s type for %s.%s()&quot;,</span>
-<span class="pc bpc" id="L286" title="1 of 2 branches missed.">                                              isRequestCallType(type) ? &quot;request&quot; : &quot;response&quot;,</span>
-<span class="fc" id="L287">                                              service.getQualifiedName(), methodName)</span>
-<span class="fc" id="L288">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">            PMessageDescriptor&lt;T, F&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            if (descriptor == null) {</span>
+<span class="fc" id="L275">                throw new SerializerException(&quot;No %s type for %s.%s()&quot;,</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">                                              isRequestCallType(type) ? &quot;request&quot; : &quot;response&quot;,</span>
+<span class="fc" id="L277">                                              service.getQualifiedName(), methodName)</span>
+<span class="fc" id="L278">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
-<span class="fc" id="L290">            T message = (T) parseTypedValue(tokenizer.expect(&quot;message start&quot;), tokenizer, descriptor, false);</span>
+<span class="fc" id="L280">            T message = (T) parseTypedValue(tokenizer.expect(&quot;message start&quot;), tokenizer, descriptor, false);</span>
 
-<span class="fc" id="L292">            tokenizer.expectSymbol(&quot;service call end&quot;, JsonToken.kListEnd);</span>
+<span class="fc" id="L282">            tokenizer.expectSymbol(&quot;service call end&quot;, JsonToken.kListEnd);</span>
 
-<span class="fc" id="L294">            return new PServiceCall&lt;&gt;(methodName, type, sequence, message);</span>
-<span class="fc" id="L295">        } catch (SerializerException se) {</span>
-<span class="fc" id="L296">            throw new SerializerException(se)</span>
-<span class="fc" id="L297">                    .setMethodName(methodName)</span>
-<span class="fc" id="L298">                    .setCallType(type)</span>
-<span class="fc" id="L299">                    .setSequenceNo(sequence);</span>
-<span class="fc" id="L300">        } catch (JsonException ie) {</span>
-<span class="fc" id="L301">            throw new SerializerException(ie, ie.getMessage())</span>
-<span class="fc" id="L302">                    .setMethodName(methodName)</span>
-<span class="fc" id="L303">                    .setCallType(type)</span>
-<span class="fc" id="L304">                    .setSequenceNo(sequence);</span>
+<span class="fc" id="L284">            return new PServiceCall&lt;&gt;(methodName, type, sequence, message);</span>
+<span class="fc" id="L285">        } catch (SerializerException se) {</span>
+<span class="fc" id="L286">            throw new SerializerException(se)</span>
+<span class="fc" id="L287">                    .setMethodName(methodName)</span>
+<span class="fc" id="L288">                    .setCallType(type)</span>
+<span class="fc" id="L289">                    .setSequenceNo(sequence);</span>
+<span class="fc" id="L290">        } catch (JsonException je) {</span>
+<span class="fc" id="L291">            throw new JsonSerializerException(je)</span>
+<span class="fc" id="L292">                    .setMethodName(methodName)</span>
+<span class="fc" id="L293">                    .setCallType(type)</span>
+<span class="fc" id="L294">                    .setSequenceNo(sequence);</span>
         }
     }
 
     private &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; T parseMessage(JsonTokenizer tokenizer, PMessageDescriptor&lt;T, F&gt; type)
             throws JsonException, IOException {
-<span class="fc" id="L310">        PMessageBuilder&lt;T, F&gt; builder = type.builder();</span>
+<span class="fc" id="L300">        PMessageBuilder&lt;T, F&gt; builder = type.builder();</span>
 
-<span class="fc bfc" id="L312" title="All 2 branches covered.">        if (tokenizer.peek(&quot;message end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
-<span class="fc" id="L313">            tokenizer.next();</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">        if (tokenizer.peek(&quot;message end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
+<span class="fc" id="L303">            tokenizer.next();</span>
         } else {
-<span class="fc" id="L315">            char sep = JsonToken.kMapStart;</span>
-<span class="fc bfc" id="L316" title="All 2 branches covered.">            while (sep != JsonToken.kMapEnd) {</span>
-<span class="fc" id="L317">                JsonToken token = tokenizer.expectString(&quot;field spec&quot;);</span>
-<span class="fc" id="L318">                String key = token.decodeJsonLiteral();</span>
+<span class="fc" id="L305">            char sep = JsonToken.kMapStart;</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">            while (sep != JsonToken.kMapEnd) {</span>
+<span class="fc" id="L307">                JsonToken token = tokenizer.expectString(&quot;field spec&quot;);</span>
+<span class="fc" id="L308">                String key = token.decodeJsonLiteral();</span>
                 PField field;
-<span class="fc bfc" id="L320" title="All 2 branches covered.">                if (Strings.isInteger(key)) {</span>
-<span class="fc" id="L321">                    field = type.getField(Integer.parseInt(key));</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">                if (Strings.isInteger(key)) {</span>
+<span class="fc" id="L311">                    field = type.getField(Integer.parseInt(key));</span>
                 } else {
-<span class="fc" id="L323">                    field = type.getField(key);</span>
+<span class="fc" id="L313">                    field = type.getField(key);</span>
                 }
-<span class="fc" id="L325">                tokenizer.expectSymbol(&quot;field KV sep&quot;, JsonToken.kKeyValSep);</span>
+<span class="fc" id="L315">                tokenizer.expectSymbol(&quot;field KV sep&quot;, JsonToken.kKeyValSep);</span>
 
-<span class="pc bpc" id="L327" title="1 of 2 branches missed.">                if (field != null) {</span>
-<span class="fc" id="L328">                    Object value = parseTypedValue(tokenizer.expect(&quot;field value&quot;), tokenizer, field.getDescriptor(), true);</span>
-<span class="fc" id="L329">                    builder.set(field.getKey(), value);</span>
-<span class="fc" id="L330">                } else {</span>
-<span class="nc" id="L331">                    consume(tokenizer.expect(&quot;field value&quot;), tokenizer);</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">                if (field != null) {</span>
+<span class="fc" id="L318">                    Object value = parseTypedValue(tokenizer.expect(&quot;field value&quot;), tokenizer, field.getDescriptor(), true);</span>
+<span class="fc" id="L319">                    builder.set(field.getKey(), value);</span>
+<span class="fc" id="L320">                } else {</span>
+<span class="fc" id="L321">                    consume(tokenizer.expect(&quot;field value&quot;), tokenizer);</span>
                 }
 
-<span class="fc" id="L334">                sep = tokenizer.expectSymbol(&quot;message end or sep&quot;, JsonToken.kMapEnd, JsonToken.kListSep);</span>
-<span class="fc" id="L335">            }</span>
+<span class="fc" id="L324">                sep = tokenizer.expectSymbol(&quot;message end or sep&quot;, JsonToken.kMapEnd, JsonToken.kListSep);</span>
+<span class="fc" id="L325">            }</span>
         }
 
-<span class="fc bfc" id="L338" title="All 2 branches covered.">        if (readStrict) {</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">        if (readStrict) {</span>
             try {
-<span class="fc" id="L340">                builder.validate();</span>
-<span class="nc" id="L341">            } catch (IllegalStateException e) {</span>
-<span class="nc" id="L342">                throw new SerializerException(e, e.getMessage());</span>
-<span class="fc" id="L343">            }</span>
+<span class="fc" id="L330">                builder.validate();</span>
+<span class="fc" id="L331">            } catch (IllegalStateException e) {</span>
+<span class="fc" id="L332">                throw new SerializerException(e, e.getMessage());</span>
+<span class="fc" id="L333">            }</span>
         }
 
-<span class="fc" id="L346">        return builder.build();</span>
+<span class="fc" id="L336">        return builder.build();</span>
     }
 
     private &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; T parseCompactMessage(JsonTokenizer tokenizer, PMessageDescriptor&lt;T, F&gt; type)
             throws IOException, JsonException {
-<span class="fc" id="L351">        PMessageBuilder&lt;T, F&gt; builder = type.builder();</span>
+<span class="fc" id="L341">        PMessageBuilder&lt;T, F&gt; builder = type.builder();</span>
         // compact message are not allowed to be empty.
 
-<span class="fc" id="L354">        int i = 0;</span>
-<span class="fc" id="L355">        char sep = JsonToken.kListStart;</span>
-<span class="fc bfc" id="L356" title="All 2 branches covered.">        while (sep != JsonToken.kListEnd) {</span>
-<span class="fc" id="L357">            PField field = type.getField(++i);</span>
+<span class="fc" id="L344">        int i = 0;</span>
+<span class="fc" id="L345">        char sep = JsonToken.kListStart;</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        while (sep != JsonToken.kListEnd) {</span>
+<span class="fc" id="L347">            PField field = type.getField(++i);</span>
 
-<span class="pc bpc" id="L359" title="1 of 2 branches missed.">            if (field != null) {</span>
-<span class="fc" id="L360">                Object value = parseTypedValue(tokenizer.expect(&quot;field value&quot;), tokenizer, field.getDescriptor(), true);</span>
-<span class="fc" id="L361">                builder.set(i, value);</span>
-<span class="fc" id="L362">            } else {</span>
-<span class="nc" id="L363">                consume(tokenizer.expect(&quot;compact field value&quot;), tokenizer);</span>
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="fc" id="L350">                Object value = parseTypedValue(tokenizer.expect(&quot;field value&quot;), tokenizer, field.getDescriptor(), true);</span>
+<span class="fc" id="L351">                builder.set(i, value);</span>
+<span class="fc" id="L352">            } else {</span>
+<span class="nc" id="L353">                consume(tokenizer.expect(&quot;compact field value&quot;), tokenizer);</span>
             }
 
-<span class="fc" id="L366">            sep = tokenizer.expectSymbol(&quot;compact entry sep&quot;, JsonToken.kListEnd, JsonToken.kListSep);</span>
-<span class="fc" id="L367">        }</span>
+<span class="fc" id="L356">            sep = tokenizer.expectSymbol(&quot;compact entry sep&quot;, JsonToken.kListEnd, JsonToken.kListSep);</span>
+<span class="fc" id="L357">        }</span>
 
-<span class="fc bfc" id="L369" title="All 2 branches covered.">        if (readStrict) {</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">        if (readStrict) {</span>
             try {
-<span class="fc" id="L371">                builder.validate();</span>
-<span class="nc" id="L372">            } catch (IllegalStateException e) {</span>
-<span class="nc" id="L373">                throw new SerializerException(e, e.getMessage());</span>
-<span class="fc" id="L374">            }</span>
+<span class="fc" id="L361">                builder.validate();</span>
+<span class="nc" id="L362">            } catch (IllegalStateException e) {</span>
+<span class="nc" id="L363">                throw new SerializerException(e, e.getMessage());</span>
+<span class="fc" id="L364">            }</span>
         }
 
-<span class="fc" id="L377">        return builder.build();</span>
+<span class="fc" id="L367">        return builder.build();</span>
     }
 
     private void consume(JsonToken token, JsonTokenizer tokenizer) throws IOException, JsonException {
-<span class="nc bnc" id="L381" title="All 2 branches missed.">        if (token.isSymbol()) {</span>
-<span class="nc bnc" id="L382" title="All 2 branches missed.">            if (token.isSymbol(JsonToken.kListStart)) {</span>
-<span class="nc bnc" id="L383" title="All 2 branches missed.">                if (tokenizer.peek(&quot;lists end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
-<span class="nc" id="L384">                    tokenizer.next();</span>
+<span class="fc bfc" id="L371" title="All 2 branches covered.">        if (token.isSymbol()) {</span>
+<span class="fc bfc" id="L372" title="All 2 branches covered.">            if (token.isSymbol(JsonToken.kListStart)) {</span>
+<span class="fc bfc" id="L373" title="All 2 branches covered.">                if (tokenizer.peek(&quot;lists end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
+<span class="fc" id="L374">                    tokenizer.next();</span>
                 } else {
-<span class="nc" id="L386">                    char sep = JsonToken.kListStart;</span>
-<span class="nc bnc" id="L387" title="All 2 branches missed.">                    while (sep != JsonToken.kListEnd) {</span>
-<span class="nc" id="L388">                        consume(tokenizer.expect(&quot;list item&quot;), tokenizer);</span>
-<span class="nc" id="L389">                        sep = tokenizer.expectSymbol(&quot;list sep&quot;, JsonToken.kListEnd, JsonToken.kListSep);</span>
+<span class="fc" id="L376">                    char sep = JsonToken.kListStart;</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">                    while (sep != JsonToken.kListEnd) {</span>
+<span class="fc" id="L378">                        consume(tokenizer.expect(&quot;list item&quot;), tokenizer);</span>
+<span class="fc" id="L379">                        sep = tokenizer.expectSymbol(&quot;list sep&quot;, JsonToken.kListEnd, JsonToken.kListSep);</span>
                     }
-<span class="nc" id="L391">                }</span>
-<span class="nc bnc" id="L392" title="All 2 branches missed.">            } else if (token.isSymbol(JsonToken.kMapStart)) {</span>
-<span class="nc bnc" id="L393" title="All 2 branches missed.">                if (tokenizer.peek(&quot;map end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
-<span class="nc" id="L394">                    tokenizer.next();</span>
+<span class="fc" id="L381">                }</span>
+<span class="pc bpc" id="L382" title="1 of 2 branches missed.">            } else if (token.isSymbol(JsonToken.kMapStart)) {</span>
+<span class="fc bfc" id="L383" title="All 2 branches covered.">                if (tokenizer.peek(&quot;map end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
+<span class="fc" id="L384">                    tokenizer.next();</span>
                 } else {
-<span class="nc" id="L396">                    char sep = JsonToken.kMapStart;</span>
-<span class="nc bnc" id="L397" title="All 2 branches missed.">                    while (sep != JsonToken.kMapEnd) {</span>
-<span class="nc" id="L398">                        tokenizer.expectString(&quot;map key&quot;);</span>
-<span class="nc" id="L399">                        tokenizer.expectSymbol(&quot;map KV sep&quot;, JsonToken.kKeyValSep);</span>
-<span class="nc" id="L400">                        consume(tokenizer.expect(&quot;entry value&quot;), tokenizer);</span>
-<span class="nc" id="L401">                        sep = tokenizer.expectSymbol(&quot;map end or sep&quot;, JsonToken.kMapEnd, JsonToken.kListSep);</span>
+<span class="fc" id="L386">                    char sep = JsonToken.kMapStart;</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">                    while (sep != JsonToken.kMapEnd) {</span>
+<span class="fc" id="L388">                        tokenizer.expectString(&quot;map key&quot;);</span>
+<span class="fc" id="L389">                        tokenizer.expectSymbol(&quot;map KV sep&quot;, JsonToken.kKeyValSep);</span>
+<span class="fc" id="L390">                        consume(tokenizer.expect(&quot;entry value&quot;), tokenizer);</span>
+<span class="fc" id="L391">                        sep = tokenizer.expectSymbol(&quot;map end or sep&quot;, JsonToken.kMapEnd, JsonToken.kListSep);</span>
                     }
                 }
             }
         }
         // Otherwise it is a simple value. No need to consume.
-<span class="nc" id="L407">    }</span>
+<span class="fc" id="L397">    }</span>
 
     private Object parseTypedValue(JsonToken token, JsonTokenizer tokenizer, PDescriptor t, boolean allowNull)
-            throws IOException {
-<span class="fc bfc" id="L411" title="All 2 branches covered.">        if (token.isNull()) {</span>
-<span class="pc bpc" id="L412" title="1 of 2 branches missed.">            if (!allowNull) {</span>
-<span class="fc" id="L413">                throw new SerializerException(&quot;Null value as body.&quot;);</span>
+            throws IOException, JsonException {
+<span class="fc bfc" id="L401" title="All 2 branches covered.">        if (token.isNull()) {</span>
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">            if (!allowNull) {</span>
+<span class="fc" id="L403">                throw new SerializerException(&quot;Null value as body.&quot;);</span>
             }
-<span class="nc" id="L415">            return null;</span>
+<span class="nc" id="L405">            return null;</span>
         }
 
-        try {
-<span class="pc bpc" id="L419" title="2 of 15 branches missed.">            switch (t.getType()) {</span>
-                case VOID: {
-<span class="nc bnc" id="L421" title="All 2 branches missed.">                    if (token.isBoolean()) {</span>
-<span class="nc bnc" id="L422" title="All 2 branches missed.">                        return token.booleanValue() ? Boolean.TRUE : null;</span>
-                    }
-<span class="nc" id="L424">                    throw new SerializerException(&quot;Not a void token value: '&quot; + token.asString() + &quot;'&quot;);</span>
+<span class="pc bpc" id="L408" title="1 of 15 branches missed.">        switch (t.getType()) {</span>
+            case VOID: {
+<span class="fc bfc" id="L410" title="All 2 branches covered.">                if (token.isBoolean()) {</span>
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">                    return token.booleanValue() ? Boolean.TRUE : null;</span>
                 }
-                case BOOL:
-<span class="fc bfc" id="L427" title="All 2 branches covered.">                    if (token.isBoolean()) {</span>
-<span class="fc" id="L428">                        return token.booleanValue();</span>
-<span class="pc bpc" id="L429" title="1 of 2 branches missed.">                    } else if (token.isInteger()) {</span>
-<span class="nc bnc" id="L430" title="All 2 branches missed.">                        return token.intValue() != 0;</span>
-                    }
-<span class="fc" id="L432">                    throw new SerializerException(&quot;No boolean value for token: '&quot; + token.asString() + &quot;'&quot;);</span>
-                case BYTE:
-<span class="fc bfc" id="L434" title="All 2 branches covered.">                    if (token.isInteger()) {</span>
-<span class="fc" id="L435">                        return token.byteValue();</span>
-                    }
-<span class="fc" id="L437">                    throw new SerializerException(&quot;Not a valid byte value: '&quot; + token.asString() + &quot;'&quot;);</span>
-                case I16:
-<span class="fc bfc" id="L439" title="All 2 branches covered.">                    if (token.isInteger()) {</span>
-<span class="fc" id="L440">                        return token.shortValue();</span>
-                    }
-<span class="fc" id="L442">                    throw new SerializerException(&quot;Not a valid short value: '&quot; + token.asString() + &quot;'&quot;);</span>
-                case I32:
-<span class="fc bfc" id="L444" title="All 2 branches covered.">                    if (token.isInteger()) {</span>
-<span class="fc" id="L445">                        return token.intValue();</span>
-                    }
-<span class="fc" id="L447">                    throw new SerializerException(&quot;Not a valid int value: '&quot; + token.asString() + &quot;'&quot;);</span>
-                case I64:
-<span class="fc bfc" id="L449" title="All 2 branches covered.">                    if (token.isInteger()) {</span>
-<span class="fc" id="L450">                        return token.longValue();</span>
-                    }
-<span class="fc" id="L452">                    throw new SerializerException(&quot;Not a valid long value: '&quot; + token.asString() + &quot;'&quot;);</span>
-                case DOUBLE:
-<span class="fc bfc" id="L454" title="All 2 branches covered.">                    if (token.isNumber()) {</span>
-<span class="fc" id="L455">                        return token.doubleValue();</span>
-                    }
-<span class="fc" id="L457">                    throw new SerializerException(&quot;Not a valid double value: '&quot; + token.asString() + &quot;'&quot;);</span>
-                case STRING:
-<span class="fc bfc" id="L459" title="All 2 branches covered.">                    if (token.isLiteral()) {</span>
-<span class="fc" id="L460">                        return token.decodeJsonLiteral();</span>
-                    }
-<span class="fc" id="L462">                    throw new SerializerException(&quot;Not a valid string value: '&quot; + token.asString() + &quot;'&quot;);</span>
-                case BINARY:
-<span class="fc bfc" id="L464" title="All 2 branches covered.">                    if (token.isLiteral()) {</span>
-                        try {
-<span class="fc" id="L466">                            return Binary.fromBase64(token.substring(1, -1)</span>
-<span class="fc" id="L467">                                                          .asString());</span>
-<span class="fc" id="L468">                        } catch (IllegalArgumentException e) {</span>
-<span class="fc" id="L469">                            throw new SerializerException(e, &quot;Unable to parse Base64 data: &quot; + token.asString());</span>
-                        }
-                    }
-<span class="fc" id="L472">                    throw new SerializerException(&quot;Not a valid binary value: &quot; + token.asString());</span>
-                case ENUM:
-<span class="fc" id="L474">                    PEnumBuilder&lt;?&gt; eb = ((PEnumDescriptor&lt;?&gt;) t).builder();</span>
-<span class="fc bfc" id="L475" title="All 2 branches covered.">                    if (token.isInteger()) {</span>
-<span class="fc" id="L476">                        eb.setByValue(token.intValue());</span>
-<span class="pc bpc" id="L477" title="1 of 2 branches missed.">                    } else if (token.isLiteral()) {</span>
-<span class="fc" id="L478">                        eb.setByName(token.substring(1, -1)</span>
-<span class="fc" id="L479">                                          .asString());</span>
-                    } else {
-<span class="nc" id="L481">                        throw new SerializerException(token.asString() + &quot; is not a enum value type&quot;);</span>
-                    }
-<span class="pc bpc" id="L483" title="1 of 4 branches missed.">                    if (!(allowNull || eb.valid())) {</span>
-<span class="nc" id="L484">                        throw new SerializerException(token.asString() + &quot; is not a known enum value for &quot; + t.getQualifiedName());</span>
-                    }
-<span class="fc" id="L486">                    return eb.build();</span>
-                case MESSAGE: {
-<span class="fc" id="L488">                    PMessageDescriptor&lt;?, ?&gt; st = (PMessageDescriptor&lt;?, ?&gt;) t;</span>
-<span class="fc bfc" id="L489" title="All 2 branches covered.">                    if (token.isSymbol(JsonToken.kMapStart)) {</span>
-<span class="fc" id="L490">                        return parseMessage(tokenizer, st);</span>
-<span class="fc bfc" id="L491" title="All 2 branches covered.">                    } else if (token.isSymbol(JsonToken.kListStart)) {</span>
-<span class="fc bfc" id="L492" title="All 2 branches covered.">                        if (isCompactible(st)) {</span>
-<span class="fc" id="L493">                            return parseCompactMessage(tokenizer, st);</span>
-                        } else {
-<span class="fc" id="L495">                            throw new SerializerException(</span>
-<span class="fc" id="L496">                                    st.getName() + &quot; is not compatible for compact struct notation.&quot;);</span>
-                        }
-                    }
-<span class="fc" id="L499">                    throw new SerializerException(&quot;expected message start, found: '%s'&quot;, token.asString());</span>
-                }
-                case MAP: {
-                    @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L503">                    PMap&lt;Object, Object&gt; mapType = (PMap&lt;Object, Object&gt;) t;</span>
-<span class="fc" id="L504">                    PDescriptor itemType = mapType.itemDescriptor();</span>
-<span class="fc" id="L505">                    PDescriptor keyType = mapType.keyDescriptor();</span>
-<span class="pc bpc" id="L506" title="1 of 2 branches missed.">                    if (!token.isSymbol(JsonToken.kMapStart)) {</span>
-<span class="nc" id="L507">                        throw new SerializerException(&quot;Incompatible start of map &quot; + token);</span>
-                    }
-<span class="fc" id="L509">                    PMap.Builder&lt;Object, Object&gt; map = mapType.builder();</span>
-
-<span class="fc bfc" id="L511" title="All 2 branches covered.">                    if (tokenizer.peek(&quot;map end or value&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
-<span class="fc" id="L512">                        tokenizer.next();</span>
-                    } else {
-<span class="fc" id="L514">                        char sep = JsonToken.kMapStart;</span>
-<span class="fc bfc" id="L515" title="All 2 branches covered.">                        while (sep != JsonToken.kMapEnd) {</span>
-<span class="fc" id="L516">                            Object key = parseMapKey(tokenizer.expectString(&quot;map key&quot;)</span>
-<span class="fc" id="L517">                                                              .decodeJsonLiteral(), keyType);</span>
-<span class="fc" id="L518">                            tokenizer.expectSymbol(&quot;map K/V sep&quot;, JsonToken.kKeyValSep);</span>
-<span class="fc" id="L519">                            Object value = parseTypedValue(tokenizer.expect(&quot;map value&quot;), tokenizer, itemType, false);</span>
-<span class="pc bpc" id="L520" title="2 of 4 branches missed.">                            if (key != null &amp;&amp; value != null) {</span>
-                                // In lenient mode, just drop the entire entry if the
-                                // key could not be parsed. Should only be the case
-                                // for unknown enum values.
-                                // -- parseMapKey checked for strictRead mode.
-<span class="fc" id="L525">                                map.put(key, value);</span>
-                            }
-<span class="fc" id="L527">                            sep = tokenizer.expectSymbol(&quot;map end or sep&quot;, JsonToken.kMapEnd, JsonToken.kListSep);</span>
-<span class="fc" id="L528">                        }</span>
-                    }
-<span class="fc" id="L530">                    return map.build();</span>
-                }
-                case SET: {
-<span class="fc" id="L533">                    PDescriptor itemType = ((PSet&lt;?&gt;) t).itemDescriptor();</span>
-<span class="pc bpc" id="L534" title="1 of 2 branches missed.">                    if (!token.isSymbol(JsonToken.kListStart)) {</span>
-<span class="nc" id="L535">                        throw new SerializerException(&quot;Incompatible start of list &quot; + token);</span>
-                    }
-                    @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L538">                    PSet.Builder&lt;Object&gt; set = ((PSet&lt;Object&gt;) t).builder();</span>
-
-<span class="fc bfc" id="L540" title="All 2 branches covered.">                    if (tokenizer.peek(&quot;set end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
-<span class="fc" id="L541">                        tokenizer.next();</span>
-                    } else {
-<span class="fc" id="L543">                        char sep = JsonToken.kListStart;</span>
-<span class="fc bfc" id="L544" title="All 2 branches covered.">                        while (sep != JsonToken.kListEnd) {</span>
-<span class="pc bpc" id="L545" title="1 of 2 branches missed.">                            Object val = parseTypedValue(tokenizer.expect(&quot;set value&quot;), tokenizer, itemType, !readStrict);</span>
-<span class="pc bpc" id="L546" title="1 of 2 branches missed.">                            if (val != null) {</span>
-                                // In lenient mode, just drop the entire entry if the
-                                // key could not be parsed. Should only be the case
-                                // for unknown enum values.
-<span class="fc" id="L550">                                set.add(val);</span>
-                            }
-<span class="fc" id="L552">                            sep = tokenizer.expectSymbol(&quot;set end or sep&quot;, JsonToken.kListSep, JsonToken.kListEnd);</span>
-<span class="fc" id="L553">                        }</span>
-                    }
-<span class="fc" id="L555">                    return set.build();</span>
-                }
-                case LIST: {
-<span class="fc" id="L558">                    PDescriptor itemType = ((PList&lt;?&gt;) t).itemDescriptor();</span>
-<span class="pc bpc" id="L559" title="1 of 2 branches missed.">                    if (!token.isSymbol(JsonToken.kListStart)) {</span>
-<span class="nc" id="L560">                        throw new SerializerException(&quot;Incompatible start of list &quot; + token);</span>
-                    }
-                    @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L563">                    PList.Builder&lt;Object&gt; list = ((PList&lt;Object&gt;) t).builder();</span>
-<span class="fc bfc" id="L564" title="All 2 branches covered.">                    if (tokenizer.peek(&quot;list end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
-<span class="fc" id="L565">                        tokenizer.next();</span>
-                    } else {
-<span class="fc" id="L567">                        char sep = JsonToken.kListStart;</span>
-<span class="fc bfc" id="L568" title="All 2 branches covered.">                        while (sep != JsonToken.kListEnd) {</span>
-<span class="fc" id="L569">                            list.add(parseTypedValue(tokenizer.expect(&quot;list value&quot;), tokenizer, itemType, false));</span>
-<span class="fc" id="L570">                            sep = tokenizer.expectSymbol(&quot;list end or sep&quot;, JsonToken.kListSep, JsonToken.kListEnd);</span>
-                        }
-                    }
-<span class="fc" id="L573">                    return list.build();</span>
-                }
+<span class="fc" id="L413">                throw new SerializerException(&quot;Not a void token value: '&quot; + token.asString() + &quot;'&quot;);</span>
             }
-<span class="nc" id="L576">        } catch (JsonException je) {</span>
-<span class="nc" id="L577">            throw new SerializerException(je, &quot;Unable to parse type value.&quot;);</span>
-<span class="nc" id="L578">        } catch (ClassCastException ce) {</span>
-<span class="nc" id="L579">            throw new SerializerException(ce, &quot;Serialized type  not compatible with &quot; + t.getQualifiedName());</span>
-<span class="nc" id="L580">        }</span>
+            case BOOL:
+<span class="fc bfc" id="L416" title="All 2 branches covered.">                if (token.isBoolean()) {</span>
+<span class="fc" id="L417">                    return token.booleanValue();</span>
+                }
+<span class="fc" id="L419">                throw new SerializerException(&quot;No boolean value for token: '&quot; + token.asString() + &quot;'&quot;);</span>
+            case BYTE:
+<span class="fc bfc" id="L421" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L422">                    return token.byteValue();</span>
+                }
+<span class="fc" id="L424">                throw new SerializerException(&quot;Not a valid byte value: '&quot; + token.asString() + &quot;'&quot;);</span>
+            case I16:
+<span class="fc bfc" id="L426" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L427">                    return token.shortValue();</span>
+                }
+<span class="fc" id="L429">                throw new SerializerException(&quot;Not a valid short value: '&quot; + token.asString() + &quot;'&quot;);</span>
+            case I32:
+<span class="fc bfc" id="L431" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L432">                    return token.intValue();</span>
+                }
+<span class="fc" id="L434">                throw new SerializerException(&quot;Not a valid int value: '&quot; + token.asString() + &quot;'&quot;);</span>
+            case I64:
+<span class="fc bfc" id="L436" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L437">                    return token.longValue();</span>
+                }
+<span class="fc" id="L439">                throw new SerializerException(&quot;Not a valid long value: '&quot; + token.asString() + &quot;'&quot;);</span>
+            case DOUBLE:
+<span class="fc bfc" id="L441" title="All 2 branches covered.">                if (token.isNumber()) {</span>
+<span class="fc" id="L442">                    return token.doubleValue();</span>
+                }
+<span class="fc" id="L444">                throw new SerializerException(&quot;Not a valid double value: '&quot; + token.asString() + &quot;'&quot;);</span>
+            case STRING:
+<span class="fc bfc" id="L446" title="All 2 branches covered.">                if (token.isLiteral()) {</span>
+<span class="fc" id="L447">                    return token.decodeJsonLiteral();</span>
+                }
+<span class="fc" id="L449">                throw new SerializerException(&quot;Not a valid string value: '&quot; + token.asString() + &quot;'&quot;);</span>
+            case BINARY:
+<span class="fc bfc" id="L451" title="All 2 branches covered.">                if (token.isLiteral()) {</span>
+                    try {
+<span class="fc" id="L453">                        return Binary.fromBase64(token.substring(1, -1)</span>
+<span class="fc" id="L454">                                                      .asString());</span>
+<span class="fc" id="L455">                    } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L456">                        throw new SerializerException(e, &quot;Unable to parse Base64 data: &quot; + token.asString());</span>
+                    }
+                }
+<span class="fc" id="L459">                throw new SerializerException(&quot;Not a valid binary value: &quot; + token.asString());</span>
+            case ENUM:
+<span class="fc" id="L461">                PEnumBuilder&lt;?&gt; eb = ((PEnumDescriptor&lt;?&gt;) t).builder();</span>
+<span class="fc bfc" id="L462" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L463">                    eb.setByValue(token.intValue());</span>
+<span class="fc bfc" id="L464" title="All 2 branches covered.">                } else if (token.isLiteral()) {</span>
+<span class="fc" id="L465">                    eb.setByName(token.substring(1, -1)</span>
+<span class="fc" id="L466">                                      .asString());</span>
+                } else {
+<span class="fc" id="L468">                    throw new SerializerException(token.asString() + &quot; is not a enum value type&quot;);</span>
+                }
+<span class="fc bfc" id="L470" title="All 4 branches covered.">                if (!(allowNull || eb.valid())) {</span>
+<span class="fc" id="L471">                    throw new SerializerException(token.asString() + &quot; is not a known enum value for &quot; + t.getQualifiedName());</span>
+                }
+<span class="fc" id="L473">                return eb.build();</span>
+            case MESSAGE: {
+<span class="fc" id="L475">                PMessageDescriptor&lt;?, ?&gt; st = (PMessageDescriptor&lt;?, ?&gt;) t;</span>
+<span class="fc bfc" id="L476" title="All 2 branches covered.">                if (token.isSymbol(JsonToken.kMapStart)) {</span>
+<span class="fc" id="L477">                    return parseMessage(tokenizer, st);</span>
+<span class="fc bfc" id="L478" title="All 2 branches covered.">                } else if (token.isSymbol(JsonToken.kListStart)) {</span>
+<span class="fc bfc" id="L479" title="All 2 branches covered.">                    if (isCompactible(st)) {</span>
+<span class="fc" id="L480">                        return parseCompactMessage(tokenizer, st);</span>
+                    } else {
+<span class="fc" id="L482">                        throw new SerializerException(</span>
+<span class="fc" id="L483">                                st.getName() + &quot; is not compatible for compact struct notation.&quot;);</span>
+                    }
+                }
+<span class="fc" id="L486">                throw new SerializerException(&quot;expected message start, found: '%s'&quot;, token.asString());</span>
+            }
+            case MAP: {
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L490">                PMap&lt;Object, Object&gt; mapType = (PMap&lt;Object, Object&gt;) t;</span>
+<span class="fc" id="L491">                PDescriptor itemType = mapType.itemDescriptor();</span>
+<span class="fc" id="L492">                PDescriptor keyType = mapType.keyDescriptor();</span>
+<span class="fc bfc" id="L493" title="All 2 branches covered.">                if (!token.isSymbol(JsonToken.kMapStart)) {</span>
+<span class="fc" id="L494">                    throw new SerializerException(&quot;Invalid start of map '&quot; + token.asString() + &quot;'&quot;);</span>
+                }
+<span class="fc" id="L496">                PMap.Builder&lt;Object, Object&gt; map = mapType.builder();</span>
 
-<span class="nc" id="L582">        throw new SerializerException(&quot;Unhandled item type &quot; + t.getQualifiedName());</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">                if (tokenizer.peek(&quot;map end or value&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
+<span class="fc" id="L499">                    tokenizer.next();</span>
+                } else {
+<span class="fc" id="L501">                    char sep = JsonToken.kMapStart;</span>
+<span class="fc bfc" id="L502" title="All 2 branches covered.">                    while (sep != JsonToken.kMapEnd) {</span>
+<span class="fc" id="L503">                        Object key = parseMapKey(tokenizer.expectString(&quot;map key&quot;)</span>
+<span class="fc" id="L504">                                                          .decodeJsonLiteral(), keyType);</span>
+<span class="fc" id="L505">                        tokenizer.expectSymbol(&quot;map K/V sep&quot;, JsonToken.kKeyValSep);</span>
+<span class="fc" id="L506">                        Object value = parseTypedValue(tokenizer.expect(&quot;map value&quot;), tokenizer, itemType, false);</span>
+<span class="pc bpc" id="L507" title="2 of 4 branches missed.">                        if (key != null &amp;&amp; value != null) {</span>
+                            // In lenient mode, just drop the entire entry if the
+                            // key could not be parsed. Should only be the case
+                            // for unknown enum values.
+                            // -- parseMapKey checked for strictRead mode.
+<span class="fc" id="L512">                            map.put(key, value);</span>
+                        }
+<span class="fc" id="L514">                        sep = tokenizer.expectSymbol(&quot;map end or sep&quot;, JsonToken.kMapEnd, JsonToken.kListSep);</span>
+<span class="fc" id="L515">                    }</span>
+                }
+<span class="fc" id="L517">                return map.build();</span>
+            }
+            case SET: {
+<span class="fc" id="L520">                PDescriptor itemType = ((PSet&lt;?&gt;) t).itemDescriptor();</span>
+<span class="fc bfc" id="L521" title="All 2 branches covered.">                if (!token.isSymbol(JsonToken.kListStart)) {</span>
+<span class="fc" id="L522">                    throw new SerializerException(&quot;Invalid start of set '&quot; + token.asString() + &quot;'&quot;);</span>
+                }
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L525">                PSet.Builder&lt;Object&gt; set = ((PSet&lt;Object&gt;) t).builder();</span>
+
+<span class="fc bfc" id="L527" title="All 2 branches covered.">                if (tokenizer.peek(&quot;set end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
+<span class="fc" id="L528">                    tokenizer.next();</span>
+                } else {
+<span class="fc" id="L530">                    char sep = JsonToken.kListStart;</span>
+<span class="fc bfc" id="L531" title="All 2 branches covered.">                    while (sep != JsonToken.kListEnd) {</span>
+<span class="pc bpc" id="L532" title="1 of 2 branches missed.">                        Object val = parseTypedValue(tokenizer.expect(&quot;set value&quot;), tokenizer, itemType, !readStrict);</span>
+<span class="pc bpc" id="L533" title="1 of 2 branches missed.">                        if (val != null) {</span>
+                            // In lenient mode, just drop the entire entry if the
+                            // key could not be parsed. Should only be the case
+                            // for unknown enum values.
+<span class="fc" id="L537">                            set.add(val);</span>
+                        }
+<span class="fc" id="L539">                        sep = tokenizer.expectSymbol(&quot;set end or sep&quot;, JsonToken.kListSep, JsonToken.kListEnd);</span>
+<span class="fc" id="L540">                    }</span>
+                }
+<span class="fc" id="L542">                return set.build();</span>
+            }
+            case LIST: {
+<span class="fc" id="L545">                PDescriptor itemType = ((PList&lt;?&gt;) t).itemDescriptor();</span>
+<span class="fc bfc" id="L546" title="All 2 branches covered.">                if (!token.isSymbol(JsonToken.kListStart)) {</span>
+<span class="fc" id="L547">                    throw new SerializerException(&quot;Invalid start of list '&quot; + token.asString() + &quot;'&quot;);</span>
+                }
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L550">                PList.Builder&lt;Object&gt; list = ((PList&lt;Object&gt;) t).builder();</span>
+<span class="fc bfc" id="L551" title="All 2 branches covered.">                if (tokenizer.peek(&quot;list end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
+<span class="fc" id="L552">                    tokenizer.next();</span>
+                } else {
+<span class="fc" id="L554">                    char sep = JsonToken.kListStart;</span>
+<span class="fc bfc" id="L555" title="All 2 branches covered.">                    while (sep != JsonToken.kListEnd) {</span>
+<span class="fc" id="L556">                        list.add(parseTypedValue(tokenizer.expect(&quot;list value&quot;), tokenizer, itemType, false));</span>
+<span class="fc" id="L557">                        sep = tokenizer.expectSymbol(&quot;list end or sep&quot;, JsonToken.kListSep, JsonToken.kListEnd);</span>
+                    }
+                }
+<span class="fc" id="L560">                return list.build();</span>
+            }
+        }
+
+<span class="nc" id="L564">        throw new SerializerException(&quot;Unhandled item type &quot; + t.getQualifiedName());</span>
     }
 
     private boolean isCompactible(PMessageDescriptor descriptor) {
-<span class="fc bfc" id="L586" title="All 2 branches covered.">        return descriptor instanceof JsonCompactibleDescriptor &amp;&amp;</span>
-<span class="pc bpc" id="L587" title="1 of 2 branches missed.">               ((JsonCompactibleDescriptor) descriptor).isJsonCompactible();</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">        return descriptor instanceof JsonCompactibleDescriptor &amp;&amp;</span>
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">               ((JsonCompactibleDescriptor) descriptor).isJsonCompactible();</span>
     }
 
     private boolean isCompact(PMessage message) {
-<span class="pc bpc" id="L591" title="1 of 4 branches missed.">        return message instanceof JsonCompactible &amp;&amp; ((JsonCompactible) message).jsonCompact();</span>
+<span class="pc bpc" id="L573" title="1 of 4 branches missed.">        return message instanceof JsonCompactible &amp;&amp; ((JsonCompactible) message).jsonCompact();</span>
     }
 
     private Object parseMapKey(String key, PDescriptor keyType) throws SerializerException {
         try {
-<span class="pc bpc" id="L596" title="2 of 11 branches missed.">            switch (keyType.getType()) {</span>
+<span class="pc bpc" id="L578" title="1 of 11 branches missed.">            switch (keyType.getType()) {</span>
                 case BOOL:
-<span class="fc" id="L598">                    return Boolean.parseBoolean(key);</span>
+<span class="fc bfc" id="L580" title="All 2 branches covered.">                    if (key.equalsIgnoreCase(&quot;true&quot;)) {</span>
+<span class="fc" id="L581">                        return Boolean.TRUE;</span>
+<span class="fc bfc" id="L582" title="All 2 branches covered.">                    } else if (key.equalsIgnoreCase(&quot;false&quot;)) {</span>
+<span class="fc" id="L583">                        return Boolean.FALSE;</span>
+                    }
+<span class="fc" id="L585">                    throw new SerializerException(&quot;Invalid boolean value: \&quot;&quot; + Strings.escape(key) + &quot;\&quot;&quot;);</span>
                 case BYTE:
-<span class="fc" id="L600">                    return Byte.parseByte(key);</span>
+<span class="fc" id="L587">                    return Byte.parseByte(key);</span>
                 case I16:
-<span class="fc" id="L602">                    return Short.parseShort(key);</span>
+<span class="fc" id="L589">                    return Short.parseShort(key);</span>
                 case I32:
-<span class="fc" id="L604">                    return Integer.parseInt(key);</span>
+<span class="fc" id="L591">                    return Integer.parseInt(key);</span>
                 case I64:
-<span class="fc" id="L606">                    return Long.parseLong(key);</span>
+<span class="fc" id="L593">                    return Long.parseLong(key);</span>
                 case DOUBLE:
                     try {
-<span class="fc" id="L609">                        JsonTokenizer tokenizer = new JsonTokenizer(new ByteArrayInputStream(key.getBytes(StandardCharsets.US_ASCII)));</span>
-<span class="fc" id="L610">                        JsonToken token = tokenizer.next();</span>
-<span class="pc bpc" id="L611" title="1 of 2 branches missed.">                        if (!token.isNumber()) {</span>
-<span class="nc" id="L612">                            throw new SerializerException(key + &quot; is not a number&quot;);</span>
-<span class="pc bpc" id="L613" title="1 of 2 branches missed.">                        } else if (tokenizer.hasNext()) {</span>
-<span class="nc" id="L614">                            throw new SerializerException(&quot;Garbage after double: \&quot;&quot; + key + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L596">                        JsonTokenizer tokenizer = new JsonTokenizer(new ByteArrayInputStream(key.getBytes(</span>
+                                StandardCharsets.US_ASCII)));
+<span class="fc" id="L598">                        JsonToken token = tokenizer.next();</span>
+<span class="fc bfc" id="L599" title="All 2 branches covered.">                        if (!token.isNumber()) {</span>
+<span class="fc" id="L600">                            throw new SerializerException(&quot;Unable to parse double from key \&quot;&quot; + key + &quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L601" title="All 2 branches covered.">                        } else if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L602">                            throw new SerializerException(&quot;Garbage after double: \&quot;&quot; + key + &quot;\&quot;&quot;);</span>
                         }
-<span class="fc" id="L616">                        return token.doubleValue();</span>
-<span class="nc" id="L617">                    } catch (JsonException | IOException e) {</span>
-<span class="nc" id="L618">                        throw new SerializerException(e, &quot;Unable to parse double from key \&quot;&quot; + key + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L604">                        return token.doubleValue();</span>
+<span class="fc" id="L605">                    } catch (SerializerException e) {</span>
+<span class="fc" id="L606">                        throw e;</span>
+<span class="fc" id="L607">                    } catch (JsonException | IOException e) {</span>
+<span class="fc" id="L608">                        throw new SerializerException(e, &quot;Unable to parse double from key \&quot;&quot; + key + &quot;\&quot;&quot;);</span>
                     }
                 case STRING:
-<span class="fc" id="L621">                    return key;</span>
+<span class="fc" id="L611">                    return key;</span>
                 case BINARY:
                     try {
-<span class="fc" id="L624">                        return Binary.fromBase64(key);</span>
-<span class="nc" id="L625">                    } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L626">                        throw new SerializerException(e, &quot;Unable to parse Base64 data.&quot;);</span>
+<span class="fc" id="L614">                        return Binary.fromBase64(key);</span>
+<span class="fc" id="L615">                    } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L616">                        throw new SerializerException(e, &quot;Unable to parse Base64 data&quot;);</span>
                     }
                 case ENUM:
-<span class="fc" id="L629">                    PEnumBuilder&lt;?&gt; eb = ((PEnumDescriptor&lt;?&gt;) keyType).builder();</span>
-<span class="fc bfc" id="L630" title="All 2 branches covered.">                    if (Strings.isInteger(key)) {</span>
-<span class="fc" id="L631">                        eb.setByValue(Integer.parseInt(key));</span>
+<span class="fc" id="L619">                    PEnumBuilder&lt;?&gt; eb = ((PEnumDescriptor&lt;?&gt;) keyType).builder();</span>
+<span class="fc bfc" id="L620" title="All 2 branches covered.">                    if (Strings.isInteger(key)) {</span>
+<span class="fc" id="L621">                        eb.setByValue(Integer.parseInt(key));</span>
                     } else {
-<span class="fc" id="L633">                        eb.setByName(key);</span>
+<span class="fc" id="L623">                        eb.setByName(key);</span>
                     }
-<span class="pc bpc" id="L635" title="2 of 4 branches missed.">                    if (readStrict &amp;&amp; !eb.valid()) {</span>
-<span class="nc" id="L636">                        throw new SerializerException(&quot;%s is not a valid enum value for %s&quot;,</span>
-<span class="nc" id="L637">                                                      key, keyType.getQualifiedName());</span>
+<span class="pc bpc" id="L625" title="1 of 4 branches missed.">                    if (readStrict &amp;&amp; !eb.valid()) {</span>
+<span class="fc" id="L626">                        throw new SerializerException(&quot;\&quot;%s\&quot; is not a known enum value for %s&quot;,</span>
+<span class="fc" id="L627">                                                      Strings.escape(key), keyType.getQualifiedName());</span>
                     }
-<span class="fc" id="L639">                    return eb.build();</span>
+<span class="fc" id="L629">                    return eb.build();</span>
                 case MESSAGE:
-<span class="nc" id="L641">                    PMessageDescriptor&lt;?, ?&gt; st = (PMessageDescriptor&lt;?, ?&gt;) keyType;</span>
-<span class="nc bnc" id="L642" title="All 2 branches missed.">                    if (!st.isSimple()) {</span>
-<span class="nc" id="L643">                        throw new SerializerException(&quot;Only simple structs can be used as map key. %s is not.&quot;,</span>
-<span class="nc" id="L644">                                                      st.getQualifiedName());</span>
+<span class="fc" id="L631">                    PMessageDescriptor&lt;?, ?&gt; st = (PMessageDescriptor&lt;?, ?&gt;) keyType;</span>
+<span class="pc bpc" id="L632" title="1 of 2 branches missed.">                    if (!st.isSimple()) {</span>
+<span class="nc" id="L633">                        throw new SerializerException(&quot;Only simple structs can be used as map key. %s is not.&quot;,</span>
+<span class="nc" id="L634">                                                      st.getQualifiedName());</span>
                     }
-<span class="nc" id="L646">                    ByteArrayInputStream input = new ByteArrayInputStream(key.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L636">                    ByteArrayInputStream input = new ByteArrayInputStream(key.getBytes(StandardCharsets.UTF_8));</span>
                     try {
-<span class="nc" id="L648">                        JsonTokenizer tokenizer = new JsonTokenizer(input);</span>
-<span class="nc" id="L649">                        tokenizer.expectSymbol(&quot;message start&quot;, JsonToken.kMapStart);</span>
-<span class="nc" id="L650">                        return parseMessage(tokenizer, st);</span>
-<span class="nc" id="L651">                    } catch (IOException e) {</span>
-<span class="nc" id="L652">                        throw new SerializerException(e, &quot;Unable to tokenize map key: %s&quot;, key);</span>
-<span class="nc" id="L653">                    } catch (JsonException e) {</span>
-<span class="nc" id="L654">                        throw new SerializerException(e, &quot;Unable to parse map key: %s&quot;, key);</span>
+<span class="fc" id="L638">                        JsonTokenizer tokenizer = new JsonTokenizer(input);</span>
+<span class="fc" id="L639">                        if (JsonToken.kMapStart ==</span>
+<span class="fc bfc" id="L640" title="All 2 branches covered.">                            tokenizer.expectSymbol(&quot;message start&quot;, JsonToken.kMapStart, JsonToken.kListStart)) {</span>
+<span class="nc" id="L641">                            return parseMessage(tokenizer, st);</span>
+                        } else {
+<span class="fc" id="L643">                            return parseCompactMessage(tokenizer, st);</span>
+                        }
+<span class="fc" id="L645">                    } catch (JsonException | IOException e) {</span>
+<span class="fc" id="L646">                        throw new SerializerException(e, &quot;Error parsing message key: &quot; + e.getMessage());</span>
                     }
                 default:
-<span class="nc" id="L657">                    throw new SerializerException(&quot;Illegal key type: %s&quot;, keyType.getType());</span>
+<span class="nc" id="L649">                    throw new SerializerException(&quot;Illegal key type: %s&quot;, keyType.getType());</span>
             }
-<span class="nc" id="L659">        } catch (NumberFormatException nfe) {</span>
-<span class="nc" id="L660">            throw new SerializerException(nfe, &quot;Unable to parse numeric value %s&quot;, key);</span>
+<span class="fc" id="L651">        } catch (NumberFormatException nfe) {</span>
+<span class="fc" id="L652">            throw new SerializerException(nfe, &quot;Unable to parse numeric value %s&quot;, key);</span>
         }
     }
 
-    private void appendMessage(JsonWriter writer, PMessage&lt;?,?&gt; message) throws SerializerException, JsonException {
-<span class="fc" id="L665">        PMessageDescriptor&lt;?, ?&gt; type = message.descriptor();</span>
-<span class="fc bfc" id="L666" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
-<span class="fc" id="L667">            writer.object();</span>
-<span class="fc" id="L668">            PField field = ((PUnion) message).unionField();</span>
-<span class="pc bpc" id="L669" title="1 of 2 branches missed.">            if (field != null) {</span>
-<span class="fc" id="L670">                Object value = message.get(field.getKey());</span>
-<span class="fc bfc" id="L671" title="All 2 branches covered.">                if (IdType.ID.equals(fieldIdType)) {</span>
-<span class="fc" id="L672">                    writer.key(field.getKey());</span>
+    private void appendMessage(JsonWriter writer, PMessage&lt;?,?&gt; message) throws SerializerException {
+<span class="fc" id="L657">        PMessageDescriptor&lt;?, ?&gt; type = message.descriptor();</span>
+<span class="fc bfc" id="L658" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
+<span class="fc" id="L659">            writer.object();</span>
+<span class="fc" id="L660">            PField field = ((PUnion) message).unionField();</span>
+<span class="pc bpc" id="L661" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="fc" id="L662">                Object value = message.get(field.getKey());</span>
+<span class="fc bfc" id="L663" title="All 2 branches covered.">                if (IdType.ID.equals(fieldIdType)) {</span>
+<span class="fc" id="L664">                    writer.key(field.getKey());</span>
                 } else {
-<span class="fc" id="L674">                    writer.key(field.getName());</span>
+<span class="fc" id="L666">                    writer.key(field.getName());</span>
                 }
-<span class="fc" id="L676">                appendTypedValue(writer, field.getDescriptor(), value);</span>
+<span class="fc" id="L668">                appendTypedValue(writer, field.getDescriptor(), value);</span>
             }
-<span class="fc" id="L678">            writer.endObject();</span>
-<span class="fc" id="L679">        } else {</span>
-<span class="fc bfc" id="L680" title="All 2 branches covered.">            if (isCompact(message)) {</span>
-<span class="fc" id="L681">                writer.array();</span>
-<span class="fc bfc" id="L682" title="All 2 branches covered.">                for (PField field : type.getFields()) {</span>
-<span class="fc bfc" id="L683" title="All 2 branches covered.">                    if (message.has(field.getKey())) {</span>
-<span class="fc" id="L684">                        appendTypedValue(writer, field.getDescriptor(), message.get(field.getKey()));</span>
+<span class="fc" id="L670">            writer.endObject();</span>
+<span class="fc" id="L671">        } else {</span>
+<span class="fc bfc" id="L672" title="All 2 branches covered.">            if (isCompact(message)) {</span>
+<span class="fc" id="L673">                writer.array();</span>
+<span class="fc bfc" id="L674" title="All 2 branches covered.">                for (PField field : type.getFields()) {</span>
+<span class="fc bfc" id="L675" title="All 2 branches covered.">                    if (message.has(field.getKey())) {</span>
+<span class="fc" id="L676">                        appendTypedValue(writer, field.getDescriptor(), message.get(field.getKey()));</span>
                     } else {
                         break;
                     }
                 }
-<span class="fc" id="L689">                writer.endArray();</span>
+<span class="fc" id="L681">                writer.endArray();</span>
             } else {
-<span class="fc" id="L691">                writer.object();</span>
-<span class="fc bfc" id="L692" title="All 2 branches covered.">                for (PField field : type.getFields()) {</span>
-<span class="fc bfc" id="L693" title="All 2 branches covered.">                    if (message.has(field.getKey())) {</span>
-<span class="fc" id="L694">                        Object value = message.get(field.getKey());</span>
-<span class="fc bfc" id="L695" title="All 2 branches covered.">                        if (IdType.ID.equals(fieldIdType)) {</span>
-<span class="fc" id="L696">                            writer.key(field.getKey());</span>
+<span class="fc" id="L683">                writer.object();</span>
+<span class="fc bfc" id="L684" title="All 2 branches covered.">                for (PField field : type.getFields()) {</span>
+<span class="fc bfc" id="L685" title="All 2 branches covered.">                    if (message.has(field.getKey())) {</span>
+<span class="fc" id="L686">                        Object value = message.get(field.getKey());</span>
+<span class="fc bfc" id="L687" title="All 2 branches covered.">                        if (IdType.ID.equals(fieldIdType)) {</span>
+<span class="fc" id="L688">                            writer.key(field.getKey());</span>
                         } else {
-<span class="fc" id="L698">                            writer.key(field.getName());</span>
+<span class="fc" id="L690">                            writer.key(field.getName());</span>
                         }
-<span class="fc" id="L700">                        appendTypedValue(writer, field.getDescriptor(), value);</span>
+<span class="fc" id="L692">                        appendTypedValue(writer, field.getDescriptor(), value);</span>
                     }
                 }
-<span class="fc" id="L703">                writer.endObject();</span>
+<span class="fc" id="L695">                writer.endObject();</span>
             }
         }
-<span class="fc" id="L706">    }</span>
+<span class="fc" id="L698">    }</span>
 
     private void appendTypedValue(JsonWriter writer, PDescriptor type, Object value)
-            throws SerializerException, JsonException {
-<span class="pc bpc" id="L710" title="1 of 5 branches missed.">        switch (type.getType()) {</span>
+            throws SerializerException {
+<span class="fc bfc" id="L702" title="All 5 branches covered.">        switch (type.getType()) {</span>
             case VOID:
-<span class="nc" id="L712">                writer.value(true);</span>
-<span class="nc" id="L713">                break;</span>
+<span class="fc" id="L704">                writer.value(true);</span>
+<span class="fc" id="L705">                break;</span>
             case MESSAGE:
-<span class="fc" id="L715">                PMessage&lt;?,?&gt; message = (PMessage&lt;?,?&gt;) value;</span>
-<span class="fc" id="L716">                appendMessage(writer, message);</span>
-<span class="fc" id="L717">                break;</span>
+<span class="fc" id="L707">                PMessage&lt;?,?&gt; message = (PMessage&lt;?,?&gt;) value;</span>
+<span class="fc" id="L708">                appendMessage(writer, message);</span>
+<span class="fc" id="L709">                break;</span>
             case MAP:
-<span class="fc" id="L719">                writer.object();</span>
+<span class="fc" id="L711">                writer.object();</span>
 
-<span class="fc" id="L721">                PMap&lt;?, ?&gt; mapType = (PMap&lt;?, ?&gt;) type;</span>
+<span class="fc" id="L713">                PMap&lt;?, ?&gt; mapType = (PMap&lt;?, ?&gt;) type;</span>
 
-<span class="fc" id="L723">                Map&lt;?, ?&gt; map = (Map&lt;?, ?&gt;) value;</span>
+<span class="fc" id="L715">                Map&lt;?, ?&gt; map = (Map&lt;?, ?&gt;) value;</span>
 
-<span class="fc bfc" id="L725" title="All 2 branches covered.">                for (Map.Entry&lt;?, ?&gt; entry : map.entrySet()) {</span>
-<span class="fc" id="L726">                    appendPrimitiveKey(writer, entry.getKey());</span>
-<span class="fc" id="L727">                    appendTypedValue(writer, mapType.itemDescriptor(), entry.getValue());</span>
-<span class="fc" id="L728">                }</span>
+<span class="fc bfc" id="L717" title="All 2 branches covered.">                for (Map.Entry&lt;?, ?&gt; entry : map.entrySet()) {</span>
+<span class="fc" id="L718">                    appendPrimitiveKey(writer, entry.getKey());</span>
+<span class="fc" id="L719">                    appendTypedValue(writer, mapType.itemDescriptor(), entry.getValue());</span>
+<span class="fc" id="L720">                }</span>
 
-<span class="fc" id="L730">                writer.endObject();</span>
-<span class="fc" id="L731">                break;</span>
+<span class="fc" id="L722">                writer.endObject();</span>
+<span class="fc" id="L723">                break;</span>
             case SET:
             case LIST:
-<span class="fc" id="L734">                writer.array();</span>
+<span class="fc" id="L726">                writer.array();</span>
 
-<span class="fc" id="L736">                PContainer&lt;?&gt; containerType = (PContainer&lt;?&gt;) type;</span>
-<span class="fc" id="L737">                Collection&lt;?&gt; collection = (Collection&lt;?&gt;) value;</span>
+<span class="fc" id="L728">                PContainer&lt;?&gt; containerType = (PContainer&lt;?&gt;) type;</span>
+<span class="fc" id="L729">                Collection&lt;?&gt; collection = (Collection&lt;?&gt;) value;</span>
 
-<span class="fc bfc" id="L739" title="All 2 branches covered.">                for (Object i : collection) {</span>
-<span class="fc" id="L740">                    appendTypedValue(writer, containerType.itemDescriptor(), i);</span>
-<span class="fc" id="L741">                }</span>
+<span class="fc bfc" id="L731" title="All 2 branches covered.">                for (Object i : collection) {</span>
+<span class="fc" id="L732">                    appendTypedValue(writer, containerType.itemDescriptor(), i);</span>
+<span class="fc" id="L733">                }</span>
 
-<span class="fc" id="L743">                writer.endArray();</span>
-<span class="fc" id="L744">                break;</span>
+<span class="fc" id="L735">                writer.endArray();</span>
+<span class="fc" id="L736">                break;</span>
             default:
-<span class="fc" id="L746">                appendPrimitive(writer, value);</span>
+<span class="fc" id="L738">                appendPrimitive(writer, value);</span>
                 break;
         }
-<span class="fc" id="L749">    }</span>
+<span class="fc" id="L741">    }</span>
 
     /**
      * @param writer    The writer to add primitive key to.
      * @param primitive Primitive object to get map key value of.
      */
-    private void appendPrimitiveKey(JsonWriter writer, Object primitive) throws JsonException, SerializerException {
-<span class="fc bfc" id="L756" title="All 2 branches covered.">        if (primitive instanceof PEnumValue) {</span>
-<span class="fc bfc" id="L757" title="All 2 branches covered.">            if (IdType.ID.equals(fieldIdType)) {</span>
-<span class="fc" id="L758">                writer.key(((PEnumValue&lt;?&gt;) primitive).getValue());</span>
+    private void appendPrimitiveKey(JsonWriter writer, Object primitive) throws SerializerException {
+<span class="fc bfc" id="L748" title="All 2 branches covered.">        if (primitive instanceof PEnumValue) {</span>
+<span class="fc bfc" id="L749" title="All 2 branches covered.">            if (IdType.ID.equals(fieldIdType)) {</span>
+<span class="fc" id="L750">                writer.key(((PEnumValue&lt;?&gt;) primitive).getValue());</span>
             } else {
-<span class="fc" id="L760">                writer.key(primitive.toString());</span>
+<span class="fc" id="L752">                writer.key(primitive.toString());</span>
             }
-<span class="fc bfc" id="L762" title="All 2 branches covered.">        } else if (primitive instanceof Boolean) {</span>
-<span class="fc" id="L763">            writer.key(((Boolean) primitive));</span>
-<span class="fc bfc" id="L764" title="All 2 branches covered.">        } else if (primitive instanceof Byte) {</span>
-<span class="fc" id="L765">            writer.key(((Byte) primitive));</span>
-<span class="fc bfc" id="L766" title="All 2 branches covered.">        } else if (primitive instanceof Short) {</span>
-<span class="fc" id="L767">            writer.key(((Short) primitive));</span>
-<span class="fc bfc" id="L768" title="All 2 branches covered.">        } else if (primitive instanceof Integer) {</span>
-<span class="fc" id="L769">            writer.key(((Integer) primitive));</span>
-<span class="fc bfc" id="L770" title="All 2 branches covered.">        } else if (primitive instanceof Long) {</span>
-<span class="fc" id="L771">            writer.key(((Long) primitive));</span>
-<span class="fc bfc" id="L772" title="All 2 branches covered.">        } else if (primitive instanceof Double) {</span>
-<span class="fc" id="L773">            writer.key(((Double) primitive));</span>
-<span class="fc bfc" id="L774" title="All 2 branches covered.">        } else if (primitive instanceof String) {</span>
-<span class="fc" id="L775">            writer.key((String) primitive);</span>
-<span class="pc bpc" id="L776" title="1 of 2 branches missed.">        } else if (primitive instanceof Binary) {</span>
-<span class="fc" id="L777">            writer.key((Binary) primitive);</span>
-<span class="nc bnc" id="L778" title="All 2 branches missed.">        } else if (primitive instanceof PMessage) {</span>
-<span class="nc" id="L779">            PMessage&lt;?,?&gt; message = (PMessage&lt;?,?&gt;) primitive;</span>
-<span class="nc bnc" id="L780" title="All 2 branches missed.">            if (!message.descriptor().isSimple()) {</span>
-<span class="nc" id="L781">                throw new SerializerException(&quot;Only simple messages can be used as map keys. &quot; +</span>
-<span class="nc" id="L782">                                              message.descriptor()</span>
-<span class="nc" id="L783">                                                     .getQualifiedName() + &quot; is not.&quot;);</span>
+<span class="fc bfc" id="L754" title="All 2 branches covered.">        } else if (primitive instanceof Boolean) {</span>
+<span class="fc" id="L755">            writer.key(((Boolean) primitive));</span>
+<span class="fc bfc" id="L756" title="All 2 branches covered.">        } else if (primitive instanceof Byte) {</span>
+<span class="fc" id="L757">            writer.key(((Byte) primitive));</span>
+<span class="fc bfc" id="L758" title="All 2 branches covered.">        } else if (primitive instanceof Short) {</span>
+<span class="fc" id="L759">            writer.key(((Short) primitive));</span>
+<span class="fc bfc" id="L760" title="All 2 branches covered.">        } else if (primitive instanceof Integer) {</span>
+<span class="fc" id="L761">            writer.key(((Integer) primitive));</span>
+<span class="fc bfc" id="L762" title="All 2 branches covered.">        } else if (primitive instanceof Long) {</span>
+<span class="fc" id="L763">            writer.key(((Long) primitive));</span>
+<span class="fc bfc" id="L764" title="All 2 branches covered.">        } else if (primitive instanceof Double) {</span>
+<span class="fc" id="L765">            writer.key(((Double) primitive));</span>
+<span class="fc bfc" id="L766" title="All 2 branches covered.">        } else if (primitive instanceof String) {</span>
+<span class="fc" id="L767">            writer.key((String) primitive);</span>
+<span class="fc bfc" id="L768" title="All 2 branches covered.">        } else if (primitive instanceof Binary) {</span>
+<span class="fc" id="L769">            writer.key((Binary) primitive);</span>
+<span class="pc bpc" id="L770" title="1 of 2 branches missed.">        } else if (primitive instanceof PMessage) {</span>
+<span class="fc" id="L771">            PMessage&lt;?,?&gt; message = (PMessage&lt;?,?&gt;) primitive;</span>
+<span class="pc bpc" id="L772" title="1 of 2 branches missed.">            if (!message.descriptor().isSimple()) {</span>
+<span class="nc" id="L773">                throw new SerializerException(&quot;Only simple messages can be used as map keys. &quot; +</span>
+<span class="nc" id="L774">                                              message.descriptor()</span>
+<span class="nc" id="L775">                                                     .getQualifiedName() + &quot; is not.&quot;);</span>
             }
-<span class="nc" id="L785">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="nc" id="L786">            JsonWriter json = new JsonWriter(baos);</span>
-<span class="nc" id="L787">            appendMessage(json, message);</span>
-<span class="nc" id="L788">            json.flush();</span>
-<span class="nc" id="L789">            writer.key(new String(baos.toByteArray(), StandardCharsets.UTF_8));</span>
-<span class="nc" id="L790">        } else {</span>
-<span class="nc" id="L791">            throw new SerializerException(&quot;illegal simple type class &quot; + primitive.getClass()</span>
-<span class="nc" id="L792">                                                                                  .getSimpleName());</span>
+<span class="fc" id="L777">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L778">            JsonWriter json = new JsonWriter(baos);</span>
+<span class="fc" id="L779">            appendMessage(json, message);</span>
+<span class="fc" id="L780">            json.flush();</span>
+<span class="fc" id="L781">            writer.key(new String(baos.toByteArray(), StandardCharsets.UTF_8));</span>
+<span class="fc" id="L782">        } else {</span>
+<span class="nc" id="L783">            throw new SerializerException(&quot;illegal simple type class &quot; + primitive.getClass()</span>
+<span class="nc" id="L784">                                                                                  .getSimpleName());</span>
         }
-<span class="fc" id="L794">    }</span>
+<span class="fc" id="L786">    }</span>
 
     /**
      * Append a primitive value to json struct.
@@ -799,33 +791,33 @@ public class JsonSerializer extends Serializer {
      * @param writer    The JSON writer.
      * @param primitive The primitive instance.
      */
-    private void appendPrimitive(JsonWriter writer, Object primitive) throws JsonException, SerializerException {
-<span class="fc bfc" id="L803" title="All 2 branches covered.">        if (primitive instanceof PEnumValue) {</span>
-<span class="fc bfc" id="L804" title="All 2 branches covered.">            if (IdType.ID.equals(enumValueType)) {</span>
-<span class="fc" id="L805">                writer.value(((PEnumValue&lt;?&gt;) primitive).getValue());</span>
+    private void appendPrimitive(JsonWriter writer, Object primitive) throws SerializerException {
+<span class="fc bfc" id="L795" title="All 2 branches covered.">        if (primitive instanceof PEnumValue) {</span>
+<span class="fc bfc" id="L796" title="All 2 branches covered.">            if (IdType.ID.equals(enumValueType)) {</span>
+<span class="fc" id="L797">                writer.value(((PEnumValue&lt;?&gt;) primitive).getValue());</span>
             } else {
-<span class="fc" id="L807">                writer.value(primitive.toString());</span>
+<span class="fc" id="L799">                writer.value(primitive.toString());</span>
             }
-<span class="fc bfc" id="L809" title="All 2 branches covered.">        } else if (primitive instanceof Boolean) {</span>
-<span class="fc" id="L810">            writer.value(((Boolean) primitive));</span>
-<span class="fc bfc" id="L811" title="All 2 branches covered.">        } else if (primitive instanceof Byte) {</span>
-<span class="fc" id="L812">            writer.value(((Byte) primitive));</span>
-<span class="fc bfc" id="L813" title="All 2 branches covered.">        } else if (primitive instanceof Short) {</span>
-<span class="fc" id="L814">            writer.value(((Short) primitive));</span>
-<span class="fc bfc" id="L815" title="All 2 branches covered.">        } else if (primitive instanceof Integer) {</span>
-<span class="fc" id="L816">            writer.value(((Integer) primitive));</span>
-<span class="fc bfc" id="L817" title="All 2 branches covered.">        } else if (primitive instanceof Long) {</span>
-<span class="fc" id="L818">            writer.value(((Long) primitive));</span>
-<span class="fc bfc" id="L819" title="All 2 branches covered.">        } else if (primitive instanceof Double) {</span>
-<span class="fc" id="L820">            writer.value(((Double) primitive));</span>
-<span class="fc bfc" id="L821" title="All 2 branches covered.">        } else if (primitive instanceof String) {</span>
-<span class="fc" id="L822">            writer.value((String) primitive);</span>
-<span class="pc bpc" id="L823" title="1 of 2 branches missed.">        } else if (primitive instanceof Binary) {</span>
-<span class="fc" id="L824">            writer.value((Binary) primitive);</span>
+<span class="fc bfc" id="L801" title="All 2 branches covered.">        } else if (primitive instanceof Boolean) {</span>
+<span class="fc" id="L802">            writer.value(((Boolean) primitive));</span>
+<span class="fc bfc" id="L803" title="All 2 branches covered.">        } else if (primitive instanceof Byte) {</span>
+<span class="fc" id="L804">            writer.value(((Byte) primitive));</span>
+<span class="fc bfc" id="L805" title="All 2 branches covered.">        } else if (primitive instanceof Short) {</span>
+<span class="fc" id="L806">            writer.value(((Short) primitive));</span>
+<span class="fc bfc" id="L807" title="All 2 branches covered.">        } else if (primitive instanceof Integer) {</span>
+<span class="fc" id="L808">            writer.value(((Integer) primitive));</span>
+<span class="fc bfc" id="L809" title="All 2 branches covered.">        } else if (primitive instanceof Long) {</span>
+<span class="fc" id="L810">            writer.value(((Long) primitive));</span>
+<span class="fc bfc" id="L811" title="All 2 branches covered.">        } else if (primitive instanceof Double) {</span>
+<span class="fc" id="L812">            writer.value(((Double) primitive));</span>
+<span class="fc bfc" id="L813" title="All 2 branches covered.">        } else if (primitive instanceof String) {</span>
+<span class="fc" id="L814">            writer.value((String) primitive);</span>
+<span class="pc bpc" id="L815" title="1 of 2 branches missed.">        } else if (primitive instanceof Binary) {</span>
+<span class="fc" id="L816">            writer.value((Binary) primitive);</span>
         } else {
-<span class="nc" id="L826">            throw new SerializerException(&quot;illegal primitive type class &quot; + primitive.getClass()</span>
-<span class="nc" id="L827">                                                                                     .getSimpleName());</span>
+<span class="nc" id="L818">            throw new SerializerException(&quot;illegal primitive type class &quot; + primitive.getClass()</span>
+<span class="nc" id="L819">                                                                                     .getSimpleName());</span>
         }
-<span class="fc" id="L829">    }</span>
+<span class="fc" id="L821">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

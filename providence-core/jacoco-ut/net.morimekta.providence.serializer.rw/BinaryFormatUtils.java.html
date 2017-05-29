@@ -197,7 +197,7 @@ import static net.morimekta.providence.serializer.rw.BinaryType.forType;
             case BinaryType.STRING:
 <span class="fc" id="L198">                int len = in.expectUInt32();</span>
 <span class="fc" id="L199">                byte[] data = in.expectBytes(len);</span>
-<span class="pc bpc" id="L200" title="1 of 4 branches missed.">                if (fieldType != null &amp;&amp; fieldType.getType() == PType.STRING) {</span>
+<span class="fc bfc" id="L200" title="All 4 branches covered.">                if (fieldType != null &amp;&amp; fieldType.getType() == PType.STRING) {</span>
 <span class="fc" id="L201">                    return new String(data, StandardCharsets.UTF_8);</span>
                 } else {
 <span class="fc" id="L203">                    return Binary.wrap(data);</span>
@@ -217,7 +217,7 @@ import static net.morimekta.providence.serializer.rw.BinaryType.forType;
 <span class="fc" id="L217">                PDescriptor keyType = null;</span>
 <span class="fc" id="L218">                PDescriptor valueType = null;</span>
                 PMap.Builder&lt;Object, Object&gt; out;
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">                if (fieldType != null) {</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">                if (fieldType != null) {</span>
                     @SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L222">                    PMap&lt;Object, Object&gt; mapType = (PMap&lt;Object, Object&gt;) fieldType;</span>
 <span class="fc" id="L223">                    keyType = mapType.keyDescriptor();</span>
@@ -225,7 +225,7 @@ import static net.morimekta.providence.serializer.rw.BinaryType.forType;
 
 <span class="fc" id="L226">                    out = mapType.builder();</span>
 <span class="fc" id="L227">                } else {</span>
-<span class="nc" id="L228">                    out = new PMap.ImmutableMapBuilder&lt;&gt;();</span>
+<span class="fc" id="L228">                    out = new PMap.ImmutableMapBuilder&lt;&gt;();</span>
                 }
 
 <span class="fc" id="L231">                FieldInfo keyInfo = new FieldInfo(1, keyT);</span>
@@ -233,9 +233,9 @@ import static net.morimekta.providence.serializer.rw.BinaryType.forType;
 <span class="fc bfc" id="L233" title="All 2 branches covered.">                for (int i = 0; i &lt; size; ++i) {</span>
 <span class="fc" id="L234">                    Object key = readFieldValue(in, keyInfo, keyType, strict);</span>
 <span class="fc" id="L235">                    Object value = readFieldValue(in, itemInfo, valueType, strict);</span>
-<span class="pc bpc" id="L236" title="2 of 4 branches missed.">                    if (key != null &amp;&amp; value != null) {</span>
+<span class="fc bfc" id="L236" title="All 4 branches covered.">                    if (key != null &amp;&amp; value != null) {</span>
 <span class="fc" id="L237">                        out.put(key, value);</span>
-<span class="nc bnc" id="L238" title="All 2 branches missed.">                    } else if (strict) {</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">                    } else if (strict) {</span>
 <span class="nc bnc" id="L239" title="All 2 branches missed.">                        if (key == null) {</span>
 <span class="nc" id="L240">                            throw new SerializerException(&quot;Null key in map&quot;);</span>
                         } else {
@@ -251,21 +251,21 @@ import static net.morimekta.providence.serializer.rw.BinaryType.forType;
 
 <span class="fc" id="L252">                PDescriptor entryType = null;</span>
                 PSet.Builder&lt;Object&gt; out;
-<span class="pc bpc" id="L254" title="1 of 2 branches missed.">                if (fieldType != null) {</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">                if (fieldType != null) {</span>
                     @SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L256">                    PSet&lt;Object&gt; setType = (PSet&lt;Object&gt;) fieldType;</span>
 <span class="fc" id="L257">                    entryType = setType.itemDescriptor();</span>
 <span class="fc" id="L258">                    out = setType.builder();</span>
 <span class="fc" id="L259">                } else {</span>
-<span class="nc" id="L260">                    out = new PSet.ImmutableSetBuilder&lt;&gt;();</span>
+<span class="fc" id="L260">                    out = new PSet.ImmutableSetBuilder&lt;&gt;();</span>
                 }
 
 <span class="fc" id="L263">                FieldInfo itemInfo = new FieldInfo(0, itemT);</span>
 <span class="fc bfc" id="L264" title="All 2 branches covered.">                for (int i = 0; i &lt; size; ++i) {</span>
 <span class="fc" id="L265">                    Object value = readFieldValue(in, itemInfo, entryType, strict);</span>
-<span class="pc bpc" id="L266" title="1 of 2 branches missed.">                    if (value != null) {</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">                    if (value != null) {</span>
 <span class="fc" id="L267">                        out.add(value);</span>
-<span class="nc bnc" id="L268" title="All 2 branches missed.">                    } else if (strict) {</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">                    } else if (strict) {</span>
 <span class="nc" id="L269">                        throw new SerializerException(&quot;Null value in set&quot;);</span>
                     }
                 }
@@ -278,13 +278,13 @@ import static net.morimekta.providence.serializer.rw.BinaryType.forType;
 
 <span class="fc" id="L279">                PDescriptor entryType = null;</span>
                 PList.Builder&lt;Object&gt; out;
-<span class="pc bpc" id="L281" title="1 of 2 branches missed.">                if (fieldType != null) {</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">                if (fieldType != null) {</span>
                     @SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L283">                    PList&lt;Object&gt; listType = (PList&lt;Object&gt;) fieldType;</span>
 <span class="fc" id="L284">                    entryType = listType.itemDescriptor();</span>
 <span class="fc" id="L285">                    out = listType.builder();</span>
 <span class="fc" id="L286">                } else {</span>
-<span class="nc" id="L287">                    out = new PList.ImmutableListBuilder&lt;&gt;();</span>
+<span class="fc" id="L287">                    out = new PList.ImmutableListBuilder&lt;&gt;();</span>
                 }
 
 <span class="fc" id="L290">                FieldInfo itemInfo = new FieldInfo(0, itemT);</span>

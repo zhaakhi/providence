@@ -22,53 +22,62 @@ package net.morimekta.providence.reflect.util;
 
 import net.morimekta.providence.descriptor.PDescriptor;
 import net.morimekta.providence.descriptor.PValueProvider;
-import net.morimekta.providence.reflect.parser.ParseException;
 import net.morimekta.providence.reflect.parser.internal.ConstParser;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 /**
- * @author Stein Eldar Johnsen
- * @since 07.09.15
+ * A value provider for thrift constants.
  */
 public class ConstProvider implements PValueProvider&lt;Object&gt; {
     private final ProgramRegistry registry;
     private final String          typeName;
     private final String          programContext;
-    private final String          defaultValue;
+    private final String          constantString;
+    private final int             startLineNo;
+    private final int             startLinePos;
 
     private Object parsedValue;
 
     public ConstProvider(@Nonnull ProgramRegistry registry,
                          @Nonnull String typeName,
                          @Nonnull String programContext,
-<span class="nc" id="L49">                         @Nonnull String defaultValue) {</span>
-<span class="nc" id="L50">        this.registry = registry;</span>
-<span class="nc" id="L51">        this.typeName = typeName;</span>
-<span class="nc" id="L52">        this.programContext = programContext;</span>
-<span class="nc" id="L53">        this.defaultValue = defaultValue;</span>
-<span class="nc" id="L54">        this.parsedValue = null;</span>
-<span class="nc" id="L55">    }</span>
+                         @Nonnull String constantString,
+                         int startLineNo,
+<span class="fc" id="L52">                         int startLinePos) {</span>
+<span class="fc" id="L53">        this.registry = registry;</span>
+<span class="fc" id="L54">        this.typeName = typeName;</span>
+<span class="fc" id="L55">        this.programContext = programContext;</span>
+<span class="fc" id="L56">        this.constantString = constantString;</span>
+<span class="fc" id="L57">        this.parsedValue = null;</span>
+
+<span class="fc" id="L59">        this.startLineNo = startLineNo;</span>
+<span class="fc" id="L60">        this.startLinePos = startLinePos;</span>
+<span class="fc" id="L61">    }</span>
 
     @Override
     public Object get() {
-<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (parsedValue == null) {</span>
-<span class="nc" id="L60">            ConstParser parser = new ConstParser(registry, programContext);</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (parsedValue == null) {</span>
+<span class="fc" id="L66">            ConstParser parser = new ConstParser(registry,</span>
+                                                 programContext,
+                                                 startLineNo,
+                                                 startLinePos);
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L62">            PDescriptor type = registry.getProvider(typeName, programContext, Collections.EMPTY_MAP)</span>
-<span class="nc" id="L63">                                       .descriptor();</span>
-<span class="nc" id="L64">            try (ByteArrayInputStream in = new ByteArrayInputStream(defaultValue.getBytes(StandardCharsets.UTF_8))) {</span>
-<span class="nc" id="L65">                parsedValue = parser.parse(in, type);</span>
-<span class="nc bnc" id="L66" title="All 8 branches missed.">            } catch (ParseException | IOException e) {</span>
-<span class="nc" id="L67">                e.printStackTrace();</span>
-<span class="nc" id="L68">            }</span>
+<span class="fc" id="L71">            PDescriptor type = registry.getProvider(typeName, programContext, Collections.EMPTY_MAP)</span>
+<span class="fc" id="L72">                                       .descriptor();</span>
+<span class="pc" id="L73">            try (ByteArrayInputStream in = new ByteArrayInputStream(constantString.getBytes(StandardCharsets.UTF_8))) {</span>
+<span class="fc" id="L74">                parsedValue = parser.parse(in, type);</span>
+<span class="pc bpc" id="L75" title="6 of 8 branches missed.">            } catch (IOException e) {</span>
+<span class="nc" id="L76">                throw new UncheckedIOException(e);</span>
+<span class="fc" id="L77">            }</span>
         }
 
-<span class="nc" id="L71">        return parsedValue;</span>
+<span class="fc" id="L80">        return parsedValue;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

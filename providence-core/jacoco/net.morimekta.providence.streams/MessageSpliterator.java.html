@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageSpliterator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.streams</a> &gt; <span class="el_source">MessageSpliterator.java</span></div><h1>MessageSpliterator.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2017 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.streams;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.util.io.IOUtils;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Comparator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+
+/**
+ * Spliterator that reads messages from a stream.
+ */
+public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+        implements Spliterator&lt;Message&gt; {
+    /**
+     * Make a self-closing message spliterator.
+     *
+     * @param in Input stream to read from.
+     * @param serializer Serializer to use.
+     * @param descriptor The message descriptor of contained messages.
+     */
+    public MessageSpliterator(@Nonnull InputStream in,
+                              @Nonnull Serializer serializer,
+                              @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor) {
+<span class="fc" id="L54">        this(in, serializer, descriptor, in);</span>
+<span class="fc" id="L55">    }</span>
+
+    /**
+     * Make a spliterator with specific closing function.
+     *
+     * @param in Input stream to read from.
+     * @param serializer Serializer to use.
+     * @param descriptor The message descriptor of contained messages.
+     * @param closer The stream closer function. If null nothing is
+     *               done when closing the spliterator.
+     */
+    public MessageSpliterator(@Nonnull InputStream in,
+                              @Nonnull Serializer serializer,
+                              @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor,
+<span class="fc" id="L69">                              @Nullable Closeable closer) {</span>
+<span class="fc" id="L70">        this.in = in;</span>
+<span class="fc" id="L71">        this.serializer = serializer;</span>
+<span class="fc" id="L72">        this.descriptor = descriptor;</span>
+
+<span class="fc" id="L74">        this.closer = closer;</span>
+<span class="fc" id="L75">        this.num = 0;</span>
+<span class="fc" id="L76">    }</span>
+
+    @Override
+    public boolean tryAdvance(Consumer&lt;? super Message&gt; action) {
+<span class="fc" id="L80">        Message message = read();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (message != null) {</span>
+<span class="fc" id="L82">            action.accept(message);</span>
+<span class="fc" id="L83">            return true;</span>
+        }
+<span class="fc" id="L85">        return false;</span>
+    }
+
+    /**
+     * Normally we cannot split the stream.
+     *
+     * @return null (no split).
+     */
+    @Override
+    public Spliterator&lt;Message&gt; trySplit() {
+<span class="fc" id="L95">        return null;</span>
+    }
+
+    /**
+     * We mostly never know the number of messages in a message stream
+     * until the last message has been read.
+     *
+     * @return Long.MAX_VALUE (not known).
+     */
+    @Override
+    public long estimateSize() {
+<span class="fc" id="L106">        return Long.MAX_VALUE;</span>
+    }
+
+    /**
+     * We mostly never know the number of messages in a message stream
+     * until the last message has been read.
+     *
+     * @return -1 (not known).
+     */
+    @Override
+    public long getExactSizeIfKnown() {
+<span class="fc" id="L117">        return -1;</span>
+    }
+
+    /**
+     * Ordered, non-null and immutable.
+     *
+     * @return The characteristics.
+     */
+    @Override
+    public int characteristics() {
+<span class="fc" id="L127">        return ORDERED | NONNULL | IMMUTABLE;</span>
+    }
+
+    /**
+     * Messages are comparable.
+     *
+     * @return Comparable compareTo method.
+     */
+    @Override
+    public Comparator&lt;? super Message&gt; getComparator() {
+<span class="fc" id="L137">        return Comparable::compareTo;</span>
+    }
+
+    // --- PRIVATE ---
+    private final InputStream                        in;
+    private final PMessageDescriptor&lt;Message, Field&gt; descriptor;
+    private final Serializer                         serializer;
+
+    private int       num;
+    private Closeable closer;
+
+    private Message read() {
+        try {
+<span class="fc bfc" id="L150" title="All 2 branches covered.">            if (num &gt; 0) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                if (!serializer.binaryProtocol()) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                    if (!IOUtils.skipUntil(in, MessageStreams.READABLE_ENTRY_SEP)) {</span>
+                        // no next entry found.
+<span class="fc" id="L154">                        return close(null);</span>
+                    }
+                }
+            }
+            // Try to check if there is a byte available. Since the
+            // available() method ony checks for available non-blocking
+            // reads, we need to actually try to read a byte.
+            //
+            // Sadly this means it's only available when marks are
+            // supported.
+<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (in.markSupported()) {</span>
+<span class="fc" id="L165">                in.mark(2);</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                if (in.read() &lt; 0) {</span>
+<span class="fc" id="L167">                    return close(null);</span>
+                }
+<span class="fc" id="L169">                in.reset();</span>
+            }
+<span class="fc" id="L171">            return serializer.deserialize(in, descriptor);</span>
+<span class="fc" id="L172">        } catch (IOException e) {</span>
+<span class="fc" id="L173">            close(e);</span>
+<span class="fc" id="L174">            throw new UncheckedIOException(e);</span>
+        } finally {
+<span class="fc" id="L176">            ++num;</span>
+        }
+    }
+
+    private Message close(Exception cause) {
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">        if (closer != null) {</span>
+            try {
+<span class="fc" id="L183">                closer.close();</span>
+<span class="fc" id="L184">            } catch (IOException e) {</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                if (cause == null) {</span>
+<span class="nc" id="L186">                    throw new UncheckedIOException(e);</span>
+                } else {
+<span class="fc" id="L188">                    cause.addSuppressed(e);</span>
+                }
+            } finally {
+<span class="pc" id="L191">                closer = null;</span>
+<span class="fc" id="L192">            }</span>
+        }
+<span class="fc" id="L194">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

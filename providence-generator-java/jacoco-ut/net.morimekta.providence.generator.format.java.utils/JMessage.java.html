@@ -45,71 +45,69 @@ import static net.morimekta.providence.reflect.contained.CStructDescriptor.MAX_C
 /**
  *
  */
-public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
-    private final PMessageDescriptor&lt;?, ?&gt; descriptor;
-    private final JHelper                  helper;
+public class JMessage&lt;T extends CMessage&lt;T&gt;&gt; {
+    private final PMessageDescriptor&lt;T, CField&gt; descriptor;
     private final ArrayList&lt;JField&gt;        declaredFields;
     private final ArrayList&lt;JField&gt;        numericalFields;
 
-<span class="fc" id="L54">    public JMessage(PMessageDescriptor&lt;T, CField&gt; descriptor, JHelper helper) {</span>
-<span class="fc" id="L55">        this.descriptor = descriptor;</span>
-<span class="fc" id="L56">        this.helper = helper;</span>
-<span class="fc" id="L57">        this.declaredFields = new ArrayList&lt;&gt;(descriptor.getFields().length);</span>
+<span class="fc" id="L53">    public JMessage(PMessageDescriptor&lt;T, CField&gt; descriptor, JHelper helper) {</span>
+<span class="fc" id="L54">        this.descriptor = descriptor;</span>
+<span class="fc" id="L55">        this.declaredFields = new ArrayList&lt;&gt;(descriptor.getFields().length);</span>
 
-<span class="fc" id="L59">        CField[] fields = descriptor.getFields();</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (int i = 0; i &lt; fields.length; ++i) {</span>
-<span class="fc" id="L61">            this.declaredFields.add(new JField(fields[i], helper, i));</span>
+<span class="fc" id="L57">        CField[] fields = descriptor.getFields();</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        for (int i = 0; i &lt; fields.length; ++i) {</span>
+<span class="fc" id="L59">            this.declaredFields.add(new JField(fields[i], helper, i));</span>
         }
         // The same declaredFields, but in ID numerical order.
-<span class="fc" id="L64">        this.numericalFields = new ArrayList&lt;&gt;(this.declaredFields);</span>
-<span class="fc" id="L65">        this.numericalFields.sort(Comparator.comparingInt(JField::id));</span>
-<span class="fc" id="L66">    }</span>
+<span class="fc" id="L62">        this.numericalFields = new ArrayList&lt;&gt;(this.declaredFields);</span>
+<span class="fc" id="L63">        this.numericalFields.sort(Comparator.comparingInt(JField::id));</span>
+<span class="fc" id="L64">    }</span>
 
-    public PMessageDescriptor&lt;?, ?&gt; descriptor() {
-<span class="fc" id="L69">        return descriptor;</span>
+    public PMessageDescriptor&lt;T, CField&gt; descriptor() {
+<span class="fc" id="L67">        return descriptor;</span>
     }
 
     public PMessageVariant variant() {
-<span class="fc" id="L73">        return descriptor.getVariant();</span>
+<span class="fc" id="L71">        return descriptor.getVariant();</span>
     }
 
     public boolean isException() {
-<span class="fc bfc" id="L77" title="All 2 branches covered.">        return descriptor.getVariant() == PMessageVariant.EXCEPTION;</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        return descriptor.getVariant() == PMessageVariant.EXCEPTION;</span>
     }
 
     public boolean isUnion() {
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        return descriptor.getVariant() == PMessageVariant.UNION;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        return descriptor.getVariant() == PMessageVariant.UNION;</span>
     }
 
     public boolean jsonCompactible() {
         // note: legacy annotation name.
-<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (descriptor().getVariant() != PMessageVariant.STRUCT) {</span>
-<span class="fc" id="L87">            return false;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (descriptor().getVariant() != PMessageVariant.STRUCT) {</span>
+<span class="fc" id="L85">            return false;</span>
         }
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (!(hasAnnotation(ThriftAnnotation.JSON_COMPACT) ||</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (!(hasAnnotation(ThriftAnnotation.JSON_COMPACT) ||</span>
               // legacy annotation version special handling.
-<span class="fc bfc" id="L91" title="All 2 branches covered.">              hasAnnotation(&quot;compact&quot;))) {</span>
-<span class="fc" id="L92">            return false;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">              hasAnnotation(&quot;compact&quot;))) {</span>
+<span class="fc" id="L90">            return false;</span>
         }
 
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (declaredFields.size() &gt; MAX_COMPACT_FIELDS) {</span>
-<span class="nc" id="L96">            return false;</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (declaredFields.size() &gt; MAX_COMPACT_FIELDS) {</span>
+<span class="nc" id="L94">            return false;</span>
         }
-<span class="fc" id="L98">        int next = 1;</span>
-<span class="fc" id="L99">        boolean hasOptional = false;</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (JField field : declaredFields) {</span>
-<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            if (field.id() != next) {</span>
-<span class="nc" id="L102">                return false;</span>
+<span class="fc" id="L96">        int next = 1;</span>
+<span class="fc" id="L97">        boolean hasOptional = false;</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        for (JField field : declaredFields) {</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (field.id() != next) {</span>
+<span class="nc" id="L100">                return false;</span>
             }
-<span class="pc bpc" id="L104" title="3 of 4 branches missed.">            if (hasOptional &amp;&amp; field.isRequired()) {</span>
-<span class="nc" id="L105">                return false;</span>
+<span class="pc bpc" id="L102" title="3 of 4 branches missed.">            if (hasOptional &amp;&amp; field.isRequired()) {</span>
+<span class="nc" id="L103">                return false;</span>
             }
-<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (!field.isRequired()) {</span>
-<span class="fc" id="L108">                hasOptional = true;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (!field.isRequired()) {</span>
+<span class="fc" id="L106">                hasOptional = true;</span>
             }
-<span class="fc" id="L110">            next++;</span>
-<span class="fc" id="L111">        }</span>
-<span class="fc" id="L112">        return true;</span>
+<span class="fc" id="L108">            next++;</span>
+<span class="fc" id="L109">        }</span>
+<span class="fc" id="L110">        return true;</span>
 
     }
 
@@ -119,55 +117,55 @@ public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
      * @return The class short name.
      */
     public String instanceType() {
-<span class="fc" id="L122">        return JUtils.getClassName(descriptor);</span>
+<span class="fc" id="L120">        return JUtils.getClassName(descriptor);</span>
     }
 
     public List&lt;JField&gt; declaredOrderFields() {
-<span class="fc" id="L126">        return declaredFields;</span>
+<span class="fc" id="L124">        return declaredFields;</span>
     }
 
     public List&lt;JField&gt; numericalOrderFields() {
-<span class="fc" id="L130">        return numericalFields;</span>
+<span class="fc" id="L128">        return numericalFields;</span>
     }
 
     public String getDescriptorClass() throws GeneratorException {
-<span class="pc bpc" id="L134" title="1 of 4 branches missed.">        switch (variant()) {</span>
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">        switch (variant()) {</span>
             case STRUCT:
-<span class="fc" id="L136">                return PStructDescriptor.class.getName();</span>
+<span class="fc" id="L134">                return PStructDescriptor.class.getName();</span>
             case UNION:
-<span class="fc" id="L138">                return PUnionDescriptor.class.getName();</span>
+<span class="fc" id="L136">                return PUnionDescriptor.class.getName();</span>
             case EXCEPTION:
-<span class="fc" id="L140">                return PExceptionDescriptor.class.getName();</span>
+<span class="fc" id="L138">                return PExceptionDescriptor.class.getName();</span>
             default:
-<span class="nc" id="L142">                throw new GeneratorException(&quot;Unable to determine type class for &quot; + variant());</span>
+<span class="nc" id="L140">                throw new GeneratorException(&quot;Unable to determine type class for &quot; + variant());</span>
         }
     }
 
     public String getProviderClass() throws GeneratorException {
-<span class="pc bpc" id="L147" title="1 of 4 branches missed.">        switch (variant()) {</span>
+<span class="pc bpc" id="L145" title="1 of 4 branches missed.">        switch (variant()) {</span>
             case STRUCT:
-<span class="fc" id="L149">                return PStructDescriptorProvider.class.getName();</span>
+<span class="fc" id="L147">                return PStructDescriptorProvider.class.getName();</span>
             case UNION:
-<span class="fc" id="L151">                return PUnionDescriptorProvider.class.getName();</span>
+<span class="fc" id="L149">                return PUnionDescriptorProvider.class.getName();</span>
             case EXCEPTION:
-<span class="fc" id="L153">                return PExceptionDescriptorProvider.class.getName();</span>
+<span class="fc" id="L151">                return PExceptionDescriptorProvider.class.getName();</span>
             default:
-<span class="nc" id="L155">                throw new GeneratorException(&quot;Unable to determine type class for &quot; + variant());</span>
+<span class="nc" id="L153">                throw new GeneratorException(&quot;Unable to determine type class for &quot; + variant());</span>
         }
     }
 
     public String extraImplements() {
-<span class="fc" id="L160">        return getAnnotationValue(ThriftAnnotation.JAVA_IMPLEMENTS);</span>
+<span class="fc" id="L158">        return getAnnotationValue(ThriftAnnotation.JAVA_IMPLEMENTS);</span>
     }
 
     public String exceptionBaseClass() {
-<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (!isException()) {</span>
-<span class="nc" id="L165">            return null;</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        if (!isException()) {</span>
+<span class="nc" id="L163">            return null;</span>
         }
-<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (hasAnnotation(ThriftAnnotation.JAVA_EXCEPTION_CLASS)) {</span>
-<span class="fc" id="L168">            return getAnnotationValue(ThriftAnnotation.JAVA_EXCEPTION_CLASS);</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (hasAnnotation(ThriftAnnotation.JAVA_EXCEPTION_CLASS)) {</span>
+<span class="fc" id="L166">            return getAnnotationValue(ThriftAnnotation.JAVA_EXCEPTION_CLASS);</span>
         }
-<span class="fc" id="L170">        return Exception.class.getSimpleName();</span>
+<span class="fc" id="L168">        return Exception.class.getSimpleName();</span>
     }
 
     /**
@@ -176,7 +174,7 @@ public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
      * @return Optional message field.
      */
     public Optional&lt;JField&gt; exceptionMessageField() {
-<span class="pc bpc" id="L179" title="1 of 4 branches missed.">        return numericalOrderFields().stream().filter(f -&gt; f.name().equals(&quot;message&quot;) &amp;&amp; f.type() == PType.STRING).findFirst();</span>
+<span class="pc bpc" id="L177" title="1 of 4 branches missed.">        return numericalOrderFields().stream().filter(f -&gt; f.name().equals(&quot;message&quot;) &amp;&amp; f.type() == PType.STRING).findFirst();</span>
     }
 
     /**
@@ -186,8 +184,8 @@ public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
      * @return True if the annotaiton is present.
      */
     public boolean hasAnnotation(ThriftAnnotation annotation) {
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp;</span>
-<span class="fc bfc" id="L190" title="All 2 branches covered.">               ((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation);</span>
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp;</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">               ((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation);</span>
     }
 
     /**
@@ -197,8 +195,8 @@ public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
      * @return True if the annotaiton is present.
      */
     public boolean hasAnnotation(String annotation) {
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp;</span>
-<span class="fc bfc" id="L201" title="All 2 branches covered.">               ((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation);</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp;</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">               ((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation);</span>
     }
 
     /**
@@ -207,7 +205,7 @@ public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
      * @return The value of the annotation, or null if not present.
      */
     private String getAnnotationValue(ThriftAnnotation annotation) {
-<span class="fc" id="L210">        return getAnnotationValue(annotation.tag);</span>
+<span class="fc" id="L208">        return getAnnotationValue(annotation.tag);</span>
     }
 
     /**
@@ -216,12 +214,12 @@ public class JMessage&lt;T extends CMessage&lt;T, CField&gt;&gt; {
      * @return The value of the annotation, or null if not present.
      */
     private String getAnnotationValue(String annotation) {
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (descriptor instanceof CAnnotatedDescriptor) {</span>
-<span class="fc bfc" id="L220" title="All 2 branches covered.">            if (((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation)) {</span>
-<span class="fc" id="L221">                return ((CAnnotatedDescriptor) descriptor).getAnnotationValue(annotation);</span>
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">        if (descriptor instanceof CAnnotatedDescriptor) {</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">            if (((CAnnotatedDescriptor) descriptor).hasAnnotation(annotation)) {</span>
+<span class="fc" id="L219">                return ((CAnnotatedDescriptor) descriptor).getAnnotationValue(annotation);</span>
             }
         }
-<span class="fc" id="L224">        return null;</span>
+<span class="fc" id="L222">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

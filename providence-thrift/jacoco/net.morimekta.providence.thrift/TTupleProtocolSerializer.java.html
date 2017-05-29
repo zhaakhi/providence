@@ -212,7 +212,7 @@ public class TTupleProtocolSerializer extends Serializer {
 <span class="fc" id="L212">                int optionalPos = 0;</span>
 <span class="fc bfc" id="L213" title="All 2 branches covered.">                for (PField fld : fields) {</span>
 <span class="fc bfc" id="L214" title="All 2 branches covered.">                    if (fld.getRequirement() != PRequirement.REQUIRED) {</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">                        if (message.has(fld.getKey())) {</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">                        if (message.has(fld.getKey())) {</span>
 <span class="fc" id="L216">                            optionals.set(optionalPos);</span>
                         }
 <span class="fc" id="L218">                        ++optionalPos;</span>
@@ -233,7 +233,7 @@ public class TTupleProtocolSerializer extends Serializer {
 <span class="fc" id="L233">                        protocol.writeBitSet(optionals, numOptionals);</span>
 <span class="fc" id="L234">                        shouldWriteOptionals = false;</span>
                     }
-<span class="fc bfc" id="L236" title="All 2 branches covered.">                    if (optionals.get(optionalPos)) {</span>
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">                    if (optionals.get(optionalPos)) {</span>
 <span class="fc" id="L237">                        writeTypedValue(message.get(fld.getKey()), fld.getDescriptor(), protocol);</span>
                     }
 <span class="fc" id="L239">                    ++optionalPos;</span>
@@ -274,7 +274,7 @@ public class TTupleProtocolSerializer extends Serializer {
 <span class="fc bfc" id="L274" title="All 2 branches covered.">                    if (optionals == null) {</span>
 <span class="fc" id="L275">                        optionals = protocol.readBitSet(numOptionals);</span>
                     }
-<span class="fc bfc" id="L277" title="All 2 branches covered.">                    if (optionals.get(optionalPos)) {</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">                    if (optionals.get(optionalPos)) {</span>
 <span class="fc" id="L278">                        builder.set(fld.getKey(), readTypedValue(fld.getDescriptor(), protocol));</span>
                     }
 <span class="fc" id="L280">                    ++optionalPos;</span>

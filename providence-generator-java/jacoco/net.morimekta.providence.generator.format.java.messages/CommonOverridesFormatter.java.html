@@ -232,89 +232,89 @@ public class CommonOverridesFormatter implements MessageMemberFormatter {
 <span class="fc" id="L232">            writer.end()</span>
 <span class="fc" id="L233">                  .appendln('}');</span>
         } else {
-<span class="fc" id="L235">            boolean firstFirstCheck = true;</span>
-<span class="fc" id="L236">            boolean alwaysAfter = false;</span>
-            boolean last, first;
+<span class="fc" id="L235">            boolean hasFirstFlag = false;</span>
+<span class="fc" id="L236">            boolean allowSeparator = false;</span>
+<span class="fc" id="L237">            boolean requireSeparator = false;</span>
 
 <span class="fc" id="L239">            List&lt;JField&gt; fieldList = message.declaredOrderFields();</span>
 
 <span class="fc" id="L241">            JField[] fields = fieldList.toArray(new JField[fieldList.size()]);</span>
 <span class="fc bfc" id="L242" title="All 2 branches covered.">            for (int i = 0; i &lt; fields.length; ++i) {</span>
-<span class="fc bfc" id="L243" title="All 2 branches covered.">                first = i == 0;</span>
-<span class="fc bfc" id="L244" title="All 2 branches covered.">                last  = i == (fields.length - 1);</span>
+<span class="fc" id="L243">                JField field = fields[i];</span>
 
-<span class="fc" id="L246">                JField field = fields[i];</span>
-<span class="fc bfc" id="L247" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
-<span class="fc bfc" id="L248" title="All 6 branches covered.">                    if (!alwaysAfter &amp;&amp; firstFirstCheck &amp;&amp; !last) {</span>
-<span class="fc" id="L249">                        writer.appendln(&quot;boolean first = true;&quot;);</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">                boolean last = (i == (fields.length - 1));</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc bfc" id="L247" title="All 6 branches covered.">                    if (!last &amp;&amp; !requireSeparator &amp;&amp; !hasFirstFlag) {</span>
+<span class="fc" id="L248">                        writer.appendln(&quot;boolean first = true;&quot;);</span>
+<span class="fc" id="L249">                        hasFirstFlag = true;</span>
                     }
 <span class="fc" id="L251">                    writer.formatln(&quot;if (%s()) {&quot;, field.presence());</span>
 <span class="fc" id="L252">                    writer.begin();</span>
                 }
 
-<span class="fc bfc" id="L255" title="All 2 branches covered.">                if (alwaysAfter) {</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">                if (requireSeparator) {</span>
 <span class="fc" id="L256">                    writer.appendln(&quot;out.append(',');&quot;);</span>
-<span class="fc bfc" id="L257" title="All 2 branches covered.">                } else if (!field.alwaysPresent()) {</span>
-<span class="pc bpc" id="L258" title="1 of 4 branches missed.">                    if (firstFirstCheck || first) {</span>
-<span class="fc bfc" id="L259" title="All 2 branches covered.">                        if (!last) {</span>
-<span class="fc" id="L260">                            writer.appendln(&quot;first = false;&quot;);</span>
+                } else {
+<span class="fc bfc" id="L258" title="All 2 branches covered.">                    if (allowSeparator) {</span>
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">                        if (hasFirstFlag) {</span>
+<span class="pc bpc" id="L260" title="1 of 4 branches missed.">                            if (last || field.alwaysPresent()) {</span>
+<span class="fc" id="L261">                                writer.appendln(&quot;if (!first) out.append(',');&quot;);</span>
+                            } else {
+<span class="fc" id="L263">                                writer.appendln(&quot;if (first) first = false;&quot;)</span>
+<span class="fc" id="L264">                                      .appendln(&quot;else out.append(',');&quot;);</span>
+                            }
                         }
-<span class="fc bfc" id="L262" title="All 2 branches covered.">                    } else if (last) {</span>
-<span class="fc" id="L263">                        writer.appendln(&quot;if (!first) out.append(',');&quot;);</span>
-                    } else {
-<span class="fc" id="L265">                        writer.appendln(&quot;if (first) first = false;&quot;)</span>
-<span class="fc" id="L266">                              .appendln(&quot;else out.append(',');&quot;);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">                    } else if (hasFirstFlag) {</span>
+<span class="fc" id="L268">                        writer.appendln(&quot;first = false;&quot;);</span>
                     }
                 }
 
-<span class="fc" id="L270">                writer.formatln(&quot;out.append(\&quot;%s:\&quot;)&quot;, field.name());</span>
-<span class="pc bpc" id="L271" title="1 of 7 branches missed.">                switch (field.type()) {</span>
+<span class="fc" id="L272">                writer.formatln(&quot;out.append(\&quot;%s:\&quot;)&quot;, field.name());</span>
+<span class="pc bpc" id="L273" title="1 of 7 branches missed.">                switch (field.type()) {</span>
                     case BOOL:
                     case I32:
                     case I64:
-<span class="fc" id="L275">                        writer.formatln(&quot;   .append(%s);&quot;, field.member());</span>
-<span class="fc" id="L276">                        break;</span>
+<span class="fc" id="L277">                        writer.formatln(&quot;   .append(%s);&quot;, field.member());</span>
+<span class="fc" id="L278">                        break;</span>
                     case BYTE:
                     case I16:
-<span class="fc" id="L279">                        writer.formatln(&quot;   .append((int) %s);&quot;, field.member());</span>
-<span class="fc" id="L280">                        break;</span>
+<span class="fc" id="L281">                        writer.formatln(&quot;   .append((int) %s);&quot;, field.member());</span>
+<span class="fc" id="L282">                        break;</span>
                     case DOUBLE:
                     case MAP:
                     case SET:
                     case LIST:
-<span class="fc" id="L285">                        writer.formatln(&quot;   .append(%s.asString(%s));&quot;,</span>
-<span class="fc" id="L286">                                        Strings.class.getName(),</span>
-<span class="fc" id="L287">                                        field.member());</span>
-<span class="fc" id="L288">                        break;</span>
+<span class="fc" id="L287">                        writer.formatln(&quot;   .append(%s.asString(%s));&quot;,</span>
+<span class="fc" id="L288">                                        Strings.class.getName(),</span>
+<span class="fc" id="L289">                                        field.member());</span>
+<span class="fc" id="L290">                        break;</span>
                     case STRING:
-<span class="fc" id="L290">                        writer.appendln(&quot;   .append('\\\&quot;')&quot;)</span>
-<span class="fc" id="L291">                              .formatln(&quot;   .append(%s.escape(%s))&quot;,</span>
-<span class="fc" id="L292">                                        Strings.class.getName(),</span>
-<span class="fc" id="L293">                                        field.member())</span>
-<span class="fc" id="L294">                              .appendln(&quot;   .append('\\\&quot;');&quot;);</span>
-<span class="fc" id="L295">                        break;</span>
+<span class="fc" id="L292">                        writer.appendln(&quot;   .append('\\\&quot;')&quot;)</span>
+<span class="fc" id="L293">                              .formatln(&quot;   .append(%s.escape(%s))&quot;,</span>
+<span class="fc" id="L294">                                        Strings.class.getName(),</span>
+<span class="fc" id="L295">                                        field.member())</span>
+<span class="fc" id="L296">                              .appendln(&quot;   .append('\\\&quot;');&quot;);</span>
+<span class="fc" id="L297">                        break;</span>
                     case BINARY:
-<span class="fc" id="L297">                        writer.appendln(&quot;   .append(\&quot;b64(\&quot;)&quot;)</span>
-<span class="fc" id="L298">                              .formatln(&quot;   .append(%s.toBase64())&quot;, field.member())</span>
-<span class="fc" id="L299">                              .appendln(&quot;   .append(')');&quot;);</span>
-<span class="fc" id="L300">                        break;</span>
+<span class="fc" id="L299">                        writer.appendln(&quot;   .append(\&quot;b64(\&quot;)&quot;)</span>
+<span class="fc" id="L300">                              .formatln(&quot;   .append(%s.toBase64())&quot;, field.member())</span>
+<span class="fc" id="L301">                              .appendln(&quot;   .append(')');&quot;);</span>
+<span class="fc" id="L302">                        break;</span>
                     case MESSAGE:
                     case ENUM:
-<span class="fc" id="L303">                        writer.formatln(&quot;   .append(%s.asString());&quot;, field.member());</span>
-<span class="fc" id="L304">                        break;</span>
+<span class="fc" id="L305">                        writer.formatln(&quot;   .append(%s.asString());&quot;, field.member());</span>
+<span class="fc" id="L306">                        break;</span>
                     default:
-<span class="nc" id="L306">                        writer.formatln(&quot;   .append(%s.toString());&quot;, field.member());</span>
+<span class="nc" id="L308">                        writer.formatln(&quot;   .append(%s.toString());&quot;, field.member());</span>
                         break;
                 }
 
-<span class="fc bfc" id="L310" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
-<span class="fc" id="L311">                    writer.end()</span>
-<span class="fc" id="L312">                          .appendln('}');</span>
-<span class="fc bfc" id="L313" title="All 4 branches covered.">                    if (!alwaysAfter &amp;&amp; firstFirstCheck) {</span>
-<span class="fc" id="L314">                        firstFirstCheck = false;</span>
-                    }
+<span class="fc bfc" id="L312" title="All 2 branches covered.">                if (field.alwaysPresent()) {</span>
+<span class="fc" id="L313">                    requireSeparator = true;</span>
                 } else {
-<span class="fc" id="L317">                    alwaysAfter = true;</span>
+<span class="fc" id="L315">                    writer.end()</span>
+<span class="fc" id="L316">                          .appendln('}');</span>
+<span class="fc" id="L317">                    allowSeparator = true;</span>
                 }
             }
         }

@@ -132,13 +132,13 @@ public class CommonBuilderFormatter
 <span class="fc" id="L132">                                        field.member(), field.member(), field.member());</span>
 <span class="fc" id="L133">                        break;</span>
                     default:
-<span class="fc bfc" id="L135" title="All 2 branches covered.">                        if (field.alwaysPresent()) {</span>
-<span class="fc" id="L136">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : %s;&quot;,</span>
-<span class="fc" id="L137">                                            field.member(),</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                        if (field.alwaysPresent()) {</span>
+<span class="nc" id="L136">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : %s;&quot;,</span>
+<span class="nc" id="L137">                                            field.member(),</span>
                                             UNION_FIELD,
-<span class="fc" id="L139">                                            field.fieldEnum(),</span>
-<span class="fc" id="L140">                                            field.member(),</span>
-<span class="fc" id="L141">                                            field.kDefault());</span>
+<span class="nc" id="L139">                                            field.fieldEnum(),</span>
+<span class="nc" id="L140">                                            field.member(),</span>
+<span class="nc" id="L141">                                            field.kDefault());</span>
                         } else {
 <span class="fc" id="L143">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : null;&quot;,</span>
 <span class="fc" id="L144">                                            field.member(),</span>
@@ -185,21 +185,35 @@ public class CommonBuilderFormatter
 <span class="fc bfc" id="L185" title="All 2 branches covered.">                if (field.container()) {</span>
 <span class="fc" id="L186">                    writer.formatln(&quot;if (builder.%s()) {&quot;, field.isSet())</span>
 <span class="fc" id="L187">                          .formatln(&quot;    %s = builder.%s.build();&quot;, field.member(), field.member())</span>
-<span class="fc" id="L188">                          .appendln(&quot;} else {&quot;)</span>
-<span class="fc" id="L189">                          .formatln(&quot;    %s = null;&quot;, field.member())</span>
-<span class="fc" id="L190">                          .appendln('}');</span>
-<span class="fc bfc" id="L191" title="All 2 branches covered.">                } else if (field.type() == PType.MESSAGE) {</span>
-<span class="fc" id="L192">                    writer.formatln(&quot;%s = builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
-<span class="fc" id="L193">                                    field.member(), field.member(), field.member(), field.member());</span>
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">                } else if (!field.isVoid()){</span>
+<span class="fc" id="L188">                          .appendln(&quot;} else {&quot;);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">                    if (field.alwaysPresent()) {</span>
+<span class="fc" id="L190">                        writer.formatln(&quot;    %s = %s;&quot;, field.member(), field.kDefault());</span>
+                    } else {
+<span class="fc" id="L192">                        writer.formatln(&quot;    %s = null;&quot;, field.member());</span>
+                    }
+<span class="fc" id="L194">                    writer.appendln('}');</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">                } else if (field.type() == PType.MESSAGE) {</span>
+<span class="fc" id="L196">                    writer.formatln(&quot;%s = builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
+<span class="fc" id="L197">                                    field.member(), field.member(), field.member(), field.member());</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                } else if (!field.isVoid()){</span>
                     // Void fields have no value.
-<span class="fc" id="L196">                    writer.formatln(&quot;%s = builder.%s;&quot;, field.member(), field.member());</span>
+                    // And primitive java values keep the default state in the builder, so no need to
+                    // explicitly set it here.
+<span class="fc bfc" id="L202" title="All 4 branches covered.">                    if (field.alwaysPresent() &amp;&amp; !field.isPrimitiveJavaValue()) {</span>
+<span class="fc" id="L203">                        writer.formatln(&quot;if (builder.%s()) {&quot;, field.isSet())</span>
+<span class="fc" id="L204">                              .formatln(&quot;    %s = builder.%s;&quot;, field.member(), field.member())</span>
+<span class="fc" id="L205">                              .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L206">                              .formatln(&quot;    %s = %s;&quot;, field.member(), field.kDefault())</span>
+<span class="fc" id="L207">                              .appendln('}');</span>
+                    } else {
+<span class="fc" id="L209">                        writer.formatln(&quot;%s = builder.%s;&quot;, field.member(), field.member());</span>
+                    }
                 }
-<span class="fc" id="L198">            }</span>
+<span class="fc" id="L212">            }</span>
         }
-<span class="fc" id="L200">        writer.end()</span>
-<span class="fc" id="L201">              .appendln('}')</span>
-<span class="fc" id="L202">              .newline();</span>
-<span class="fc" id="L203">    }</span>
+<span class="fc" id="L214">        writer.end()</span>
+<span class="fc" id="L215">              .appendln('}')</span>
+<span class="fc" id="L216">              .newline();</span>
+<span class="fc" id="L217">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

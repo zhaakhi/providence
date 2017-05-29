@@ -27,8 +27,6 @@ import net.morimekta.util.Strings;
 
 import java.util.ArrayList;
 
-import static net.morimekta.providence.generator.format.java.utils.JUtils.camelCase;
-
 /**
  * Created by morimekta on 4/24/16.
  */
@@ -39,74 +37,74 @@ public class JServiceMethod {
 
     public JServiceMethod(CService service,
                           CServiceMethod method,
-<span class="fc" id="L42">                          JHelper helper) {</span>
-<span class="fc" id="L43">        this.service = service;</span>
-<span class="fc" id="L44">        this.method = method;</span>
-<span class="fc" id="L45">        this.helper = helper;</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L40">                          JHelper helper) {</span>
+<span class="fc" id="L41">        this.service = service;</span>
+<span class="fc" id="L42">        this.method = method;</span>
+<span class="fc" id="L43">        this.helper = helper;</span>
+<span class="fc" id="L44">    }</span>
 
     public CServiceMethod getMethod() {
-<span class="fc" id="L49">        return method;</span>
+<span class="fc" id="L47">        return method;</span>
     }
 
     public CService getService() {
-<span class="nc" id="L53">        return service;</span>
+<span class="nc" id="L51">        return service;</span>
     }
 
     public String constant() {
-<span class="fc" id="L57">        return Strings.c_case(&quot;&quot;, method.getName()).toUpperCase();</span>
+<span class="fc" id="L55">        return Strings.c_case(method.getName()).toUpperCase();</span>
     }
 
     public String name() {
-<span class="fc" id="L61">        return method.getName();</span>
+<span class="fc" id="L59">        return method.getName();</span>
     }
 
     public String methodName() {
-<span class="fc" id="L65">        return JUtils.camelCase(method.getName());</span>
+<span class="fc" id="L63">        return method.getName();</span>
     }
 
     public String getRequestClass() {
-<span class="fc" id="L69">        return camelCase(&quot;&quot;, method.getRequestType().getName());</span>
+<span class="fc" id="L67">        return JUtils.getClassName(method.getRequestType());</span>
     }
 
     public String getResponseClass() {
-<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (method.getResponseType() != null) {</span>
-<span class="fc" id="L74">            return camelCase(&quot;&quot;, method.getResponseType().getName());</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (method.getResponseType() != null) {</span>
+<span class="fc" id="L72">            return JUtils.getClassName(method.getResponseType());</span>
         }
-<span class="fc" id="L76">        return null;</span>
+<span class="fc" id="L74">        return null;</span>
     }
 
     public JField getResponse() {
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (method.getResponseType() != null) {</span>
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if (method.getResponseType().getField(0) != null) {</span>
-<span class="fc" id="L82">                return new JField(method.getResponseType().getField(0),</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (method.getResponseType() != null) {</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">            if (method.getResponseType().getField(0) != null) {</span>
+<span class="fc" id="L80">                return new JField(method.getResponseType().getField(0),</span>
                                   helper,
                                   0);
             }
         }
-<span class="fc" id="L87">        return null;</span>
+<span class="fc" id="L85">        return null;</span>
     }
 
     public JField[] params() {
-<span class="fc" id="L91">        CField[] fields = method.getRequestType().getFields();</span>
-<span class="fc" id="L92">        JField[] ret = new JField[fields.length];</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        for (int i = 0; i &lt; fields.length; ++i) {</span>
-<span class="fc" id="L94">            ret[i] = new JField(fields[i], helper, i);</span>
+<span class="fc" id="L89">        CField[] fields = method.getRequestType().getFields();</span>
+<span class="fc" id="L90">        JField[] ret = new JField[fields.length];</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        for (int i = 0; i &lt; fields.length; ++i) {</span>
+<span class="fc" id="L92">            ret[i] = new JField(fields[i], helper, i);</span>
         }
-<span class="fc" id="L96">        return ret;</span>
+<span class="fc" id="L94">        return ret;</span>
     }
 
     public JField[] exceptions() {
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (method.getResponseType() == null) return new JField[0];</span>
-<span class="fc" id="L101">        ArrayList&lt;JField&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (method.getResponseType() == null) return new JField[0];</span>
+<span class="fc" id="L99">        ArrayList&lt;JField&gt; ret = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L103">        int idx = 0;</span>
-<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (CField field : method.getResponseType().getFields()) {</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (field.getKey() != 0) {</span>
-<span class="fc" id="L106">                ret.add(new JField(field, helper, idx++));</span>
+<span class="fc" id="L101">        int idx = 0;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (CField field : method.getResponseType().getFields()) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            if (field.getKey() != 0) {</span>
+<span class="fc" id="L104">                ret.add(new JField(field, helper, idx++));</span>
             }
         }
-<span class="fc" id="L109">        return ret.toArray(new JField[ret.size()]);</span>
+<span class="fc" id="L107">        return ret.toArray(new JField[ret.size()]);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

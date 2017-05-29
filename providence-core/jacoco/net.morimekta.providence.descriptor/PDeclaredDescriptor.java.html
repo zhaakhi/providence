@@ -23,6 +23,7 @@ package net.morimekta.providence.descriptor;
 import net.morimekta.providence.PBuilder;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Descriptor for a declared type. A declared type is a value type that is
@@ -32,35 +33,42 @@ public abstract class PDeclaredDescriptor&lt;T&gt; implements PDescriptor {
     private final String programName;
     private final String name;
 
-<span class="fc" id="L35">    protected PDeclaredDescriptor(@Nonnull String programName, @Nonnull String name) {</span>
-<span class="fc" id="L36">        this.programName = programName;</span>
-<span class="fc" id="L37">        this.name = name;</span>
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L36">    protected PDeclaredDescriptor(@Nonnull String programName, @Nonnull String name) {</span>
+<span class="fc" id="L37">        this.programName = programName;</span>
+<span class="fc" id="L38">        this.name = name;</span>
+<span class="fc" id="L39">    }</span>
 
     @Nonnull
     @Override
     public final String getProgramName() {
-<span class="fc" id="L43">        return programName;</span>
+<span class="fc" id="L44">        return programName;</span>
     }
 
     @Nonnull
     @Override
     public final String getName() {
-<span class="fc" id="L49">        return name;</span>
+<span class="fc" id="L50">        return name;</span>
     }
 
     @Nonnull
     @Override
     public final String getQualifiedName(String programContext) {
-<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (!this.programName.equals(programContext)) {</span>
-<span class="fc" id="L56">            return getProgramName() + &quot;.&quot; + getName();</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (!this.programName.equals(programContext)) {</span>
+<span class="fc" id="L57">            return getProgramName() + &quot;.&quot; + getName();</span>
         }
-<span class="fc" id="L58">        return getName();</span>
+<span class="fc" id="L59">        return getName();</span>
+    }
+
+    @Nullable
+    @Override
+    public T getDefaultValue() {
+        // Declared value types currently cannot have default values defined by the descriptor.
+<span class="nc" id="L66">        return null;</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L63">        return getQualifiedName();</span>
+<span class="fc" id="L71">        return getQualifiedName();</span>
     }
 
     /**

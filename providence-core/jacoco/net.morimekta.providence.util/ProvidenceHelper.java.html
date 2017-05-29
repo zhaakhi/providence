@@ -24,31 +24,38 @@ import net.morimekta.providence.PMessage;
 import net.morimekta.providence.descriptor.PField;
 import net.morimekta.providence.descriptor.PMessageDescriptor;
 import net.morimekta.providence.serializer.JsonSerializer;
+import net.morimekta.providence.serializer.PrettySerializer;
 import net.morimekta.providence.serializer.Serializer;
 import net.morimekta.providence.streams.MessageStreams;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
- * Convenience methods for reading providence messages from resources.
+ * Convenience methods for handling providence messages.
  */
 public class ProvidenceHelper {
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Message fromJsonResource(String path,
                              PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L44">        return fromResource(path, descriptor, new JsonSerializer(true));</span>
+<span class="fc" id="L51">        return fromResource(path, descriptor, new JsonSerializer(true));</span>
     }
 
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     ArrayList&lt;Message&gt; arrayListFromJsonResource(String path,
                                                  PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L51">        return arrayListFromResource(path, descriptor, new JsonSerializer(true));</span>
+<span class="fc" id="L58">        return arrayListFromResource(path, descriptor, new JsonSerializer(true));</span>
     }
 
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
@@ -56,11 +63,11 @@ public class ProvidenceHelper {
                          PMessageDescriptor&lt;Message, Field&gt; descriptor,
                          Serializer serializer)
             throws IOException {
-<span class="fc" id="L59">        InputStream in = ProvidenceHelper.class.getResourceAsStream(resource);</span>
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if(in == null) {</span>
-<span class="nc" id="L61">            throw new IOException(&quot;No such resource &quot; + resource);</span>
+<span class="fc" id="L66">        InputStream in = ProvidenceHelper.class.getResourceAsStream(resource);</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if(in == null) {</span>
+<span class="nc" id="L68">            throw new IOException(&quot;No such resource &quot; + resource);</span>
         }
-<span class="fc" id="L63">        return serializer.deserialize(new BufferedInputStream(in), descriptor);</span>
+<span class="fc" id="L70">        return serializer.deserialize(new BufferedInputStream(in), descriptor);</span>
     }
 
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
@@ -68,10 +75,50 @@ public class ProvidenceHelper {
                                              PMessageDescriptor&lt;Message, Field&gt; descriptor,
                                              Serializer serializer)
             throws IOException {
-<span class="fc" id="L71">        return (ArrayList&lt;Message&gt;) MessageStreams.resource(path, serializer, descriptor)</span>
-<span class="fc" id="L72">                                                  .collect(Collectors.toList());</span>
+<span class="fc" id="L78">        return (ArrayList&lt;Message&gt;) MessageStreams.resource(path, serializer, descriptor)</span>
+<span class="fc" id="L79">                                                  .collect(Collectors.toList());</span>
     }
 
-<span class="nc" id="L75">    private ProvidenceHelper() {}</span>
+    /**
+     * Prints a pretty formatted string that is optimized for diffing (mainly
+     * for testing and debugging).
+     *
+     * @param message The message to stringify.
+     * @param &lt;Message&gt; The message type.
+     * @param &lt;Field&gt; The message field type.
+     * @return The resulting string.
+     */
+    @Nonnull
+    public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    String debugString(Message message) {
+<span class="fc" id="L94">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L95">        DEBUG_STRING_SERIALIZER.serialize(baos, message);</span>
+<span class="fc" id="L96">        return new String(baos.toByteArray(), UTF_8);</span>
+    }
+
+    /**
+     * Parses a pretty formatted string, and makes exceptions unchecked.
+     *
+     * @param string The message string to parse.
+     * @param descriptor The message descriptor.
+     * @param &lt;Message&gt; The message type.
+     * @param &lt;Field&gt; The message field type.
+     * @return The parsed message.
+     */
+    @Nonnull
+    public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    Message parseDebugString(String string, PMessageDescriptor&lt;Message, Field&gt; descriptor) {
+        try {
+<span class="fc" id="L112">            ByteArrayInputStream bais = new ByteArrayInputStream(string.getBytes(UTF_8));</span>
+<span class="fc" id="L113">            return DEBUG_STRING_SERIALIZER.deserialize(bais, descriptor);</span>
+<span class="nc" id="L114">        } catch (IOException e) {</span>
+<span class="nc" id="L115">            throw new UncheckedIOException(e);</span>
+        }
+    }
+
+
+<span class="fc" id="L120">    private static final PrettySerializer DEBUG_STRING_SERIALIZER = new PrettySerializer().debug();</span>
+
+<span class="fc" id="L122">    private ProvidenceHelper() {}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

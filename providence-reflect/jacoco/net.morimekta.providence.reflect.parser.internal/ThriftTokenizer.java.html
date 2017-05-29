@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThriftTokenizer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.parser.internal</a> &gt; <span class="el_source">ThriftTokenizer.java</span></div><h1>ThriftTokenizer.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.reflect.parser.internal;
+
+import net.morimekta.providence.reflect.parser.ParseException;
+import net.morimekta.providence.serializer.pretty.Token;
+import net.morimekta.providence.serializer.pretty.Tokenizer;
+import net.morimekta.providence.serializer.pretty.TokenizerException;
+import net.morimekta.util.Strings;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * Specialization of the 'pretty' tokenizer to make it handle some
+ * special cases only applicable when parsing thrift files, but not
+ * allowed in pretty format or config files.
+ */
+public class ThriftTokenizer extends Tokenizer {
+    // Various thrift keywords.
+    public static final String kNamespace = &quot;namespace&quot;;
+    public static final String kInclude   = &quot;include&quot;;
+    public static final String kTypedef   = &quot;typedef&quot;;
+    public static final String kEnum      = &quot;enum&quot;;
+    public static final String kStruct    = &quot;struct&quot;;
+    public static final String kUnion     = &quot;union&quot;;
+    public static final String kException = &quot;exception&quot;;
+    public static final String kConst     = &quot;const&quot;;
+    public static final String kService   = &quot;service&quot;;
+
+    public static final String kExtends  = &quot;extends&quot;;
+    public static final String kVoid     = &quot;void&quot;;
+    public static final String kOneway   = &quot;oneway&quot;;
+    public static final String kThrows   = &quot;throws&quot;;
+    public static final String kRequired = &quot;required&quot;;
+    public static final String kOptional = &quot;optional&quot;;
+
+    // Not really 'symbols', but basically used as.
+    public static final String kLineCommentStart  = &quot;//&quot;;
+    public static final String kBlockCommentStart = &quot;/*&quot;;
+    public static final String kBlockCommentEnd   = &quot;*/&quot;;
+
+    public ThriftTokenizer(InputStream in) throws IOException {
+<span class="fc" id="L63">        super(in, false);</span>
+<span class="fc" id="L64">    }</span>
+
+    protected Token nextSymbol(int lastByte) throws TokenizerException {
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (lastByte == '/') {</span>
+<span class="fc" id="L68">            int startOffset = readOffset;</span>
+<span class="fc" id="L69">            int startLineNo = lineNo;</span>
+<span class="fc" id="L70">            int startLinePos = linePos;</span>
+
+<span class="fc" id="L72">            int next = read();</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">            if (next &lt; 0) {</span>
+<span class="nc" id="L74">                throw failure(startLineNo, startLinePos, 1,</span>
+                              &quot;Expected java-style comment, got end of file&quot;);
+            }
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">            if (next == '/' || next == '*') {</span>
+<span class="fc" id="L78">                return token(startOffset, 2, startLinePos);</span>
+            }
+<span class="nc" id="L80">            throw failure(startLineNo, startLinePos, 2,</span>
+                          &quot;Expected java-style comment, got '%s' after '/'&quot;,
+<span class="nc" id="L82">                          Strings.escape((char) next));</span>
+        }
+<span class="fc" id="L84">        return super.nextSymbol(lastByte);</span>
+    }
+
+    @Nonnull
+    @Override
+    protected TokenizerException failure(String format, Object... params) {
+<span class="fc" id="L90">        return new ParseException(format, params);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

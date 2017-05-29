@@ -94,17 +94,18 @@ import java.util.stream.Collectors;
     }
 
     /**
-     * Get a Collection of F with fields set on the builder.
+     * Get a Collection of F with fields set on the builder. A.k.a is
+     * present.
      *
      * Unusual naming because it avoids conflict with generated methods.
      *
      * @return Collection of F
      */
     @Nonnull
-    public Collection&lt;F&gt; collectSetFields() {
-<span class="nc" id="L105">           return Arrays.stream(descriptor().getFields())</span>
-<span class="nc" id="L106">                        .filter(this::isSet)</span>
-<span class="nc" id="L107">                        .collect(Collectors.toList());</span>
+    public Collection&lt;F&gt; presentFields() {
+<span class="nc" id="L106">           return Arrays.stream(descriptor().getFields())</span>
+<span class="nc" id="L107">                        .filter(this::isSet)</span>
+<span class="nc" id="L108">                        .collect(Collectors.toList());</span>
     }
 
     /**
@@ -122,7 +123,7 @@ import java.util.stream.Collectors;
      * @return True if the field is modified.
      */
     public boolean isModified(@Nonnull F field) {
-<span class="nc" id="L125">        return isModified(field.getKey());</span>
+<span class="nc" id="L126">        return isModified(field.getKey());</span>
     }
 
     /**
@@ -132,9 +133,9 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public Collection&lt;F&gt; modifiedFields() {
-<span class="nc" id="L135">           return Arrays.stream(descriptor().getFields())</span>
-<span class="nc" id="L136">                        .filter(this::isModified)</span>
-<span class="nc" id="L137">                        .collect(Collectors.toList());</span>
+<span class="nc" id="L136">           return Arrays.stream(descriptor().getFields())</span>
+<span class="nc" id="L137">                        .filter(this::isModified)</span>
+<span class="nc" id="L138">                        .collect(Collectors.toList());</span>
      }
 
     /**
@@ -157,7 +158,7 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public PMessageBuilder&lt;T, F&gt; addTo(@Nonnull F field, Object value) {
-<span class="nc" id="L160">        return addTo(field.getKey(), value);</span>
+<span class="nc" id="L161">        return addTo(field.getKey(), value);</span>
     }
 
     /**
@@ -178,7 +179,7 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public PMessageBuilder&lt;T, F&gt; clear(@Nonnull F field) {
-<span class="nc" id="L181">        return clear(field.getKey());</span>
+<span class="nc" id="L182">        return clear(field.getKey());</span>
     }
 
 
@@ -216,7 +217,7 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public PMessageBuilder mutator(@Nonnull F field) {
-<span class="nc" id="L219">        return mutator(field.getKey());</span>
+<span class="nc" id="L220">        return mutator(field.getKey());</span>
     }
 
     /**

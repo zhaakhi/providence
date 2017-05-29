@@ -21,6 +21,7 @@
 package net.morimekta.providence.descriptor;
 
 import net.morimekta.providence.PType;
+import net.morimekta.util.Binary;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -31,25 +32,27 @@ import java.util.Objects;
  * These are the basic types used in the thrift structure except containers.
  */
 public class PPrimitive implements PDescriptor {
-<span class="fc" id="L34">    public static final PPrimitive VOID   = new PPrimitive(PType.VOID, null);</span>
-<span class="fc" id="L35">    public static final PPrimitive BOOL   = new PPrimitive(PType.BOOL, false);</span>
-<span class="fc" id="L36">    public static final PPrimitive BYTE   = new PPrimitive(PType.BYTE, (byte) 0);</span>
-<span class="fc" id="L37">    public static final PPrimitive I16    = new PPrimitive(PType.I16, (short) 0);</span>
-<span class="fc" id="L38">    public static final PPrimitive I32    = new PPrimitive(PType.I32, 0);</span>
-<span class="fc" id="L39">    public static final PPrimitive I64    = new PPrimitive(PType.I64, (long) 0);</span>
-<span class="fc" id="L40">    public static final PPrimitive DOUBLE = new PPrimitive(PType.DOUBLE, 0.0);</span>
-<span class="fc" id="L41">    public static final PPrimitive STRING = new PPrimitive(PType.STRING, null);</span>
-<span class="fc" id="L42">    public static final PPrimitive BINARY = new PPrimitive(PType.BINARY, null);</span>
+<span class="fc" id="L35">    public static final PPrimitive VOID   = new PPrimitive(PType.VOID, null, true);</span>
+<span class="fc" id="L36">    public static final PPrimitive BOOL   = new PPrimitive(PType.BOOL, false, true);</span>
+<span class="fc" id="L37">    public static final PPrimitive BYTE   = new PPrimitive(PType.BYTE, (byte) 0, true);</span>
+<span class="fc" id="L38">    public static final PPrimitive I16    = new PPrimitive(PType.I16, (short) 0, true);</span>
+<span class="fc" id="L39">    public static final PPrimitive I32    = new PPrimitive(PType.I32, 0, true);</span>
+<span class="fc" id="L40">    public static final PPrimitive I64    = new PPrimitive(PType.I64, (long) 0, true);</span>
+<span class="fc" id="L41">    public static final PPrimitive DOUBLE = new PPrimitive(PType.DOUBLE, 0.0, true);</span>
+<span class="fc" id="L42">    public static final PPrimitive STRING = new PPrimitive(PType.STRING, &quot;&quot;, false);</span>
+<span class="fc" id="L43">    public static final PPrimitive BINARY = new PPrimitive(PType.BINARY, Binary.empty(), false);</span>
 
-    private final PPrimitiveProvider mProvider;
-    private final PType              mType;
-    private final Object             mDefault;
+    private final PPrimitiveProvider provider;
+    private final PType              type;
+    private final Object             defaultValue;
+    private final boolean            nativePrimitive;
 
-<span class="fc" id="L48">    private PPrimitive(PType type, Object defValue) {</span>
-<span class="fc" id="L49">        mType = type;</span>
-<span class="fc" id="L50">        mProvider = new PPrimitiveProvider(this);</span>
-<span class="fc" id="L51">        mDefault = defValue;</span>
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L50">    private PPrimitive(PType type, Object defValue, boolean nativePrimitive) {</span>
+<span class="fc" id="L51">        this.type = type;</span>
+<span class="fc" id="L52">        this.provider = new PPrimitiveProvider(this);</span>
+<span class="fc" id="L53">        this.defaultValue = defValue;</span>
+<span class="fc" id="L54">        this.nativePrimitive = nativePrimitive;</span>
+<span class="fc" id="L55">    }</span>
 
     /**
      * Get the descriptor provider for the primitive.
@@ -58,52 +61,60 @@ public class PPrimitive implements PDescriptor {
      */
     @Nonnull
     public PPrimitiveProvider provider() {
-<span class="fc" id="L61">        return mProvider;</span>
+<span class="fc" id="L64">        return provider;</span>
     }
 
     @Override
     public String getProgramName() {
-<span class="fc" id="L66">        return null;</span>
+<span class="fc" id="L69">        return null;</span>
     }
 
     @Nonnull
     @Override
     public String getName() {
-<span class="fc" id="L72">        return mType.toString();</span>
+<span class="fc" id="L75">        return type.toString();</span>
     }
 
     @Nonnull
     @Override
     public String getQualifiedName(String programContext) {
-<span class="fc" id="L78">        return mType.toString();</span>
+<span class="fc" id="L81">        return type.toString();</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L83">        return mType.toString();</span>
+<span class="fc" id="L86">        return type.toString();</span>
     }
 
     @Nonnull
     @Override
     public PType getType() {
-<span class="fc" id="L89">        return mType;</span>
+<span class="fc" id="L92">        return type;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L94" title="All 2 branches covered.">        return this == o;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        return this == o;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L99">        return Objects.hash(mType, mDefault);</span>
+<span class="fc" id="L102">        return Objects.hash(type, defaultValue);</span>
+    }
+
+    @Override
+    public Object getDefaultValue() {
+<span class="fc" id="L107">        return defaultValue;</span>
     }
 
     /**
-     * @return The default value for the primitive.
+     * @return Returns false if the primitive type allows null values.
+     *         If this method returns true, getter and setter methods
+     *         will have parameters and return type with the native
+     *         primitive type, not it's boxed variant.
      */
-    public Object getDefaultValue() {
-<span class="fc" id="L106">        return mDefault;</span>
+    public boolean isNativePrimitive() {
+<span class="nc" id="L117">        return nativePrimitive;</span>
     }
 
     /**
@@ -112,28 +123,28 @@ public class PPrimitive implements PDescriptor {
      * @return The primitive descriptor.
      */
     public static PPrimitive findByName(String name) {
-<span class="pc bpc" id="L115" title="10 of 41 branches missed.">        switch (name) {</span>
+<span class="pc bpc" id="L126" title="10 of 41 branches missed.">        switch (name) {</span>
             case &quot;void&quot;:
-<span class="fc" id="L117">                return VOID;</span>
+<span class="fc" id="L128">                return VOID;</span>
             case &quot;bool&quot;:
-<span class="fc" id="L119">                return BOOL;</span>
+<span class="fc" id="L130">                return BOOL;</span>
             case &quot;byte&quot;:
             case &quot;i8&quot;:
-<span class="fc" id="L122">                return BYTE;</span>
+<span class="fc" id="L133">                return BYTE;</span>
             case &quot;i16&quot;:
-<span class="fc" id="L124">                return I16;</span>
+<span class="fc" id="L135">                return I16;</span>
             case &quot;i32&quot;:
-<span class="fc" id="L126">                return I32;</span>
+<span class="fc" id="L137">                return I32;</span>
             case &quot;i64&quot;:
-<span class="fc" id="L128">                return I64;</span>
+<span class="fc" id="L139">                return I64;</span>
             case &quot;double&quot;:
-<span class="fc" id="L130">                return DOUBLE;</span>
+<span class="fc" id="L141">                return DOUBLE;</span>
             case &quot;string&quot;:
-<span class="fc" id="L132">                return STRING;</span>
+<span class="fc" id="L143">                return STRING;</span>
             case &quot;binary&quot;:
-<span class="fc" id="L134">                return BINARY;</span>
+<span class="fc" id="L145">                return BINARY;</span>
         }
-<span class="fc" id="L136">        return null;</span>
+<span class="fc" id="L147">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

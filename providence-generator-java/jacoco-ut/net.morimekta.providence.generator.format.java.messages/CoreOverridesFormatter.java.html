@@ -360,20 +360,20 @@ public class CoreOverridesFormatter implements MessageMemberFormatter {
 <span class="fc" id="L360">        boolean hasCheck = false;</span>
 <span class="fc" id="L361">        boolean hasMissingVar = false;</span>
 <span class="fc bfc" id="L362" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
-<span class="fc bfc" id="L363" title="All 2 branches covered.">            if (!field.alwaysPresent()) {</span>
-<span class="fc bfc" id="L364" title="All 2 branches covered.">                if (!hasMissingVar) {</span>
-<span class="fc" id="L365">                    writer.appendln(&quot;boolean missing = false;&quot;);</span>
+<span class="pc bpc" id="L363" title="1 of 2 branches missed.">            if (!field.alwaysPresent()) {</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">                if (!hasMissingVar) {</span>
+<span class="nc" id="L365">                    writer.appendln(&quot;boolean missing = false;&quot;);</span>
                 }
-<span class="fc" id="L367">                hasMissingVar = true;</span>
-<span class="fc" id="L368">                hasCheck = true;</span>
-<span class="fc" id="L369">                writer.formatln(&quot;if (%s()) {&quot;, field.presence())</span>
-<span class="fc" id="L370">                      .appendln(&quot;    if (missing) return false;&quot;)</span>
-<span class="fc" id="L371">                      .appendln(&quot;} else {&quot;)</span>
-<span class="fc" id="L372">                      .appendln(&quot;    missing = true;&quot;)</span>
-<span class="fc" id="L373">                      .appendln('}');</span>
+<span class="nc" id="L367">                hasMissingVar = true;</span>
+<span class="nc" id="L368">                hasCheck = true;</span>
+<span class="nc" id="L369">                writer.formatln(&quot;if (%s()) {&quot;, field.presence())</span>
+<span class="nc" id="L370">                      .appendln(&quot;    if (missing) return false;&quot;)</span>
+<span class="nc" id="L371">                      .appendln(&quot;} else {&quot;)</span>
+<span class="nc" id="L372">                      .appendln(&quot;    missing = true;&quot;)</span>
+<span class="nc" id="L373">                      .appendln('}');</span>
 <span class="pc bpc" id="L374" title="1 of 2 branches missed.">            } else if (hasCheck) {</span>
-<span class="fc" id="L375">                writer.appendln(&quot;if (missing) return false;&quot;);</span>
-<span class="fc" id="L376">                hasCheck = false;</span>
+<span class="nc" id="L375">                writer.appendln(&quot;if (missing) return false;&quot;);</span>
+<span class="nc" id="L376">                hasCheck = false;</span>
             }
 <span class="fc" id="L378">        }</span>
 
@@ -390,7 +390,7 @@ public class CoreOverridesFormatter implements MessageMemberFormatter {
 <span class="fc" id="L390">              .appendln(&quot;switch(key) {&quot;)</span>
 <span class="fc" id="L391">              .begin();</span>
 
-<span class="fc bfc" id="L393" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L393" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
 <span class="fc bfc" id="L394" title="All 2 branches covered.">            if (field.isVoid()) {</span>
                 // Void fields have no value.
 <span class="fc" id="L396">                writer.formatln(&quot;case %d: return %s() ? Boolean.FALSE : null;&quot;,</span>
@@ -415,8 +415,8 @@ public class CoreOverridesFormatter implements MessageMemberFormatter {
 <span class="fc" id="L415">              .appendln(&quot;switch(key) {&quot;)</span>
 <span class="fc" id="L416">              .begin();</span>
 
-<span class="fc bfc" id="L418" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc bfc" id="L419" title="All 4 branches covered.">            if (field.alwaysPresent() &amp;&amp; !message.isUnion()) {</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
+<span class="pc bpc" id="L419" title="1 of 4 branches missed.">            if (field.alwaysPresent() &amp;&amp; !message.isUnion()) {</span>
 <span class="fc" id="L420">                writer.formatln(&quot;case %d: return true;&quot;, field.id());</span>
             } else {
 <span class="fc" id="L422">                writer.formatln(&quot;case %d: return %s();&quot;, field.id(), field.presence());</span>
@@ -438,10 +438,10 @@ public class CoreOverridesFormatter implements MessageMemberFormatter {
 <span class="fc" id="L438">              .appendln(&quot;switch(key) {&quot;)</span>
 <span class="fc" id="L439">              .begin();</span>
 
-<span class="fc bfc" id="L441" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
 <span class="fc bfc" id="L442" title="All 2 branches covered.">            if (field.container()) {</span>
 <span class="fc" id="L443">                writer.formatln(&quot;case %d: return %s();&quot;, field.id(), field.counter());</span>
-<span class="fc bfc" id="L444" title="All 4 branches covered.">            } else if (field.alwaysPresent() &amp;&amp; !message.isUnion()) {</span>
+<span class="pc bpc" id="L444" title="1 of 4 branches missed.">            } else if (field.alwaysPresent() &amp;&amp; !message.isUnion()) {</span>
 <span class="fc" id="L445">                writer.formatln(&quot;case %d: return 1;&quot;, field.id());</span>
             } else {
 <span class="fc" id="L447">                writer.formatln(&quot;case %d: return %s() ? 1 : 0;&quot;, field.id(), field.presence());</span>

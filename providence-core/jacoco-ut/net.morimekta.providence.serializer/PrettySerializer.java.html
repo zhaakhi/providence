@@ -40,9 +40,9 @@ import net.morimekta.providence.descriptor.PPrimitive;
 import net.morimekta.providence.descriptor.PService;
 import net.morimekta.providence.descriptor.PServiceMethod;
 import net.morimekta.providence.descriptor.PSet;
-import net.morimekta.providence.util.pretty.Token;
-import net.morimekta.providence.util.pretty.Tokenizer;
-import net.morimekta.providence.util.pretty.TokenizerException;
+import net.morimekta.providence.serializer.pretty.Token;
+import net.morimekta.providence.serializer.pretty.Tokenizer;
+import net.morimekta.providence.serializer.pretty.TokenizerException;
 import net.morimekta.util.Binary;
 import net.morimekta.util.Strings;
 import net.morimekta.util.io.CountingOutputStream;
@@ -173,23 +173,23 @@ public class PrettySerializer extends Serializer {
     public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     int serialize(OutputStream out, PServiceCall&lt;Message, Field&gt; call)
             throws IOException {
-<span class="nc" id="L176">        CountingOutputStream cout = new CountingOutputStream(out);</span>
-<span class="nc" id="L177">        IndentedPrintWriter builder = new IndentedPrintWriter(cout, indent, newline);</span>
+<span class="fc" id="L176">        CountingOutputStream cout = new CountingOutputStream(out);</span>
+<span class="fc" id="L177">        IndentedPrintWriter builder = new IndentedPrintWriter(cout, indent, newline);</span>
 
-<span class="nc" id="L179">        builder.format(&quot;%d: %s %s(&quot;,</span>
-<span class="nc" id="L180">                       call.getSequence(),</span>
-<span class="nc" id="L181">                       call.getType().getName(),</span>
-<span class="nc" id="L182">                       call.getMethod())</span>
-<span class="nc" id="L183">               .begin(indent + indent);</span>
+<span class="fc" id="L179">        builder.format(&quot;%d: %s %s(&quot;,</span>
+<span class="fc" id="L180">                       call.getSequence(),</span>
+<span class="fc" id="L181">                       call.getType().getName(),</span>
+<span class="fc" id="L182">                       call.getMethod())</span>
+<span class="fc" id="L183">               .begin(indent + indent);</span>
 
-<span class="nc" id="L185">        appendMessage(builder, call.getMessage(), true);</span>
+<span class="fc" id="L185">        appendMessage(builder, call.getMessage(), true);</span>
 
-<span class="nc" id="L187">        builder.end()</span>
-<span class="nc" id="L188">               .append(Token.kMethodEnd)</span>
-<span class="nc" id="L189">               .newline()</span>
-<span class="nc" id="L190">               .flush();</span>
+<span class="fc" id="L187">        builder.end()</span>
+<span class="fc" id="L188">               .append(Token.kParamsEnd)</span>
+<span class="fc" id="L189">               .newline()</span>
+<span class="fc" id="L190">               .flush();</span>
 
-<span class="nc" id="L192">        return cout.getByteCount();</span>
+<span class="fc" id="L192">        return cout.getByteCount();</span>
     }
 
     @Nonnull
@@ -198,58 +198,58 @@ public class PrettySerializer extends Serializer {
     public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     PServiceCall&lt;Message, Field&gt; deserialize(InputStream input, PService service)
             throws IOException {
-<span class="nc" id="L201">        String methodName = null;</span>
-<span class="nc" id="L202">        int sequence = 0;</span>
-<span class="nc" id="L203">        PServiceCallType callType = null;</span>
+<span class="fc" id="L201">        String methodName = null;</span>
+<span class="fc" id="L202">        int sequence = 0;</span>
+<span class="fc" id="L203">        PServiceCallType callType = null;</span>
         try {
             // pretty printed service calls cannot be chained-serialized, so this should be totally safe.
-<span class="nc" id="L206">            Tokenizer tokenizer = new Tokenizer(input, false);</span>
+<span class="fc" id="L206">            Tokenizer tokenizer = new Tokenizer(input, false);</span>
 
-<span class="nc" id="L208">            Token token = tokenizer.expect(&quot;Sequence or type&quot;);</span>
-<span class="nc bnc" id="L209" title="All 2 branches missed.">            if (token.isInteger()) {</span>
-<span class="nc" id="L210">                sequence = (int) token.parseInteger();</span>
-<span class="nc" id="L211">                tokenizer.expectSymbol(&quot;Sequence type sep&quot;, Token.kKeyValueSep);</span>
-<span class="nc" id="L212">                token = tokenizer.expectIdentifier(&quot;Call Type&quot;);</span>
+<span class="fc" id="L208">            Token token = tokenizer.expect(&quot;Sequence or type&quot;);</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">            if (token.isInteger()) {</span>
+<span class="fc" id="L210">                sequence = (int) token.parseInteger();</span>
+<span class="fc" id="L211">                tokenizer.expectSymbol(&quot;Sequence type sep&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L212">                token = tokenizer.expectIdentifier(&quot;Call Type&quot;);</span>
             }
-<span class="nc" id="L214">            callType = PServiceCallType.forName(token.asString());</span>
-<span class="nc bnc" id="L215" title="All 2 branches missed.">            if (callType == null) {</span>
+<span class="fc" id="L214">            callType = PServiceCallType.forName(token.asString());</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">            if (callType == null) {</span>
 <span class="nc" id="L216">                throw new TokenizerException(token, &quot;No such call type &quot; + token.asString())</span>
 <span class="nc" id="L217">                        .setLine(tokenizer.getLine(token.getLineNo()))</span>
 <span class="nc" id="L218">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
             }
 
-<span class="nc" id="L221">            token = tokenizer.expectIdentifier(&quot;method name&quot;);</span>
-<span class="nc" id="L222">            methodName = token.asString();</span>
+<span class="fc" id="L221">            token = tokenizer.expectIdentifier(&quot;method name&quot;);</span>
+<span class="fc" id="L222">            methodName = token.asString();</span>
 
-<span class="nc" id="L224">            PServiceMethod method = service.getMethod(methodName);</span>
-<span class="nc bnc" id="L225" title="All 2 branches missed.">            if (method == null) {</span>
+<span class="fc" id="L224">            PServiceMethod method = service.getMethod(methodName);</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">            if (method == null) {</span>
 <span class="nc" id="L226">                throw new TokenizerException(token, &quot;no such method &quot; + methodName + &quot; on service &quot; + service.getQualifiedName())</span>
 <span class="nc" id="L227">                        .setLine(tokenizer.getLine(token.getLineNo()))</span>
 <span class="nc" id="L228">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
 
-<span class="nc" id="L231">            tokenizer.expectSymbol(&quot;call params start&quot;, Token.kMethodStart);</span>
-<span class="nc" id="L232">            tokenizer.expectSymbol(&quot;message encloser&quot;, Token.kMessageStart);</span>
+<span class="fc" id="L231">            tokenizer.expectSymbol(&quot;call params start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L232">            tokenizer.expectSymbol(&quot;message encloser&quot;, Token.kMessageStart);</span>
 
             Message message;
-<span class="pc bnc" id="L235" title="All 4 branches missed.">            switch (callType) {</span>
+<span class="pc bpc" id="L235" title="1 of 4 branches missed.">            switch (callType) {</span>
                 case CALL:
                 case ONEWAY:
-<span class="nc" id="L238">                    message = (Message) readMessage(tokenizer, method.getRequestType(), true);</span>
-<span class="nc" id="L239">                    break;</span>
+<span class="fc" id="L238">                    message = (Message) readMessage(tokenizer, method.getRequestType(), true);</span>
+<span class="fc" id="L239">                    break;</span>
                 case REPLY:
-<span class="nc" id="L241">                    message = (Message) readMessage(tokenizer, method.getResponseType(), true);</span>
-<span class="nc" id="L242">                    break;</span>
+<span class="fc" id="L241">                    message = (Message) readMessage(tokenizer, method.getResponseType(), true);</span>
+<span class="fc" id="L242">                    break;</span>
                 case EXCEPTION:
-<span class="nc" id="L244">                    message = (Message) readMessage(tokenizer, PApplicationException.kDescriptor, true);</span>
-<span class="nc" id="L245">                    break;</span>
+<span class="fc" id="L244">                    message = (Message) readMessage(tokenizer, PApplicationException.kDescriptor, true);</span>
+<span class="fc" id="L245">                    break;</span>
                 default:
 <span class="nc" id="L247">                    throw new IllegalStateException(&quot;Unreachable code reached&quot;);</span>
             }
 
-<span class="nc" id="L250">            tokenizer.expectSymbol(&quot;Call params closing&quot;, Token.kMethodEnd);</span>
+<span class="fc" id="L250">            tokenizer.expectSymbol(&quot;Call params closing&quot;, Token.kParamsEnd);</span>
 
-<span class="nc" id="L252">            return new PServiceCall&lt;&gt;(methodName, callType, sequence, message);</span>
+<span class="fc" id="L252">            return new PServiceCall&lt;&gt;(methodName, callType, sequence, message);</span>
 <span class="nc" id="L253">        } catch (TokenizerException e) {</span>
 <span class="nc" id="L254">            throw new TokenizerException(e, null)</span>
 <span class="nc" id="L255">                    .setCallType(callType)</span>
@@ -314,471 +314,468 @@ public class PrettySerializer extends Serializer {
 <span class="fc" id="L314">            tokenizer.expectSymbol(&quot;field value separator&quot;, Token.kFieldValueSep);</span>
 
 <span class="fc" id="L316">            PField field = descriptor.getField(token.asString());</span>
-<span class="pc bpc" id="L317" title="1 of 2 branches missed.">            if (field == null) {</span>
-<span class="nc bnc" id="L318" title="All 2 branches missed.">                if (strict) {</span>
-<span class="nc" id="L319">                    throw new TokenizerException(token, &quot;No such field %s on %s&quot;, token.asString(), descriptor.getQualifiedName()).setLine(tokenizer.getLine(token.getLineNo()));</span>
-                }
-<span class="nc" id="L321">                consumeValue(tokenizer, tokenizer.expect(&quot;field value&quot;));</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">            if (field == null) {</span>
+<span class="fc" id="L318">                consumeValue(tokenizer, tokenizer.expect(&quot;field value&quot;));</span>
             } else {
-<span class="fc" id="L323">                builder.set(field.getKey(), readFieldValue(</span>
-<span class="fc" id="L324">                        tokenizer, tokenizer.expect(&quot;field value&quot;), field.getDescriptor()));</span>
+<span class="fc" id="L320">                builder.set(field.getKey(), readFieldValue(</span>
+<span class="fc" id="L321">                        tokenizer, tokenizer.expect(&quot;field value&quot;), field.getDescriptor()));</span>
             }
 
-<span class="fc" id="L327">            token = tokenizer.peek();</span>
-<span class="pc bpc" id="L328" title="1 of 6 branches missed.">            if (token != null &amp;&amp; (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2))) {</span>
-<span class="fc" id="L329">                tokenizer.next();</span>
+<span class="fc" id="L324">            token = tokenizer.peek();</span>
+<span class="pc bpc" id="L325" title="1 of 6 branches missed.">            if (token != null &amp;&amp; (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2))) {</span>
+<span class="fc" id="L326">                tokenizer.next();</span>
             }
-<span class="fc" id="L331">            token = tokenizer.next();</span>
-<span class="fc" id="L332">        }</span>
-<span class="fc" id="L333">        return builder.build();</span>
+<span class="fc" id="L328">            token = tokenizer.next();</span>
+<span class="fc" id="L329">        }</span>
+<span class="fc" id="L330">        return builder.build();</span>
     }
 
     private Object readFieldValue(Tokenizer tokenizer, Token token, PDescriptor descriptor) throws IOException {
-<span class="pc bpc" id="L337" title="2 of 15 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L334" title="2 of 15 branches missed.">        switch (descriptor.getType()) {</span>
             case VOID: {
                 // Even void fields needs a value token...
                 // Allow any boolean true value that is an _identifier_. No numbers here.
-<span class="nc bnc" id="L341" title="All 15 branches missed.">                switch (token.asString().toLowerCase()) {</span>
+<span class="nc bnc" id="L338" title="All 15 branches missed.">                switch (token.asString().toLowerCase()) {</span>
                     case &quot;t&quot;:
                     case &quot;true&quot;:
                     case &quot;y&quot;:
                     case &quot;yes&quot;:
-<span class="nc" id="L346">                        return Boolean.TRUE;</span>
+<span class="nc" id="L343">                        return Boolean.TRUE;</span>
                 }
-<span class="nc" id="L348">                throw new TokenizerException(token, &quot;Invalid void value &quot; + token.asString())</span>
-<span class="nc" id="L349">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L345">                throw new TokenizerException(token, &quot;Invalid void value &quot; + token.asString())</span>
+<span class="nc" id="L346">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
             }
             case BOOL: {
-<span class="pc bpc" id="L352" title="28 of 34 branches missed.">                switch (token.asString().toLowerCase()) {</span>
+<span class="pc bpc" id="L349" title="28 of 34 branches missed.">                switch (token.asString().toLowerCase()) {</span>
                     case &quot;1&quot;:
                     case &quot;t&quot;:
                     case &quot;true&quot;:
                     case &quot;y&quot;:
                     case &quot;yes&quot;:
-<span class="fc" id="L358">                        return Boolean.TRUE;</span>
+<span class="fc" id="L355">                        return Boolean.TRUE;</span>
                     case &quot;0&quot;:
                     case &quot;f&quot;:
                     case &quot;false&quot;:
                     case &quot;n&quot;:
                     case &quot;no&quot;:
-<span class="fc" id="L364">                        return Boolean.FALSE;</span>
+<span class="fc" id="L361">                        return Boolean.FALSE;</span>
                 }
-<span class="nc" id="L366">                throw new TokenizerException(token, &quot;Invalid boolean value &quot; + token.asString())</span>
-<span class="nc" id="L367">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L363">                throw new TokenizerException(token, &quot;Invalid boolean value &quot; + token.asString())</span>
+<span class="nc" id="L364">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
 
             }
             case BYTE: {
-<span class="pc bpc" id="L371" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
-<span class="fc" id="L372">                    long val = token.parseInteger();</span>
-<span class="pc bpc" id="L373" title="2 of 4 branches missed.">                    if (val &gt; Byte.MAX_VALUE || val &lt; Byte.MIN_VALUE) {</span>
-<span class="nc" id="L374">                        throw new TokenizerException(token, &quot;Byte value out of bounds: &quot; + token.asString())</span>
-<span class="nc" id="L375">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
+<span class="fc" id="L369">                    long val = token.parseInteger();</span>
+<span class="pc bpc" id="L370" title="2 of 4 branches missed.">                    if (val &gt; Byte.MAX_VALUE || val &lt; Byte.MIN_VALUE) {</span>
+<span class="nc" id="L371">                        throw new TokenizerException(token, &quot;Byte value out of bounds: &quot; + token.asString())</span>
+<span class="nc" id="L372">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
                     }
-<span class="fc" id="L377">                    return (byte) val;</span>
+<span class="fc" id="L374">                    return (byte) val;</span>
                 } else {
-<span class="nc" id="L379">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
-<span class="nc" id="L380">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L376">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
+<span class="nc" id="L377">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
             }
             case I16: {
-<span class="pc bpc" id="L384" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
-<span class="fc" id="L385">                    long val = token.parseInteger();</span>
-<span class="pc bpc" id="L386" title="2 of 4 branches missed.">                    if (val &gt; Short.MAX_VALUE || val &lt; Short.MIN_VALUE) {</span>
-<span class="nc" id="L387">                        throw new TokenizerException(token, &quot;Short value out of bounds: &quot; + token.asString())</span>
-<span class="nc" id="L388">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L381" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
+<span class="fc" id="L382">                    long val = token.parseInteger();</span>
+<span class="pc bpc" id="L383" title="2 of 4 branches missed.">                    if (val &gt; Short.MAX_VALUE || val &lt; Short.MIN_VALUE) {</span>
+<span class="nc" id="L384">                        throw new TokenizerException(token, &quot;Short value out of bounds: &quot; + token.asString())</span>
+<span class="nc" id="L385">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
                     }
-<span class="fc" id="L390">                    return (short) val;</span>
+<span class="fc" id="L387">                    return (short) val;</span>
                 } else {
-<span class="nc" id="L392">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
-<span class="nc" id="L393">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L389">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
+<span class="nc" id="L390">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
             }
             case I32: {
-<span class="pc bpc" id="L397" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
-<span class="fc" id="L398">                    long val = token.parseInteger();</span>
-<span class="pc bpc" id="L399" title="2 of 4 branches missed.">                    if (val &gt; Integer.MAX_VALUE || val &lt; Integer.MIN_VALUE) {</span>
-<span class="nc" id="L400">                        throw new TokenizerException(token, &quot;Integer value out of bounds: &quot; + token.asString())</span>
-<span class="nc" id="L401">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
+<span class="fc" id="L395">                    long val = token.parseInteger();</span>
+<span class="pc bpc" id="L396" title="2 of 4 branches missed.">                    if (val &gt; Integer.MAX_VALUE || val &lt; Integer.MIN_VALUE) {</span>
+<span class="nc" id="L397">                        throw new TokenizerException(token, &quot;Integer value out of bounds: &quot; + token.asString())</span>
+<span class="nc" id="L398">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
                     }
-<span class="fc" id="L403">                    return (int) val;</span>
+<span class="fc" id="L400">                    return (int) val;</span>
                 } else {
-<span class="nc" id="L405">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
-<span class="nc" id="L406">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L402">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
+<span class="nc" id="L403">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
             }
             case I64: {
-<span class="pc bpc" id="L410" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
-<span class="fc" id="L411">                    return token.parseInteger();</span>
+<span class="pc bpc" id="L407" title="1 of 2 branches missed.">                if (token.isInteger()) {</span>
+<span class="fc" id="L408">                    return token.parseInteger();</span>
                 } else {
-<span class="nc" id="L413">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
-<span class="nc" id="L414">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L410">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
+<span class="nc" id="L411">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
             }
             case DOUBLE: {
                 try {
-<span class="fc" id="L419">                    return token.parseDouble();</span>
-<span class="nc" id="L420">                } catch (NumberFormatException nfe) {</span>
-<span class="nc" id="L421">                    throw new TokenizerException(token, &quot;Number format error: &quot; + nfe.getMessage())</span>
-<span class="nc" id="L422">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L416">                    return token.parseDouble();</span>
+<span class="nc" id="L417">                } catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L418">                    throw new TokenizerException(token, &quot;Number format error: &quot; + nfe.getMessage())</span>
+<span class="nc" id="L419">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
             }
             case STRING: {
-<span class="pc bpc" id="L426" title="1 of 2 branches missed.">                if (!token.isStringLiteral()) {</span>
-<span class="nc" id="L427">                    throw new TokenizerException(token, &quot;Expected string literal, got '%s'&quot;, token.asString())</span>
-<span class="nc" id="L428">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L423" title="1 of 2 branches missed.">                if (!token.isStringLiteral()) {</span>
+<span class="nc" id="L424">                    throw new TokenizerException(token, &quot;Expected string literal, got '%s'&quot;, token.asString())</span>
+<span class="nc" id="L425">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
-<span class="fc" id="L430">                return token.decodeLiteral();</span>
+<span class="fc" id="L427">                return token.decodeLiteral(strict);</span>
             }
             case BINARY: {
-<span class="fc" id="L433">                tokenizer.expectSymbol(&quot;binary content start&quot;, Token.kMethodStart);</span>
-<span class="fc" id="L434">                String content = tokenizer.readBinary(Token.kMethodEnd);</span>
-<span class="pc bpc" id="L435" title="7 of 10 branches missed.">                switch (token.asString()) {</span>
+<span class="fc" id="L430">                tokenizer.expectSymbol(&quot;binary content start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L431">                String content = tokenizer.readBinary(Token.kParamsEnd);</span>
+<span class="pc bpc" id="L432" title="7 of 10 branches missed.">                switch (token.asString()) {</span>
                     case &quot;b64&quot;:
-<span class="fc" id="L437">                        return Binary.fromBase64(content);</span>
+<span class="fc" id="L434">                        return Binary.fromBase64(content);</span>
                     case &quot;hex&quot;:
-<span class="nc" id="L439">                        return Binary.fromHexString(content);</span>
+<span class="nc" id="L436">                        return Binary.fromHexString(content);</span>
                     default:
-<span class="nc" id="L441">                        throw new TokenizerException(token, &quot;Unrecognized binary format &quot; + token.asString())</span>
-<span class="nc" id="L442">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L438">                        throw new TokenizerException(token, &quot;Unrecognized binary format &quot; + token.asString())</span>
+<span class="nc" id="L439">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
             }
             case ENUM: {
-<span class="fc" id="L446">                PEnumBuilder b = ((PEnumDescriptor) descriptor).builder();</span>
-<span class="fc" id="L447">                b.setByName(token.asString());</span>
-<span class="pc bpc" id="L448" title="1 of 4 branches missed.">                if (strict &amp;&amp; !b.valid()) {</span>
-<span class="nc" id="L449">                    throw new TokenizerException(token, &quot;No such &quot; + descriptor.getQualifiedName() + &quot; value &quot; + token.asString())</span>
-<span class="nc" id="L450">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L443">                PEnumBuilder b = ((PEnumDescriptor) descriptor).builder();</span>
+<span class="fc" id="L444">                b.setByName(token.asString());</span>
+<span class="pc bpc" id="L445" title="1 of 4 branches missed.">                if (strict &amp;&amp; !b.valid()) {</span>
+<span class="nc" id="L446">                    throw new TokenizerException(token, &quot;No such &quot; + descriptor.getQualifiedName() + &quot; value &quot; + token.asString())</span>
+<span class="nc" id="L447">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
-<span class="fc" id="L452">                return b.build();</span>
+<span class="fc" id="L449">                return b.build();</span>
             }
             case MESSAGE: {
-<span class="pc bpc" id="L455" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
-<span class="nc" id="L456">                    throw new TokenizerException(token, &quot;Expected message start, got '%s'&quot;, token.asString())</span>
-<span class="nc" id="L457">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L452" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L453">                    throw new TokenizerException(token, &quot;Expected message start, got '%s'&quot;, token.asString())</span>
+<span class="nc" id="L454">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
-<span class="fc" id="L459">                return readMessage(tokenizer, (PMessageDescriptor&lt;?, ?&gt;) descriptor, true);</span>
+<span class="fc" id="L456">                return readMessage(tokenizer, (PMessageDescriptor&lt;?, ?&gt;) descriptor, true);</span>
             }
             case MAP: {
-<span class="pc bpc" id="L462" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
-<span class="nc" id="L463">                    throw new TokenizerException(token, &quot;Expected map start, got '%s'&quot;, token.asString())</span>
-<span class="nc" id="L464">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L460">                    throw new TokenizerException(token, &quot;Expected map start, got '%s'&quot;, token.asString())</span>
+<span class="nc" id="L461">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L467">                PMap&lt;Object, Object&gt; pMap = (PMap) descriptor;</span>
-<span class="fc" id="L468">                PDescriptor kDesc = pMap.keyDescriptor();</span>
-<span class="fc" id="L469">                PDescriptor iDesc = pMap.itemDescriptor();</span>
+<span class="fc" id="L464">                PMap&lt;Object, Object&gt; pMap = (PMap) descriptor;</span>
+<span class="fc" id="L465">                PDescriptor kDesc = pMap.keyDescriptor();</span>
+<span class="fc" id="L466">                PDescriptor iDesc = pMap.itemDescriptor();</span>
 
-<span class="fc" id="L471">                PMap.Builder&lt;Object, Object&gt; builder = pMap.builder();</span>
+<span class="fc" id="L468">                PMap.Builder&lt;Object, Object&gt; builder = pMap.builder();</span>
 
-<span class="fc" id="L473">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
-<span class="fc bfc" id="L474" title="All 2 branches covered.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
-<span class="fc" id="L475">                    Object key = readFieldValue(tokenizer, token, kDesc);</span>
-<span class="fc" id="L476">                    tokenizer.expectSymbol(&quot;map kv sep&quot;, Token.kKeyValueSep);</span>
-<span class="fc" id="L477">                    Object value = readFieldValue(tokenizer, tokenizer.expect(&quot;map value&quot;), iDesc);</span>
-<span class="fc" id="L478">                    builder.put(key, value);</span>
-<span class="fc" id="L479">                    token = tokenizer.expect(&quot;map sep, end or value&quot;);</span>
-<span class="fc bfc" id="L480" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
-<span class="fc" id="L481">                        token = tokenizer.expect(&quot;map end or value&quot;);</span>
+<span class="fc" id="L470">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
+<span class="fc bfc" id="L471" title="All 2 branches covered.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L472">                    Object key = readFieldValue(tokenizer, token, kDesc);</span>
+<span class="fc" id="L473">                    tokenizer.expectSymbol(&quot;map kv sep&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L474">                    Object value = readFieldValue(tokenizer, tokenizer.expect(&quot;map value&quot;), iDesc);</span>
+<span class="fc" id="L475">                    builder.put(key, value);</span>
+<span class="fc" id="L476">                    token = tokenizer.expect(&quot;map sep, end or value&quot;);</span>
+<span class="fc bfc" id="L477" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="fc" id="L478">                        token = tokenizer.expect(&quot;map end or value&quot;);</span>
                     }
-<span class="fc" id="L483">                }</span>
-<span class="fc" id="L484">                return builder.build();</span>
+<span class="fc" id="L480">                }</span>
+<span class="fc" id="L481">                return builder.build();</span>
             }
             case LIST: {
-<span class="pc bpc" id="L487" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kListStart)) {</span>
-<span class="nc" id="L488">                    throw new TokenizerException(token, &quot;Expected list start, got '%s'&quot;, token.asString())</span>
-<span class="nc" id="L489">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L484" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kListStart)) {</span>
+<span class="nc" id="L485">                    throw new TokenizerException(token, &quot;Expected list start, got '%s'&quot;, token.asString())</span>
+<span class="nc" id="L486">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L492">                PList&lt;Object&gt; pList = (PList) descriptor;</span>
-<span class="fc" id="L493">                PDescriptor iDesc = pList.itemDescriptor();</span>
+<span class="fc" id="L489">                PList&lt;Object&gt; pList = (PList) descriptor;</span>
+<span class="fc" id="L490">                PDescriptor iDesc = pList.itemDescriptor();</span>
 
-<span class="fc" id="L495">                PList.Builder&lt;Object&gt; builder = pList.builder();</span>
+<span class="fc" id="L492">                PList.Builder&lt;Object&gt; builder = pList.builder();</span>
 
-<span class="fc" id="L497">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
-<span class="fc bfc" id="L498" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
-<span class="fc" id="L499">                    builder.add(readFieldValue(tokenizer, token, iDesc));</span>
-<span class="fc" id="L500">                    token = tokenizer.expect(&quot;list sep, end or value&quot;);</span>
-<span class="fc bfc" id="L501" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
-<span class="fc" id="L502">                        token = tokenizer.expect(&quot;list end or value&quot;);</span>
+<span class="fc" id="L494">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
+<span class="fc bfc" id="L495" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L496">                    builder.add(readFieldValue(tokenizer, token, iDesc));</span>
+<span class="fc" id="L497">                    token = tokenizer.expect(&quot;list sep, end or value&quot;);</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="fc" id="L499">                        token = tokenizer.expect(&quot;list end or value&quot;);</span>
                     }
                 }
 
-<span class="fc" id="L506">                return builder.build();</span>
+<span class="fc" id="L503">                return builder.build();</span>
             }
             case SET: {
-<span class="pc bpc" id="L509" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kListStart)) {</span>
-<span class="nc" id="L510">                    throw new TokenizerException(token, &quot;Expected set start, got '%s'&quot;, token.asString())</span>
-<span class="nc" id="L511">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L506" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kListStart)) {</span>
+<span class="nc" id="L507">                    throw new TokenizerException(token, &quot;Expected set start, got '%s'&quot;, token.asString())</span>
+<span class="nc" id="L508">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L514">                PSet&lt;Object&gt; pList = (PSet) descriptor;</span>
-<span class="fc" id="L515">                PDescriptor iDesc = pList.itemDescriptor();</span>
+<span class="fc" id="L511">                PSet&lt;Object&gt; pList = (PSet) descriptor;</span>
+<span class="fc" id="L512">                PDescriptor iDesc = pList.itemDescriptor();</span>
 
-<span class="fc" id="L517">                PSet.Builder&lt;Object&gt; builder = pList.builder();</span>
+<span class="fc" id="L514">                PSet.Builder&lt;Object&gt; builder = pList.builder();</span>
 
-<span class="fc" id="L519">                token = tokenizer.expect(&quot;set end or value&quot;);</span>
-<span class="fc bfc" id="L520" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
-<span class="fc" id="L521">                    builder.add(readFieldValue(tokenizer, token, iDesc));</span>
-<span class="fc" id="L522">                    token = tokenizer.expect(&quot;set sep, end or value&quot;);</span>
-<span class="fc bfc" id="L523" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
-<span class="fc" id="L524">                        token = tokenizer.expect(&quot;set end or value&quot;);</span>
+<span class="fc" id="L516">                token = tokenizer.expect(&quot;set end or value&quot;);</span>
+<span class="fc bfc" id="L517" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L518">                    builder.add(readFieldValue(tokenizer, token, iDesc));</span>
+<span class="fc" id="L519">                    token = tokenizer.expect(&quot;set sep, end or value&quot;);</span>
+<span class="fc bfc" id="L520" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="fc" id="L521">                        token = tokenizer.expect(&quot;set end or value&quot;);</span>
                     }
                 }
 
-<span class="fc" id="L528">                return builder.build();</span>
+<span class="fc" id="L525">                return builder.build();</span>
             }
             default: {
-<span class="nc" id="L531">                throw new IllegalStateException(&quot;Unhandled field type: &quot; + descriptor.getType());</span>
+<span class="nc" id="L528">                throw new IllegalStateException(&quot;Unhandled field type: &quot; + descriptor.getType());</span>
             }
         }
     }
 
     @Override
     public boolean binaryProtocol() {
-<span class="fc" id="L538">        return false;</span>
+<span class="fc" id="L535">        return false;</span>
     }
 
     @Override
     public String mimeType() {
-<span class="nc" id="L543">        return MIME_TYPE;</span>
+<span class="nc" id="L540">        return MIME_TYPE;</span>
     }
 
     private void appendMessage(IndentedPrintWriter builder, PMessage&lt;?,?&gt; message, boolean enclose) {
-<span class="fc" id="L547">        PMessageDescriptor&lt;?, ?&gt; type = message.descriptor();</span>
+<span class="fc" id="L544">        PMessageDescriptor&lt;?, ?&gt; type = message.descriptor();</span>
 
-<span class="fc bfc" id="L549" title="All 2 branches covered.">        if (enclose) {</span>
-<span class="fc" id="L550">            builder.append(Token.kMessageStart)</span>
-<span class="fc" id="L551">                   .begin();</span>
+<span class="fc bfc" id="L546" title="All 2 branches covered.">        if (enclose) {</span>
+<span class="fc" id="L547">            builder.append(Token.kMessageStart)</span>
+<span class="fc" id="L548">                   .begin();</span>
         }
 
-<span class="fc bfc" id="L554" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
-<span class="fc" id="L555">            PField field = ((PUnion) message).unionField();</span>
-<span class="pc bpc" id="L556" title="1 of 2 branches missed.">            if (field != null) {</span>
-<span class="fc" id="L557">                Object o = message.get(field.getKey());</span>
+<span class="fc bfc" id="L551" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
+<span class="fc" id="L552">            PField field = ((PUnion) message).unionField();</span>
+<span class="pc bpc" id="L553" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="fc" id="L554">                Object o = message.get(field.getKey());</span>
 
-<span class="pc bpc" id="L559" title="1 of 2 branches missed.">                if (enclose) {</span>
-<span class="fc" id="L560">                    builder.appendln();</span>
+<span class="pc bpc" id="L556" title="1 of 2 branches missed.">                if (enclose) {</span>
+<span class="fc" id="L557">                    builder.appendln();</span>
                 }
 
-<span class="fc" id="L563">                builder.append(field.getName())</span>
-<span class="fc" id="L564">                       .append(space)</span>
-<span class="fc" id="L565">                       .append(Token.kFieldValueSep)</span>
-<span class="fc" id="L566">                       .append(space);</span>
-<span class="fc" id="L567">                appendTypedValue(builder, field.getDescriptor(), o);</span>
+<span class="fc" id="L560">                builder.append(field.getName())</span>
+<span class="fc" id="L561">                       .append(space)</span>
+<span class="fc" id="L562">                       .append(Token.kFieldValueSep)</span>
+<span class="fc" id="L563">                       .append(space);</span>
+<span class="fc" id="L564">                appendTypedValue(builder, field.getDescriptor(), o);</span>
             }
-<span class="fc" id="L569">        } else {</span>
-<span class="fc" id="L570">            boolean first = true;</span>
-<span class="fc bfc" id="L571" title="All 2 branches covered.">            for (PField field : type.getFields()) {</span>
-<span class="fc bfc" id="L572" title="All 2 branches covered.">                if (message.has(field.getKey())) {</span>
-<span class="fc bfc" id="L573" title="All 2 branches covered.">                    if (first) {</span>
-<span class="fc" id="L574">                        first = false;</span>
-<span class="fc bfc" id="L575" title="All 2 branches covered.">                        if (enclose) {</span>
-<span class="fc" id="L576">                            builder.appendln();</span>
+<span class="fc" id="L566">        } else {</span>
+<span class="fc" id="L567">            boolean first = true;</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">            for (PField field : type.getFields()) {</span>
+<span class="fc bfc" id="L569" title="All 2 branches covered.">                if (message.has(field.getKey())) {</span>
+<span class="fc bfc" id="L570" title="All 2 branches covered.">                    if (first) {</span>
+<span class="fc" id="L571">                        first = false;</span>
+<span class="fc bfc" id="L572" title="All 2 branches covered.">                        if (enclose) {</span>
+<span class="fc" id="L573">                            builder.appendln();</span>
                         }
                     } else {
-<span class="fc" id="L579">                        builder.append(entrySep);</span>
-<span class="fc" id="L580">                        builder.appendln();</span>
+<span class="fc" id="L576">                        builder.append(entrySep);</span>
+<span class="fc" id="L577">                        builder.appendln();</span>
                     }
-<span class="fc" id="L582">                    Object o = message.get(field.getKey());</span>
+<span class="fc" id="L579">                    Object o = message.get(field.getKey());</span>
 
-<span class="fc" id="L584">                    builder.append(field.getName())</span>
-<span class="fc" id="L585">                           .append(space)</span>
-<span class="fc" id="L586">                           .append(Token.kFieldValueSep)</span>
-<span class="fc" id="L587">                           .append(space);</span>
-<span class="fc" id="L588">                    appendTypedValue(builder, field.getDescriptor(), o);</span>
+<span class="fc" id="L581">                    builder.append(field.getName())</span>
+<span class="fc" id="L582">                           .append(space)</span>
+<span class="fc" id="L583">                           .append(Token.kFieldValueSep)</span>
+<span class="fc" id="L584">                           .append(space);</span>
+<span class="fc" id="L585">                    appendTypedValue(builder, field.getDescriptor(), o);</span>
                 }
             }
         }
 
-<span class="fc bfc" id="L593" title="All 2 branches covered.">        if (enclose) {</span>
-<span class="fc" id="L594">            builder.end()</span>
-<span class="fc" id="L595">                   .appendln(Token.kMessageEnd);</span>
+<span class="fc bfc" id="L590" title="All 2 branches covered.">        if (enclose) {</span>
+<span class="fc" id="L591">            builder.end()</span>
+<span class="fc" id="L592">                   .appendln(Token.kMessageEnd);</span>
         }
-<span class="fc" id="L597">    }</span>
+<span class="fc" id="L594">    }</span>
 
     private void appendTypedValue(IndentedPrintWriter writer, PDescriptor descriptor, Object o) {
-<span class="pc bpc" id="L600" title="1 of 5 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L597" title="1 of 5 branches missed.">        switch (descriptor.getType()) {</span>
             case LIST:
             case SET: {
-<span class="fc" id="L603">                PContainer&lt;?&gt; containerType = (PContainer&lt;?&gt;) descriptor;</span>
-<span class="fc" id="L604">                PDescriptor itemType = containerType.itemDescriptor();</span>
-<span class="fc" id="L605">                Collection&lt;?&gt; collection = (Collection&lt;?&gt;) o;</span>
+<span class="fc" id="L600">                PContainer&lt;?&gt; containerType = (PContainer&lt;?&gt;) descriptor;</span>
+<span class="fc" id="L601">                PDescriptor itemType = containerType.itemDescriptor();</span>
+<span class="fc" id="L602">                Collection&lt;?&gt; collection = (Collection&lt;?&gt;) o;</span>
 
-<span class="fc" id="L607">                PPrimitive primitive = PPrimitive.findByName(itemType.getName());</span>
-<span class="fc bfc" id="L608" title="All 6 branches covered.">                if (primitive != null &amp;&amp;</span>
+<span class="fc" id="L604">                PPrimitive primitive = PPrimitive.findByName(itemType.getName());</span>
+<span class="fc bfc" id="L605" title="All 6 branches covered.">                if (primitive != null &amp;&amp;</span>
                     primitive != PPrimitive.STRING &amp;&amp;
                     primitive != PPrimitive.BINARY &amp;&amp;
-<span class="pc bpc" id="L611" title="1 of 2 branches missed.">                    collection.size() &lt;= 10) {</span>
+<span class="pc bpc" id="L608" title="1 of 2 branches missed.">                    collection.size() &lt;= 10) {</span>
                     // special case if we have simple primitives (numbers and bools) in a &quot;short&quot; list,
                     // print in one single line.
-<span class="fc" id="L614">                    writer.append(Token.kListStart);</span>
+<span class="fc" id="L611">                    writer.append(Token.kListStart);</span>
 
-<span class="fc" id="L616">                    boolean first = true;</span>
-<span class="fc bfc" id="L617" title="All 2 branches covered.">                    for (Object i : collection) {</span>
-<span class="fc bfc" id="L618" title="All 2 branches covered.">                        if (first) {</span>
-<span class="fc" id="L619">                            first = false;</span>
+<span class="fc" id="L613">                    boolean first = true;</span>
+<span class="fc bfc" id="L614" title="All 2 branches covered.">                    for (Object i : collection) {</span>
+<span class="fc bfc" id="L615" title="All 2 branches covered.">                        if (first) {</span>
+<span class="fc" id="L616">                            first = false;</span>
                         } else {
                             // Lists are always comma-delimited
-<span class="fc" id="L622">                            writer.append(Token.kLineSep1)</span>
-<span class="fc" id="L623">                                  .append(space);</span>
+<span class="fc" id="L619">                            writer.append(Token.kLineSep1)</span>
+<span class="fc" id="L620">                                  .append(space);</span>
                         }
-<span class="fc" id="L625">                        appendTypedValue(writer, containerType.itemDescriptor(), i);</span>
-<span class="fc" id="L626">                    }</span>
-<span class="fc" id="L627">                    writer.append(Token.kListEnd);</span>
-<span class="fc" id="L628">                } else {</span>
-<span class="fc" id="L629">                    writer.append(Token.kListStart)</span>
-<span class="fc" id="L630">                          .begin();</span>
+<span class="fc" id="L622">                        appendTypedValue(writer, containerType.itemDescriptor(), i);</span>
+<span class="fc" id="L623">                    }</span>
+<span class="fc" id="L624">                    writer.append(Token.kListEnd);</span>
+<span class="fc" id="L625">                } else {</span>
+<span class="fc" id="L626">                    writer.append(Token.kListStart)</span>
+<span class="fc" id="L627">                          .begin();</span>
 
-<span class="fc" id="L632">                    boolean first = true;</span>
-<span class="fc bfc" id="L633" title="All 2 branches covered.">                    for (Object i : collection) {</span>
-<span class="fc bfc" id="L634" title="All 2 branches covered.">                        if (first) {</span>
-<span class="fc" id="L635">                            first = false;</span>
+<span class="fc" id="L629">                    boolean first = true;</span>
+<span class="fc bfc" id="L630" title="All 2 branches covered.">                    for (Object i : collection) {</span>
+<span class="fc bfc" id="L631" title="All 2 branches covered.">                        if (first) {</span>
+<span class="fc" id="L632">                            first = false;</span>
                         } else {
                             // Lists are always comma-delimited
-<span class="fc" id="L638">                            writer.append(Token.kLineSep1);</span>
+<span class="fc" id="L635">                            writer.append(Token.kLineSep1);</span>
                         }
-<span class="fc" id="L640">                        writer.appendln();</span>
-<span class="fc" id="L641">                        appendTypedValue(writer, containerType.itemDescriptor(), i);</span>
-<span class="fc" id="L642">                    }</span>
+<span class="fc" id="L637">                        writer.appendln();</span>
+<span class="fc" id="L638">                        appendTypedValue(writer, containerType.itemDescriptor(), i);</span>
+<span class="fc" id="L639">                    }</span>
 
-<span class="fc" id="L644">                    writer.end()</span>
-<span class="fc" id="L645">                          .appendln(Token.kListEnd);</span>
+<span class="fc" id="L641">                    writer.end()</span>
+<span class="fc" id="L642">                          .appendln(Token.kListEnd);</span>
                 }
-<span class="fc" id="L647">                break;</span>
+<span class="fc" id="L644">                break;</span>
             }
             case MAP: {
-<span class="fc" id="L650">                PMap&lt;?, ?&gt; mapType = (PMap&lt;?, ?&gt;) descriptor;</span>
+<span class="fc" id="L647">                PMap&lt;?, ?&gt; mapType = (PMap&lt;?, ?&gt;) descriptor;</span>
 
-<span class="fc" id="L652">                Map&lt;?, ?&gt; map = (Map&lt;?, ?&gt;) o;</span>
+<span class="fc" id="L649">                Map&lt;?, ?&gt; map = (Map&lt;?, ?&gt;) o;</span>
 
-<span class="fc" id="L654">                writer.append(Token.kMessageStart)</span>
-<span class="fc" id="L655">                      .begin();</span>
+<span class="fc" id="L651">                writer.append(Token.kMessageStart)</span>
+<span class="fc" id="L652">                      .begin();</span>
 
-<span class="fc" id="L657">                boolean first = true;</span>
-<span class="fc bfc" id="L658" title="All 2 branches covered.">                for (Map.Entry&lt;?, ?&gt; entry : map.entrySet()) {</span>
-<span class="fc bfc" id="L659" title="All 2 branches covered.">                    if (first) {</span>
-<span class="fc" id="L660">                        first = false;</span>
+<span class="fc" id="L654">                boolean first = true;</span>
+<span class="fc bfc" id="L655" title="All 2 branches covered.">                for (Map.Entry&lt;?, ?&gt; entry : map.entrySet()) {</span>
+<span class="fc bfc" id="L656" title="All 2 branches covered.">                    if (first) {</span>
+<span class="fc" id="L657">                        first = false;</span>
                     } else {
-<span class="fc" id="L662">                        writer.append(entrySep);</span>
+<span class="fc" id="L659">                        writer.append(entrySep);</span>
                     }
-<span class="fc" id="L664">                    writer.appendln();</span>
-<span class="fc" id="L665">                    appendTypedValue(writer, mapType.keyDescriptor(), entry.getKey());</span>
-<span class="fc" id="L666">                    writer.append(Token.kKeyValueSep)</span>
-<span class="fc" id="L667">                          .append(space);</span>
-<span class="fc" id="L668">                    appendTypedValue(writer, mapType.itemDescriptor(), entry.getValue());</span>
-<span class="fc" id="L669">                }</span>
+<span class="fc" id="L661">                    writer.appendln();</span>
+<span class="fc" id="L662">                    appendTypedValue(writer, mapType.keyDescriptor(), entry.getKey());</span>
+<span class="fc" id="L663">                    writer.append(Token.kKeyValueSep)</span>
+<span class="fc" id="L664">                          .append(space);</span>
+<span class="fc" id="L665">                    appendTypedValue(writer, mapType.itemDescriptor(), entry.getValue());</span>
+<span class="fc" id="L666">                }</span>
 
-<span class="fc" id="L671">                writer.end()</span>
-<span class="fc" id="L672">                      .appendln(Token.kMessageEnd);</span>
-<span class="fc" id="L673">                break;</span>
+<span class="fc" id="L668">                writer.end()</span>
+<span class="fc" id="L669">                      .appendln(Token.kMessageEnd);</span>
+<span class="fc" id="L670">                break;</span>
             }
             case VOID:
-<span class="nc" id="L676">                writer.print(true);</span>
-<span class="nc" id="L677">                break;</span>
+<span class="nc" id="L673">                writer.print(true);</span>
+<span class="nc" id="L674">                break;</span>
             case MESSAGE:
-<span class="fc" id="L679">                PMessage&lt;?,?&gt; message = (PMessage&lt;?, ?&gt;) o;</span>
-<span class="fc" id="L680">                appendMessage(writer, message, true);</span>
-<span class="fc" id="L681">                break;</span>
+<span class="fc" id="L676">                PMessage&lt;?,?&gt; message = (PMessage&lt;?, ?&gt;) o;</span>
+<span class="fc" id="L677">                appendMessage(writer, message, true);</span>
+<span class="fc" id="L678">                break;</span>
             default:
-<span class="fc" id="L683">                appendPrimitive(writer, o);</span>
+<span class="fc" id="L680">                appendPrimitive(writer, o);</span>
                 break;
         }
-<span class="fc" id="L686">    }</span>
+<span class="fc" id="L683">    }</span>
 
     private void appendPrimitive(IndentedPrintWriter writer, Object o) {
-<span class="fc bfc" id="L689" title="All 2 branches covered.">        if (o instanceof PEnumValue) {</span>
-<span class="fc" id="L690">            writer.print(((PEnumValue) o).asString());</span>
-<span class="fc bfc" id="L691" title="All 2 branches covered.">        } else if (o instanceof CharSequence) {</span>
-<span class="fc" id="L692">            writer.print(Token.kLiteralDoubleQuote);</span>
-<span class="fc" id="L693">            writer.print(Strings.escape((CharSequence) o));</span>
-<span class="fc" id="L694">            writer.print(Token.kLiteralDoubleQuote);</span>
-<span class="fc bfc" id="L695" title="All 2 branches covered.">        } else if (o instanceof Binary) {</span>
-<span class="fc" id="L696">            Binary b = (Binary) o;</span>
-<span class="fc" id="L697">            writer.append(Token.B64)</span>
-<span class="fc" id="L698">                  .append(Token.kMethodStart)</span>
-<span class="fc" id="L699">                  .append(b.toBase64())</span>
-<span class="fc" id="L700">                  .append(Token.kMethodEnd);</span>
-<span class="fc bfc" id="L701" title="All 2 branches covered.">        } else if (o instanceof Boolean) {</span>
-<span class="fc" id="L702">            writer.print(((Boolean) o).booleanValue());</span>
-<span class="fc bfc" id="L703" title="All 8 branches covered.">        } else if (o instanceof Byte || o instanceof Short || o instanceof Integer || o instanceof Long) {</span>
-<span class="fc" id="L704">            writer.print(Strings.escape(o.toString()));</span>
-<span class="pc bpc" id="L705" title="1 of 2 branches missed.">        } else if (o instanceof Double) {</span>
-<span class="fc" id="L706">            Double d = (Double) o;</span>
-<span class="fc bfc" id="L707" title="All 2 branches covered.">            if (d == ((double) d.longValue())) {</span>
+<span class="fc bfc" id="L686" title="All 2 branches covered.">        if (o instanceof PEnumValue) {</span>
+<span class="fc" id="L687">            writer.print(((PEnumValue) o).asString());</span>
+<span class="fc bfc" id="L688" title="All 2 branches covered.">        } else if (o instanceof CharSequence) {</span>
+<span class="fc" id="L689">            writer.print(Token.kLiteralDoubleQuote);</span>
+<span class="fc" id="L690">            writer.print(Strings.escape((CharSequence) o));</span>
+<span class="fc" id="L691">            writer.print(Token.kLiteralDoubleQuote);</span>
+<span class="fc bfc" id="L692" title="All 2 branches covered.">        } else if (o instanceof Binary) {</span>
+<span class="fc" id="L693">            Binary b = (Binary) o;</span>
+<span class="fc" id="L694">            writer.append(Token.B64)</span>
+<span class="fc" id="L695">                  .append(Token.kParamsStart)</span>
+<span class="fc" id="L696">                  .append(b.toBase64())</span>
+<span class="fc" id="L697">                  .append(Token.kParamsEnd);</span>
+<span class="fc bfc" id="L698" title="All 2 branches covered.">        } else if (o instanceof Boolean) {</span>
+<span class="fc" id="L699">            writer.print(((Boolean) o).booleanValue());</span>
+<span class="fc bfc" id="L700" title="All 8 branches covered.">        } else if (o instanceof Byte || o instanceof Short || o instanceof Integer || o instanceof Long) {</span>
+<span class="fc" id="L701">            writer.print(o.toString());</span>
+<span class="pc bpc" id="L702" title="1 of 2 branches missed.">        } else if (o instanceof Double) {</span>
+<span class="fc" id="L703">            Double d = (Double) o;</span>
+<span class="fc bfc" id="L704" title="All 2 branches covered.">            if (d.equals(((double) d.longValue()))) {</span>
                 // actually an integer or long value.
-<span class="fc" id="L709">                writer.print(d.longValue());</span>
+<span class="fc" id="L706">                writer.print(d.longValue());</span>
             } else {
-<span class="fc" id="L711">                writer.print(d.doubleValue());</span>
+<span class="fc" id="L708">                writer.print(d.doubleValue());</span>
             }
-<span class="fc" id="L713">        } else {</span>
-<span class="nc" id="L714">            throw new IllegalArgumentException(&quot;Unknown primitive type class &quot; + o.getClass()</span>
-<span class="nc" id="L715">                                                                                  .getSimpleName());</span>
+<span class="fc" id="L710">        } else {</span>
+<span class="nc" id="L711">            throw new IllegalArgumentException(&quot;Unknown primitive type class &quot; + o.getClass()</span>
+<span class="nc" id="L712">                                                                                  .getSimpleName());</span>
         }
-<span class="fc" id="L717">    }</span>
+<span class="fc" id="L714">    }</span>
 
     private void consumeValue(Tokenizer tokenizer, Token token) throws IOException {
-<span class="nc bnc" id="L720" title="All 2 branches missed.">        if (token.isSymbol(Token.kMessageStart)) {</span>
+<span class="fc bfc" id="L717" title="All 2 branches covered.">        if (token.isSymbol(Token.kMessageStart)) {</span>
             // message or map.
-<span class="nc" id="L722">            token = tokenizer.expect(&quot;map or message first entry&quot;);</span>
-
-<span class="nc bnc" id="L724" title="All 4 branches missed.">            if (!token.isSymbol(Token.kMessageEnd) &amp;&amp; !token.isIdentifier()) {</span>
-                // assume map.
-<span class="nc bnc" id="L726" title="All 2 branches missed.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
-<span class="nc bnc" id="L727" title="All 4 branches missed.">                    if (token.isIdentifier() || token.isReferenceIdentifier()) {</span>
-<span class="nc" id="L728">                        throw new TokenizerException(token, &quot;Invalid map key: &quot; + token.asString())</span>
-<span class="nc" id="L729">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
-                    }
-<span class="nc" id="L731">                    consumeValue(tokenizer, token);</span>
-<span class="nc" id="L732">                    tokenizer.expectSymbol(&quot;key value sep.&quot;, Token.kKeyValueSep);</span>
-<span class="nc" id="L733">                    consumeValue(tokenizer, tokenizer.expect(&quot;map value&quot;));</span>
-
-                    // maps do *not* require separator, but allows ',' separator, and separator after last.
-<span class="nc" id="L736">                    token = tokenizer.expect(&quot;map key, end or sep&quot;);</span>
-<span class="nc bnc" id="L737" title="All 2 branches missed.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
-<span class="nc" id="L738">                        token = tokenizer.expect(&quot;map key or end&quot;);</span>
-                    }
-                }
+<span class="fc" id="L719">            token = tokenizer.expect(&quot;map or message first entry&quot;);</span>
+<span class="fc bfc" id="L720" title="All 2 branches covered.">            if (token.isSymbol(Token.kMessageEnd)) {</span>
+                // ignore, empty map or message.
             } else {
-                // assume message.
-<span class="nc bnc" id="L743" title="All 2 branches missed.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
-<span class="nc bnc" id="L744" title="All 2 branches missed.">                    if (!token.isIdentifier()) {</span>
-<span class="nc" id="L745">                        throw new TokenizerException(token, &quot;Invalid field name: &quot; + token.asString())</span>
-<span class="nc" id="L746">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
-                    }
+<span class="fc bfc" id="L723" title="All 2 branches covered.">                if (!tokenizer.peek().isSymbol(Token.kFieldValueSep)) {</span>
+                    // assume map.
+<span class="fc bfc" id="L725" title="All 2 branches covered.">                    while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L726">                        consumeValue(tokenizer, token);</span>
+<span class="fc" id="L727">                        tokenizer.expectSymbol(&quot;key value sep.&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L728">                        consumeValue(tokenizer, tokenizer.expect(&quot;map value&quot;));</span>
 
-<span class="nc" id="L749">                    tokenizer.expectSymbol(&quot;field value sep.&quot;, Token.kFieldValueSep);</span>
-<span class="nc" id="L750">                    consumeValue(tokenizer, tokenizer.next());</span>
-<span class="nc" id="L751">                    token = nextNotLineSep(tokenizer);</span>
+                        // maps do *not* require separator, but allows ',' separator, and separator after last.
+<span class="fc" id="L731">                        token = tokenizer.expect(&quot;map key, end or sep&quot;);</span>
+<span class="fc bfc" id="L732" title="All 2 branches covered.">                        if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="fc" id="L733">                            token = tokenizer.expect(&quot;map key or end&quot;);</span>
+                        }
+                    }
+                } else {
+                    // assume message.
+<span class="fc bfc" id="L738" title="All 2 branches covered.">                    while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="pc bpc" id="L739" title="1 of 2 branches missed.">                        if (!token.isIdentifier()) {</span>
+<span class="nc" id="L740">                            throw new TokenizerException(token, &quot;Invalid field name: &quot; + token.asString())</span>
+<span class="nc" id="L741">                                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                        }
+
+<span class="fc" id="L744">                        tokenizer.expectSymbol(&quot;field value sep.&quot;, Token.kFieldValueSep);</span>
+<span class="fc" id="L745">                        consumeValue(tokenizer, tokenizer.next());</span>
+<span class="fc" id="L746">                        token = nextNotLineSep(tokenizer);</span>
+                    }
                 }
             }
-<span class="nc bnc" id="L754" title="All 2 branches missed.">        } else if (token.isSymbol(Token.kListStart)) {</span>
-<span class="nc" id="L755">            token = tokenizer.next();</span>
-<span class="nc bnc" id="L756" title="All 2 branches missed.">            while (!token.isSymbol(Token.kListEnd)) {</span>
-<span class="nc" id="L757">                consumeValue(tokenizer, token);</span>
+<span class="fc bfc" id="L750" title="All 2 branches covered.">        } else if (token.isSymbol(Token.kListStart)) {</span>
+<span class="fc" id="L751">            token = tokenizer.next();</span>
+<span class="fc bfc" id="L752" title="All 2 branches covered.">            while (!token.isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L753">                consumeValue(tokenizer, token);</span>
                 // lists and sets require list separator (,), and allows trailing separator.
-<span class="nc bnc" id="L759" title="All 2 branches missed.">                if (tokenizer.expectSymbol(&quot;list separator or end&quot;, Token.kLineSep1, Token.kListEnd) == Token.kListEnd) {</span>
-<span class="nc" id="L760">                    break;</span>
+<span class="fc bfc" id="L755" title="All 2 branches covered.">                if (tokenizer.expectSymbol(&quot;list separator or end&quot;, Token.kLineSep1, Token.kListEnd) == Token.kListEnd) {</span>
+<span class="fc" id="L756">                    break;</span>
                 }
-<span class="nc" id="L762">                token = tokenizer.expect(&quot;list value or end&quot;);</span>
+<span class="fc" id="L758">                token = tokenizer.expect(&quot;list value or end&quot;);</span>
             }
-<span class="nc bnc" id="L764" title="All 2 branches missed.">        } else if (token.asString().equals(Token.HEX)) {</span>
-<span class="nc" id="L765">            tokenizer.expectSymbol(&quot;hex body start&quot;, Token.kMethodStart);</span>
-<span class="nc" id="L766">            tokenizer.readBinary(Token.kMethodEnd);</span>
-<span class="nc bnc" id="L767" title="All 2 branches missed.">        } else if (!(token.isReal() ||  // number (double)</span>
-<span class="nc bnc" id="L768" title="All 2 branches missed.">                     token.isInteger() ||  // number (int)</span>
-<span class="nc bnc" id="L769" title="All 2 branches missed.">                     token.isStringLiteral() ||  // string literal</span>
-<span class="nc bnc" id="L770" title="All 2 branches missed.">                     token.isIdentifier())) {  // enum value reference.</span>
-<span class="nc" id="L771">            throw new TokenizerException(token, &quot;Unknown value token '%s'&quot;, token.asString())</span>
-<span class="nc" id="L772">                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="pc bpc" id="L760" title="1 of 2 branches missed.">        } else if (token.asString().equals(Token.HEX) ||</span>
+<span class="fc bfc" id="L761" title="All 2 branches covered.">                   token.asString().equals(Token.B64)) {</span>
+<span class="fc" id="L762">            tokenizer.expectSymbol(&quot;hex body start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L763">            tokenizer.readBinary(Token.kParamsEnd);</span>
+<span class="fc bfc" id="L764" title="All 2 branches covered.">        } else if (!(token.isReal() ||  // number (double)</span>
+<span class="fc bfc" id="L765" title="All 2 branches covered.">                     token.isInteger() ||  // number (int)</span>
+<span class="fc bfc" id="L766" title="All 2 branches covered.">                     token.isStringLiteral() ||  // string literal</span>
+<span class="pc bpc" id="L767" title="1 of 2 branches missed.">                     token.isIdentifier())) {  // enum value reference.</span>
+<span class="nc" id="L768">            throw new TokenizerException(token, &quot;Unknown value token '%s'&quot;, token.asString())</span>
+<span class="nc" id="L769">                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
         }
-<span class="nc" id="L774">    }</span>
+<span class="fc" id="L771">    }</span>
 
     private Token nextNotLineSep(Tokenizer tokenizer) throws IOException {
-<span class="nc bnc" id="L777" title="All 2 branches missed.">        if (tokenizer.peek().isSymbol(Token.kLineSep1) ||</span>
-<span class="nc bnc" id="L778" title="All 2 branches missed.">            tokenizer.peek().isSymbol(Token.kLineSep2)) {</span>
-<span class="nc" id="L779">            tokenizer.expect(&quot;message field or end&quot;);</span>
+<span class="fc bfc" id="L774" title="All 2 branches covered.">        if (tokenizer.peek().isSymbol(Token.kLineSep1) ||</span>
+<span class="pc bpc" id="L775" title="1 of 2 branches missed.">            tokenizer.peek().isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L776">            tokenizer.expect(&quot;message field or end&quot;);</span>
         }
-<span class="nc" id="L781">        return tokenizer.expect(&quot;message field or end&quot;);</span>
+<span class="fc" id="L778">        return tokenizer.expect(&quot;message field or end&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
