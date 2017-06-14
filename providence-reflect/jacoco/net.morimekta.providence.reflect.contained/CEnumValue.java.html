@@ -65,113 +65,102 @@ public class CEnumValue implements PEnumValue&lt;CEnumValue&gt;, CAnnotatedDescr
     }
 
     @Override
-    public int getValue() {
+    public int asInteger() {
 <span class="fc" id="L69">        return value;</span>
     }
 
     @Nonnull
     @Override
-    public String getName() {
-<span class="fc" id="L75">        return name;</span>
-    }
-
-    @Override
-    public int asInteger() {
-<span class="fc" id="L80">        return value;</span>
-    }
-
-    @Nonnull
-    @Override
     public String asString() {
-<span class="fc" id="L86">        return name;</span>
+<span class="fc" id="L75">        return name;</span>
     }
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public Set&lt;String&gt; getAnnotations() {
-<span class="fc" id="L93">        return annotations.keySet();</span>
+<span class="fc" id="L82">        return annotations.keySet();</span>
     }
 
     @Override
     public boolean hasAnnotation(@Nonnull String name) {
-<span class="fc" id="L98">        return annotations.containsKey(name);</span>
+<span class="fc" id="L87">        return annotations.containsKey(name);</span>
     }
 
     @Override
     public String getAnnotationValue(@Nonnull String name) {
-<span class="fc" id="L103">        return annotations.get(name);</span>
+<span class="fc" id="L92">        return annotations.get(name);</span>
     }
 
     @Nonnull
     @Override
     public PEnumDescriptor&lt;CEnumValue&gt; descriptor() {
-<span class="fc" id="L109">        return type;</span>
+<span class="fc" id="L98">        return type;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (o == this) return true;</span>
-<span class="pc bpc" id="L115" title="1 of 4 branches missed.">        if (o == null || !(o instanceof CEnumValue)) {</span>
-<span class="fc" id="L116">            return false;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (o == this) return true;</span>
+<span class="pc bpc" id="L104" title="1 of 4 branches missed.">        if (o == null || !(o instanceof CEnumValue)) {</span>
+<span class="fc" id="L105">            return false;</span>
         }
-<span class="fc" id="L118">        CEnumValue other = (CEnumValue) o;</span>
-<span class="fc" id="L119">        return other.descriptor()</span>
-<span class="fc" id="L120">                    .getQualifiedName()</span>
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">                    .equals(type.getQualifiedName()) &amp;&amp;</span>
-<span class="fc" id="L122">               other.getName()</span>
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                    .equals(name) &amp;&amp;</span>
-<span class="pc bnc" id="L124" title="All 2 branches missed.">               other.getValue() == value;</span>
+<span class="fc" id="L107">        CEnumValue other = (CEnumValue) o;</span>
+<span class="fc" id="L108">        return other.descriptor()</span>
+<span class="fc" id="L109">                    .getQualifiedName()</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">                    .equals(type.getQualifiedName()) &amp;&amp;</span>
+<span class="fc" id="L111">               other.asString()</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">                    .equals(name) &amp;&amp;</span>
+<span class="pc bnc" id="L113" title="All 2 branches missed.">               other.asInteger() == value;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L129">        return Objects.hash(CEnumValue.class,</span>
-<span class="fc" id="L130">                            descriptor().getQualifiedName(),</span>
-<span class="fc" id="L131">                            name, value);</span>
+<span class="fc" id="L118">        return Objects.hash(CEnumValue.class,</span>
+<span class="fc" id="L119">                            descriptor().getQualifiedName(),</span>
+<span class="fc" id="L120">                            name, value);</span>
     }
 
     @Override
     public int compareTo(CEnumValue other) {
-<span class="fc" id="L136">        return Integer.compare(value, other.value);</span>
+<span class="fc" id="L125">        return Integer.compare(value, other.value);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L141">        return name.toUpperCase();</span>
+<span class="fc" id="L130">        return name.toUpperCase();</span>
     }
 
     public static class Builder extends PEnumBuilder&lt;CEnumValue&gt; {
         private final CEnumDescriptor mType;
 
-<span class="fc" id="L147">        private CEnumValue mValue = null;</span>
+<span class="fc" id="L136">        private CEnumValue mValue = null;</span>
 
-<span class="fc" id="L149">        public Builder(CEnumDescriptor type) {</span>
-<span class="fc" id="L150">            mType = type;</span>
-<span class="fc" id="L151">        }</span>
+<span class="fc" id="L138">        public Builder(CEnumDescriptor type) {</span>
+<span class="fc" id="L139">            mType = type;</span>
+<span class="fc" id="L140">        }</span>
 
         @Override
         public CEnumValue build() {
-<span class="fc" id="L155">            return mValue;</span>
+<span class="fc" id="L144">            return mValue;</span>
         }
 
         @Override
         public boolean valid() {
-<span class="fc bfc" id="L160" title="All 2 branches covered.">            return mValue != null;</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            return mValue != null;</span>
         }
 
         @Nonnull
         @Override
-        public Builder setByValue(int id) {
-<span class="fc" id="L166">            mValue = mType.getValueById(id);</span>
-<span class="fc" id="L167">            return this;</span>
+        public Builder setById(int id) {
+<span class="fc" id="L155">            mValue = mType.findById(id);</span>
+<span class="fc" id="L156">            return this;</span>
         }
 
         @Nonnull
         @Override
         public Builder setByName(String name) {
-<span class="fc" id="L173">            mValue = mType.getValueByName(name);</span>
-<span class="fc" id="L174">            return this;</span>
+<span class="fc" id="L162">            mValue = mType.findByName(name);</span>
+<span class="fc" id="L163">            return this;</span>
         }
     }
 }

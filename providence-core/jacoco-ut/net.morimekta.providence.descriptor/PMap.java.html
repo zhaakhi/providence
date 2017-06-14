@@ -21,7 +21,6 @@
 package net.morimekta.providence.descriptor;
 
 import net.morimekta.providence.PBuilder;
-import net.morimekta.providence.PBuilderFactory;
 import net.morimekta.providence.PType;
 
 import com.google.common.collect.ImmutableMap;
@@ -30,170 +29,194 @@ import com.google.common.collect.ImmutableSortedMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Descriptor for a map with key and item type.
  */
 public class PMap&lt;Key, Value&gt; extends PContainer&lt;Map&lt;Key, Value&gt;&gt; {
-    private final PDescriptorProvider        keyDescriptor;
-    private final BuilderFactory&lt;Key, Value&gt; builderFactory;
+    private final PDescriptorProvider           keyDescriptor;
+    private final Supplier&lt;Builder&lt;Key, Value&gt;&gt; builderSupplier;
 
     public PMap(PDescriptorProvider keyDesc,
                 PDescriptorProvider itemDesc,
-                BuilderFactory&lt;Key, Value&gt; builderFactory) {
-<span class="fc" id="L46">        super(itemDesc);</span>
-<span class="fc" id="L47">        this.keyDescriptor = keyDesc;</span>
-<span class="fc" id="L48">        this.builderFactory = builderFactory;</span>
-<span class="fc" id="L49">    }</span>
+                Supplier&lt;Builder&lt;Key, Value&gt;&gt; builderSupplier) {
+<span class="fc" id="L45">        super(itemDesc);</span>
+<span class="fc" id="L46">        this.keyDescriptor = keyDesc;</span>
+<span class="fc" id="L47">        this.builderSupplier = builderSupplier;</span>
+<span class="fc" id="L48">    }</span>
 
     public PDescriptor keyDescriptor() {
-<span class="fc" id="L52">        return keyDescriptor.descriptor();</span>
+<span class="fc" id="L51">        return keyDescriptor.descriptor();</span>
     }
 
     @Nonnull
     @Override
     public String getName() {
-<span class="fc" id="L58">        return &quot;map&lt;&quot; + keyDescriptor().getName() + &quot;,&quot; + itemDescriptor().getName() + &quot;&gt;&quot;;</span>
+<span class="fc" id="L57">        return &quot;map&lt;&quot; + keyDescriptor().getName() + &quot;,&quot; + itemDescriptor().getName() + &quot;&gt;&quot;;</span>
     }
 
     @Nonnull
     @Override
     public String getQualifiedName(String programContext) {
-<span class="fc" id="L64">        return &quot;map&lt;&quot; + keyDescriptor().getQualifiedName(programContext) + &quot;,&quot; +</span>
-<span class="fc" id="L65">               itemDescriptor().getQualifiedName(programContext) + &quot;&gt;&quot;;</span>
+<span class="fc" id="L63">        return &quot;map&lt;&quot; + keyDescriptor().getQualifiedName(programContext) + &quot;,&quot; +</span>
+<span class="fc" id="L64">               itemDescriptor().getQualifiedName(programContext) + &quot;&gt;&quot;;</span>
     }
 
     @Nonnull
     @Override
     public PType getType() {
-<span class="fc" id="L71">        return PType.MAP;</span>
+<span class="fc" id="L70">        return PType.MAP;</span>
     }
 
     @Nullable
     @Override
     public Object getDefaultValue() {
-<span class="nc" id="L77">        return Collections.EMPTY_MAP;</span>
+<span class="nc" id="L76">        return Collections.EMPTY_MAP;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="pc bpc" id="L82" title="1 of 4 branches missed.">        if (o == null || !(o instanceof PMap)) {</span>
-<span class="fc" id="L83">            return false;</span>
+<span class="pc bpc" id="L81" title="1 of 4 branches missed.">        if (o == null || !(o instanceof PMap)) {</span>
+<span class="fc" id="L82">            return false;</span>
         }
-<span class="fc" id="L85">        PMap&lt;?, ?&gt; other = (PMap&lt;?, ?&gt;) o;</span>
-<span class="fc" id="L86">        return other.itemDescriptor()</span>
-<span class="fc bfc" id="L87" title="All 2 branches covered.">                    .equals(itemDescriptor()) &amp;&amp; other.keyDescriptor()</span>
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">                                                      .equals(keyDescriptor());</span>
+<span class="fc" id="L84">        PMap&lt;?, ?&gt; other = (PMap&lt;?, ?&gt;) o;</span>
+<span class="fc" id="L85">        return other.itemDescriptor()</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                    .equals(itemDescriptor()) &amp;&amp; other.keyDescriptor()</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                                                      .equals(keyDescriptor());</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L93">        return PMap.class.hashCode() +</span>
-<span class="fc" id="L94">               itemDescriptor().hashCode() +</span>
-<span class="fc" id="L95">               keyDescriptor().hashCode();</span>
+<span class="fc" id="L92">        return PMap.class.hashCode() +</span>
+<span class="fc" id="L93">               itemDescriptor().hashCode() +</span>
+<span class="fc" id="L94">               keyDescriptor().hashCode();</span>
     }
 
+    /**
+     * Container builder to be used in serialization.
+     *
+     * @param &lt;K&gt; The key type.
+     * @param &lt;V&gt; The value type.
+     */
     public interface Builder&lt;K, V&gt; extends PBuilder&lt;Map&lt;K, V&gt;&gt; {
         @Nonnull
         Builder&lt;K, V&gt; put(@Nonnull K key, @Nonnull V value);
         @Nonnull
         Builder&lt;K, V&gt; putAll(@Nonnull Map&lt;K, V&gt; map);
-        @Nonnull
-        Builder&lt;K, V&gt; clear();
-
-        int size();
 
         @Nonnull
         @Override
         Map&lt;K, V&gt; build();
     }
 
-    private interface BuilderFactory&lt;K, V&gt; extends PBuilderFactory&lt;Map&lt;K, V&gt;&gt; {
-        @Nonnull
-        Builder&lt;K, V&gt; builder();
-    }
+    /**
+     * Default map builder returning an ImmutableMap.
+     *
+     * @param &lt;K&gt; The key type.
+     * @param &lt;V&gt; The value type.
+     */
+    public static class DefaultBuilder&lt;K, V&gt; implements Builder&lt;K,V&gt; {
+        private ImmutableMap.Builder&lt;K,V&gt; builder;
 
-<span class="fc" id="L118">    public static class ImmutableMapBuilder&lt;K, V&gt; extends LinkedHashMapBuilder&lt;K,V&gt; {</span>
-        @Nonnull
-        @Override
-        public Map&lt;K, V&gt; build() {
-<span class="fc" id="L122">            return ImmutableMap.copyOf(builder);</span>
-        }
-    }
-
-<span class="fc" id="L126">    public static class ImmutableSortedMapBuilder&lt;K extends Comparable, V&gt; extends LinkedHashMapBuilder&lt;K, V&gt; {</span>
-        @Nonnull
-        @Override
-        public Map&lt;K, V&gt; build() {
-<span class="fc" id="L130">            return ImmutableSortedMap.copyOf(builder);</span>
-        }
-    }
-
-    public static class LinkedHashMapBuilder&lt;K, V&gt; implements Builder&lt;K, V&gt; {
-        final LinkedHashMap&lt;K, V&gt; builder;
-
-<span class="fc" id="L137">        public LinkedHashMapBuilder() {</span>
-<span class="fc" id="L138">            this.builder = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L139">        }</span>
+<span class="fc" id="L123">        public DefaultBuilder() {</span>
+<span class="fc" id="L124">            builder = ImmutableMap.builder();</span>
+<span class="fc" id="L125">        }</span>
 
         @Nonnull
         @Override
-        public LinkedHashMapBuilder&lt;K, V&gt; put(@Nonnull K key, @Nonnull V value) {
-<span class="fc" id="L144">            builder.put(key, value);</span>
-<span class="fc" id="L145">            return this;</span>
+        public PMap.Builder&lt;K,V&gt; put(@Nonnull K key, @Nonnull V value) {
+<span class="fc" id="L130">            builder.put(key, value);</span>
+<span class="fc" id="L131">            return this;</span>
         }
 
         @Nonnull
         @Override
-        public LinkedHashMapBuilder&lt;K, V&gt; putAll(@Nonnull Map&lt;K, V&gt; map) {
-<span class="fc" id="L151">            builder.putAll(map);</span>
-<span class="fc" id="L152">            return this;</span>
+        public PMap.Builder&lt;K,V&gt; putAll(@Nonnull Map&lt;K,V&gt; items) {
+<span class="fc" id="L137">            builder.putAll(items);</span>
+<span class="fc" id="L138">            return this;</span>
         }
 
         @Nonnull
         @Override
-        public LinkedHashMapBuilder&lt;K, V&gt; clear() {
-<span class="fc" id="L158">            builder.clear();</span>
-<span class="fc" id="L159">            return this;</span>
-        }
-
-        public int size() {
-<span class="nc" id="L163">            return builder.size();</span>
-        }
-
-        @Nonnull
-        @Override
-        public Map&lt;K, V&gt; build() {
-<span class="fc" id="L169">            return Collections.unmodifiableMap(builder);</span>
+        public Map&lt;K,V&gt; build() {
+<span class="fc" id="L144">            return builder.build();</span>
         }
     }
 
+    /**
+     * Sorted map builder returning an ImmutableSortedMap.
+     *
+     * @param &lt;K&gt; The key type.
+     * @param &lt;V&gt; The value type.
+     */
+    public static class SortedBuilder&lt;K extends Comparable, V&gt; implements Builder&lt;K, V&gt; {
+        private ImmutableSortedMap.Builder&lt;K,V&gt; builder;
+
+<span class="fc" id="L157">        public SortedBuilder() {</span>
+<span class="fc" id="L158">            builder = ImmutableSortedMap.naturalOrder();</span>
+<span class="fc" id="L159">        }</span>
+
+        @Nonnull
+        @Override
+        public PMap.Builder&lt;K,V&gt; put(@Nonnull K key, @Nonnull V value) {
+<span class="fc" id="L164">            builder.put(key, value);</span>
+<span class="fc" id="L165">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public PMap.Builder&lt;K,V&gt; putAll(@Nonnull Map&lt;K,V&gt; items) {
+<span class="fc" id="L171">            builder.putAll(items);</span>
+<span class="fc" id="L172">            return this;</span>
+        }
+
+        @Nonnull
+        @Override
+        public Map&lt;K,V&gt; build() {
+<span class="fc" id="L178">            return builder.build();</span>
+        }
+    }
+
+    /**
+     * Ordered map builder returning an ImmutableMap. The immutable map
+     * is order preserving, so the effect is the same.
+     *
+     * @param &lt;K&gt; The key type.
+     * @param &lt;V&gt; The value type.
+     */
+<span class="fc" id="L189">    public static class OrderedBuilder&lt;K, V&gt; extends DefaultBuilder&lt;K, V&gt; {</span>
+    }
+
+    @Nonnull
     @Override
     public Builder&lt;Key, Value&gt; builder() {
-<span class="fc" id="L175">        return builderFactory.builder();</span>
+<span class="fc" id="L195">        return builderSupplier.get();</span>
     }
 
+    @Nonnull
     public static &lt;K, V&gt; PContainerProvider&lt;Map&lt;K, V&gt;, PMap&lt;K, V&gt;&gt; provider(PDescriptorProvider keyDesc,
                                                                             PDescriptorProvider itemDesc) {
-<span class="fc" id="L180">        return provider(keyDesc, itemDesc, ImmutableMapBuilder::new);</span>
+<span class="fc" id="L201">        return provider(keyDesc, itemDesc, DefaultBuilder::new);</span>
     }
 
+    @Nonnull
     public static &lt;K extends Comparable&lt;K&gt;, V&gt; PContainerProvider&lt;Map&lt;K, V&gt;, PMap&lt;K, V&gt;&gt; sortedProvider(PDescriptorProvider keyDesc,
                                                                                                         PDescriptorProvider itemDesc) {
-<span class="fc" id="L185">        return provider(keyDesc, itemDesc, ImmutableSortedMapBuilder::new);</span>
+<span class="fc" id="L207">        return provider(keyDesc, itemDesc, SortedBuilder::new);</span>
     }
 
+    @Nonnull
     public static &lt;K, V&gt; PContainerProvider&lt;Map&lt;K, V&gt;, PMap&lt;K, V&gt;&gt; orderedProvider(PDescriptorProvider keyDesc,
                                                                                    PDescriptorProvider itemDesc) {
-<span class="fc" id="L190">        return provider(keyDesc, itemDesc, LinkedHashMapBuilder::new);</span>
+<span class="fc" id="L213">        return provider(keyDesc, itemDesc, OrderedBuilder::new);</span>
     }
 
     private static &lt;K, V&gt; PContainerProvider&lt;Map&lt;K, V&gt;, PMap&lt;K, V&gt;&gt; provider(PDescriptorProvider keyDesc,
                                                                              PDescriptorProvider itemDesc,
-                                                                             BuilderFactory&lt;K, V&gt; builderFactory) {
-<span class="fc" id="L196">        return new PContainerProvider&lt;&gt;(new PMap&lt;&gt;(keyDesc, itemDesc, builderFactory));</span>
+                                                                             Supplier&lt;Builder&lt;K, V&gt;&gt; builderFactory) {
+<span class="fc" id="L219">        return new PContainerProvider&lt;&gt;(new PMap&lt;&gt;(keyDesc, itemDesc, builderFactory));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

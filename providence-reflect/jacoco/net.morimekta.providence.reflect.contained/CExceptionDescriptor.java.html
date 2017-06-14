@@ -21,7 +21,6 @@
 package net.morimekta.providence.reflect.contained;
 
 import net.morimekta.providence.PMessageBuilder;
-import net.morimekta.providence.PMessageBuilderFactory;
 import net.morimekta.providence.descriptor.PExceptionDescriptor;
 import net.morimekta.providence.descriptor.PField;
 
@@ -32,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * @author Stein Eldar Johnsen
@@ -49,7 +49,7 @@ public class CExceptionDescriptor extends PExceptionDescriptor&lt;CException, CF
               // overrides isSimple instead to avoid having to check fields
               // types before it's converted.
               false);
-<span class="fc" id="L52">        ((_Factory) getFactoryInternal()).setType(this);</span>
+<span class="fc" id="L52">        ((_Factory) getBuilderSupplier()).setType(this);</span>
 
 <span class="fc" id="L54">        this.comment = comment;</span>
 <span class="fc" id="L55">        this.fields = fields.toArray(new CField[fields.size()]);</span>
@@ -58,7 +58,7 @@ public class CExceptionDescriptor extends PExceptionDescriptor&lt;CException, CF
 <span class="fc" id="L58">        Map&lt;Integer, CField&gt; fieldIdMap = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc" id="L59">        Map&lt;String, CField&gt; fieldNameMap = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L60" title="All 2 branches covered.">        for (CField field : fields) {</span>
-<span class="fc" id="L61">            fieldIdMap.put(field.getKey(), field);</span>
+<span class="fc" id="L61">            fieldIdMap.put(field.getId(), field);</span>
 <span class="fc" id="L62">            fieldNameMap.put(field.getName(), field);</span>
 <span class="fc" id="L63">        }</span>
 <span class="fc" id="L64">        this.fieldIdMap = fieldIdMap;</span>
@@ -77,13 +77,13 @@ public class CExceptionDescriptor extends PExceptionDescriptor&lt;CException, CF
     }
 
     @Override
-    public CField getField(String name) {
+    public CField findFieldByName(String name) {
 <span class="fc" id="L81">        return fieldNameMap.get(name);</span>
     }
 
     @Override
-    public CField getField(int key) {
-<span class="fc" id="L86">        return fieldIdMap.get(key);</span>
+    public CField findFieldById(int id) {
+<span class="fc" id="L86">        return fieldIdMap.get(id);</span>
     }
 
     @Nonnull
@@ -128,7 +128,7 @@ public class CExceptionDescriptor extends PExceptionDescriptor&lt;CException, CF
 <span class="fc" id="L128">        return true;</span>
     }
 
-<span class="fc" id="L131">    private static class _Factory extends PMessageBuilderFactory&lt;CException, CField&gt; {</span>
+<span class="fc" id="L131">    private static class _Factory implements Supplier&lt;PMessageBuilder&lt;CException, CField&gt;&gt; {</span>
         private CExceptionDescriptor mType;
 
         public void setType(CExceptionDescriptor type) {
@@ -137,7 +137,7 @@ public class CExceptionDescriptor extends PExceptionDescriptor&lt;CException, CF
 
         @Nonnull
         @Override
-        public PMessageBuilder&lt;CException, CField&gt; builder() {
+        public PMessageBuilder&lt;CException, CField&gt; get() {
 <span class="nc" id="L141">            return new CException.Builder(mType);</span>
         }
     }

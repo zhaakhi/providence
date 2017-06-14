@@ -74,7 +74,7 @@ import java.util.Set;
 <span class="fc" id="L74">            name = sub.substring(0, idx);</span>
 <span class="fc" id="L75">            sub = sub.substring(idx + 1);</span>
 
-<span class="fc" id="L77">            PField field = descriptor.getField(name);</span>
+<span class="fc" id="L77">            PField field = descriptor.findFieldByName(name);</span>
 <span class="fc bfc" id="L78" title="All 2 branches covered.">            if (field == null) {</span>
 <span class="fc" id="L79">                throw new KeyNotFoundException(&quot;Message &quot; + descriptor.getQualifiedName() + &quot; has no field named &quot; + name);</span>
             }
@@ -86,20 +86,20 @@ import java.util.Set;
 <span class="fc" id="L86">            descriptor = (PMessageDescriptor) fieldDesc;</span>
 
 <span class="pc bpc" id="L88" title="1 of 2 branches missed.">            if (message != null) {</span>
-<span class="fc" id="L89">                message = (PMessage) message.get(field.getKey());</span>
+<span class="fc" id="L89">                message = (PMessage) message.get(field.getId());</span>
             }
 <span class="fc" id="L91">        }</span>
 
-<span class="fc" id="L93">        PField field = descriptor.getField(sub);</span>
+<span class="fc" id="L93">        PField field = descriptor.findFieldByName(sub);</span>
 <span class="fc bfc" id="L94" title="All 2 branches covered.">        if (field == null) {</span>
 <span class="fc" id="L95">            throw new KeyNotFoundException(&quot;Message &quot; + descriptor.getQualifiedName() + &quot; has no field named &quot; + sub);</span>
         }
 
-<span class="pc bpc" id="L98" title="1 of 4 branches missed.">        if (message == null || !message.has(field.getKey())) {</span>
+<span class="pc bpc" id="L98" title="1 of 4 branches missed.">        if (message == null || !message.has(field.getId())) {</span>
 <span class="fc" id="L99">            return asFieldType(field, defValue);</span>
         }
 
-<span class="fc" id="L102">        return message.get(field.getKey());</span>
+<span class="fc" id="L102">        return message.get(field.getId());</span>
     }
 
     /**
@@ -110,11 +110,11 @@ import java.util.Set;
      */
     static void buildKeySet(String prefix, PMessage message, Set&lt;String&gt; valueKeySet) {
 <span class="fc bfc" id="L112" title="All 2 branches covered.">        for (PField field : message.descriptor().getFields()) {</span>
-<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (message.has(field.getKey())) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (message.has(field.getId())) {</span>
 <span class="fc" id="L114">                String key = makeKey(prefix, field);</span>
 
 <span class="fc bfc" id="L116" title="All 2 branches covered.">                if (field.getType() == PType.MESSAGE) {</span>
-<span class="fc" id="L117">                    buildKeySet(key, (PMessage) message.get(field.getKey()), valueKeySet);</span>
+<span class="fc" id="L117">                    buildKeySet(key, (PMessage) message.get(field.getId()), valueKeySet);</span>
                 } else {
 <span class="fc" id="L119">                    valueKeySet.add(key);</span>
                 }
@@ -150,11 +150,11 @@ import java.util.Set;
 <span class="nc" id="L150">                return ConfigUtil.asDouble(o);</span>
             case ENUM:
 <span class="nc bnc" id="L152" title="All 2 branches missed.">                if (o instanceof Number) {</span>
-<span class="nc" id="L153">                    return ((PEnumDescriptor) field.getDescriptor()).getValueById(((Number) o).intValue());</span>
+<span class="nc" id="L153">                    return ((PEnumDescriptor) field.getDescriptor()).findById(((Number) o).intValue());</span>
 <span class="nc bnc" id="L154" title="All 2 branches missed.">                } else if (o instanceof Numeric) {</span>
-<span class="nc" id="L155">                    return ((PEnumDescriptor) field.getDescriptor()).getValueById(((Numeric) o).asInteger());</span>
+<span class="nc" id="L155">                    return ((PEnumDescriptor) field.getDescriptor()).findById(((Numeric) o).asInteger());</span>
 <span class="nc bnc" id="L156" title="All 2 branches missed.">                } else if (o instanceof CharSequence) {</span>
-<span class="nc" id="L157">                    return ((PEnumDescriptor) field.getDescriptor()).getValueByName(o.toString());</span>
+<span class="nc" id="L157">                    return ((PEnumDescriptor) field.getDescriptor()).findByName(o.toString());</span>
                 } else {
 <span class="nc" id="L159">                    throw new IncompatibleValueException(&quot;Unable to cast &quot; + o.getClass().getSimpleName() + &quot; to enum type.&quot;);</span>
                 }

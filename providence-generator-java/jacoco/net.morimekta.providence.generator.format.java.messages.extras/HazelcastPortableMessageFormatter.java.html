@@ -247,7 +247,7 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 <span class="fc" id="L247">                writer.formatln(&quot;%s.writeDouble(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
 <span class="fc" id="L248">                break;</span>
             case ENUM:
-<span class="fc" id="L250">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, %s.getValue());&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L250">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, %s.asInteger());&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
 <span class="fc" id="L251">                break;</span>
             case I16:
 <span class="fc" id="L253">                writer.formatln(&quot;%s.writeShort(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
@@ -467,7 +467,7 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 <span class="nc" id="L467">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectDouble&quot;);</span>
 <span class="nc" id="L468">                break;</span>
             case ENUM:
-<span class="nc" id="L470">                writer.formatln(&quot;%s = %s.forValue(%s.%s());&quot;,</span>
+<span class="nc" id="L470">                writer.formatln(&quot;%s = %s.findById(%s.%s());&quot;,</span>
                                 variable,
 <span class="nc" id="L472">                                helper.getFieldType(descriptor),</span>
                                 bebr,
@@ -663,14 +663,14 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
     private void writePortableFieldList(JField field, PDescriptor descriptor) throws GeneratorException {
 <span class="pc bpc" id="L664" title="3 of 11 branches missed.">        switch (descriptor.getType()) {</span>
             case BYTE:
-<span class="fc" id="L666">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toArray(%s.build()));&quot;,</span>
+<span class="fc" id="L666">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="fc" id="L668">                                field.name(),</span>
 <span class="fc" id="L669">                                Bytes.class.getName(),</span>
 <span class="fc" id="L670">                                field.member());</span>
 <span class="fc" id="L671">                break;</span>
             case BINARY:
-<span class="nc" id="L673">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.%s(%s.build()));&quot;,</span>
+<span class="nc" id="L673">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.%s(%s));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="nc" id="L675">                                field.name(),</span>
 <span class="nc" id="L676">                                BinaryUtil.class.getName(),</span>
@@ -678,55 +678,55 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 <span class="nc" id="L678">                                field.member());</span>
 <span class="nc" id="L679">                break;</span>
             case BOOL:
-<span class="fc" id="L681">                writer.formatln(&quot;%s.writeBooleanArray(\&quot;%s\&quot;, %s.toArray(%s.build()));&quot;,</span>
+<span class="fc" id="L681">                writer.formatln(&quot;%s.writeBooleanArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="fc" id="L683">                                field.name(),</span>
 <span class="fc" id="L684">                                Booleans.class.getName(),</span>
 <span class="fc" id="L685">                                field.member());</span>
 <span class="fc" id="L686">                break;</span>
             case DOUBLE:
-<span class="fc" id="L688">                writer.formatln(&quot;%s.writeDoubleArray(\&quot;%s\&quot;, %s.toArray(%s.build()));&quot;,</span>
+<span class="fc" id="L688">                writer.formatln(&quot;%s.writeDoubleArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="fc" id="L690">                                field.name(),</span>
 <span class="fc" id="L691">                                Doubles.class.getName(),</span>
 <span class="fc" id="L692">                                field.member());</span>
 <span class="fc" id="L693">                break;</span>
             case ENUM:
-<span class="nc" id="L695">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.build().stream().mapToInt(t -&gt; t.getValue()).toArray());&quot;,</span>
+<span class="nc" id="L695">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.stream().mapToInt(t -&gt; t.getValue()).toArray());&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="nc" id="L697">                                field.name(),</span>
 <span class="nc" id="L698">                                field.member());</span>
 <span class="nc" id="L699">                break;</span>
             case I16:
-<span class="fc" id="L701">                writer.formatln(&quot;%s.writeShortArray(\&quot;%s\&quot;, %s.toArray(%s.build()));&quot;,</span>
+<span class="fc" id="L701">                writer.formatln(&quot;%s.writeShortArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="fc" id="L703">                                field.name(),</span>
 <span class="fc" id="L704">                                Shorts.class.getName(),</span>
 <span class="fc" id="L705">                                field.member());</span>
 <span class="fc" id="L706">                break;</span>
             case I32:
-<span class="fc" id="L708">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.toArray(%s.build()));&quot;,</span>
+<span class="fc" id="L708">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="fc" id="L710">                                field.name(),</span>
 <span class="fc" id="L711">                                Ints.class.getName(),</span>
 <span class="fc" id="L712">                                field.member());</span>
 <span class="fc" id="L713">                break;</span>
             case I64:
-<span class="fc" id="L715">                writer.formatln(&quot;%s.writeLongArray(\&quot;%s\&quot;, %s.toArray(%s.build()));&quot;,</span>
+<span class="fc" id="L715">                writer.formatln(&quot;%s.writeLongArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="fc" id="L717">                                field.name(),</span>
 <span class="fc" id="L718">                                Longs.class.getName(),</span>
 <span class="fc" id="L719">                                field.member());</span>
 <span class="fc" id="L720">                break;</span>
             case STRING:
-<span class="fc" id="L722">                writer.formatln(&quot;%s.writeUTFArray(\&quot;%s\&quot;, %s.build().toArray(new String[0]));&quot;,</span>
+<span class="fc" id="L722">                writer.formatln(&quot;%s.writeUTFArray(\&quot;%s\&quot;, %s.toArray(new String[0]));&quot;,</span>
                                 PORTABLE_WRITER,
 <span class="fc" id="L724">                                field.name(),</span>
 <span class="fc" id="L725">                                field.member());</span>
 <span class="fc" id="L726">                break;</span>
             case MESSAGE:
                 //TODO: need to verify that this actually has the annotation later on, or the portable will give compile time exception.
-<span class="fc" id="L729">                writer.formatln(&quot;%s&lt;%s.%s&gt; %sList = %s.build().stream().map(i -&gt; i.mutate()).collect(%s.toList());&quot;,</span>
+<span class="fc" id="L729">                writer.formatln(&quot;%s&lt;%s.%s&gt; %sList = %s.stream().map(i -&gt; i.mutate()).collect(%s.toList());&quot;,</span>
 <span class="fc" id="L730">                                List.class.getName(),</span>
 <span class="fc" id="L731">                                helper.getValueType(descriptor),</span>
                                 &quot;_Builder&quot;,
@@ -880,7 +880,7 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 <span class="fc" id="L880">                writer.formatln(&quot;%s(%s.readDouble(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
 <span class="fc" id="L881">                break;</span>
             case ENUM:
-<span class="fc" id="L883">                writer.formatln(&quot;%s(%s.forValue(%s.readInt(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L883">                writer.formatln(&quot;%s(%s.findById(%s.readInt(\&quot;%s\&quot;)));&quot;,</span>
 <span class="fc" id="L884">                                field.setter(),</span>
 <span class="fc" id="L885">                                field.instanceType(),</span>
                                 PORTABLE_READER,
@@ -1079,7 +1079,7 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
                         PORTABLE_READER,
 <span class="nc" id="L1080">                        field.name(),</span>
 <span class="nc" id="L1081">                        descriptor.getName(),</span>
-                        &quot;forValue&quot;,
+                        &quot;findById&quot;,
                         //TODO need to change this to another value.
 <span class="nc" id="L1084">                        Collectors.class.getName());</span>
 <span class="nc" id="L1085">                break;</span>

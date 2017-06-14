@@ -65,14 +65,14 @@ public class HasFieldValueThat&lt;Message extends PMessage&lt;Message, Field&gt;
             }
 <span class="nc" id="L66">            PMessage actual = (PMessage) o;</span>
 
-<span class="nc" id="L68">            PField field = actual.descriptor().getField(path[i]);</span>
+<span class="nc" id="L68">            PField field = actual.descriptor().findFieldByName(path[i]);</span>
 <span class="nc bnc" id="L69" title="All 2 branches missed.">            if (field == null) {</span>
 <span class="nc" id="L70">                return false;</span>
             }
-<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (!actual.has(field.getKey())) {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (!actual.has(field.getId())) {</span>
 <span class="nc" id="L73">                return false;</span>
             }
-<span class="nc" id="L75">            o = actual.get(field.getKey());</span>
+<span class="nc" id="L75">            o = actual.get(field.getId());</span>
         }
 <span class="nc" id="L77">        return valueMatcher.matches(o);</span>
     }
@@ -107,17 +107,17 @@ public class HasFieldValueThat&lt;Message extends PMessage&lt;Message, Field&gt;
                 }
 <span class="nc" id="L108">                PMessage actual = (PMessage) o;</span>
 
-<span class="nc" id="L110">                PField field = actual.descriptor().getField(fieldName);</span>
+<span class="nc" id="L110">                PField field = actual.descriptor().findFieldByName(fieldName);</span>
 <span class="nc bnc" id="L111" title="All 2 branches missed.">                if (field == null) {</span>
 <span class="nc" id="L112">                    mismatchDescription.appendText(&quot;field path &quot; + path + &quot; is not valid&quot;);</span>
 <span class="nc" id="L113">                    return;</span>
                 }
-<span class="nc bnc" id="L115" title="All 2 branches missed.">                if (!actual.has(field.getKey())) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                if (!actual.has(field.getId())) {</span>
 <span class="nc" id="L116">                    mismatchDescription.appendText(&quot;field &quot; + path + &quot; is missing&quot;);</span>
 <span class="nc" id="L117">                    return;</span>
                 }
 
-<span class="nc" id="L120">                o = actual.get(field.getKey());</span>
+<span class="nc" id="L120">                o = actual.get(field.getId());</span>
             }
 
 <span class="nc" id="L123">            mismatchDescription.appendText(&quot;field &quot; + path + &quot; &quot;);</span>

@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BinaryFormatUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.serializer.binary</a> &gt; <span class="el_source">BinaryFormatUtils.java</span></div><h1>BinaryFormatUtils.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.serializer.binary;
+
+import net.morimekta.providence.PEnumBuilder;
+import net.morimekta.providence.PEnumValue;
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PType;
+import net.morimekta.providence.PUnion;
+import net.morimekta.providence.descriptor.PContainer;
+import net.morimekta.providence.descriptor.PDescriptor;
+import net.morimekta.providence.descriptor.PEnumDescriptor;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PList;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PSet;
+import net.morimekta.providence.serializer.SerializerException;
+import net.morimekta.util.Binary;
+import net.morimekta.util.io.BigEndianBinaryReader;
+import net.morimekta.util.io.BigEndianBinaryWriter;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Map;
+
+import static net.morimekta.providence.serializer.binary.BinaryType.asString;
+import static net.morimekta.providence.serializer.binary.BinaryType.forType;
+
+/**
+ * Utilities helping with reading and writing binary format (protocol)
+ * messages.
+ *
+ * NOTE: This class is not meant to be used directly, use the
+ * {@link net.morimekta.providence.serializer.BinarySerializer} serializer
+ * class instead. It is separated out and made public in order for
+ * pre-generated serialization code to be able to use the same utility
+ * methods.
+ */
+<span class="nc" id="L40">public class BinaryFormatUtils {</span>
+    /**
+     * Field info data holder with convenience methods.
+     */
+    public static class FieldInfo {
+        private final int id;
+        private final byte type;
+
+        /**
+         * Create a field info instance.
+         *
+         * @param id The field ID or key.
+         * @param type The field binary written type.
+         */
+<span class="fc" id="L54">        public FieldInfo(int id, byte type) {</span>
+<span class="fc" id="L55">            this.id = id;</span>
+<span class="fc" id="L56">            this.type = type;</span>
+<span class="fc" id="L57">        }</span>
+
+        @Override
+        public String toString() {
+<span class="fc" id="L61">            return String.format(&quot;field(%d: %s)&quot;, id, asString(type));</span>
+        }
+
+        /**
+         * @return The field ID or key.
+         */
+        public int getId() {
+<span class="fc" id="L68">            return id;</span>
+        }
+
+        /**
+         * @return The binary field type.
+         */
+        public byte getType() {
+<span class="fc" id="L75">            return type;</span>
+        }
+    }
+
+    /**
+     * Read message from reader.
+     *
+     * @param input The input reader.
+     * @param descriptor The message descriptor.
+     * @param strict If the message should be read in strict mode.
+     * @param &lt;Message&gt; The message type.
+     * @param &lt;Field&gt; The field type.
+     * @return The read and parsed message.
+     * @throws IOException If read failed.
+     */
+    public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    Message readMessage(BigEndianBinaryReader input,
+                        PMessageDescriptor&lt;Message, Field&gt; descriptor,
+                        boolean strict) throws IOException {
+<span class="fc" id="L94">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (builder instanceof BinaryReader) {</span>
+<span class="fc" id="L96">            ((BinaryReader) builder).readBinary(input, strict);</span>
+        } else {
+<span class="fc" id="L98">            FieldInfo fieldInfo = readFieldInfo(input);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            while (fieldInfo != null) {</span>
+<span class="fc" id="L100">                PField field = descriptor.findFieldById(fieldInfo.getId());</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                if (field != null) {</span>
+<span class="fc" id="L102">                    Object value = readFieldValue(input, fieldInfo, field.getDescriptor(), strict);</span>
+<span class="fc" id="L103">                    builder.set(field.getId(), value);</span>
+<span class="fc" id="L104">                } else {</span>
+<span class="fc" id="L105">                    readFieldValue(input, fieldInfo, null, false);</span>
+                }
+
+<span class="fc" id="L108">                fieldInfo = readFieldInfo(input);</span>
+<span class="fc" id="L109">            }</span>
+
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (strict) {</span>
+                try {
+<span class="fc" id="L113">                    builder.validate();</span>
+<span class="fc" id="L114">                } catch (IllegalStateException e) {</span>
+<span class="fc" id="L115">                    throw new SerializerException(e, e.getMessage());</span>
+<span class="fc" id="L116">                }</span>
+            }
+        }
+
+<span class="fc" id="L120">        return builder.build();</span>
+    }
+
+    /**
+     * Consume a message from the stream without parsing the content into a message.
+     *
+     * @param in Stream to read message from.
+     * @throws IOException On read failures.
+     */
+    public static void consumeMessage(BigEndianBinaryReader in) throws IOException {
+        FieldInfo fieldInfo;
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        while ((fieldInfo = readFieldInfo(in)) != null) {</span>
+<span class="fc" id="L132">            readFieldValue(in, fieldInfo, null, false);</span>
+        }
+<span class="fc" id="L134">    }</span>
+
+    /**
+     * Read field info from stream. If this is the last field (field ID 0)
+     * return null.
+     *
+     * @param in The stream to consume.
+     * @return The field info or null.
+     * @throws IOException If read failed.
+     */
+    private static FieldInfo readFieldInfo(BigEndianBinaryReader in) throws IOException {
+<span class="fc" id="L145">        byte type = in.expectByte();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        if (type == BinaryType.STOP) {</span>
+<span class="fc" id="L147">            return null;</span>
+        }
+<span class="fc" id="L149">        return new FieldInfo(in.expectShort(), type);</span>
+    }
+
+    /**
+     * Read a field value from stream.
+     *
+     * @param in        The stream to consume.
+     * @param fieldInfo The field info about the content.
+     * @param fieldType The type to generate content for.
+     * @param strict    If the field should be read strictly.
+     * @return The field value, or null if no type.
+     * @throws IOException If unable to read from stream or invalid field type.
+     */
+    public static Object readFieldValue(BigEndianBinaryReader in,
+                                        FieldInfo fieldInfo,
+                                        PDescriptor fieldType,
+                                        boolean strict)
+            throws IOException {
+<span class="fc bfc" id="L167" title="All 4 branches covered.">        if (fieldType != null &amp;&amp; forType(fieldType.getType()) != fieldInfo.type) {</span>
+<span class="fc" id="L168">            throw new SerializerException(&quot;Wrong field type for id=%d: expected %s, got %s&quot;,</span>
+<span class="fc" id="L169">                                          fieldInfo.id,</span>
+<span class="fc" id="L170">                                          asString(forType(fieldType.getType())),</span>
+<span class="fc" id="L171">                                          asString(fieldInfo.getType()));</span>
+        }
+
+<span class="pc bpc" id="L174" title="1 of 13 branches missed.">        switch (fieldInfo.type) {</span>
+            case BinaryType.VOID:
+<span class="fc" id="L176">                return Boolean.TRUE;</span>
+            case BinaryType.BOOL:
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                return in.expectByte() != 0;</span>
+            case BinaryType.BYTE:
+<span class="fc" id="L180">                return in.expectByte();</span>
+            case BinaryType.I16:
+<span class="fc" id="L182">                return in.expectShort();</span>
+            case BinaryType.I32:
+<span class="fc" id="L184">                int val = in.expectInt();</span>
+<span class="fc bfc" id="L185" title="All 4 branches covered.">                if (fieldType != null &amp;&amp; fieldType instanceof PEnumDescriptor) {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L187">                    PEnumBuilder builder = ((PEnumDescriptor&lt;?&gt;)fieldType).builder();</span>
+<span class="fc" id="L188">                    builder.setById(val);</span>
+<span class="fc" id="L189">                    return builder.build();</span>
+                } else {
+<span class="fc" id="L191">                    return val;</span>
+                }
+            case BinaryType.I64:
+<span class="fc" id="L194">                return in.expectLong();</span>
+            case BinaryType.DOUBLE:
+<span class="fc" id="L196">                return in.expectDouble();</span>
+            case BinaryType.STRING:
+<span class="fc" id="L198">                int len = in.expectUInt32();</span>
+<span class="fc" id="L199">                byte[] data = in.expectBytes(len);</span>
+<span class="fc bfc" id="L200" title="All 4 branches covered.">                if (fieldType != null &amp;&amp; fieldType.getType() == PType.STRING) {</span>
+<span class="fc" id="L201">                    return new String(data, StandardCharsets.UTF_8);</span>
+                } else {
+<span class="fc" id="L203">                    return Binary.wrap(data);</span>
+                }
+            case BinaryType.STRUCT: {
+<span class="fc bfc" id="L206" title="All 2 branches covered.">                if (fieldType == null) {</span>
+<span class="fc" id="L207">                    consumeMessage(in);</span>
+<span class="fc" id="L208">                    return null;</span>
+                }
+<span class="fc" id="L210">                return readMessage(in, (PMessageDescriptor&lt;?,?&gt;) fieldType, strict);</span>
+            }
+            case BinaryType.MAP: {
+<span class="fc" id="L213">                final byte keyT = in.expectByte();</span>
+<span class="fc" id="L214">                final byte itemT = in.expectByte();</span>
+<span class="fc" id="L215">                final int size = in.expectUInt32();</span>
+
+<span class="fc" id="L217">                PDescriptor keyType = null;</span>
+<span class="fc" id="L218">                PDescriptor valueType = null;</span>
+                PMap.Builder&lt;Object, Object&gt; out;
+<span class="fc bfc" id="L220" title="All 2 branches covered.">                if (fieldType != null) {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L222">                    PMap&lt;Object, Object&gt; mapType = (PMap&lt;Object, Object&gt;) fieldType;</span>
+<span class="fc" id="L223">                    keyType = mapType.keyDescriptor();</span>
+<span class="fc" id="L224">                    valueType = mapType.itemDescriptor();</span>
+
+<span class="fc" id="L226">                    out = mapType.builder();</span>
+<span class="fc" id="L227">                } else {</span>
+<span class="fc" id="L228">                    out = new PMap.DefaultBuilder&lt;&gt;();</span>
+                }
+
+<span class="fc" id="L231">                FieldInfo keyInfo = new FieldInfo(1, keyT);</span>
+<span class="fc" id="L232">                FieldInfo itemInfo = new FieldInfo(2, itemT);</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                for (int i = 0; i &lt; size; ++i) {</span>
+<span class="fc" id="L234">                    Object key = readFieldValue(in, keyInfo, keyType, strict);</span>
+<span class="fc" id="L235">                    Object value = readFieldValue(in, itemInfo, valueType, strict);</span>
+<span class="fc bfc" id="L236" title="All 4 branches covered.">                    if (key != null &amp;&amp; value != null) {</span>
+<span class="fc" id="L237">                        out.put(key, value);</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">                    } else if (strict) {</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                        if (key == null) {</span>
+<span class="nc" id="L240">                            throw new SerializerException(&quot;Null key in map&quot;);</span>
+                        } else {
+<span class="nc" id="L242">                            throw new SerializerException(&quot;Null value in map&quot;);</span>
+                        }
+                    }
+                }
+<span class="fc" id="L246">                return out.build();</span>
+            }
+            case BinaryType.SET: {
+<span class="fc" id="L249">                final byte itemT = in.expectByte();</span>
+<span class="fc" id="L250">                final int size = in.expectUInt32();</span>
+
+<span class="fc" id="L252">                PDescriptor entryType = null;</span>
+                PSet.Builder&lt;Object&gt; out;
+<span class="fc bfc" id="L254" title="All 2 branches covered.">                if (fieldType != null) {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L256">                    PSet&lt;Object&gt; setType = (PSet&lt;Object&gt;) fieldType;</span>
+<span class="fc" id="L257">                    entryType = setType.itemDescriptor();</span>
+<span class="fc" id="L258">                    out = setType.builder();</span>
+<span class="fc" id="L259">                } else {</span>
+<span class="fc" id="L260">                    out = new PSet.DefaultBuilder&lt;&gt;();</span>
+                }
+
+<span class="fc" id="L263">                FieldInfo itemInfo = new FieldInfo(0, itemT);</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                for (int i = 0; i &lt; size; ++i) {</span>
+<span class="fc" id="L265">                    Object value = readFieldValue(in, itemInfo, entryType, strict);</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">                    if (value != null) {</span>
+<span class="fc" id="L267">                        out.add(value);</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">                    } else if (strict) {</span>
+<span class="nc" id="L269">                        throw new SerializerException(&quot;Null value in set&quot;);</span>
+                    }
+                }
+
+<span class="fc" id="L273">                return out.build();</span>
+            }
+            case BinaryType.LIST: {
+<span class="fc" id="L276">                final byte itemT = in.expectByte();</span>
+<span class="fc" id="L277">                final int size = in.expectUInt32();</span>
+
+<span class="fc" id="L279">                PDescriptor entryType = null;</span>
+                PList.Builder&lt;Object&gt; out;
+<span class="fc bfc" id="L281" title="All 2 branches covered.">                if (fieldType != null) {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L283">                    PList&lt;Object&gt; listType = (PList&lt;Object&gt;) fieldType;</span>
+<span class="fc" id="L284">                    entryType = listType.itemDescriptor();</span>
+<span class="fc" id="L285">                    out = listType.builder();</span>
+<span class="fc" id="L286">                } else {</span>
+<span class="fc" id="L287">                    out = new PList.DefaultBuilder&lt;&gt;();</span>
+                }
+
+<span class="fc" id="L290">                FieldInfo itemInfo = new FieldInfo(0, itemT);</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">                for (int i = 0; i &lt; size; ++i) {</span>
+<span class="fc" id="L292">                    Object value = readFieldValue(in, itemInfo, entryType, strict);</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">                    if (value != null) {</span>
+<span class="fc" id="L294">                        out.add(value);</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">                    } else if (strict) {</span>
+<span class="nc" id="L296">                        throw new SerializerException(&quot;Null value in list&quot;);</span>
+                    }
+                }
+
+<span class="fc" id="L300">                return out.build();</span>
+            }
+            default:
+<span class="nc" id="L303">                throw new SerializerException(&quot;unknown data type: &quot; + fieldInfo.getType());</span>
+        }
+    }
+
+    // --- WRITE METHODS ---
+
+    /**
+     * Write message to writer.
+     *
+     * @param writer The binary writer.
+     * @param message The message to write.
+     * @param &lt;Message&gt; The message type.
+     * @param &lt;Field&gt; The field type.
+     * @return The number of bytes written.
+     * @throws IOException If write failed.
+     */
+    public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    int writeMessage(BigEndianBinaryWriter writer, Message message)
+            throws IOException {
+<span class="fc bfc" id="L322" title="All 2 branches covered.">        if (message instanceof BinaryWriter) {</span>
+<span class="fc" id="L323">            return ((BinaryWriter) message).writeBinary(writer);</span>
+        }
+
+<span class="fc" id="L326">        int len = 0;</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
+<span class="fc" id="L328">            PField field = ((PUnion) message).unionField();</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="fc" id="L330">                len += writeFieldSpec(writer, forType(field.getDescriptor().getType()), field.getId());</span>
+<span class="fc" id="L331">                len += writeFieldValue(writer,</span>
+<span class="fc" id="L332">                                       message.get(field.getId()),</span>
+<span class="fc" id="L333">                                       field.getDescriptor());</span>
+            }
+<span class="fc" id="L335">        } else {</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">            for (PField field : message.descriptor().getFields()) {</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">                if (message.has(field.getId())) {</span>
+<span class="fc" id="L338">                    len += writeFieldSpec(writer, forType(field.getDescriptor().getType()), field.getId());</span>
+<span class="fc" id="L339">                    len += writeFieldValue(writer,</span>
+<span class="fc" id="L340">                                           message.get(field.getId()),</span>
+<span class="fc" id="L341">                                           field.getDescriptor());</span>
+                }
+            }
+        }
+<span class="fc" id="L345">        len += writer.writeUInt8(BinaryType.STOP);</span>
+<span class="fc" id="L346">        return len;</span>
+    }
+
+    private static int writeFieldSpec(BigEndianBinaryWriter out, byte type, int key) throws IOException {
+<span class="fc" id="L350">        out.writeByte(type);</span>
+<span class="fc" id="L351">        out.writeShort((short) key);</span>
+<span class="fc" id="L352">        return 3;</span>
+    }
+
+    private static int writeFieldValue(BigEndianBinaryWriter out, Object value, PDescriptor descriptor) throws IOException {
+<span class="pc bpc" id="L356" title="2 of 14 branches missed.">        switch (descriptor.getType()) {</span>
+            case VOID:
+<span class="nc" id="L358">                return 0;</span>
+            case BOOL:
+<span class="fc bfc" id="L360" title="All 2 branches covered.">                return out.writeByte(((Boolean) value) ? (byte) 1 : (byte) 0);</span>
+            case BYTE:
+<span class="fc" id="L362">                return out.writeByte((Byte) value);</span>
+            case I16:
+<span class="fc" id="L364">                return out.writeShort((Short) value);</span>
+            case I32:
+<span class="fc" id="L366">                return out.writeInt((Integer) value);</span>
+            case I64:
+<span class="fc" id="L368">                return out.writeLong((Long) value);</span>
+            case DOUBLE:
+<span class="fc" id="L370">                return out.writeDouble((Double) value);</span>
+            case BINARY: {
+<span class="fc" id="L372">                Binary binary = (Binary) value;</span>
+<span class="fc" id="L373">                int len = out.writeUInt32(binary.length());</span>
+<span class="fc" id="L374">                return len + out.writeBinary(binary);</span>
+            }
+            case STRING: {
+<span class="fc" id="L377">                Binary binary = Binary.wrap(value.toString().getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L378">                int len = out.writeUInt32(binary.length());</span>
+<span class="fc" id="L379">                return len + out.writeBinary(binary);</span>
+            }
+            case ENUM:
+<span class="fc" id="L382">                return out.writeInt(((PEnumValue&lt;?&gt;) value).asInteger());</span>
+            case MAP: {
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L385">                Map&lt;Object, Object&gt; map = (Map&lt;Object, Object&gt;) value;</span>
+<span class="fc" id="L386">                PMap&lt;?,?&gt; pMap = (PMap&lt;?, ?&gt;) descriptor;</span>
+<span class="fc" id="L387">                int len = out.writeByte(forType(pMap.keyDescriptor().getType()));</span>
+<span class="fc" id="L388">                len += out.writeByte(forType(pMap.itemDescriptor().getType()));</span>
+<span class="fc" id="L389">                len += out.writeUInt32(map.size());</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">                for (Map.Entry&lt;Object, Object&gt; entry : map.entrySet()) {</span>
+<span class="fc" id="L391">                    len += writeFieldValue(out, entry.getKey(), pMap.keyDescriptor());</span>
+<span class="fc" id="L392">                    len += writeFieldValue(out, entry.getValue(), pMap.itemDescriptor());</span>
+<span class="fc" id="L393">                }</span>
+<span class="fc" id="L394">                return len;</span>
+            }
+            case SET:
+            case LIST: {
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L399">                Collection&lt;Object&gt; coll = (Collection&lt;Object&gt;) value;</span>
+<span class="fc" id="L400">                PContainer&lt;?&gt; pSet = (PContainer&lt;?&gt;) descriptor;</span>
+
+<span class="fc" id="L402">                int len = out.writeByte(forType(pSet.itemDescriptor().getType()));</span>
+<span class="fc" id="L403">                len += out.writeUInt32(coll.size());</span>
+
+<span class="fc bfc" id="L405" title="All 2 branches covered.">                for (Object item : coll) {</span>
+<span class="fc" id="L406">                    len += writeFieldValue(out, item, pSet.itemDescriptor());</span>
+<span class="fc" id="L407">                }</span>
+<span class="fc" id="L408">                return len;</span>
+            }
+            case MESSAGE: {
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L412">                int size = writeMessage(out, (PMessage) value);</span>
+<span class="fc" id="L413">                return size;</span>
+            }
+            default:
+<span class="nc" id="L416">                throw new SerializerException(&quot;Unhandled field type: &quot; + descriptor.getType());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

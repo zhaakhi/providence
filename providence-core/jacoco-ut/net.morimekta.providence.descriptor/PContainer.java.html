@@ -22,6 +22,8 @@ package net.morimekta.providence.descriptor;
 
 import net.morimekta.providence.PBuilder;
 
+import javax.annotation.Nonnull;
+
 /**
  * Generic descriptor for a container type.
  * &lt;p&gt;
@@ -33,28 +35,29 @@ import net.morimekta.providence.PBuilder;
 public abstract class PContainer&lt;Container&gt; implements PDescriptor {
     private final PDescriptorProvider itemDescriptorProvider;
 
-<span class="fc" id="L36">    protected PContainer(PDescriptorProvider provider) {</span>
-<span class="fc" id="L37">        itemDescriptorProvider = provider;</span>
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L38">    protected PContainer(PDescriptorProvider provider) {</span>
+<span class="fc" id="L39">        itemDescriptorProvider = provider;</span>
+<span class="fc" id="L40">    }</span>
 
     public PDescriptor itemDescriptor() {
-<span class="fc" id="L41">        return itemDescriptorProvider.descriptor();</span>
+<span class="fc" id="L43">        return itemDescriptorProvider.descriptor();</span>
     }
 
     @Override
     public String getProgramName() {
-<span class="fc" id="L46">        return null;</span>
+<span class="fc" id="L48">        return null;</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L51">        return getQualifiedName();</span>
+<span class="fc" id="L53">        return getQualifiedName();</span>
     }
 
     /**
      * Get an instance builder for the container.
      * @return The instance builder.
      */
+    @Nonnull
     public abstract PBuilder&lt;Container&gt; builder();
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

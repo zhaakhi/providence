@@ -21,8 +21,10 @@
 package net.morimekta.providence.descriptor;
 
 import net.morimekta.providence.PMessage;
-import net.morimekta.providence.PMessageBuilderFactory;
+import net.morimekta.providence.PMessageBuilder;
 import net.morimekta.providence.PMessageVariant;
+
+import java.util.function.Supplier;
 
 /**
  * The definition of a thrift structure.
@@ -30,14 +32,14 @@ import net.morimekta.providence.PMessageVariant;
 public abstract class PStructDescriptor&lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; extends PMessageDescriptor&lt;T, F&gt; {
     public PStructDescriptor(String programName,
                              String name,
-                             PMessageBuilderFactory&lt;T, F&gt; factory,
+                             Supplier&lt;PMessageBuilder&lt;T, F&gt;&gt; builderSupplier,
                              boolean simple) {
-<span class="fc" id="L35">        super(programName, name, factory, simple);</span>
-<span class="fc" id="L36">    }</span>
+<span class="fc" id="L37">        super(programName, name, builderSupplier, simple);</span>
+<span class="fc" id="L38">    }</span>
 
     @Override
     public PMessageVariant getVariant() {
-<span class="fc" id="L40">        return PMessageVariant.STRUCT;</span>
+<span class="fc" id="L42">        return PMessageVariant.STRUCT;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -21,12 +21,12 @@
 package net.morimekta.providence.generator.format.java.enums;
 
 import net.morimekta.providence.PEnumBuilder;
-import net.morimekta.providence.PEnumBuilderFactory;
 import net.morimekta.providence.PEnumValue;
 import net.morimekta.providence.descriptor.PEnumDescriptor;
 import net.morimekta.providence.descriptor.PEnumDescriptorProvider;
 import net.morimekta.providence.generator.GeneratorException;
 import net.morimekta.providence.generator.format.java.shared.EnumMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.JAnnotation;
 import net.morimekta.providence.generator.format.java.utils.JUtils;
 import net.morimekta.providence.reflect.contained.CEnumDescriptor;
 import net.morimekta.util.io.IndentedPrintWriter;
@@ -55,178 +55,153 @@ public class CoreMemberFormatter implements EnumMemberFormatter {
     @Override
     public void appendMethods(CEnumDescriptor type) throws GeneratorException {
 <span class="fc" id="L57">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L58">              .appendln(&quot;public int getValue() {&quot;)</span>
+<span class="fc" id="L58">              .appendln(&quot;public int asInteger() {&quot;)</span>
 <span class="fc" id="L59">              .begin()</span>
-<span class="fc" id="L60">              .appendln(&quot;return mValue;&quot;)</span>
+<span class="fc" id="L60">              .appendln(&quot;return mId;&quot;)</span>
 <span class="fc" id="L61">              .end()</span>
 <span class="fc" id="L62">              .appendln('}')</span>
 <span class="fc" id="L63">              .newline();</span>
 
 <span class="fc" id="L65">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L66">              .appendln(&quot;public String getName() {&quot;)</span>
-<span class="fc" id="L67">              .begin()</span>
-<span class="fc" id="L68">              .appendln(&quot;return mName;&quot;)</span>
-<span class="fc" id="L69">              .end()</span>
-<span class="fc" id="L70">              .appendln('}')</span>
-<span class="fc" id="L71">              .newline();</span>
-
-<span class="fc" id="L73">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L74">              .appendln(&quot;public int asInteger() {&quot;)</span>
-<span class="fc" id="L75">              .begin()</span>
-<span class="fc" id="L76">              .appendln(&quot;return mValue;&quot;)</span>
-<span class="fc" id="L77">              .end()</span>
-<span class="fc" id="L78">              .appendln('}')</span>
-<span class="fc" id="L79">              .newline();</span>
-
-<span class="fc" id="L81">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L82">              .appendln(&quot;public String asString() {&quot;)</span>
-<span class="fc" id="L83">              .begin()</span>
-<span class="fc" id="L84">              .appendln(&quot;return mName;&quot;)</span>
-<span class="fc" id="L85">              .end()</span>
-<span class="fc" id="L86">              .appendln('}')</span>
-<span class="fc" id="L87">              .newline();</span>
-<span class="fc" id="L88">    }</span>
+<span class="fc" id="L66">              .appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L67">              .appendln(&quot;public String asString() {&quot;)</span>
+<span class="fc" id="L68">              .begin()</span>
+<span class="fc" id="L69">              .appendln(&quot;return mName;&quot;)</span>
+<span class="fc" id="L70">              .end()</span>
+<span class="fc" id="L71">              .appendln('}')</span>
+<span class="fc" id="L72">              .newline();</span>
+<span class="fc" id="L73">    }</span>
 
     @Override
     public void appendExtraProperties(CEnumDescriptor type) throws GeneratorException {
-<span class="fc" id="L92">        appendBuilder(type);</span>
-<span class="fc" id="L93">        appendDescriptor(type);</span>
-<span class="fc" id="L94">    }</span>
+<span class="fc" id="L77">        appendBuilder(type);</span>
+<span class="fc" id="L78">        appendDescriptor(type);</span>
+<span class="fc" id="L79">    }</span>
 
     private void appendDescriptor(PEnumDescriptor&lt;?&gt; type) {
-<span class="fc" id="L97">        String simpleClass = JUtils.getClassName(type);</span>
+<span class="fc" id="L82">        String simpleClass = JUtils.getClassName(type);</span>
 
-<span class="fc" id="L99">        writer.formatln(&quot;public static final %s&lt;%s&gt; kDescriptor;&quot;,</span>
-<span class="fc" id="L100">                        PEnumDescriptor.class.getName(),</span>
+<span class="fc" id="L84">        writer.formatln(&quot;public static final %s&lt;%s&gt; kDescriptor;&quot;,</span>
+<span class="fc" id="L85">                        PEnumDescriptor.class.getName(),</span>
                         simpleClass)
-<span class="fc" id="L102">              .newline();</span>
+<span class="fc" id="L87">              .newline();</span>
 
-<span class="fc" id="L104">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L105">              .formatln(&quot;public %s&lt;%s&gt; descriptor() {&quot;,</span>
-<span class="fc" id="L106">                        PEnumDescriptor.class.getName(),</span>
+<span class="fc" id="L89">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L90">              .formatln(&quot;public %s&lt;%s&gt; descriptor() {&quot;,</span>
+<span class="fc" id="L91">                        PEnumDescriptor.class.getName(),</span>
                         simpleClass)
-<span class="fc" id="L108">              .begin()</span>
-<span class="fc" id="L109">              .appendln(&quot;return kDescriptor;&quot;)</span>
-<span class="fc" id="L110">              .end()</span>
-<span class="fc" id="L111">              .appendln('}')</span>
-<span class="fc" id="L112">              .newline();</span>
+<span class="fc" id="L93">              .begin()</span>
+<span class="fc" id="L94">              .appendln(&quot;return kDescriptor;&quot;)</span>
+<span class="fc" id="L95">              .end()</span>
+<span class="fc" id="L96">              .appendln('}')</span>
+<span class="fc" id="L97">              .newline();</span>
 
-<span class="fc" id="L114">        writer.formatln(&quot;public static %s&lt;%s&gt; provider() {&quot;,</span>
-<span class="fc" id="L115">                        PEnumDescriptorProvider.class.getName(),</span>
+<span class="fc" id="L99">        writer.formatln(&quot;public static %s&lt;%s&gt; provider() {&quot;,</span>
+<span class="fc" id="L100">                        PEnumDescriptorProvider.class.getName(),</span>
                         simpleClass)
-<span class="fc" id="L117">              .begin()</span>
-<span class="fc" id="L118">              .formatln(&quot;return new %s&lt;%s&gt;(kDescriptor);&quot;,</span>
-<span class="fc" id="L119">                        PEnumDescriptorProvider.class.getName(),</span>
+<span class="fc" id="L102">              .begin()</span>
+<span class="fc" id="L103">              .formatln(&quot;return new %s&lt;%s&gt;(kDescriptor);&quot;,</span>
+<span class="fc" id="L104">                        PEnumDescriptorProvider.class.getName(),</span>
+                        simpleClass)
+<span class="fc" id="L106">              .end()</span>
+<span class="fc" id="L107">              .appendln('}')</span>
+<span class="fc" id="L108">              .newline();</span>
+
+<span class="fc" id="L110">        writer.appendln(&quot;private static class _Descriptor&quot;)</span>
+<span class="fc" id="L111">              .formatln(&quot;        extends %s&lt;%s&gt; {&quot;,</span>
+<span class="fc" id="L112">                        PEnumDescriptor.class.getName(),</span>
+                        simpleClass)
+<span class="fc" id="L114">              .begin()</span>
+<span class="fc" id="L115">              .appendln(&quot;public _Descriptor() {&quot;)</span>
+<span class="fc" id="L116">              .begin()</span>
+<span class="fc" id="L117">              .formatln(&quot;super(\&quot;%s\&quot;, \&quot;%s\&quot;, _Builder::new);&quot;,</span>
+<span class="fc" id="L118">                        type.getProgramName(),</span>
+<span class="fc" id="L119">                        type.getName(),</span>
                         simpleClass)
 <span class="fc" id="L121">              .end()</span>
 <span class="fc" id="L122">              .appendln('}')</span>
-<span class="fc" id="L123">              .newline();</span>
+<span class="fc" id="L123">              .newline()</span>
+<span class="fc" id="L124">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L125">              .appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L126">              .formatln(&quot;public %s[] getValues() {&quot;, simpleClass)</span>
+<span class="fc" id="L127">              .begin()</span>
+<span class="fc" id="L128">              .formatln(&quot;return %s.values();&quot;, simpleClass)</span>
+<span class="fc" id="L129">              .end()</span>
+<span class="fc" id="L130">              .appendln('}')</span>
+<span class="fc" id="L131">              .newline()</span>
+<span class="fc" id="L132">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L133">              .appendln(JAnnotation.NULLABLE)</span>
+<span class="fc" id="L134">              .formatln(&quot;public %s findById(int id) {&quot;, simpleClass)</span>
+<span class="fc" id="L135">              .begin()</span>
+<span class="fc" id="L136">              .formatln(&quot;return %s.findById(id);&quot;, simpleClass)</span>
+<span class="fc" id="L137">              .end()</span>
+<span class="fc" id="L138">              .appendln('}')</span>
+<span class="fc" id="L139">              .newline()</span>
+<span class="fc" id="L140">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L141">              .appendln(JAnnotation.NULLABLE)</span>
+<span class="fc" id="L142">              .formatln(&quot;public %s findByName(String name) {&quot;, simpleClass)</span>
+<span class="fc" id="L143">              .begin()</span>
+<span class="fc" id="L144">              .formatln(&quot;return %s.findByName(name);&quot;, simpleClass)</span>
+<span class="fc" id="L145">              .end()</span>
+<span class="fc" id="L146">              .appendln('}')</span>
+<span class="fc" id="L147">              .end()</span>
+<span class="fc" id="L148">              .appendln('}')</span>
+<span class="fc" id="L149">              .newline();</span>
 
-<span class="fc" id="L125">        writer.appendln(&quot;private static class _Factory&quot;)</span>
-<span class="fc" id="L126">              .begin()</span>
-<span class="fc" id="L127">              .formatln(&quot;    extends %s&lt;%s&gt; {&quot;,</span>
-<span class="fc" id="L128">                        PEnumBuilderFactory.class.getName(),</span>
-                        simpleClass)
-<span class="fc" id="L130">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L131">              .formatln(&quot;public %s._Builder builder() {&quot;, simpleClass)</span>
-<span class="fc" id="L132">              .begin()</span>
-<span class="fc" id="L133">              .formatln(&quot;return new %s._Builder();&quot;, simpleClass)</span>
-<span class="fc" id="L134">              .end()</span>
-<span class="fc" id="L135">              .appendln('}')</span>
-<span class="fc" id="L136">              .end()</span>
-<span class="fc" id="L137">              .appendln('}')</span>
-<span class="fc" id="L138">              .newline();</span>
-
-<span class="fc" id="L140">        writer.appendln(&quot;private static class _Descriptor&quot;)</span>
-<span class="fc" id="L141">              .formatln(&quot;        extends %s&lt;%s&gt; {&quot;,</span>
-<span class="fc" id="L142">                        PEnumDescriptor.class.getName(),</span>
-                        simpleClass)
-<span class="fc" id="L144">              .begin()</span>
-<span class="fc" id="L145">              .appendln(&quot;public _Descriptor() {&quot;)</span>
-<span class="fc" id="L146">              .begin()</span>
-<span class="fc" id="L147">              .formatln(&quot;super(\&quot;%s\&quot;, \&quot;%s\&quot;, new _Factory());&quot;,</span>
-<span class="fc" id="L148">                        type.getProgramName(),</span>
-<span class="fc" id="L149">                        type.getName(),</span>
-                        simpleClass)
-<span class="fc" id="L151">              .end()</span>
-<span class="fc" id="L152">              .appendln('}')</span>
-<span class="fc" id="L153">              .newline()</span>
-<span class="fc" id="L154">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L155">              .formatln(&quot;public %s[] getValues() {&quot;, simpleClass)</span>
-<span class="fc" id="L156">              .begin()</span>
-<span class="fc" id="L157">              .formatln(&quot;return %s.values();&quot;, simpleClass)</span>
-<span class="fc" id="L158">              .end()</span>
-<span class="fc" id="L159">              .appendln('}')</span>
-<span class="fc" id="L160">              .newline()</span>
-<span class="fc" id="L161">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L162">              .formatln(&quot;public %s getValueById(int id) {&quot;, simpleClass)</span>
-<span class="fc" id="L163">              .begin()</span>
-<span class="fc" id="L164">              .formatln(&quot;return %s.forValue(id);&quot;, simpleClass)</span>
-<span class="fc" id="L165">              .end()</span>
-<span class="fc" id="L166">              .appendln('}')</span>
-<span class="fc" id="L167">              .newline()</span>
-<span class="fc" id="L168">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L169">              .formatln(&quot;public %s getValueByName(String name) {&quot;, simpleClass)</span>
-<span class="fc" id="L170">              .begin()</span>
-<span class="fc" id="L171">              .formatln(&quot;return %s.forName(name);&quot;, simpleClass)</span>
-<span class="fc" id="L172">              .end()</span>
-<span class="fc" id="L173">              .appendln('}')</span>
-<span class="fc" id="L174">              .end()</span>
-<span class="fc" id="L175">              .appendln('}')</span>
-<span class="fc" id="L176">              .newline();</span>
-
-<span class="fc" id="L178">        writer.formatln(&quot;static {&quot;, simpleClass)</span>
-<span class="fc" id="L179">              .begin();</span>
-<span class="fc" id="L180">        writer.appendln(&quot;kDescriptor = new _Descriptor();&quot;)</span>
-<span class="fc" id="L181">              .end()</span>
-<span class="fc" id="L182">              .appendln('}');</span>
-<span class="fc" id="L183">    }</span>
+<span class="fc" id="L151">        writer.formatln(&quot;static {&quot;, simpleClass)</span>
+<span class="fc" id="L152">              .begin();</span>
+<span class="fc" id="L153">        writer.appendln(&quot;kDescriptor = new _Descriptor();&quot;)</span>
+<span class="fc" id="L154">              .end()</span>
+<span class="fc" id="L155">              .appendln('}');</span>
+<span class="fc" id="L156">    }</span>
 
     private void appendBuilder(PEnumDescriptor&lt;?&gt; type) {
-<span class="fc" id="L186">        String simpleClass = JUtils.getClassName(type);</span>
-<span class="fc" id="L187">        writer.formatln(&quot;public static class _Builder extends %s&lt;%s&gt; {&quot;,</span>
-<span class="fc" id="L188">                        PEnumBuilder.class.getName(),</span>
+<span class="fc" id="L159">        String simpleClass = JUtils.getClassName(type);</span>
+<span class="fc" id="L160">        writer.formatln(&quot;public static class _Builder extends %s&lt;%s&gt; {&quot;,</span>
+<span class="fc" id="L161">                        PEnumBuilder.class.getName(),</span>
                         simpleClass)
-<span class="fc" id="L190">              .begin()</span>
-<span class="fc" id="L191">              .formatln(&quot;%s mValue;&quot;, simpleClass)</span>
-<span class="fc" id="L192">              .newline();</span>
+<span class="fc" id="L163">              .begin()</span>
+<span class="fc" id="L164">              .formatln(&quot;%s mValue;&quot;, simpleClass)</span>
+<span class="fc" id="L165">              .newline();</span>
 
-<span class="fc" id="L194">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L195">              .appendln(&quot;public _Builder setByValue(int value) {&quot;)</span>
-<span class="fc" id="L196">              .begin()</span>
-<span class="fc" id="L197">              .formatln(&quot;mValue = %s.forValue(value);&quot;, simpleClass)</span>
-<span class="fc" id="L198">              .appendln(&quot;return this;&quot;)</span>
+<span class="fc" id="L167">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L168">              .appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L169">              .appendln(&quot;public _Builder setById(int value) {&quot;)</span>
+<span class="fc" id="L170">              .begin()</span>
+<span class="fc" id="L171">              .formatln(&quot;mValue = %s.findById(value);&quot;, simpleClass)</span>
+<span class="fc" id="L172">              .appendln(&quot;return this;&quot;)</span>
+<span class="fc" id="L173">              .end()</span>
+<span class="fc" id="L174">              .appendln('}')</span>
+<span class="fc" id="L175">              .newline();</span>
+
+<span class="fc" id="L177">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L178">              .appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L179">              .appendln(&quot;public _Builder setByName(String name) {&quot;)</span>
+<span class="fc" id="L180">              .begin()</span>
+<span class="fc" id="L181">              .formatln(&quot;mValue = %s.findByName(name);&quot;, simpleClass)</span>
+<span class="fc" id="L182">              .appendln(&quot;return this;&quot;)</span>
+<span class="fc" id="L183">              .end()</span>
+<span class="fc" id="L184">              .appendln('}')</span>
+<span class="fc" id="L185">              .newline();</span>
+
+<span class="fc" id="L187">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L188">              .appendln(&quot;public boolean valid() {&quot;)</span>
+<span class="fc" id="L189">              .begin()</span>
+<span class="fc" id="L190">              .appendln(&quot;return mValue != null;&quot;)</span>
+<span class="fc" id="L191">              .end()</span>
+<span class="fc" id="L192">              .appendln('}')</span>
+<span class="fc" id="L193">              .newline();</span>
+
+<span class="fc" id="L195">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L196">              .formatln(&quot;public %s build() {&quot;, simpleClass)</span>
+<span class="fc" id="L197">              .begin()</span>
+<span class="fc" id="L198">              .appendln(&quot;return mValue;&quot;)</span>
 <span class="fc" id="L199">              .end()</span>
-<span class="fc" id="L200">              .appendln('}')</span>
-<span class="fc" id="L201">              .newline();</span>
+<span class="fc" id="L200">              .appendln('}');</span>
 
-<span class="fc" id="L203">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L204">              .appendln(&quot;public _Builder setByName(String name) {&quot;)</span>
-<span class="fc" id="L205">              .begin()</span>
-<span class="fc" id="L206">              .formatln(&quot;mValue = %s.forName(name);&quot;, simpleClass)</span>
-<span class="fc" id="L207">              .appendln(&quot;return this;&quot;)</span>
-<span class="fc" id="L208">              .end()</span>
-<span class="fc" id="L209">              .appendln('}')</span>
-<span class="fc" id="L210">              .newline();</span>
-
-<span class="fc" id="L212">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L213">              .appendln(&quot;public boolean valid() {&quot;)</span>
-<span class="fc" id="L214">              .begin()</span>
-<span class="fc" id="L215">              .appendln(&quot;return mValue != null;&quot;)</span>
-<span class="fc" id="L216">              .end()</span>
-<span class="fc" id="L217">              .appendln('}')</span>
-<span class="fc" id="L218">              .newline();</span>
-
-<span class="fc" id="L220">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L221">              .formatln(&quot;public %s build() {&quot;, simpleClass)</span>
-<span class="fc" id="L222">              .begin()</span>
-<span class="fc" id="L223">              .appendln(&quot;return mValue;&quot;)</span>
-<span class="fc" id="L224">              .end()</span>
-<span class="fc" id="L225">              .appendln('}');</span>
-
-<span class="fc" id="L227">        writer.end()</span>
-<span class="fc" id="L228">              .appendln('}')</span>
-<span class="fc" id="L229">              .newline();</span>
-<span class="fc" id="L230">    }</span>
+<span class="fc" id="L202">        writer.end()</span>
+<span class="fc" id="L203">              .appendln('}')</span>
+<span class="fc" id="L204">              .newline();</span>
+<span class="fc" id="L205">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

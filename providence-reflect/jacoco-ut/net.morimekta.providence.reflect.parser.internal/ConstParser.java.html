@@ -149,13 +149,13 @@ public class ConstParser {
 <span class="fc" id="L149">                skipUntil(tokenizer, ThriftTokenizer.kBlockCommentEnd.getBytes(UTF_8));</span>
 <span class="fc" id="L150">                continue;</span>
             }
-<span class="fc" id="L152">            Field field = type.getField(token.decodeLiteral(true));</span>
+<span class="fc" id="L152">            Field field = type.findFieldByName(token.decodeLiteral(true));</span>
 <span class="pc bpc" id="L153" title="1 of 2 branches missed.">            if (field == null) {</span>
 <span class="nc" id="L154">                throw tokenizer.failure(token, &quot;Not a valid field name: &quot; + token.decodeLiteral(true));</span>
             }
 <span class="fc" id="L156">            tokenizer.expectSymbol(&quot;message key-value sep&quot;, Token.kKeyValueSep);</span>
 
-<span class="fc" id="L158">            builder.set(field.getKey(),</span>
+<span class="fc" id="L158">            builder.set(field.getId(),</span>
 <span class="fc" id="L159">                        parseTypedValue(tokenizer.expect(&quot;parsing field value&quot;), tokenizer, field.getDescriptor(), false));</span>
 
 <span class="fc" id="L161">            token = tokenizer.peek(&quot;optional line sep or message end&quot;);</span>
@@ -388,7 +388,7 @@ public class ConstParser {
             case ENUM:
 <span class="nc" id="L389">                PEnumBuilder&lt;?&gt; eb = ((PEnumDescriptor&lt;?&gt;) keyType).builder();</span>
 <span class="nc bnc" id="L390" title="All 2 branches missed.">                if (Strings.isInteger(key)) {</span>
-<span class="nc" id="L391">                    return eb.setByValue(Integer.parseInt(key))</span>
+<span class="nc" id="L391">                    return eb.setById(Integer.parseInt(key))</span>
 <span class="nc" id="L392">                             .build();</span>
                 } else {
 <span class="nc bnc" id="L394" title="All 2 branches missed.">                    if (key.startsWith(keyType.getProgramName() + &quot;.&quot; + keyType.getName() + &quot;.&quot;)) {</span>
@@ -465,9 +465,9 @@ public class ConstParser {
 <span class="fc" id="L465">        PDeclaredDescriptor descriptor = registry.getDeclaredType(typeName, programContext);</span>
 <span class="pc bpc" id="L466" title="2 of 4 branches missed.">        if (descriptor != null &amp;&amp; descriptor instanceof PEnumDescriptor) {</span>
 <span class="fc" id="L467">            PEnumDescriptor desc = (PEnumDescriptor) descriptor;</span>
-<span class="fc" id="L468">            PEnumValue value = desc.getValueByName(valueName);</span>
+<span class="fc" id="L468">            PEnumValue value = desc.findByName(valueName);</span>
 <span class="pc bpc" id="L469" title="1 of 2 branches missed.">            if (value != null) {</span>
-<span class="fc" id="L470">                return value.getValue();</span>
+<span class="fc" id="L470">                return value.asInteger();</span>
             }
         }
 

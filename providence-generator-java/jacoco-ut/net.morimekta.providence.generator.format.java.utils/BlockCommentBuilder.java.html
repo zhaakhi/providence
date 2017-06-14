@@ -25,6 +25,8 @@ import net.morimekta.util.io.IndentedPrintWriter;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 
+import javax.annotation.Nonnull;
+
 /**
  * Builds a proper block javadoc-compatible comment.
  */
@@ -32,69 +34,75 @@ public class BlockCommentBuilder {
     private final IndentedPrintWriter writer;
     private final Escaper             html;
 
-<span class="fc" id="L35">    public BlockCommentBuilder(IndentedPrintWriter writer) {</span>
-<span class="fc" id="L36">        this.html = HtmlEscapers.htmlEscaper();</span>
-<span class="fc" id="L37">        this.writer = writer;</span>
+<span class="fc" id="L37">    public BlockCommentBuilder(IndentedPrintWriter writer) {</span>
+<span class="fc" id="L38">        this.html = HtmlEscapers.htmlEscaper();</span>
+<span class="fc" id="L39">        this.writer = writer;</span>
 
-<span class="fc" id="L39">        writer.appendln(&quot;/**&quot;)</span>
-<span class="fc" id="L40">              .begin(&quot; *&quot;);</span>
-<span class="fc" id="L41">    }</span>
+<span class="fc" id="L41">        writer.appendln(&quot;/**&quot;)</span>
+<span class="fc" id="L42">              .begin(&quot; *&quot;);</span>
+<span class="fc" id="L43">    }</span>
 
     public BlockCommentBuilder comment(String comment) {
-<span class="fc" id="L44">        String escaped = html.escape(comment).replaceAll(&quot;[@]&quot;, &quot;&amp;#64;&quot;);</span>
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        for (String line : escaped.trim().split(&quot;\r?\n&quot;)) {</span>
-<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (line.trim().length() == 0) {</span>
-<span class="fc" id="L47">                writer.appendln(&quot; &lt;p&gt;&quot;);</span>
+<span class="fc" id="L46">        String escaped = html.escape(comment).replaceAll(&quot;[@]&quot;, &quot;&amp;#64;&quot;);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (String line : escaped.trim().split(&quot;\r?\n&quot;)) {</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (line.trim().length() == 0) {</span>
+<span class="fc" id="L49">                writer.appendln(&quot; &lt;p&gt;&quot;);</span>
             } else {
-<span class="fc" id="L49">                writer.appendln(&quot; &quot; + line.replaceAll(&quot;[ ]*$&quot;, &quot;&quot;));</span>
+<span class="fc" id="L51">                writer.appendln(&quot; &quot; + line.replaceAll(&quot;[ ]*$&quot;, &quot;&quot;));</span>
             }
         }
 
-<span class="fc" id="L53">        return this;</span>
+<span class="fc" id="L55">        return this;</span>
     }
 
     public BlockCommentBuilder newline() {
-<span class="fc" id="L57">        writer.appendln();</span>
-<span class="fc" id="L58">        return this;</span>
+<span class="fc" id="L59">        writer.appendln();</span>
+<span class="fc" id="L60">        return this;</span>
     }
 
     public BlockCommentBuilder param_(String name, String comment) {
-<span class="fc" id="L62">        writer.formatln(&quot; @param %s %s&quot;, name, html.escape(comment));</span>
-<span class="fc" id="L63">        return this;</span>
+<span class="fc" id="L64">        writer.formatln(&quot; @param %s %s&quot;, name, html.escape(comment));</span>
+<span class="fc" id="L65">        return this;</span>
     }
 
     public BlockCommentBuilder return_(String comment) {
-<span class="fc" id="L67">        writer.formatln(&quot; @return %s&quot;, html.escape(comment));</span>
-<span class="fc" id="L68">        return this;</span>
+<span class="fc" id="L69">        writer.formatln(&quot; @return %s&quot;, html.escape(comment));</span>
+<span class="fc" id="L70">        return this;</span>
     }
 
     public BlockCommentBuilder throws_(Class&lt;?&gt; klass, String comment) {
-<span class="fc" id="L72">        return throws_(klass.getName().replaceAll(&quot;[$]&quot;, &quot;.&quot;), comment);</span>
+<span class="fc" id="L74">        return throws_(klass.getName().replaceAll(&quot;[$]&quot;, &quot;.&quot;), comment);</span>
     }
 
     public BlockCommentBuilder throws_(String klass, String comment) {
-<span class="fc" id="L76">        writer.formatln(&quot; @throws %s %s&quot;,</span>
+<span class="fc" id="L78">        writer.formatln(&quot; @throws %s %s&quot;,</span>
                         klass,
-<span class="fc" id="L78">                        html.escape(comment));</span>
-<span class="fc" id="L79">        return this;</span>
+<span class="fc" id="L80">                        html.escape(comment));</span>
+<span class="fc" id="L81">        return this;</span>
     }
 
     public BlockCommentBuilder see_(Class&lt;?&gt; klass, String comment) {
-<span class="nc" id="L83">        writer.formatln(&quot; @see %s %s&quot;,</span>
-<span class="nc" id="L84">                        klass.getName().replaceAll(&quot;[$]&quot;, &quot;.&quot;),</span>
-<span class="nc" id="L85">                        html.escape(comment));</span>
-<span class="nc" id="L86">        return this;</span>
+<span class="nc" id="L85">        return see_(klass.getName().replaceAll(&quot;[$]&quot;, &quot;.&quot;), comment);</span>
     }
 
     public BlockCommentBuilder see_(String klass, String comment) {
-<span class="nc" id="L90">        writer.formatln(&quot; @see %s %s&quot;,</span>
-<span class="nc" id="L91">                        html.escape(comment));</span>
-<span class="nc" id="L92">        return this;</span>
+<span class="nc" id="L89">        writer.formatln(&quot; @see %s %s&quot;, klass, html.escape(comment));</span>
+<span class="nc" id="L90">        return this;</span>
+    }
+
+    public BlockCommentBuilder deprecated_(@Nonnull String useInstead) {
+<span class="nc" id="L94">        writer.formatln(&quot; @deprecated Use {@link %s} instead.&quot;, useInstead);</span>
+<span class="nc" id="L95">        return this;</span>
+    }
+
+    public BlockCommentBuilder deprecated_(@Nonnull String useInstead, @Nonnull String reason) {
+<span class="nc" id="L99">        writer.formatln(&quot; @deprecated %s. Use {@link %s} instead.&quot;, html.escape(reason), useInstead);</span>
+<span class="nc" id="L100">        return this;</span>
     }
 
     public void finish() {
-<span class="fc" id="L96">        writer.end()</span>
-<span class="fc" id="L97">              .appendln(&quot; */&quot;);</span>
-<span class="fc" id="L98">    }</span>
+<span class="fc" id="L104">        writer.end()</span>
+<span class="fc" id="L105">              .appendln(&quot; */&quot;);</span>
+<span class="fc" id="L106">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

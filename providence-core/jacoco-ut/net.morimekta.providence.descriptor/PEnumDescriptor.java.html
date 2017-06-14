@@ -21,13 +21,13 @@
 package net.morimekta.providence.descriptor;
 
 import net.morimekta.providence.PEnumBuilder;
-import net.morimekta.providence.PEnumBuilderFactory;
 import net.morimekta.providence.PEnumValue;
 import net.morimekta.providence.PType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * The definition of a thrift enum.
@@ -36,11 +36,11 @@ public abstract class PEnumDescriptor&lt;T extends PEnumValue&lt;T&gt;&gt; exten
     // According to doc it's 1, but the current c++ compiler makes it 0...
     public static final int DEFAULT_FIRST_VALUE = 0;
 
-    private final PEnumBuilderFactory&lt;T&gt; factory;
+    private final Supplier&lt;PEnumBuilder&lt;T&gt;&gt; builderSupplier;
 
-    public PEnumDescriptor(String packageName, String name, PEnumBuilderFactory&lt;T&gt; provider) {
+    public PEnumDescriptor(String packageName, String name, Supplier&lt;PEnumBuilder&lt;T&gt;&gt; provider) {
 <span class="fc" id="L42">        super(packageName, name);</span>
-<span class="fc" id="L43">        factory = provider;</span>
+<span class="fc" id="L43">        builderSupplier = provider;</span>
 <span class="fc" id="L44">    }</span>
 
     @Nonnull
@@ -60,54 +60,84 @@ public abstract class PEnumDescriptor&lt;T extends PEnumValue&lt;T&gt;&gt; exten
      * @return Enum if found, null otherwise.
      */
     @Nullable
-    public abstract T getValueById(int id);
+    public abstract T findById(int id);
 
     /**
      * @param name Name to look up enum from.
      * @return Enum if found, null otherwise.
      */
-    public abstract T getValueByName(String name);
+    @Nullable
+    public abstract T findByName(String name);
 
+    /**
+     * @param id Value to look up enum from.
+     * @return The enum value.
+     * @throws IllegalArgumentException If value not found.
+     */
+    @Nonnull
+    public T valueForId(int id) {
+<span class="nc" id="L79">        T value = findById(id);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (value == null) {</span>
+<span class="nc" id="L81">            throw new IllegalArgumentException(&quot;No &quot; + getQualifiedName() + &quot; for id &quot; + id);</span>
+        }
+<span class="nc" id="L83">        return value;</span>
+    }
+
+    /**
+     * @param name Name to look up enum from.
+     * @return The enum value.
+     * @throws IllegalArgumentException If value not found.
+     */
+    @Nonnull
+    public T valueForName(String name) {
+<span class="nc" id="L93">        T value = findByName(name);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (value == null) {</span>
+<span class="nc" id="L95">            throw new IllegalArgumentException(&quot;No &quot; + getQualifiedName() + &quot; for name \&quot; &quot; + name + &quot;\&quot;&quot;);</span>
+        }
+<span class="nc" id="L97">        return value;</span>
+    }
+
+    @Nonnull
     @Override
     public PEnumBuilder&lt;T&gt; builder() {
-<span class="fc" id="L73">        return factory.builder();</span>
+<span class="fc" id="L103">        return builderSupplier.get();</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L78">        return getQualifiedName();</span>
+<span class="fc" id="L108">        return getQualifiedName();</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (o == this) {</span>
-<span class="fc" id="L84">            return true;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (o == this) {</span>
+<span class="fc" id="L114">            return true;</span>
         }
-<span class="fc bfc" id="L86" title="All 4 branches covered.">        if (o == null || !(o.getClass().equals(getClass()))) {</span>
-<span class="fc" id="L87">            return false;</span>
+<span class="fc bfc" id="L116" title="All 4 branches covered.">        if (o == null || !(o.getClass().equals(getClass()))) {</span>
+<span class="fc" id="L117">            return false;</span>
         }
-<span class="fc" id="L89">        PEnumDescriptor&lt;?&gt; other = (PEnumDescriptor&lt;?&gt;) o;</span>
-<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (!getQualifiedName().equals(other.getQualifiedName()) ||</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">            getValues().length != other.getValues().length) {</span>
-<span class="fc" id="L92">            return false;</span>
+<span class="fc" id="L119">        PEnumDescriptor&lt;?&gt; other = (PEnumDescriptor&lt;?&gt;) o;</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (!getQualifiedName().equals(other.getQualifiedName()) ||</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            getValues().length != other.getValues().length) {</span>
+<span class="fc" id="L122">            return false;</span>
         }
-<span class="fc bfc" id="L94" title="All 2 branches covered.">        for (PEnumValue&lt;?&gt; value : getValues()) {</span>
-<span class="fc" id="L95">            PEnumValue&lt;?&gt; ovI = other.getValueById(value.getValue());</span>
-<span class="pc bpc" id="L96" title="1 of 4 branches missed.">            if (ovI != null &amp;&amp; !value.getName().equals(ovI.getName())) {</span>
-<span class="fc" id="L97">                return false;</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        for (PEnumValue&lt;?&gt; value : getValues()) {</span>
+<span class="fc" id="L125">            PEnumValue&lt;?&gt; ovI = other.findById(value.asInteger());</span>
+<span class="pc bpc" id="L126" title="1 of 4 branches missed.">            if (ovI != null &amp;&amp; !value.asString().equals(ovI.asString())) {</span>
+<span class="fc" id="L127">                return false;</span>
             }
         }
 
-<span class="fc" id="L101">        return true;</span>
+<span class="fc" id="L131">        return true;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L106">        return Objects.hash(PEnumDescriptor.class, getQualifiedName());</span>
+<span class="fc" id="L136">        return Objects.hash(PEnumDescriptor.class, getQualifiedName());</span>
     }
 
-    protected PEnumBuilderFactory&lt;T&gt; getFactoryInternal() {
-<span class="fc" id="L110">        return factory;</span>
+    protected Supplier&lt;PEnumBuilder&lt;T&gt;&gt; getBuilderSupplier() {
+<span class="fc" id="L140">        return builderSupplier;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

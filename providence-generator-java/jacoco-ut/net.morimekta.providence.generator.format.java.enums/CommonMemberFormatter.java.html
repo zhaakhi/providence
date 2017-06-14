@@ -24,6 +24,7 @@ import net.morimekta.providence.PEnumValue;
 import net.morimekta.providence.generator.GeneratorException;
 import net.morimekta.providence.generator.format.java.JavaOptions;
 import net.morimekta.providence.generator.format.java.shared.EnumMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.BlockCommentBuilder;
 import net.morimekta.providence.generator.format.java.utils.JAnnotation;
 import net.morimekta.providence.generator.format.java.utils.JUtils;
 import net.morimekta.providence.reflect.contained.CAnnotatedDescriptor;
@@ -43,67 +44,156 @@ public class CommonMemberFormatter implements EnumMemberFormatter {
     private final JavaOptions options;
     private final String version;
 
-<span class="fc" id="L46">    public CommonMemberFormatter(IndentedPrintWriter writer, JavaOptions options) {</span>
-<span class="fc" id="L47">        this.writer = writer;</span>
-<span class="fc" id="L48">        this.options = options;</span>
+<span class="fc" id="L47">    public CommonMemberFormatter(IndentedPrintWriter writer, JavaOptions options) {</span>
+<span class="fc" id="L48">        this.writer = writer;</span>
+<span class="fc" id="L49">        this.options = options;</span>
 
         try {
-<span class="fc" id="L51">            Properties properties = new Properties();</span>
-<span class="fc" id="L52">            properties.load(getClass().getResourceAsStream(&quot;/java_generator_version.properties&quot;));</span>
+<span class="fc" id="L52">            Properties properties = new Properties();</span>
+<span class="fc" id="L53">            properties.load(getClass().getResourceAsStream(&quot;/java_generator_version.properties&quot;));</span>
 
-<span class="fc" id="L54">            this.version = properties.getProperty(&quot;java_generator_version&quot;);</span>
-<span class="nc" id="L55">        } catch (IOException e) {</span>
-<span class="nc" id="L56">            throw new UncheckedIOException(e);</span>
-<span class="fc" id="L57">        }</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L55">            this.version = properties.getProperty(&quot;java_generator_version&quot;);</span>
+<span class="nc" id="L56">        } catch (IOException e) {</span>
+<span class="nc" id="L57">            throw new UncheckedIOException(e);</span>
+<span class="fc" id="L58">        }</span>
+<span class="fc" id="L59">    }</span>
 
     @Override
     public void appendClassAnnotations(CEnumDescriptor type) throws GeneratorException {
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if (JAnnotation.isDeprecated((CAnnotatedDescriptor) type)) {</span>
-<span class="nc" id="L63">            writer.appendln(JAnnotation.DEPRECATED);</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (JAnnotation.isDeprecated((CAnnotatedDescriptor) type)) {</span>
+<span class="nc" id="L64">            writer.appendln(JAnnotation.DEPRECATED);</span>
         }
-<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (options.generated_annotation) {</span>
-<span class="nc" id="L66">            writer.formatln(&quot;@%s(\&quot;providence java generator %s\&quot;)&quot;, Generated.class.getName(), version);</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (options.generated_annotation_version) {</span>
+<span class="nc" id="L67">            writer.formatln(&quot;@%s(\&quot;providence java generator %s\&quot;)&quot;, Generated.class.getName(), version);</span>
+        } else {
+<span class="fc" id="L69">            writer.formatln(&quot;@%s(\&quot;providence java generator\&quot;)&quot;, Generated.class.getName());</span>
         }
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L71">    }</span>
+
+    public void appendStaticGetter_Legacy(CEnumDescriptor type, String simpleClass) {
+<span class="nc" id="L74">        new BlockCommentBuilder(writer)</span>
+<span class="nc" id="L75">                .comment(&quot;Find a value based in its ID&quot;)</span>
+<span class="nc" id="L76">                .newline()</span>
+<span class="nc" id="L77">                .param_(&quot;id&quot;, &quot;Id of value&quot;)</span>
+<span class="nc" id="L78">                .return_(&quot;Value found or null&quot;)</span>
+<span class="nc" id="L79">                .deprecated_(&quot;#findById(int)&quot;)</span>
+<span class="nc" id="L80">                .finish();</span>
+<span class="nc" id="L81">        writer.appendln(&quot;@Deprecated&quot;)</span>
+<span class="nc" id="L82">              .formatln(&quot;public static %s forValue(int id) {&quot;, simpleClass)</span>
+<span class="nc" id="L83">              .appendln(&quot;    return findById(id);&quot;)</span>
+<span class="nc" id="L84">              .appendln('}')</span>
+<span class="nc" id="L85">              .newline();</span>
+
+<span class="nc" id="L87">        new BlockCommentBuilder(writer)</span>
+<span class="nc" id="L88">                .comment(&quot;Find a value based in its name&quot;)</span>
+<span class="nc" id="L89">                .newline()</span>
+<span class="nc" id="L90">                .param_(&quot;name&quot;, &quot;Name of value&quot;)</span>
+<span class="nc" id="L91">                .return_(&quot;Value found or null&quot;)</span>
+<span class="nc" id="L92">                .deprecated_(&quot;#findByName(String)&quot;)</span>
+<span class="nc" id="L93">                .finish();</span>
+<span class="nc" id="L94">        writer.appendln(&quot;@Deprecated&quot;)</span>
+<span class="nc" id="L95">              .formatln(&quot;public static %s forName(String name) {&quot;, simpleClass)</span>
+<span class="nc" id="L96">              .appendln(&quot;    return findByName(name);&quot;)</span>
+<span class="nc" id="L97">              .appendln('}')</span>
+<span class="nc" id="L98">              .newline();</span>
+<span class="nc" id="L99">    }</span>
+
+    public void appendStaticGetter_FindBy(CEnumDescriptor type, String simpleClass) {
+<span class="fc" id="L102">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L103">                .comment(&quot;Find a value based in its ID&quot;)</span>
+<span class="fc" id="L104">                .newline()</span>
+<span class="fc" id="L105">                .param_(&quot;id&quot;, &quot;Id of value&quot;)</span>
+<span class="fc" id="L106">                .return_(&quot;Value found or null&quot;)</span>
+<span class="fc" id="L107">                .finish();</span>
+<span class="fc" id="L108">        writer.formatln(&quot;public static %s findById(int id) {&quot;, simpleClass)</span>
+<span class="fc" id="L109">              .begin()</span>
+<span class="fc" id="L110">              .appendln(&quot;switch (id) {&quot;)</span>
+<span class="fc" id="L111">              .begin();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for (PEnumValue&lt;?&gt; value : type.getValues()) {</span>
+<span class="fc" id="L113">            writer.formatln(&quot;case %d: return %s.%s;&quot;,</span>
+<span class="fc" id="L114">                            value.asInteger(),</span>
+                            simpleClass,
+<span class="fc" id="L116">                            JUtils.enumConst(value));</span>
+        }
+<span class="fc" id="L118">        writer.appendln(&quot;default: return null;&quot;)</span>
+<span class="fc" id="L119">              .end()</span>
+<span class="fc" id="L120">              .appendln('}')</span>
+<span class="fc" id="L121">              .end()</span>
+<span class="fc" id="L122">              .appendln('}')</span>
+<span class="fc" id="L123">              .newline();</span>
+
+<span class="fc" id="L125">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L126">                .comment(&quot;Find a value based in its name&quot;)</span>
+<span class="fc" id="L127">                .newline()</span>
+<span class="fc" id="L128">                .param_(&quot;name&quot;, &quot;Name of value&quot;)</span>
+<span class="fc" id="L129">                .return_(&quot;Value found or null&quot;)</span>
+<span class="fc" id="L130">                .finish();</span>
+<span class="fc" id="L131">        writer.formatln(&quot;public static %s findByName(String name) {&quot;, simpleClass)</span>
+<span class="fc" id="L132">              .begin()</span>
+<span class="fc" id="L133">              .appendln(&quot;if (name == null) {&quot;)</span>
+<span class="fc" id="L134">              .formatln(&quot;    throw new IllegalArgumentException(\&quot;Null name given\&quot;);&quot;, type.getQualifiedName())</span>
+<span class="fc" id="L135">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L136">              .appendln(&quot;switch (name) {&quot;)</span>
+<span class="fc" id="L137">              .begin();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (PEnumValue&lt;?&gt; value : type.getValues()) {</span>
+<span class="fc" id="L139">            writer.formatln(&quot;case \&quot;%s\&quot;: return %s.%s;&quot;,</span>
+<span class="fc" id="L140">                            value.asString(),</span>
+                            simpleClass,
+<span class="fc" id="L142">                            JUtils.enumConst(value));</span>
+        }
+<span class="fc" id="L144">        writer.appendln(&quot;default: return null;&quot;)</span>
+<span class="fc" id="L145">              .end()</span>
+<span class="fc" id="L146">              .appendln('}')</span>
+<span class="fc" id="L147">              .end()</span>
+<span class="fc" id="L148">              .appendln('}')</span>
+<span class="fc" id="L149">              .newline();</span>
+<span class="fc" id="L150">    }</span>
+
+    public void appendStaticGetter_ValueFor(CEnumDescriptor type, String simpleClass) {
+<span class="fc" id="L153">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L154">                .comment(&quot;Get a value based in its ID&quot;)</span>
+<span class="fc" id="L155">                .newline()</span>
+<span class="fc" id="L156">                .param_(&quot;id&quot;, &quot;Id of value&quot;)</span>
+<span class="fc" id="L157">                .return_(&quot;Value found&quot;)</span>
+<span class="fc" id="L158">                .throws_(IllegalArgumentException.class.getSimpleName(), &quot;If no value for id is found&quot;)</span>
+<span class="fc" id="L159">                .finish();</span>
+<span class="fc" id="L160">        writer.appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L161">              .formatln(&quot;public static %s valueForId(int id) {&quot;, simpleClass)</span>
+<span class="fc" id="L162">              .formatln(&quot;    %s value = findById(id);&quot;, simpleClass)</span>
+<span class="fc" id="L163">              .appendln(&quot;    if (value == null) {&quot;)</span>
+<span class="fc" id="L164">              .formatln(&quot;        throw new IllegalArgumentException(\&quot;No %s for id \&quot; + id);&quot;, type.getQualifiedName())</span>
+<span class="fc" id="L165">              .appendln(&quot;    }&quot;)</span>
+<span class="fc" id="L166">              .appendln(&quot;    return value;&quot;)</span>
+<span class="fc" id="L167">              .appendln('}')</span>
+<span class="fc" id="L168">              .newline();</span>
+
+<span class="fc" id="L170">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L171">                .comment(&quot;Get a value based in its name&quot;)</span>
+<span class="fc" id="L172">                .newline()</span>
+<span class="fc" id="L173">                .param_(&quot;name&quot;, &quot;Name of value&quot;)</span>
+<span class="fc" id="L174">                .return_(&quot;Value found&quot;)</span>
+<span class="fc" id="L175">                .throws_(IllegalArgumentException.class.getSimpleName(), &quot;If no value for name is found, or null name&quot;)</span>
+<span class="fc" id="L176">                .finish();</span>
+<span class="fc" id="L177">        writer.appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L178">              .formatln(&quot;public static %s valueForName(String name) {&quot;, simpleClass)</span>
+<span class="fc" id="L179">              .formatln(&quot;    %s value = findByName(name);&quot;, simpleClass)</span>
+<span class="fc" id="L180">              .appendln(&quot;    if (value == null) {&quot;)</span>
+<span class="fc" id="L181">              .formatln(&quot;        throw new IllegalArgumentException(\&quot;No %s for name \\\&quot;\&quot; + name + \&quot;\\\&quot;\&quot;);&quot;, type.getQualifiedName())</span>
+<span class="fc" id="L182">              .appendln(&quot;    }&quot;)</span>
+<span class="fc" id="L183">              .appendln(&quot;    return value;&quot;)</span>
+<span class="fc" id="L184">              .appendln('}')</span>
+<span class="fc" id="L185">              .newline();</span>
+<span class="fc" id="L186">    }</span>
 
     @Override
     public void appendExtraProperties(CEnumDescriptor type) throws GeneratorException {
-<span class="fc" id="L72">        String simpleClass = JUtils.getClassName(type);</span>
+<span class="fc" id="L190">        String simpleClass = JUtils.getClassName(type);</span>
 
-<span class="fc" id="L74">        writer.formatln(&quot;public static %s forValue(int value) {&quot;, simpleClass)</span>
-<span class="fc" id="L75">              .begin()</span>
-<span class="fc" id="L76">              .appendln(&quot;switch (value) {&quot;)</span>
-<span class="fc" id="L77">              .begin();</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (PEnumValue&lt;?&gt; value : type.getValues()) {</span>
-<span class="fc" id="L79">            writer.formatln(&quot;case %d: return %s.%s;&quot;,</span>
-<span class="fc" id="L80">                            value.getValue(),</span>
-                            simpleClass,
-<span class="fc" id="L82">                            JUtils.enumConst(value));</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">        if (options.generate_legacy_enum_getters) {</span>
+<span class="nc" id="L193">            appendStaticGetter_Legacy(type, simpleClass);</span>
         }
-<span class="fc" id="L84">        writer.appendln(&quot;default: return null;&quot;)</span>
-<span class="fc" id="L85">              .end()</span>
-<span class="fc" id="L86">              .appendln('}')</span>
-<span class="fc" id="L87">              .end()</span>
-<span class="fc" id="L88">              .appendln('}')</span>
-<span class="fc" id="L89">              .newline();</span>
-
-<span class="fc" id="L91">        writer.formatln(&quot;public static %s forName(String name) {&quot;, simpleClass)</span>
-<span class="fc" id="L92">              .begin()</span>
-<span class="fc" id="L93">              .appendln(&quot;switch (name) {&quot;)</span>
-<span class="fc" id="L94">              .begin();</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (PEnumValue&lt;?&gt; value : type.getValues()) {</span>
-<span class="fc" id="L96">            writer.formatln(&quot;case \&quot;%s\&quot;: return %s.%s;&quot;,</span>
-<span class="fc" id="L97">                            value.getName(),</span>
-                            simpleClass,
-<span class="fc" id="L99">                            JUtils.enumConst(value));</span>
-        }
-<span class="fc" id="L101">        writer.appendln(&quot;default: return null;&quot;)</span>
-<span class="fc" id="L102">              .end()</span>
-<span class="fc" id="L103">              .appendln('}')</span>
-<span class="fc" id="L104">              .end()</span>
-<span class="fc" id="L105">              .appendln('}')</span>
-<span class="fc" id="L106">              .newline();</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L195">        appendStaticGetter_FindBy(type, simpleClass);</span>
+<span class="fc" id="L196">        appendStaticGetter_ValueFor(type, simpleClass);</span>
+<span class="fc" id="L197">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

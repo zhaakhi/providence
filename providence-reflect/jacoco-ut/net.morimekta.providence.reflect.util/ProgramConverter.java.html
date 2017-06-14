@@ -102,9 +102,9 @@ public class ProgramConverter {
 <span class="fc" id="L102">                                                               enumType.getAnnotations());</span>
 <span class="fc" id="L103">                    List&lt;CEnumValue&gt; values = new LinkedList&lt;&gt;();</span>
 <span class="fc bfc" id="L104" title="All 2 branches covered.">                    for (EnumValue value : enumType.getValues()) {</span>
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                        int v = value.hasValue() ? value.getValue() : nextValue;</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                        int v = value.hasId() ? value.getId() : nextValue;</span>
 <span class="fc" id="L106">                        nextValue = v + 1;</span>
-<span class="fc" id="L107">                        values.add(new CEnumValue(value.getDocumentation(), value.getValue(), value.getName(), type, value.getAnnotations()));</span>
+<span class="fc" id="L107">                        values.add(new CEnumValue(value.getDocumentation(), value.getId(), value.getName(), type, value.getAnnotations()));</span>
 <span class="fc" id="L108">                    }</span>
 <span class="fc" id="L109">                    type.setValues(values);</span>
 <span class="fc" id="L110">                    declaredTypes.add(type);</span>
@@ -145,7 +145,7 @@ public class ProgramConverter {
 <span class="fc" id="L145">                                                            messageType.getAnnotations());</span>
 <span class="fc" id="L146">                            break;</span>
                         default:
-<span class="nc" id="L148">                            throw new IllegalArgumentException(&quot;Unhandled struct type &quot; + messageType.getVariant());</span>
+<span class="nc" id="L148">                            throw new UnsupportedOperationException(&quot;Unhandled message variant &quot; + messageType.getVariant());</span>
                     }
 <span class="fc" id="L150">                    declaredTypes.add(type);</span>
 <span class="fc" id="L151">                    registry.putDeclaredType(type);</span>
@@ -307,7 +307,7 @@ public class ProgramConverter {
 <span class="fc" id="L307">                                             field.getStartLinePos());</span>
         }
 <span class="fc" id="L309">        PRequirement requirement = PRequirement.valueOf(field.getRequirement()</span>
-<span class="fc" id="L310">                                                             .getName());</span>
+<span class="fc" id="L310">                                                             .asString());</span>
 <span class="fc bfc" id="L311" title="All 2 branches covered.">        if (variant == MessageVariant.UNION) {</span>
 <span class="pc bpc" id="L312" title="1 of 2 branches missed.">            if (requirement == PRequirement.REQUIRED) {</span>
 <span class="nc" id="L313">                throw new IllegalArgumentException(&quot;Required field in union&quot;);</span>
@@ -316,7 +316,7 @@ public class ProgramConverter {
         }
         @SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L318">        CField made = new CField(field.getDocumentation(),</span>
-<span class="fc" id="L319">                                 field.getKey(),</span>
+<span class="fc" id="L319">                                 field.getId(),</span>
                                  requirement,
 <span class="fc" id="L321">                                 field.getName(),</span>
                                  type,

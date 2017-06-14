@@ -21,7 +21,6 @@
 package net.morimekta.providence.reflect.contained;
 
 import net.morimekta.providence.PMessageBuilder;
-import net.morimekta.providence.PMessageBuilderFactory;
 import net.morimekta.providence.descriptor.PField;
 import net.morimekta.providence.descriptor.PUnionDescriptor;
 
@@ -32,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * @author Stein Eldar Johnsen
@@ -53,7 +53,7 @@ public class CUnionDescriptor extends PUnionDescriptor&lt;CUnion, CField&gt; imp
               // overrides isSimple instead to avoid having to check fields
               // types before it's converted.
               false);
-<span class="fc" id="L56">        ((_Factory) getFactoryInternal()).setType(this);</span>
+<span class="fc" id="L56">        ((_Factory) getBuilderSupplier()).setType(this);</span>
 
 <span class="fc" id="L58">        this.comment = comment;</span>
 <span class="fc" id="L59">        this.fields = fields.toArray(new CField[fields.size()]);</span>
@@ -62,7 +62,7 @@ public class CUnionDescriptor extends PUnionDescriptor&lt;CUnion, CField&gt; imp
 <span class="fc" id="L62">        Map&lt;Integer, CField&gt; fieldIdMap = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc" id="L63">        Map&lt;String, CField&gt; fieldNameMap = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L64" title="All 2 branches covered.">        for (CField field : fields) {</span>
-<span class="fc" id="L65">            fieldIdMap.put(field.getKey(), field);</span>
+<span class="fc" id="L65">            fieldIdMap.put(field.getId(), field);</span>
 <span class="fc" id="L66">            fieldNameMap.put(field.getName(), field);</span>
 <span class="fc" id="L67">        }</span>
 <span class="fc" id="L68">        this.fieldIdMap = fieldIdMap;</span>
@@ -81,13 +81,13 @@ public class CUnionDescriptor extends PUnionDescriptor&lt;CUnion, CField&gt; imp
     }
 
     @Override
-    public CField getField(String name) {
+    public CField findFieldByName(String name) {
 <span class="nc" id="L85">        return fieldNameMap.get(name);</span>
     }
 
     @Override
-    public CField getField(int key) {
-<span class="nc" id="L90">        return fieldIdMap.get(key);</span>
+    public CField findFieldById(int id) {
+<span class="nc" id="L90">        return fieldIdMap.get(id);</span>
     }
 
     @Override
@@ -132,7 +132,7 @@ public class CUnionDescriptor extends PUnionDescriptor&lt;CUnion, CField&gt; imp
 <span class="nc" id="L132">        return null;</span>
     }
 
-<span class="fc" id="L135">    private static class _Factory extends PMessageBuilderFactory&lt;CUnion,CField&gt; {</span>
+<span class="fc" id="L135">    private static class _Factory implements Supplier&lt;PMessageBuilder&lt;CUnion,CField&gt;&gt; {</span>
         private CUnionDescriptor mType;
 
         public void setType(CUnionDescriptor type) {
@@ -141,7 +141,7 @@ public class CUnionDescriptor extends PUnionDescriptor&lt;CUnion, CField&gt; imp
 
         @Nonnull
         @Override
-        public PMessageBuilder&lt;CUnion,CField&gt; builder() {
+        public PMessageBuilder&lt;CUnion,CField&gt; get() {
 <span class="nc" id="L145">            return new CUnion.Builder(mType);</span>
         }
     }

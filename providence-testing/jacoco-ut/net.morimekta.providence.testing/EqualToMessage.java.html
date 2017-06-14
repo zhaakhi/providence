@@ -128,18 +128,18 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
 
 <span class="fc bfc" id="L129" title="All 2 branches covered.">        for (PField field : expected.descriptor()</span>
 <span class="fc" id="L130">                                       .getFields()) {</span>
-<span class="fc" id="L131">            int key = field.getKey();</span>
+<span class="fc" id="L131">            int key = field.getId();</span>
 <span class="fc bfc" id="L132" title="All 2 branches covered.">            String fieldXPath = xPath.isEmpty() ? field.getName() : xPath + &quot;.&quot; + field.getName();</span>
 
 <span class="pc bpc" id="L134" title="1 of 2 branches missed.">            if (expected.has(key) != actual.has(key)) {</span>
 <span class="nc bnc" id="L135" title="All 2 branches missed.">                if (!expected.has(key)) {</span>
 <span class="nc" id="L136">                    mismatches.add(String.format(&quot;%s to be missing, but was %s&quot;,</span>
                                                  fieldXPath,
-<span class="nc" id="L138">                                                 toString(actual.get(field.getKey()))));</span>
+<span class="nc" id="L138">                                                 toString(actual.get(field.getId()))));</span>
 <span class="nc bnc" id="L139" title="All 2 branches missed.">                } else if (!actual.has(key)) {</span>
 <span class="nc" id="L140">                    mismatches.add(String.format(&quot;%s to be %s, but was missing&quot;,</span>
                                                  fieldXPath,
-<span class="nc" id="L142">                                                 toString(expected.get(field.getKey()))));</span>
+<span class="nc" id="L142">                                                 toString(expected.get(field.getId()))));</span>
                 }
 <span class="fc bfc" id="L144" title="All 2 branches covered.">            } else if (!Objects.equals(expected.get(key), actual.get(key))) {</span>
 <span class="pc bpc" id="L145" title="2 of 5 branches missed.">                switch (field.getType()) {</span>
@@ -165,8 +165,8 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
                     default: {
 <span class="fc" id="L166">                        mismatches.add(String.format(&quot;%s was %s, expected %s&quot;,</span>
                                                      fieldXPath,
-<span class="fc" id="L168">                                                     toString(actual.get(field.getKey())),</span>
-<span class="fc" id="L169">                                                     toString(expected.get(field.getKey()))));</span>
+<span class="fc" id="L168">                                                     toString(actual.get(field.getId())),</span>
+<span class="fc" id="L169">                                                     toString(expected.get(field.getId()))));</span>
                         break;
                     }
                 }
@@ -313,7 +313,7 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
 <span class="nc" id="L313">            return limitToString((PMessage) o);</span>
 <span class="pc bpc" id="L314" title="1 of 2 branches missed.">        } else if (o instanceof PEnumValue) {</span>
 <span class="nc" id="L315">            return ((PEnumValue) o).descriptor()</span>
-<span class="nc" id="L316">                                   .getName() + &quot;.&quot; + ((PEnumValue) o).getName();</span>
+<span class="nc" id="L316">                                   .getName() + &quot;.&quot; + ((PEnumValue) o).asString();</span>
 <span class="pc bpc" id="L317" title="1 of 2 branches missed.">        } else if (o instanceof Map) {</span>
 <span class="nc" id="L318">            return &quot;{&quot; + Strings.join(&quot;,&quot;,</span>
 <span class="nc" id="L319">                                      ((Map&lt;?, ?&gt;) o).entrySet()</span>

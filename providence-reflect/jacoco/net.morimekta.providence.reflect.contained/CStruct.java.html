@@ -61,7 +61,7 @@ public class CStruct implements CMessage&lt;CStruct&gt;, JsonCompactible {
         }
 <span class="nc" id="L62">        boolean missing = false;</span>
 <span class="nc bnc" id="L63" title="All 2 branches missed.">        for (CField field : descriptor.getFields()) {</span>
-<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (has(field.getKey())) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (has(field.getId())) {</span>
 <span class="nc bnc" id="L65" title="All 2 branches missed.">                if (missing) {</span>
 <span class="nc" id="L66">                    return false;</span>
                 }
@@ -133,7 +133,7 @@ public class CStruct implements CMessage&lt;CStruct&gt;, JsonCompactible {
         }
 
 <span class="fc bfc" id="L135" title="All 2 branches covered.">        for (CField field : a.descriptor().getFields()) {</span>
-<span class="fc" id="L136">            int id = field.getKey();</span>
+<span class="fc" id="L136">            int id = field.getId();</span>
 <span class="fc bfc" id="L137" title="All 2 branches covered.">            if (a.has(id) != b.has(id)) {</span>
 <span class="fc" id="L138">                return false;</span>
             }
@@ -195,12 +195,12 @@ public class CStruct implements CMessage&lt;CStruct&gt;, JsonCompactible {
         }
 <span class="fc bfc" id="L196" title="All 2 branches covered.">        for (PField field : m1.descriptor()</span>
 <span class="fc" id="L197">                              .getFields()) {</span>
-<span class="fc" id="L198">            c = Boolean.compare(m1.has(field.getKey()), m2.has(field.getKey()));</span>
+<span class="fc" id="L198">            c = Boolean.compare(m1.has(field.getId()), m2.has(field.getId()));</span>
 <span class="pc bpc" id="L199" title="1 of 2 branches missed.">            if (c != 0) {</span>
 <span class="nc" id="L200">                return c;</span>
             }
-<span class="fc bfc" id="L202" title="All 2 branches covered.">            if (m1.has(field.getKey())) {</span>
-<span class="fc" id="L203">                c = compare((Comparable) m1.get(field.getKey()), (Comparable) m2.get(field.getKey()));</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            if (m1.has(field.getId())) {</span>
+<span class="fc" id="L203">                c = compare((Comparable) m1.get(field.getId()), (Comparable) m2.get(field.getId()));</span>
 <span class="fc bfc" id="L204" title="All 2 branches covered.">                if (c != 0) {</span>
 <span class="fc" id="L205">                    return c;</span>
                 }

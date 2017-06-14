@@ -44,39 +44,43 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Convenience methods for handling providence messages.
  */
 public class ProvidenceHelper {
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Message fromJsonResource(String path,
                              PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L51">        return fromResource(path, descriptor, new JsonSerializer(true));</span>
+<span class="fc" id="L52">        return fromResource(path, descriptor, new JsonSerializer(true));</span>
     }
 
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     ArrayList&lt;Message&gt; arrayListFromJsonResource(String path,
                                                  PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L58">        return arrayListFromResource(path, descriptor, new JsonSerializer(true));</span>
+<span class="fc" id="L60">        return arrayListFromResource(path, descriptor, new JsonSerializer(true));</span>
     }
 
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Message fromResource(String resource,
                          PMessageDescriptor&lt;Message, Field&gt; descriptor,
                          Serializer serializer)
             throws IOException {
-<span class="fc" id="L66">        InputStream in = ProvidenceHelper.class.getResourceAsStream(resource);</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if(in == null) {</span>
-<span class="nc" id="L68">            throw new IOException(&quot;No such resource &quot; + resource);</span>
+<span class="fc" id="L69">        InputStream in = ProvidenceHelper.class.getResourceAsStream(resource);</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if(in == null) {</span>
+<span class="nc" id="L71">            throw new IOException(&quot;No such resource &quot; + resource);</span>
         }
-<span class="fc" id="L70">        return serializer.deserialize(new BufferedInputStream(in), descriptor);</span>
+<span class="fc" id="L73">        return serializer.deserialize(new BufferedInputStream(in), descriptor);</span>
     }
 
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     ArrayList&lt;Message&gt; arrayListFromResource(String path,
                                              PMessageDescriptor&lt;Message, Field&gt; descriptor,
                                              Serializer serializer)
             throws IOException {
-<span class="fc" id="L78">        return (ArrayList&lt;Message&gt;) MessageStreams.resource(path, serializer, descriptor)</span>
-<span class="fc" id="L79">                                                  .collect(Collectors.toList());</span>
+<span class="fc" id="L82">        return MessageStreams.resource(path, serializer, descriptor)</span>
+<span class="fc" id="L83">                             .collect(Collectors.toCollection(ArrayList::new));</span>
     }
 
     /**
@@ -91,9 +95,9 @@ public class ProvidenceHelper {
     @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     String debugString(Message message) {
-<span class="fc" id="L94">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="fc" id="L95">        DEBUG_STRING_SERIALIZER.serialize(baos, message);</span>
-<span class="fc" id="L96">        return new String(baos.toByteArray(), UTF_8);</span>
+<span class="fc" id="L98">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L99">        DEBUG_STRING_SERIALIZER.serialize(baos, message);</span>
+<span class="fc" id="L100">        return new String(baos.toByteArray(), UTF_8);</span>
     }
 
     /**
@@ -109,16 +113,16 @@ public class ProvidenceHelper {
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Message parseDebugString(String string, PMessageDescriptor&lt;Message, Field&gt; descriptor) {
         try {
-<span class="fc" id="L112">            ByteArrayInputStream bais = new ByteArrayInputStream(string.getBytes(UTF_8));</span>
-<span class="fc" id="L113">            return DEBUG_STRING_SERIALIZER.deserialize(bais, descriptor);</span>
-<span class="nc" id="L114">        } catch (IOException e) {</span>
-<span class="nc" id="L115">            throw new UncheckedIOException(e);</span>
+<span class="fc" id="L116">            ByteArrayInputStream bais = new ByteArrayInputStream(string.getBytes(UTF_8));</span>
+<span class="fc" id="L117">            return DEBUG_STRING_SERIALIZER.deserialize(bais, descriptor);</span>
+<span class="nc" id="L118">        } catch (IOException e) {</span>
+<span class="nc" id="L119">            throw new UncheckedIOException(e);</span>
         }
     }
 
 
-<span class="fc" id="L120">    private static final PrettySerializer DEBUG_STRING_SERIALIZER = new PrettySerializer().debug();</span>
+<span class="fc" id="L124">    private static final PrettySerializer DEBUG_STRING_SERIALIZER = new PrettySerializer().debug();</span>
 
-<span class="fc" id="L122">    private ProvidenceHelper() {}</span>
+<span class="fc" id="L126">    private ProvidenceHelper() {}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

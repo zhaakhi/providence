@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 /**
  * Base class for message builders.
  */
-<span class="nc" id="L34">public abstract class PMessageBuilder&lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt;</span>
+<span class="fc" id="L34">public abstract class PMessageBuilder&lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt;</span>
         implements PBuilder&lt;T&gt; {
     /**
      * Checks if the current set data is enough to make a valid struct. It
@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public PMessageBuilder&lt;T, F&gt; set(@Nonnull F field, Object value) {
-<span class="nc" id="L75">        return set(field.getKey(), value);</span>
+<span class="fc" id="L75">        return set(field.getId(), value);</span>
     }
 
     /**
@@ -90,7 +90,7 @@ import java.util.stream.Collectors;
      * @return True if the field is set.
      */
     public boolean isSet(@Nonnull F field) {
-<span class="nc" id="L93">        return isSet(field.getKey());</span>
+<span class="fc" id="L93">        return isSet(field.getId());</span>
     }
 
     /**
@@ -103,9 +103,9 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public Collection&lt;F&gt; presentFields() {
-<span class="nc" id="L106">           return Arrays.stream(descriptor().getFields())</span>
-<span class="nc" id="L107">                        .filter(this::isSet)</span>
-<span class="nc" id="L108">                        .collect(Collectors.toList());</span>
+<span class="fc" id="L106">           return Arrays.stream(descriptor().getFields())</span>
+<span class="fc" id="L107">                        .filter(this::isSet)</span>
+<span class="fc" id="L108">                        .collect(Collectors.toList());</span>
     }
 
     /**
@@ -123,7 +123,7 @@ import java.util.stream.Collectors;
      * @return True if the field is modified.
      */
     public boolean isModified(@Nonnull F field) {
-<span class="nc" id="L126">        return isModified(field.getKey());</span>
+<span class="fc" id="L126">        return isModified(field.getId());</span>
     }
 
     /**
@@ -133,9 +133,9 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public Collection&lt;F&gt; modifiedFields() {
-<span class="nc" id="L136">           return Arrays.stream(descriptor().getFields())</span>
-<span class="nc" id="L137">                        .filter(this::isModified)</span>
-<span class="nc" id="L138">                        .collect(Collectors.toList());</span>
+<span class="fc" id="L136">           return Arrays.stream(descriptor().getFields())</span>
+<span class="fc" id="L137">                        .filter(this::isModified)</span>
+<span class="fc" id="L138">                        .collect(Collectors.toList());</span>
      }
 
     /**
@@ -158,7 +158,7 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public PMessageBuilder&lt;T, F&gt; addTo(@Nonnull F field, Object value) {
-<span class="nc" id="L161">        return addTo(field.getKey(), value);</span>
+<span class="fc" id="L161">        return addTo(field.getId(), value);</span>
     }
 
     /**
@@ -179,7 +179,7 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public PMessageBuilder&lt;T, F&gt; clear(@Nonnull F field) {
-<span class="nc" id="L182">        return clear(field.getKey());</span>
+<span class="fc" id="L182">        return clear(field.getId());</span>
     }
 
 
@@ -192,7 +192,7 @@ import java.util.stream.Collectors;
      * @return The message builder.
      */
     @Nonnull
-    public abstract PMessageBuilder&lt;T, F&gt; merge(T from);
+    public abstract PMessageBuilder&lt;T, F&gt; merge(@Nonnull T from);
 
     /**
      * Get the builder for the given message contained in this builder. If
@@ -217,7 +217,7 @@ import java.util.stream.Collectors;
      */
     @Nonnull
     public PMessageBuilder mutator(@Nonnull F field) {
-<span class="nc" id="L220">        return mutator(field.getKey());</span>
+<span class="fc" id="L220">        return mutator(field.getId());</span>
     }
 
     /**

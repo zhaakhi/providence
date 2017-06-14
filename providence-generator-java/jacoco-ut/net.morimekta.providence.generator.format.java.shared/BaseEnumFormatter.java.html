@@ -102,23 +102,23 @@ public class BaseEnumFormatter {
             }
 <span class="fc" id="L103">            writer.formatln(&quot;%s(%d, \&quot;%s\&quot;),&quot;,</span>
 <span class="fc" id="L104">                            JUtils.enumConst(v),</span>
-<span class="fc" id="L105">                            v.getValue(),</span>
-<span class="fc" id="L106">                            v.getName());</span>
+<span class="fc" id="L105">                            v.asInteger(),</span>
+<span class="fc" id="L106">                            v.asString());</span>
         }
 <span class="fc" id="L108">        writer.appendln(';')</span>
 <span class="fc" id="L109">              .newline();</span>
 <span class="fc" id="L110">    }</span>
 
     private void appendEnumFields(CEnumDescriptor type) {
-<span class="fc" id="L113">        writer.appendln(&quot;private final int mValue;&quot;)</span>
+<span class="fc" id="L113">        writer.appendln(&quot;private final int    mId;&quot;)</span>
 <span class="fc" id="L114">              .appendln(&quot;private final String mName;&quot;)</span>
 <span class="fc" id="L115">              .newline();</span>
 <span class="fc" id="L116">    }</span>
 
     private void appendEnumConstructor(CEnumDescriptor type) {
-<span class="fc" id="L119">        writer.formatln(&quot;%s(int value, String name) {&quot;, JUtils.getClassName(type))</span>
+<span class="fc" id="L119">        writer.formatln(&quot;%s(int id, String name) {&quot;, JUtils.getClassName(type))</span>
 <span class="fc" id="L120">              .begin()</span>
-<span class="fc" id="L121">              .appendln(&quot;mValue = value;&quot;)</span>
+<span class="fc" id="L121">              .appendln(&quot;mId = id;&quot;)</span>
 <span class="fc" id="L122">              .appendln(&quot;mName = name;&quot;)</span>
 <span class="fc" id="L123">              .end()</span>
 <span class="fc" id="L124">              .appendln(&quot;}&quot;)</span>

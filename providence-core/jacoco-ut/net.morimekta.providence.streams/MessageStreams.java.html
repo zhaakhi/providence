@@ -59,12 +59,13 @@ import java.util.stream.StreamSupport;
      * @return The stream that reads the file.
      * @throws IOException when unable to open the stream.
      */
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Stream&lt;Message&gt; path(Path file,
                          Serializer serializer,
                          PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L67">        return file(file.toFile(), serializer, descriptor);</span>
+<span class="fc" id="L68">        return file(file.toFile(), serializer, descriptor);</span>
     }
 
 
@@ -81,13 +82,14 @@ import java.util.stream.StreamSupport;
      * @return The stream that reads the file.
      * @throws IOException when unable to open the stream.
      */
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Stream&lt;Message&gt; file(File file,
                          Serializer serializer,
                          PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L89">        InputStream in = new BufferedInputStream(new FileInputStream(file));</span>
-<span class="fc" id="L90">        return stream(in, serializer, descriptor);</span>
+<span class="fc" id="L91">        InputStream in = new BufferedInputStream(new FileInputStream(file));</span>
+<span class="fc" id="L92">        return stream(in, serializer, descriptor);</span>
     }
 
     /**
@@ -103,17 +105,18 @@ import java.util.stream.StreamSupport;
      * @return The stream that reads the file.
      * @throws IOException when unable find the resource.
      */
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Stream&lt;Message&gt; resource(@Nonnull String resource,
                              @Nonnull Serializer serializer,
                              @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L111">        InputStream in = MessageStreams.class.getResourceAsStream(resource);</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (in == null) {</span>
-<span class="fc" id="L113">            throw new IOException(&quot;No such resource &quot; + resource);</span>
+<span class="fc" id="L114">        InputStream in = MessageStreams.class.getResourceAsStream(resource);</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (in == null) {</span>
+<span class="fc" id="L116">            throw new IOException(&quot;No such resource &quot; + resource);</span>
         }
-<span class="fc" id="L115">        in = new BufferedInputStream(in);</span>
-<span class="fc" id="L116">        return stream(in, serializer, descriptor);</span>
+<span class="fc" id="L118">        in = new BufferedInputStream(in);</span>
+<span class="fc" id="L119">        return stream(in, serializer, descriptor);</span>
     }
 
     /**
@@ -128,11 +131,12 @@ import java.util.stream.StreamSupport;
      * @param &lt;Field&gt;    The message field type.
      * @return The stream that reads the file.
      */
+    @Nonnull
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Stream&lt;Message&gt; stream(InputStream in,
                            Serializer serializer,
                            PMessageDescriptor&lt;Message, Field&gt; descriptor) {
-<span class="fc" id="L135">        return StreamSupport.stream(new MessageSpliterator&lt;&gt;(in, serializer, descriptor), false);</span>
+<span class="fc" id="L139">        return StreamSupport.stream(new MessageSpliterator&lt;&gt;(in, serializer, descriptor), false);</span>
     }
 
 }

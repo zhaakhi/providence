@@ -43,13 +43,13 @@ public interface CMessage&lt;Message extends PMessage&lt;Message, CField&gt;&gt;
 
     @Override
     default boolean has(int key) {
-<span class="fc" id="L46">        CField field = descriptor().getField(key);</span>
+<span class="fc" id="L46">        CField field = descriptor().findFieldById(key);</span>
 <span class="fc bfc" id="L47" title="All 4 branches covered.">        return field != null &amp;&amp; values().containsKey(key);</span>
     }
 
     @Override
     default int num(int key) {
-<span class="fc" id="L52">        CField field = descriptor().getField(key);</span>
+<span class="fc" id="L52">        CField field = descriptor().findFieldById(key);</span>
 <span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (field == null) {</span>
 <span class="nc" id="L54">            return 0;</span>
         }
@@ -73,7 +73,7 @@ public interface CMessage&lt;Message extends PMessage&lt;Message, CField&gt;&gt;
 
     @Override
     default Object get(int key) {
-<span class="fc" id="L76">        CField field = descriptor().getField(key);</span>
+<span class="fc" id="L76">        CField field = descriptor().findFieldById(key);</span>
 <span class="fc bfc" id="L77" title="All 2 branches covered.">        if (field != null) {</span>
 <span class="fc" id="L78">            Object value = values().get(key);</span>
 <span class="fc bfc" id="L79" title="All 2 branches covered.">            if (value != null) {</span>

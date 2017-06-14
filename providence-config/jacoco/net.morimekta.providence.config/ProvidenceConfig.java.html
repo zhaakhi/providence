@@ -33,10 +33,10 @@ import net.morimekta.providence.descriptor.PList;
 import net.morimekta.providence.descriptor.PMap;
 import net.morimekta.providence.descriptor.PMessageDescriptor;
 import net.morimekta.providence.descriptor.PSet;
-import net.morimekta.providence.util.TypeRegistry;
 import net.morimekta.providence.serializer.pretty.Token;
 import net.morimekta.providence.serializer.pretty.Tokenizer;
 import net.morimekta.providence.serializer.pretty.TokenizerException;
+import net.morimekta.providence.util.TypeRegistry;
 import net.morimekta.util.Binary;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -50,8 +50,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -356,7 +356,7 @@ public class ProvidenceConfig {
     }
 
     private Set&lt;String&gt; getReverseDeps(String to) {
-<span class="fc" id="L359">        return reverseDependencies.computeIfAbsent(to, k -&gt; new HashSet&lt;&gt;());</span>
+<span class="fc" id="L359">        return reverseDependencies.computeIfAbsent(to, k -&gt; new LinkedHashSet&lt;&gt;());</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;) @Nonnull
@@ -552,7 +552,7 @@ public class ProvidenceConfig {
                     // net.morimekta.providence.descriptor.PEnumDescriptor
                     // TODO: Figure out a way to fix the generic cast.
 <span class="fc" id="L554">                    PEnumDescriptor ed = (PEnumDescriptor) (Object) registry.getDeclaredType(id.substring(0, l));</span>
-<span class="fc" id="L555">                    PEnumValue val = ed.getValueByName(id.substring(l + 1));</span>
+<span class="fc" id="L555">                    PEnumValue val = ed.findByName(id.substring(l + 1));</span>
 <span class="pc bpc" id="L556" title="3 of 4 branches missed.">                    if (val == null &amp;&amp; strict) {</span>
 <span class="nc" id="L557">                        throw new TokenizerException(token, &quot;Unknown %s value: %s&quot;, id.substring(0, l), id.substring(l + 1))</span>
 <span class="nc" id="L558">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
@@ -735,7 +735,7 @@ public class ProvidenceConfig {
 <span class="nc" id="L735">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
             }
 
-<span class="fc" id="L738">            F field = descriptor.getField(token.asString());</span>
+<span class="fc" id="L738">            F field = descriptor.findFieldByName(token.asString());</span>
 <span class="fc bfc" id="L739" title="All 2 branches covered.">            if (field == null) {</span>
 <span class="fc bfc" id="L740" title="All 2 branches covered.">                if (strict) {</span>
 <span class="fc" id="L741">                    throw new TokenizerException(&quot;No such field &quot; + token.asString() + &quot; in &quot; + descriptor.getQualifiedName())</span>
@@ -781,7 +781,7 @@ public class ProvidenceConfig {
 <span class="fc" id="L781">                    token = tokenizer.expect(&quot;reference or message start&quot;);</span>
 <span class="fc bfc" id="L782" title="All 2 branches covered.">                    if (UNDEFINED.equals(token.asString())) {</span>
                         // unset.
-<span class="fc" id="L784">                        builder.clear(field.getKey());</span>
+<span class="fc" id="L784">                        builder.clear(field.getId());</span>
 <span class="fc" id="L785">                        context.setReference(reference, null);</span>
 
                         // special casing this, as we don't want to duplicate the parse line below.
@@ -814,7 +814,7 @@ public class ProvidenceConfig {
                         // if the following symbol is *not* message start,
                         // we assume a new field or end of current message.
 <span class="fc bfc" id="L816" title="All 2 branches covered.">                        if (!token.isSymbol(Token.kMessageStart)) {</span>
-<span class="fc" id="L817">                            builder.set(field.getKey(), context.setReference(reference, bld.build()));</span>
+<span class="fc" id="L817">                            builder.set(field.getId(), context.setReference(reference, bld.build()));</span>
 <span class="fc" id="L818">                            continue;</span>
                         }
 <span class="pc bpc" id="L820" title="1 of 2 branches missed.">                    } else if (!token.isSymbol(Token.kMessageStart)) {</span>
@@ -824,13 +824,13 @@ public class ProvidenceConfig {
                     }
                 } else {
                     // extend in-line.
-<span class="fc" id="L827">                    bld = builder.mutator(field.getKey());</span>
+<span class="fc" id="L827">                    bld = builder.mutator(field.getId());</span>
                 }
-<span class="fc" id="L829">                builder.set(field.getKey(), context.setReference(reference, parseMessage(tokenizer, context, bld)));</span>
+<span class="fc" id="L829">                builder.set(field.getId(), context.setReference(reference, parseMessage(tokenizer, context, bld)));</span>
 <span class="fc bfc" id="L830" title="All 2 branches covered.">            } else if (field.getType() == PType.MAP) {</span>
                 // maps can be extended the same way as
 <span class="fc" id="L832">                token = tokenizer.expect(&quot;field sep or value start&quot;);</span>
-<span class="fc" id="L833">                Map baseValue = new HashMap();</span>
+<span class="fc" id="L833">                Map baseValue = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc" id="L834">                String reference = null;</span>
 <span class="pc bpc" id="L835" title="1 of 2 branches missed.">                if (token.isSymbol(kDefineReference)) {</span>
 <span class="nc" id="L836">                    reference = context.initReference(tokenizer.expectIdentifier(&quot;reference name&quot;), tokenizer);</span>
@@ -840,7 +840,7 @@ public class ProvidenceConfig {
 <span class="pc bpc" id="L840" title="1 of 2 branches missed.">                if (token.isSymbol(Token.kFieldValueSep)) {</span>
 <span class="fc" id="L841">                    token = tokenizer.expect(&quot;field id or start&quot;);</span>
 <span class="pc bpc" id="L842" title="1 of 2 branches missed.">                    if (UNDEFINED.equals(token.asString())) {</span>
-<span class="nc" id="L843">                        builder.clear(field.getKey());</span>
+<span class="nc" id="L843">                        builder.clear(field.getId());</span>
 <span class="nc" id="L844">                        context.setReference(reference, null);</span>
 
 <span class="nc" id="L846">                        token = tokenizer.expect(&quot;message end or field&quot;);</span>
@@ -855,14 +855,14 @@ public class ProvidenceConfig {
 
 <span class="nc" id="L856">                        token = tokenizer.expect(&quot;map start or next field&quot;);</span>
 <span class="nc bnc" id="L857" title="All 2 branches missed.">                        if (!token.isSymbol(Token.kMessageStart)) {</span>
-<span class="nc" id="L858">                            builder.set(field.getKey(), context.setReference(reference, baseValue));</span>
+<span class="nc" id="L858">                            builder.set(field.getId(), context.setReference(reference, baseValue));</span>
 <span class="nc" id="L859">                            continue;</span>
 <span class="nc bnc" id="L860" title="All 2 branches missed.">                        } else if (baseValue == null) {</span>
-<span class="nc" id="L861">                            baseValue = new HashMap();</span>
+<span class="nc" id="L861">                            baseValue = new LinkedHashMap&lt;&gt;();</span>
                         }
                     }
                 } else {
-<span class="nc" id="L865">                    baseValue.putAll((Map) builder.build().get(field.getKey()));</span>
+<span class="nc" id="L865">                    baseValue.putAll((Map) builder.build().get(field.getId()));</span>
                 }
 
 <span class="pc bpc" id="L868" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
@@ -870,7 +870,7 @@ public class ProvidenceConfig {
 <span class="nc" id="L870">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
                 }
 <span class="fc" id="L872">                Map map =  parseMapValue(tokenizer, context, (PMap) field.getDescriptor(), baseValue);</span>
-<span class="fc" id="L873">                builder.set(field.getKey(), context.setReference(reference, map));</span>
+<span class="fc" id="L873">                builder.set(field.getId(), context.setReference(reference, map));</span>
 <span class="fc" id="L874">            } else {</span>
 <span class="fc" id="L875">                String reference = null;</span>
                 // Simple fields *must* have the '=' separation, may have '&amp;' reference.
@@ -881,11 +881,11 @@ public class ProvidenceConfig {
                 }
 <span class="fc" id="L882">                token = tokenizer.expect(&quot;field value&quot;);</span>
 <span class="pc bpc" id="L883" title="1 of 2 branches missed.">                if (UNDEFINED.equals(token.asString())) {</span>
-<span class="nc" id="L884">                    builder.clear(field.getKey());</span>
+<span class="nc" id="L884">                    builder.clear(field.getId());</span>
 <span class="nc" id="L885">                    context.setReference(reference, null);</span>
                 } else {
 <span class="fc" id="L887">                    Object value = parseFieldValue(token, tokenizer, context, field.getDescriptor());</span>
-<span class="fc" id="L888">                    builder.set(field.getKey(), context.setReference(reference, value));</span>
+<span class="fc" id="L888">                    builder.set(field.getId(), context.setReference(reference, value));</span>
                 }
             }
 
@@ -993,9 +993,9 @@ public class ProvidenceConfig {
 <span class="fc" id="L993">                    PEnumDescriptor ed = (PEnumDescriptor) descriptor;</span>
                     PEnumValue value;
 <span class="pc bpc" id="L995" title="1 of 2 branches missed.">                    if (next.isInteger()) {</span>
-<span class="nc" id="L996">                        value = ed.getValueById((int) next.parseInteger());</span>
+<span class="nc" id="L996">                        value = ed.findById((int) next.parseInteger());</span>
 <span class="pc bpc" id="L997" title="1 of 2 branches missed.">                    } else if (next.isIdentifier()) {</span>
-<span class="fc" id="L998">                        value = ed.getValueByName(next.asString());</span>
+<span class="fc" id="L998">                        value = ed.findByName(next.asString());</span>
 <span class="pc bpc" id="L999" title="1 of 4 branches missed.">                        if (value == null &amp;&amp; context.containsReference(next.asString())) {</span>
 <span class="fc" id="L1000">                            value = resolve(context, next, tokenizer, ed);</span>
                         }
@@ -1031,7 +1031,7 @@ public class ProvidenceConfig {
 <span class="nc" id="L1031">                        }</span>
 <span class="nc" id="L1032">                        return resolved;</span>
 <span class="nc bnc" id="L1033" title="All 2 branches missed.">                    } else if (next.isSymbol(Token.kMessageStart)) {</span>
-<span class="nc" id="L1034">                        return parseMapValue(tokenizer, context, (PMap) descriptor, new HashMap());</span>
+<span class="nc" id="L1034">                        return parseMapValue(tokenizer, context, (PMap) descriptor, new LinkedHashMap());</span>
                     }
                     break;
                 }
@@ -1041,7 +1041,7 @@ public class ProvidenceConfig {
 <span class="nc bnc" id="L1041" title="All 2 branches missed.">                    } else if (next.isSymbol(Token.kListStart)) {</span>
                         @SuppressWarnings(&quot;unchecked&quot;)
 <span class="nc" id="L1043">                        PSet&lt;Object&gt; ct = (PSet) descriptor;</span>
-<span class="nc" id="L1044">                        HashSet&lt;Object&gt; value = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L1044">                        Set&lt;Object&gt; value = new LinkedHashSet&lt;&gt;();</span>
 
 <span class="nc" id="L1046">                        next = tokenizer.expect(&quot;set value or end&quot;);</span>
 <span class="nc bnc" id="L1047" title="All 2 branches missed.">                        while (!next.isSymbol(Token.kListEnd)) {</span>
@@ -1138,14 +1138,14 @@ public class ProvidenceConfig {
 <span class="fc" id="L1138">                return (V) (Object) asDouble(value);</span>
             case ENUM:
 <span class="pc bpc" id="L1140" title="1 of 2 branches missed.">                if (value instanceof PEnumValue) {</span>
-<span class="fc" id="L1141">                    PEnumValue verified = ((PEnumDescriptor) descriptor).getValueById(((PEnumValue) value).getValue());</span>
+<span class="fc" id="L1141">                    PEnumValue verified = ((PEnumDescriptor) descriptor).findById(((PEnumValue) value).asInteger());</span>
 <span class="pc bpc" id="L1142" title="1 of 2 branches missed.">                    if (value.equals(verified)) {</span>
 <span class="fc" id="L1143">                        return (V) value;</span>
                     }
 <span class="nc bnc" id="L1145" title="All 2 branches missed.">                } else if (value instanceof Number) {</span>
-<span class="nc" id="L1146">                    return (V) ((PEnumDescriptor) descriptor).getValueById(((Number) value).intValue());</span>
+<span class="nc" id="L1146">                    return (V) ((PEnumDescriptor) descriptor).findById(((Number) value).intValue());</span>
 <span class="nc bnc" id="L1147" title="All 2 branches missed.">                } else if (value instanceof CharSequence) {</span>
-<span class="nc" id="L1148">                    return (V) ((PEnumDescriptor) descriptor).getValueByName(value.toString());</span>
+<span class="nc" id="L1148">                    return (V) ((PEnumDescriptor) descriptor).findByName(value.toString());</span>
                 }
 <span class="nc" id="L1150">                throw new IncompatibleValueException(value.getClass().getSimpleName() + &quot; is not compatible with &quot; + descriptor.getQualifiedName());</span>
             case STRING:

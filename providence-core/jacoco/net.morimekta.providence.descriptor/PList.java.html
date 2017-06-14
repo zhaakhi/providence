@@ -21,7 +21,6 @@
 package net.morimekta.providence.descriptor;
 
 import net.morimekta.providence.PBuilder;
-import net.morimekta.providence.PBuilderFactory;
 import net.morimekta.providence.PType;
 
 import com.google.common.collect.ImmutableList;
@@ -31,17 +30,18 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Descriptor for a list with item type.
  */
 public class PList&lt;Item&gt; extends PContainer&lt;List&lt;Item&gt;&gt; {
-    private final BuilderFactory&lt;Item&gt; builderFactory;
+    private final Supplier&lt;Builder&lt;Item&gt;&gt; builderSupplier;
 
     public PList(PDescriptorProvider itemType,
-                 BuilderFactory&lt;Item&gt; builderFactory) {
+                 Supplier&lt;Builder&lt;Item&gt;&gt; builderSupplier) {
 <span class="fc" id="L43">        super(itemType);</span>
-<span class="fc" id="L44">        this.builderFactory = builderFactory;</span>
+<span class="fc" id="L44">        this.builderSupplier = builderSupplier;</span>
 <span class="fc" id="L45">    }</span>
 
     @Nonnull
@@ -83,82 +83,70 @@ public class PList&lt;Item&gt; extends PContainer&lt;List&lt;Item&gt;&gt; {
 <span class="fc" id="L83">        return PList.class.hashCode() + itemDescriptor().hashCode();</span>
     }
 
+    /**
+     * Container builder used in serialization.
+     *
+     * @param &lt;I&gt; The item type.
+     */
     public interface Builder&lt;I&gt; extends PBuilder&lt;List&lt;I&gt;&gt; {
         @Nonnull
         Builder&lt;I&gt; add(@Nonnull I value);
         @Nonnull
         Builder&lt;I&gt; addAll(@Nonnull Collection&lt;I&gt; items);
-        @Nonnull
-        Builder&lt;I&gt; clear();
-
-        int size();
 
         @Nonnull
         @Override
         List&lt;I&gt; build();
     }
 
-    private interface BuilderFactory&lt;I&gt; extends PBuilderFactory&lt;List&lt;I&gt;&gt; {
-        @Nonnull
-        @Override
-        Builder&lt;I&gt; builder();
-    }
-
-    public static class ImmutableListBuilder&lt;I&gt; implements Builder&lt;I&gt; {
+    /**
+     * Default builder returning an ImmutableList.
+     *
+     * @param &lt;I&gt; The item type.
+     */
+    public static class DefaultBuilder&lt;I&gt; implements Builder&lt;I&gt; {
         private ImmutableList.Builder&lt;I&gt; builder;
-        private int size;
 
-<span class="fc" id="L111">        public ImmutableListBuilder() {</span>
-<span class="fc" id="L112">            builder = ImmutableList.builder();</span>
-<span class="fc" id="L113">        }</span>
+<span class="fc" id="L110">        public DefaultBuilder() {</span>
+<span class="fc" id="L111">            builder = ImmutableList.builder();</span>
+<span class="fc" id="L112">        }</span>
 
         @Nonnull
         @Override
-        public ImmutableListBuilder&lt;I&gt; add(@Nonnull I value) {
-<span class="fc" id="L118">            builder.add(value);</span>
-<span class="fc" id="L119">            ++size;</span>
-<span class="fc" id="L120">            return this;</span>
+        public DefaultBuilder&lt;I&gt; add(@Nonnull I value) {
+<span class="fc" id="L117">            builder.add(value);</span>
+<span class="fc" id="L118">            return this;</span>
         }
 
         @Nonnull
         @Override
-        public ImmutableListBuilder&lt;I&gt; addAll(@Nonnull Collection&lt;I&gt; items) {
-<span class="fc" id="L126">            builder.addAll(items);</span>
-<span class="fc" id="L127">            size += items.size();</span>
-<span class="fc" id="L128">            return this;</span>
-        }
-
-        @Nonnull
-        @Override
-        public ImmutableListBuilder&lt;I&gt; clear() {
-<span class="fc" id="L134">            builder = ImmutableList.builder();</span>
-<span class="fc" id="L135">            size = 0;</span>
-<span class="fc" id="L136">            return this;</span>
-        }
-
-        public int size() {
-<span class="nc" id="L140">            return size;</span>
+        public DefaultBuilder&lt;I&gt; addAll(@Nonnull Collection&lt;I&gt; items) {
+<span class="fc" id="L124">            builder.addAll(items);</span>
+<span class="fc" id="L125">            return this;</span>
         }
 
         @Nonnull
         @Override
         public List&lt;I&gt; build() {
-<span class="fc" id="L146">            return builder.build();</span>
+<span class="fc" id="L131">            return builder.build();</span>
         }
     }
 
+    @Nonnull
     @Override
     public Builder&lt;Item&gt; builder() {
-<span class="fc" id="L152">        return builderFactory.builder();</span>
+<span class="fc" id="L138">        return builderSupplier.get();</span>
     }
 
+    @Nonnull
     public static &lt;I&gt; PContainerProvider&lt;List&lt;I&gt;, PList&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc) {
-<span class="fc" id="L156">        return provider(itemDesc, ImmutableListBuilder::new);</span>
+<span class="fc" id="L143">        return provider(itemDesc, DefaultBuilder::new);</span>
     }
 
+    @Nonnull
     public static &lt;I&gt; PContainerProvider&lt;List&lt;I&gt;, PList&lt;I&gt;&gt; provider(PDescriptorProvider itemDesc,
-                                                                     BuilderFactory&lt;I&gt; builderFactory) {
-<span class="fc" id="L161">        return new PContainerProvider&lt;&gt;(new PList&lt;&gt;(itemDesc, builderFactory));</span>
+                                                                     Supplier&lt;Builder&lt;I&gt;&gt; builderFactory) {
+<span class="fc" id="L149">        return new PContainerProvider&lt;&gt;(new PList&lt;&gt;(itemDesc, builderFactory));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

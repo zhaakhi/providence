@@ -21,8 +21,10 @@
 package net.morimekta.providence.descriptor;
 
 import net.morimekta.providence.PMessage;
-import net.morimekta.providence.PMessageBuilderFactory;
+import net.morimekta.providence.PMessageBuilder;
 import net.morimekta.providence.PMessageVariant;
+
+import java.util.function.Supplier;
 
 /**
  * The definition of a thrift exception.
@@ -31,14 +33,14 @@ public abstract class PExceptionDescriptor&lt;Exception extends PMessage&lt;Exce
         extends PMessageDescriptor&lt;Exception, Field&gt; {
     public PExceptionDescriptor(String packageName,
                                 String name,
-                                PMessageBuilderFactory&lt;Exception, Field&gt; provider,
+                                Supplier&lt;PMessageBuilder&lt;Exception, Field&gt;&gt; builderSupplier,
                                 boolean simple) {
-<span class="fc" id="L36">        super(packageName, name, provider, simple);</span>
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L38">        super(packageName, name, builderSupplier, simple);</span>
+<span class="fc" id="L39">    }</span>
 
     @Override
     public PMessageVariant getVariant() {
-<span class="fc" id="L41">        return PMessageVariant.EXCEPTION;</span>
+<span class="fc" id="L43">        return PMessageVariant.EXCEPTION;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

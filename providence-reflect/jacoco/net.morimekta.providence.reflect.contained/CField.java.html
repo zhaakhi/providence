@@ -40,7 +40,7 @@ import java.util.Set;
  */
 public class CField implements PField, CAnnotatedDescriptor {
     private final String              comment;
-    private final int                 key;
+    private final int                 id;
     private final PRequirement        requirement;
     private final PDescriptorProvider typeProvider;
     private final String              name;
@@ -48,14 +48,14 @@ public class CField implements PField, CAnnotatedDescriptor {
     private final Map&lt;String, String&gt; annotations;
 
     public CField(@Nullable String docs,
-                  int key,
+                  int id,
                   @Nonnull PRequirement requirement,
                   @Nonnull String name,
                   @Nonnull PDescriptorProvider typeProvider,
                   @Nullable PValueProvider defaultValue,
 <span class="fc" id="L56">                  @Nullable Map&lt;String, String&gt; annotations) {</span>
 <span class="fc" id="L57">        this.comment = docs;</span>
-<span class="fc" id="L58">        this.key = key;</span>
+<span class="fc" id="L58">        this.id = id;</span>
 <span class="fc" id="L59">        this.requirement = requirement;</span>
 <span class="fc" id="L60">        this.typeProvider = typeProvider;</span>
 <span class="fc" id="L61">        this.name = name;</span>
@@ -69,8 +69,8 @@ public class CField implements PField, CAnnotatedDescriptor {
     }
 
     @Override
-    public int getKey() {
-<span class="fc" id="L73">        return key;</span>
+    public int getId() {
+<span class="fc" id="L73">        return id;</span>
     }
 
     @Nonnull
@@ -132,10 +132,10 @@ public class CField implements PField, CAnnotatedDescriptor {
 
     @Override
     public String getAnnotationValue(@Nonnull String name) {
-<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (annotations != null) {</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (annotations != null) {</span>
 <span class="nc" id="L136">            return annotations.get(name);</span>
         }
-<span class="nc" id="L138">        return null;</span>
+<span class="fc" id="L138">        return null;</span>
     }
 
     @Override
@@ -143,7 +143,7 @@ public class CField implements PField, CAnnotatedDescriptor {
 <span class="fc" id="L143">        StringBuilder builder = new StringBuilder();</span>
 <span class="fc" id="L144">        builder.append(PField.class.getSimpleName())</span>
 <span class="fc" id="L145">               .append('{')</span>
-<span class="fc" id="L146">               .append(key)</span>
+<span class="fc" id="L146">               .append(id)</span>
 <span class="fc" id="L147">               .append(&quot;: &quot;);</span>
 <span class="fc bfc" id="L148" title="All 2 branches covered.">        if (requirement != PRequirement.DEFAULT) {</span>
 <span class="fc" id="L149">            builder.append(requirement.label)</span>
@@ -163,7 +163,7 @@ public class CField implements PField, CAnnotatedDescriptor {
 <span class="nc" id="L163">            return false;</span>
         }
 <span class="fc" id="L165">        CField other = (CField) o;</span>
-<span class="fc bfc" id="L166" title="All 4 branches covered.">        return key == other.key &amp;&amp;</span>
+<span class="fc bfc" id="L166" title="All 4 branches covered.">        return id == other.id &amp;&amp;</span>
                requirement == other.requirement &amp;&amp;
                // We cannot test that the types are deep-equals as it may have circular
                // containment.
@@ -174,7 +174,7 @@ public class CField implements PField, CAnnotatedDescriptor {
 
     @Override
     public int hashCode() {
-<span class="fc" id="L177">        return Objects.hash(CField.class, key, requirement, name, getDefaultValue());</span>
+<span class="fc" id="L177">        return Objects.hash(CField.class, id, requirement, name, getDefaultValue());</span>
     }
 
     /**

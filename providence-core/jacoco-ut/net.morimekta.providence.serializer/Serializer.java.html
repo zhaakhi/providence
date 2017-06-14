@@ -40,21 +40,26 @@ import java.io.OutputStream;
  */
 <span class="fc" id="L41">public abstract class Serializer {</span>
     public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
-    int serialize(OutputStream output, Message message) throws IOException;
+    int serialize(@Nonnull OutputStream output,
+                  @Nonnull Message message) throws IOException;
 
     public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
-    int serialize(OutputStream output, PServiceCall&lt;Message, Field&gt; call) throws IOException;
-
-    @Nonnull
-    public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
-    Message deserialize(InputStream input, PMessageDescriptor&lt;Message, Field&gt; descriptor) throws IOException;
+    int serialize(@Nonnull OutputStream output,
+                  @Nonnull PServiceCall&lt;Message, Field&gt; call) throws IOException;
 
     @Nonnull
     public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
-    PServiceCall&lt;Message, Field&gt; deserialize(InputStream input, PService service) throws IOException;
+    Message deserialize(@Nonnull InputStream input,
+                        @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor) throws IOException;
+
+    @Nonnull
+    public abstract &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    PServiceCall&lt;Message, Field&gt; deserialize(@Nonnull InputStream input,
+                                             @Nonnull PService service) throws IOException;
 
     public abstract boolean binaryProtocol();
 
+    @Nonnull
     public abstract String mimeType();
 
     /**
@@ -64,12 +69,12 @@ import java.io.OutputStream;
      * @return If the service call is a request, and not a response.
      */
     protected boolean isRequestCallType(PServiceCallType type) {
-<span class="pc bfc" id="L67" title="All 2 branches covered.">        switch (type) {</span>
+<span class="pc bfc" id="L72" title="All 2 branches covered.">        switch (type) {</span>
             case CALL:
             case ONEWAY:
-<span class="fc" id="L70">                return true;</span>
+<span class="fc" id="L75">                return true;</span>
         }
-<span class="fc" id="L72">        return false;</span>
+<span class="fc" id="L77">        return false;</span>
     }
 
     public static final boolean DEFAULT_STRICT = false;

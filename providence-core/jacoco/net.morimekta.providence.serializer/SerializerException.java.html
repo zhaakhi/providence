@@ -95,22 +95,22 @@ public class SerializerException extends IOException implements Stringable {
 
     @Override
     public String toString() {
-<span class="nc" id="L98">        return MoreObjects.toStringHelper(getClass())</span>
-<span class="nc" id="L99">                          .omitNullValues()</span>
-<span class="nc" id="L100">                          .addValue(getMessage())</span>
-<span class="nc" id="L101">                          .add(&quot;method&quot;, getMethodName())</span>
-<span class="nc" id="L102">                          .add(&quot;type&quot;, getCallType())</span>
-<span class="nc" id="L103">                          .add(&quot;seq&quot;, getSequenceNo())</span>
-<span class="nc" id="L104">                          .add(&quot;exception&quot;, getExceptionType())</span>
-<span class="nc" id="L105">                          .toString();</span>
+<span class="fc" id="L98">        return MoreObjects.toStringHelper(getClass())</span>
+<span class="fc" id="L99">                          .omitNullValues()</span>
+<span class="fc" id="L100">                          .addValue(getMessage())</span>
+<span class="fc" id="L101">                          .add(&quot;method&quot;, methodName)</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                          .add(&quot;type&quot;, callType)</span>
+<span class="fc" id="L103">                          .add(&quot;seq&quot;, methodName == null ? null : sequenceNo)</span>
+<span class="fc" id="L104">                          .add(&quot;exception&quot;, exceptionType)</span>
+<span class="fc" id="L105">                          .toString();</span>
     }
 
     @Override
     public String asString() {
-<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (methodName != null) {</span>
-<span class="nc" id="L111">            return &quot;Error in &quot; + methodName + &quot;: &quot; + getMessage();</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (methodName != null) {</span>
+<span class="fc" id="L111">            return &quot;Error in &quot; + methodName + &quot;(): &quot; + getMessage();</span>
         } else {
-<span class="nc" id="L113">            return &quot;Error: &quot; + getMessage();</span>
+<span class="fc" id="L113">            return &quot;Error: &quot; + getMessage();</span>
         }
     }
 }

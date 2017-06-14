@@ -135,7 +135,7 @@ public class OverrideMessageSupplier&lt;Message extends PMessage&lt;Message, Fie
 <span class="fc" id="L135">                continue;</span>
             }
 <span class="fc" id="L137">            PField field = containedBuilder.descriptor()</span>
-<span class="fc" id="L138">                                           .getField(fieldName);</span>
+<span class="fc" id="L138">                                           .findFieldByName(fieldName);</span>
 <span class="fc bfc" id="L139" title="All 2 branches covered.">            if (field == null) {</span>
 <span class="fc bfc" id="L140" title="All 2 branches covered.">                if (strict) {</span>
 <span class="fc" id="L141">                    throw new ConfigException(&quot;No such field %s in %s [%s]&quot;,</span>
@@ -152,12 +152,12 @@ public class OverrideMessageSupplier&lt;Message extends PMessage&lt;Message, Fie
 <span class="fc" id="L152">                                                                                     .getBytes(StandardCharsets.UTF_8)),</span>
                                                     true);
 <span class="fc bfc" id="L154" title="All 2 branches covered.">                if (UNDEFINED.equals(override.getValue())) {</span>
-<span class="fc" id="L155">                    containedBuilder.clear(field.getKey());</span>
+<span class="fc" id="L155">                    containedBuilder.clear(field.getId());</span>
 <span class="fc bfc" id="L156" title="All 2 branches covered.">                } else if (field.getType() == PType.STRING) {</span>
 <span class="pc bpc" id="L157" title="1 of 2 branches missed.">                    if (tokenizer.hasNext()) {</span>
 <span class="fc" id="L158">                        Token next = tokenizer.next();</span>
 <span class="fc bfc" id="L159" title="All 2 branches covered.">                        if (next.isStringLiteral()) {</span>
-<span class="fc" id="L160">                            containedBuilder.set(field.getKey(), next.decodeLiteral(strict));</span>
+<span class="fc" id="L160">                            containedBuilder.set(field.getId(), next.decodeLiteral(strict));</span>
 <span class="fc bfc" id="L161" title="All 2 branches covered.">                            if (tokenizer.hasNext()) {</span>
 <span class="fc" id="L162">                                throw new ConfigException(&quot;Garbage after string value [%s]: '%s'&quot;,</span>
 <span class="fc" id="L163">                                                          override.getKey(),</span>
@@ -166,9 +166,9 @@ public class OverrideMessageSupplier&lt;Message extends PMessage&lt;Message, Fie
 <span class="fc" id="L166">                            continue;</span>
                         }
                     }
-<span class="fc" id="L169">                    containedBuilder.set(field.getKey(), override.getValue());</span>
+<span class="fc" id="L169">                    containedBuilder.set(field.getId(), override.getValue());</span>
                 } else {
-<span class="fc" id="L171">                    containedBuilder.set(field.getKey(), readFieldValue(tokenizer, tokenizer.expect(&quot;value&quot;), field.getDescriptor()));</span>
+<span class="fc" id="L171">                    containedBuilder.set(field.getId(), readFieldValue(tokenizer, tokenizer.expect(&quot;value&quot;), field.getDescriptor()));</span>
 <span class="fc bfc" id="L172" title="All 2 branches covered.">                    if (tokenizer.hasNext()) {</span>
 <span class="fc" id="L173">                        throw new ConfigException(&quot;Garbage after %s value [%s]: '%s'&quot;,</span>
 <span class="fc" id="L174">                                                  field.getType(),</span>
@@ -197,7 +197,7 @@ public class OverrideMessageSupplier&lt;Message extends PMessage&lt;Message, Fie
 <span class="fc bfc" id="L197" title="All 2 branches covered.">        for (int i = 0; i &lt; (path.length - 1); ++i) {</span>
 <span class="fc" id="L198">            PMessageDescriptor descriptor = builder.descriptor();</span>
 <span class="fc" id="L199">            String fieldName = path[i];</span>
-<span class="fc" id="L200">            PField field = descriptor.getField(fieldName);</span>
+<span class="fc" id="L200">            PField field = descriptor.findFieldByName(fieldName);</span>
 <span class="fc bfc" id="L201" title="All 2 branches covered.">            if (field == null) {</span>
 <span class="fc bfc" id="L202" title="All 2 branches covered.">                if (strict) {</span>
 <span class="fc" id="L203">                    throw new ConfigException(&quot;No such field %s in %s [%s]&quot;,</span>
@@ -213,7 +213,7 @@ public class OverrideMessageSupplier&lt;Message extends PMessage&lt;Message, Fie
 <span class="fc" id="L213">                                          descriptor.getQualifiedName(),</span>
 <span class="fc" id="L214">                                          String.join(&quot;.&quot;, path));</span>
             }
-<span class="fc" id="L216">            builder = builder.mutator(field.getKey());</span>
+<span class="fc" id="L216">            builder = builder.mutator(field.getId());</span>
         }
 <span class="fc" id="L218">        return builder;</span>
     }

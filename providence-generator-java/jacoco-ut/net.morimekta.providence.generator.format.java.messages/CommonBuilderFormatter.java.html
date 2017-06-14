@@ -119,101 +119,102 @@ public class CommonBuilderFormatter
                     case MAP:
                     case SET:
 <span class="fc" id="L121">                        writer.formatln(</span>
-                                &quot;%s = %s == _Field.%s ? builder.%s.build() : null;&quot;,
+                                &quot;%s = %s == _Field.%s ? %s : null;&quot;,
 <span class="fc" id="L123">                                field.member(),</span>
                                 UNION_FIELD,
 <span class="fc" id="L125">                                field.fieldEnum(),</span>
-<span class="fc" id="L126">                                field.member());</span>
-<span class="fc" id="L127">                        break;</span>
+<span class="fc" id="L126">                                field.fieldInstanceCopy(&quot;builder.&quot; + field.member()),</span>
+<span class="fc" id="L127">                                field.member());</span>
+<span class="fc" id="L128">                        break;</span>
                     case MESSAGE:
-<span class="fc" id="L129">                        writer.formatln(&quot;%s = %s != _Field.%s&quot;, field.member(), UNION_FIELD, field.fieldEnum())</span>
-<span class="fc" id="L130">                              .appendln(&quot;        ? null&quot;)</span>
-<span class="fc" id="L131">                              .formatln(&quot;        : builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
-<span class="fc" id="L132">                                        field.member(), field.member(), field.member());</span>
-<span class="fc" id="L133">                        break;</span>
+<span class="fc" id="L130">                        writer.formatln(&quot;%s = %s != _Field.%s&quot;, field.member(), UNION_FIELD, field.fieldEnum())</span>
+<span class="fc" id="L131">                              .appendln(&quot;        ? null&quot;)</span>
+<span class="fc" id="L132">                              .formatln(&quot;        : builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
+<span class="fc" id="L133">                                        field.member(), field.member(), field.member());</span>
+<span class="fc" id="L134">                        break;</span>
                     default:
-<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                        if (field.alwaysPresent()) {</span>
-<span class="nc" id="L136">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : %s;&quot;,</span>
-<span class="nc" id="L137">                                            field.member(),</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">                        if (field.alwaysPresent()) {</span>
+<span class="nc" id="L137">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : %s;&quot;,</span>
+<span class="nc" id="L138">                                            field.member(),</span>
                                             UNION_FIELD,
-<span class="nc" id="L139">                                            field.fieldEnum(),</span>
-<span class="nc" id="L140">                                            field.member(),</span>
-<span class="nc" id="L141">                                            field.kDefault());</span>
+<span class="nc" id="L140">                                            field.fieldEnum(),</span>
+<span class="nc" id="L141">                                            field.member(),</span>
+<span class="nc" id="L142">                                            field.kDefault());</span>
                         } else {
-<span class="fc" id="L143">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : null;&quot;,</span>
-<span class="fc" id="L144">                                            field.member(),</span>
+<span class="fc" id="L144">                            writer.formatln(&quot;%s = %s == _Field.%s ? builder.%s : null;&quot;,</span>
+<span class="fc" id="L145">                                            field.member(),</span>
                                             UNION_FIELD,
-<span class="fc" id="L146">                                            field.fieldEnum(),</span>
-<span class="fc" id="L147">                                            field.member());</span>
+<span class="fc" id="L147">                                            field.fieldEnum(),</span>
+<span class="fc" id="L148">                                            field.member());</span>
                         }
                         break;
                 }
-<span class="fc" id="L151">            }</span>
+<span class="fc" id="L152">            }</span>
         } else {
-<span class="fc bfc" id="L153" title="All 2 branches covered.">            if (message.isException()) {</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (message.isException()) {</span>
                 // If an exception class contains a field named 'message' (no caps), it will use that
                 // as the exception message unmodified.
-<span class="fc" id="L156">                Optional&lt;JField&gt; msg = message.exceptionMessageField();</span>
-<span class="fc bfc" id="L157" title="All 2 branches covered.">                if (msg.isPresent()) {</span>
-<span class="fc" id="L158">                    writer.formatln(&quot;super(builder.%s);&quot;, msg.get().member())</span>
-<span class="fc" id="L159">                          .newline();</span>
+<span class="fc" id="L157">                Optional&lt;JField&gt; msg = message.exceptionMessageField();</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">                if (msg.isPresent()) {</span>
+<span class="fc" id="L159">                    writer.formatln(&quot;super(builder.%s);&quot;, msg.get().member())</span>
+<span class="fc" id="L160">                          .newline();</span>
                 } else {
-<span class="fc" id="L161">                    writer.appendln(&quot;super(createMessage(&quot;)</span>
-<span class="fc" id="L162">                          .begin(&quot;                    &quot;);</span>
-<span class="fc" id="L163">                    boolean first = true;</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">                    for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc bfc" id="L165" title="All 2 branches covered.">                        if (first) {</span>
-<span class="fc" id="L166">                            first = false;</span>
+<span class="fc" id="L162">                    writer.appendln(&quot;super(createMessage(&quot;)</span>
+<span class="fc" id="L163">                          .begin(&quot;                    &quot;);</span>
+<span class="fc" id="L164">                    boolean first = true;</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">                    for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                        if (first) {</span>
+<span class="fc" id="L167">                            first = false;</span>
                         } else {
-<span class="fc" id="L168">                            writer.append(',')</span>
-<span class="fc" id="L169">                                  .appendln();</span>
+<span class="fc" id="L169">                            writer.append(',')</span>
+<span class="fc" id="L170">                                  .appendln();</span>
                         }
-<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                        if (field.container()) {</span>
-<span class="nc" id="L172">                            writer.format(&quot;builder.%s() ? builder.%s.build() : null&quot;, field.isSet(), field.member());</span>
-<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                        } else if (!field.isVoid()) {</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">                        if (field.container()) {</span>
+<span class="nc" id="L173">                            writer.format(&quot;builder.%s() ? %s : null&quot;, field.isSet(), field.fieldInstanceCopy(&quot;builder.&quot; + field.member()));</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                        } else if (!field.isVoid()) {</span>
                             // Void fields have no value.
-<span class="fc" id="L175">                            writer.format(&quot;builder.%s&quot;, field.member());</span>
+<span class="fc" id="L176">                            writer.format(&quot;builder.%s&quot;, field.member());</span>
                         }
-<span class="fc" id="L177">                    }</span>
-<span class="fc" id="L178">                    writer.append(&quot;));&quot;)</span>
-<span class="fc" id="L179">                          .end()</span>
-<span class="fc" id="L180">                          .newline();</span>
+<span class="fc" id="L178">                    }</span>
+<span class="fc" id="L179">                    writer.append(&quot;));&quot;)</span>
+<span class="fc" id="L180">                          .end()</span>
+<span class="fc" id="L181">                          .newline();</span>
                 }
             }
 
-<span class="fc bfc" id="L184" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc bfc" id="L185" title="All 2 branches covered.">                if (field.container()) {</span>
-<span class="fc" id="L186">                    writer.formatln(&quot;if (builder.%s()) {&quot;, field.isSet())</span>
-<span class="fc" id="L187">                          .formatln(&quot;    %s = builder.%s.build();&quot;, field.member(), field.member())</span>
-<span class="fc" id="L188">                          .appendln(&quot;} else {&quot;);</span>
-<span class="fc bfc" id="L189" title="All 2 branches covered.">                    if (field.alwaysPresent()) {</span>
-<span class="fc" id="L190">                        writer.formatln(&quot;    %s = %s;&quot;, field.member(), field.kDefault());</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">                if (field.container()) {</span>
+<span class="fc" id="L187">                    writer.formatln(&quot;if (builder.%s()) {&quot;, field.isSet())</span>
+<span class="fc" id="L188">                          .formatln(&quot;    %s = %s;&quot;, field.member(), field.fieldInstanceCopy(&quot;builder.&quot; + field.member()))</span>
+<span class="fc" id="L189">                          .appendln(&quot;} else {&quot;);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">                    if (field.alwaysPresent()) {</span>
+<span class="fc" id="L191">                        writer.formatln(&quot;    %s = %s;&quot;, field.member(), field.kDefault());</span>
                     } else {
-<span class="fc" id="L192">                        writer.formatln(&quot;    %s = null;&quot;, field.member());</span>
+<span class="fc" id="L193">                        writer.formatln(&quot;    %s = null;&quot;, field.member());</span>
                     }
-<span class="fc" id="L194">                    writer.appendln('}');</span>
-<span class="fc bfc" id="L195" title="All 2 branches covered.">                } else if (field.type() == PType.MESSAGE) {</span>
-<span class="fc" id="L196">                    writer.formatln(&quot;%s = builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
-<span class="fc" id="L197">                                    field.member(), field.member(), field.member(), field.member());</span>
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                } else if (!field.isVoid()){</span>
+<span class="fc" id="L195">                    writer.appendln('}');</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">                } else if (field.type() == PType.MESSAGE) {</span>
+<span class="fc" id="L197">                    writer.formatln(&quot;%s = builder.%s_builder != null ? builder.%s_builder.build() : builder.%s;&quot;,</span>
+<span class="fc" id="L198">                                    field.member(), field.member(), field.member(), field.member());</span>
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">                } else if (!field.isVoid()){</span>
                     // Void fields have no value.
                     // And primitive java values keep the default state in the builder, so no need to
                     // explicitly set it here.
-<span class="fc bfc" id="L202" title="All 4 branches covered.">                    if (field.alwaysPresent() &amp;&amp; !field.isPrimitiveJavaValue()) {</span>
-<span class="fc" id="L203">                        writer.formatln(&quot;if (builder.%s()) {&quot;, field.isSet())</span>
-<span class="fc" id="L204">                              .formatln(&quot;    %s = builder.%s;&quot;, field.member(), field.member())</span>
-<span class="fc" id="L205">                              .appendln(&quot;} else {&quot;)</span>
-<span class="fc" id="L206">                              .formatln(&quot;    %s = %s;&quot;, field.member(), field.kDefault())</span>
-<span class="fc" id="L207">                              .appendln('}');</span>
+<span class="fc bfc" id="L203" title="All 4 branches covered.">                    if (field.alwaysPresent() &amp;&amp; !field.isPrimitiveJavaValue()) {</span>
+<span class="fc" id="L204">                        writer.formatln(&quot;if (builder.%s()) {&quot;, field.isSet())</span>
+<span class="fc" id="L205">                              .formatln(&quot;    %s = builder.%s;&quot;, field.member(), field.member())</span>
+<span class="fc" id="L206">                              .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L207">                              .formatln(&quot;    %s = %s;&quot;, field.member(), field.kDefault())</span>
+<span class="fc" id="L208">                              .appendln('}');</span>
                     } else {
-<span class="fc" id="L209">                        writer.formatln(&quot;%s = builder.%s;&quot;, field.member(), field.member());</span>
+<span class="fc" id="L210">                        writer.formatln(&quot;%s = builder.%s;&quot;, field.member(), field.member());</span>
                     }
                 }
-<span class="fc" id="L212">            }</span>
+<span class="fc" id="L213">            }</span>
         }
-<span class="fc" id="L214">        writer.end()</span>
-<span class="fc" id="L215">              .appendln('}')</span>
-<span class="fc" id="L216">              .newline();</span>
-<span class="fc" id="L217">    }</span>
+<span class="fc" id="L215">        writer.end()</span>
+<span class="fc" id="L216">              .appendln('}')</span>
+<span class="fc" id="L217">              .newline();</span>
+<span class="fc" id="L218">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
