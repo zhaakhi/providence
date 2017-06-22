@@ -85,10 +85,9 @@ import static org.junit.Assert.assertNotNull;
 <span class="nc" id="L85">        this.globalWriter             = this.writer             = null;</span>
 <span class="nc" id="L86">        this.globalFillRate           = this.fillRate           = 1.0;</span>
 
-<span class="nc" id="L88">        this.defaultFactory = this::getDefaultValueSupplier;</span>
-<span class="nc" id="L89">        this.generated = new LinkedList&lt;&gt;();</span>
-<span class="nc" id="L90">        this.started = false;</span>
-<span class="nc" id="L91">    }</span>
+<span class="nc" id="L88">        this.generated = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L89">        this.started = false;</span>
+<span class="nc" id="L90">    }</span>
 
     /**
      * Generate a message with random content.
@@ -101,17 +100,17 @@ import static org.junit.Assert.assertNotNull;
     @SuppressWarnings(&quot;unchecked&quot;)
     public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generate(PMessageDescriptor&lt;M, F&gt; descriptor) {
         M instance;
-<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (reader != null) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (reader != null) {</span>
             try {
-<span class="nc" id="L106">                instance = reader.read(descriptor);</span>
-<span class="nc" id="L107">            } catch (IOException e) {</span>
-<span class="nc" id="L108">                throw new AssertionError(e.getMessage(), e);</span>
-<span class="nc" id="L109">            }</span>
+<span class="nc" id="L105">                instance = reader.read(descriptor);</span>
+<span class="nc" id="L106">            } catch (IOException e) {</span>
+<span class="nc" id="L107">                throw new AssertionError(e.getMessage(), e);</span>
+<span class="nc" id="L108">            }</span>
         } else {
-<span class="nc" id="L111">            instance = generateInternal(descriptor);</span>
+<span class="nc" id="L110">            instance = generateInternal(descriptor);</span>
         }
-<span class="nc" id="L113">        generated.add(instance);</span>
-<span class="nc" id="L114">        return instance;</span>
+<span class="nc" id="L112">        generated.add(instance);</span>
+<span class="nc" id="L113">        return instance;</span>
     }
 
     /**
@@ -122,7 +121,7 @@ import static org.junit.Assert.assertNotNull;
      * @return The list of generated messages.
      */
     public List&lt;PMessage&gt; getGenerated() {
-<span class="nc" id="L125">        return ImmutableList.copyOf(generated);</span>
+<span class="nc" id="L124">        return ImmutableList.copyOf(generated);</span>
     }
 
     /**
@@ -132,16 +131,16 @@ import static org.junit.Assert.assertNotNull;
      */
     @SuppressWarnings(&quot;unchecked&quot;)
     public void dumpGeneratedMessages() throws IOException {
-<span class="nc" id="L135">        MessageWriter writer = this.writer;</span>
-<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (writer == null) {</span>
-<span class="nc" id="L137">            writer = new IOMessageWriter(System.err, outputSerializer);</span>
+<span class="nc" id="L134">        MessageWriter writer = this.writer;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (writer == null) {</span>
+<span class="nc" id="L136">            writer = new IOMessageWriter(System.err, outputSerializer);</span>
         }
 
-<span class="nc bnc" id="L140" title="All 2 branches missed.">        for (PMessage message : generated) {</span>
-<span class="nc" id="L141">            writer.write(message);</span>
-<span class="nc" id="L142">            writer.separator();</span>
-<span class="nc" id="L143">        }</span>
-<span class="nc" id="L144">    }</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        for (PMessage message : generated) {</span>
+<span class="nc" id="L140">            writer.write(message);</span>
+<span class="nc" id="L141">            writer.separator();</span>
+<span class="nc" id="L142">        }</span>
+<span class="nc" id="L143">    }</span>
 
     // --- generator setup ---:
 
@@ -152,13 +151,13 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setRandom(Random random) {
-<span class="nc bnc" id="L155" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L156">            this.random = random;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L155">            this.random = random;</span>
         } else {
-<span class="nc" id="L158">            this.globalRandom = random;</span>
-<span class="nc" id="L159">            this.random = random;</span>
+<span class="nc" id="L157">            this.globalRandom = random;</span>
+<span class="nc" id="L158">            this.random = random;</span>
         }
-<span class="nc" id="L161">        return this;</span>
+<span class="nc" id="L160">        return this;</span>
     }
 
     /**
@@ -168,13 +167,13 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setFairy(Fairy fairy) {
-<span class="nc bnc" id="L171" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L172">            this.fairy = fairy;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L171">            this.fairy = fairy;</span>
         } else {
-<span class="nc" id="L174">            this.globalFairy = fairy;</span>
-<span class="nc" id="L175">            this.fairy = fairy;</span>
+<span class="nc" id="L173">            this.globalFairy = fairy;</span>
+<span class="nc" id="L174">            this.fairy = fairy;</span>
         }
-<span class="nc" id="L177">        return this;</span>
+<span class="nc" id="L176">        return this;</span>
     }
 
     /**
@@ -195,11 +194,11 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setLocale(Locale locale) {
-<span class="nc" id="L198">        this.fairy = Fairy.create(locale);</span>
-<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (!started) {</span>
-<span class="nc" id="L200">            this.globalFairy = this.fairy;</span>
+<span class="nc" id="L197">        this.fairy = Fairy.create(locale);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        if (!started) {</span>
+<span class="nc" id="L199">            this.globalFairy = this.fairy;</span>
         }
-<span class="nc" id="L202">        return this;</span>
+<span class="nc" id="L201">        return this;</span>
     }
 
     /**
@@ -209,14 +208,14 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setFillRate(double fillRate) {
-<span class="nc bnc" id="L212" title="All 6 branches missed.">        assert fillRate &gt; 0.0 &amp;&amp; fillRate &lt;= 1.0 : &quot;Fill rate outside the range &lt; 0.0 .. 1.0 ]: &quot; + fillRate;</span>
-<span class="nc bnc" id="L213" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L214">            this.fillRate = fillRate;</span>
+<span class="nc bnc" id="L211" title="All 6 branches missed.">        assert fillRate &gt; 0.0 &amp;&amp; fillRate &lt;= 1.0 : &quot;Fill rate outside the range &lt; 0.0 .. 1.0 ]: &quot; + fillRate;</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L213">            this.fillRate = fillRate;</span>
         } else {
-<span class="nc" id="L216">            this.globalFillRate = fillRate;</span>
-<span class="nc" id="L217">            this.fillRate = fillRate;</span>
+<span class="nc" id="L215">            this.globalFillRate = fillRate;</span>
+<span class="nc" id="L216">            this.fillRate = fillRate;</span>
         }
-<span class="nc" id="L219">        return this;</span>
+<span class="nc" id="L218">        return this;</span>
     }
 
     /**
@@ -226,12 +225,12 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator addFactory(ValueSupplierFactory factory) {
-<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L230">            this.factories.add(factory);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L229">            this.factories.add(factory);</span>
         } else {
-<span class="nc" id="L232">            this.globalFactories.add(factory);</span>
+<span class="nc" id="L231">            this.globalFactories.add(factory);</span>
         }
-<span class="nc" id="L234">        return this;</span>
+<span class="nc" id="L233">        return this;</span>
     }
 
     /**
@@ -241,12 +240,12 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator addFactories(ValueSupplierFactory... factories) {
-<span class="nc bnc" id="L244" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L245">            Collections.addAll(this.factories, factories);</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L244">            Collections.addAll(this.factories, factories);</span>
         } else {
-<span class="nc" id="L247">            Collections.addAll(this.globalFactories, factories);</span>
+<span class="nc" id="L246">            Collections.addAll(this.globalFactories, factories);</span>
         }
-<span class="nc" id="L249">        return this;</span>
+<span class="nc" id="L248">        return this;</span>
     }
 
     /**
@@ -256,12 +255,12 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator addFactories(Collection&lt;ValueSupplierFactory&gt; factories) {
-<span class="nc bnc" id="L259" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L260">            this.factories.addAll(factories);</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L259">            this.factories.addAll(factories);</span>
         } else {
-<span class="nc" id="L262">            this.globalFactories.addAll(factories);</span>
+<span class="nc" id="L261">            this.globalFactories.addAll(factories);</span>
         }
-<span class="nc" id="L264">        return this;</span>
+<span class="nc" id="L263">        return this;</span>
     }
 
     /**
@@ -271,13 +270,13 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setMessageWriter(MessageWriter writer) {
-<span class="nc bnc" id="L274" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L275">            this.writer = writer;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L274">            this.writer = writer;</span>
         } else {
-<span class="nc" id="L277">            this.globalWriter = writer;</span>
-<span class="nc" id="L278">            this.writer = writer;</span>
+<span class="nc" id="L276">            this.globalWriter = writer;</span>
+<span class="nc" id="L277">            this.writer = writer;</span>
         }
-<span class="nc" id="L280">        return this;</span>
+<span class="nc" id="L279">        return this;</span>
     }
 
     /**
@@ -287,14 +286,14 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setMessageReader(MessageReader reader) {
-<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L291">            this.reader = reader;</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L290">            this.reader = reader;</span>
         } else {
-<span class="nc bnc" id="L293" title="All 4 branches missed.">            assert globalReader == null : &quot;Generator already contains reader for messages.&quot;;</span>
-<span class="nc" id="L294">            this.globalReader = reader;</span>
-<span class="nc" id="L295">            this.reader = reader;</span>
+<span class="nc bnc" id="L292" title="All 4 branches missed.">            assert globalReader == null : &quot;Generator already contains reader for messages.&quot;;</span>
+<span class="nc" id="L293">            this.globalReader = reader;</span>
+<span class="nc" id="L294">            this.reader = reader;</span>
         }
-<span class="nc" id="L297">        return this;</span>
+<span class="nc" id="L296">        return this;</span>
     }
 
     /**
@@ -304,7 +303,7 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setResourceReader(String resource) {
-<span class="nc" id="L307">        return setResourceReader(resource, new PrettySerializer());</span>
+<span class="nc" id="L306">        return setResourceReader(resource, new PrettySerializer());</span>
     }
 
     /**
@@ -316,8 +315,8 @@ import static org.junit.Assert.assertNotNull;
      */
     public MessageGenerator setResourceReader(String resource,
                                               Serializer serializer) {
-<span class="nc" id="L319">        return setMessageReader(new IOMessageReader(</span>
-<span class="nc" id="L320">                getClass().getResourceAsStream(resource),</span>
+<span class="nc" id="L318">        return setMessageReader(new IOMessageReader(</span>
+<span class="nc" id="L319">                getClass().getResourceAsStream(resource),</span>
                 serializer));
     }
 
@@ -330,15 +329,15 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setOutputSerializer(Serializer defaultSerializer) {
-<span class="nc bnc" id="L333" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L334">            this.writer = null;</span>
-<span class="nc" id="L335">            this.outputSerializer = defaultSerializer;</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L333">            this.writer = null;</span>
+<span class="nc" id="L334">            this.outputSerializer = defaultSerializer;</span>
         } else {
-<span class="nc bnc" id="L337" title="All 4 branches missed.">            assert globalWriter == null : &quot;Generator already has a writer.&quot;;</span>
-<span class="nc" id="L338">            this.outputSerializer = defaultSerializer;</span>
-<span class="nc" id="L339">            this.globalOutputSerializer = defaultSerializer;</span>
+<span class="nc bnc" id="L336" title="All 4 branches missed.">            assert globalWriter == null : &quot;Generator already has a writer.&quot;;</span>
+<span class="nc" id="L337">            this.outputSerializer = defaultSerializer;</span>
+<span class="nc" id="L338">            this.globalOutputSerializer = defaultSerializer;</span>
         }
-<span class="nc" id="L341">        return this;</span>
+<span class="nc" id="L340">        return this;</span>
     }
 
     /**
@@ -348,26 +347,28 @@ import static org.junit.Assert.assertNotNull;
      * @return The message generator.
      */
     public MessageGenerator setMaxCollectionItems(int max) {
-<span class="nc bnc" id="L351" title="All 2 branches missed.">        if (!started) {</span>
-<span class="nc" id="L352">            this.maxCollectionItems = max;</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">        if (!started) {</span>
+<span class="nc" id="L351">            this.maxCollectionItems = max;</span>
         } else {
-<span class="nc" id="L354">            this.globalMaxCollectionItems = max;</span>
-<span class="nc" id="L355">            this.maxCollectionItems = max;</span>
+<span class="nc" id="L353">            this.globalMaxCollectionItems = max;</span>
+<span class="nc" id="L354">            this.maxCollectionItems = max;</span>
         }
-<span class="nc" id="L357">        return this;</span>
+<span class="nc" id="L356">        return this;</span>
     }
 
     /**
      * Dump all generated messages on failure for this test only.
+     *
+     * @return The message generator.
      */
     public MessageGenerator dumpOnFailure() {
-<span class="nc bnc" id="L364" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L365">            this.dumpOnFailure = true;</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L366">            this.dumpOnFailure = true;</span>
         } else {
-<span class="nc" id="L367">            this.globalDumpOnFailure = true;</span>
-<span class="nc" id="L368">            this.dumpOnFailure = true;</span>
+<span class="nc" id="L368">            this.globalDumpOnFailure = true;</span>
+<span class="nc" id="L369">            this.dumpOnFailure = true;</span>
         }
-<span class="nc" id="L370">        return this;</span>
+<span class="nc" id="L371">        return this;</span>
     }
 
     /**
@@ -378,83 +379,83 @@ import static org.junit.Assert.assertNotNull;
      */
     @SuppressWarnings(&quot;unchecked&quot;)
     public Supplier&lt;Object&gt; getValueSupplier(PDescriptor descriptor) {
-<span class="nc bnc" id="L381" title="All 15 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="nc bnc" id="L382" title="All 15 branches missed.">        switch (descriptor.getType()) {</span>
             case BOOL:
-<span class="nc" id="L383">                return random::nextBoolean;</span>
+<span class="nc" id="L384">                return random::nextBoolean;</span>
             case BYTE:
-<span class="nc" id="L385">                return () -&gt; (byte) random.nextInt();</span>
+<span class="nc" id="L386">                return () -&gt; (byte) random.nextInt();</span>
             case I16:
-<span class="nc" id="L387">                return () -&gt; (short) random.nextInt();</span>
+<span class="nc" id="L388">                return () -&gt; (short) random.nextInt();</span>
             case I32:
-<span class="nc" id="L389">                return random::nextInt;</span>
+<span class="nc" id="L390">                return random::nextInt;</span>
             case I64:
-<span class="nc" id="L391">                return random::nextLong;</span>
+<span class="nc" id="L392">                return random::nextLong;</span>
             case DOUBLE:
-<span class="nc" id="L393">                return random::nextDouble;</span>
+<span class="nc" id="L394">                return random::nextDouble;</span>
             case ENUM: {
-<span class="nc" id="L395">                PEnumDescriptor ed = (PEnumDescriptor) descriptor;</span>
-<span class="nc" id="L396">                PEnumValue[] values = ed.getValues();</span>
-<span class="nc" id="L397">                return () -&gt; values[abs(random.nextInt()) % values.length];</span>
+<span class="nc" id="L396">                PEnumDescriptor ed = (PEnumDescriptor) descriptor;</span>
+<span class="nc" id="L397">                PEnumValue[] values = ed.getValues();</span>
+<span class="nc" id="L398">                return () -&gt; values[abs(random.nextInt()) % values.length];</span>
             }
             case BINARY: {
-<span class="nc" id="L400">                return () -&gt; {</span>
-<span class="nc" id="L401">                    byte[] tmp = new byte[nextCollectionSize()];</span>
-<span class="nc" id="L402">                    random.nextBytes(tmp);</span>
-<span class="nc" id="L403">                    return Binary.wrap(tmp);</span>
+<span class="nc" id="L401">                return () -&gt; {</span>
+<span class="nc" id="L402">                    byte[] tmp = new byte[nextCollectionSize()];</span>
+<span class="nc" id="L403">                    random.nextBytes(tmp);</span>
+<span class="nc" id="L404">                    return Binary.wrap(tmp);</span>
                 };
             }
             case STRING:
-<span class="nc" id="L407">                return () -&gt; fairy.textProducer()</span>
-<span class="nc" id="L408">                                  .sentence();</span>
+<span class="nc" id="L408">                return () -&gt; fairy.textProducer()</span>
+<span class="nc" id="L409">                                  .sentence();</span>
             case SET: {
-<span class="nc" id="L410">                PSet&lt;Object&gt; set = (PSet&lt;Object&gt;) descriptor;</span>
-<span class="nc" id="L411">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(set.itemDescriptor());</span>
-<span class="nc" id="L412">                return () -&gt; {</span>
-<span class="nc" id="L413">                    int num = nextCollectionSize();</span>
+<span class="nc" id="L411">                PSet&lt;Object&gt; set = (PSet&lt;Object&gt;) descriptor;</span>
+<span class="nc" id="L412">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(set.itemDescriptor());</span>
+<span class="nc" id="L413">                return () -&gt; {</span>
+<span class="nc" id="L414">                    int num = nextCollectionSize();</span>
                     // Sets does not necessary allow conflicting items.
-<span class="nc" id="L415">                    Set&lt;Object&gt; builder = new LinkedHashSet&lt;&gt;();</span>
-<span class="nc bnc" id="L416" title="All 2 branches missed.">                    for (int i = 0; i &lt; num; ++i) {</span>
-<span class="nc" id="L417">                        builder.add(itemSupplier.get());</span>
+<span class="nc" id="L416">                    Set&lt;Object&gt; builder = new LinkedHashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">                    for (int i = 0; i &lt; num; ++i) {</span>
+<span class="nc" id="L418">                        builder.add(itemSupplier.get());</span>
                     }
-<span class="nc" id="L419">                    return set.builder()</span>
-<span class="nc" id="L420">                              .addAll(builder)</span>
-<span class="nc" id="L421">                              .build();</span>
+<span class="nc" id="L420">                    return set.builder()</span>
+<span class="nc" id="L421">                              .addAll(builder)</span>
+<span class="nc" id="L422">                              .build();</span>
                 };
             }
             case LIST: {
-<span class="nc" id="L425">                PList&lt;Object&gt; list = (PList&lt;Object&gt;) descriptor;</span>
-<span class="nc" id="L426">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(list.itemDescriptor());</span>
-<span class="nc" id="L427">                return () -&gt; {</span>
-<span class="nc" id="L428">                    int num = nextCollectionSize();</span>
-<span class="nc" id="L429">                    PList.Builder&lt;Object&gt; builder = list.builder();</span>
-<span class="nc bnc" id="L430" title="All 2 branches missed.">                    for (int i = 0; i &lt; num; ++i) {</span>
-<span class="nc" id="L431">                        builder.add(itemSupplier.get());</span>
+<span class="nc" id="L426">                PList&lt;Object&gt; list = (PList&lt;Object&gt;) descriptor;</span>
+<span class="nc" id="L427">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(list.itemDescriptor());</span>
+<span class="nc" id="L428">                return () -&gt; {</span>
+<span class="nc" id="L429">                    int num = nextCollectionSize();</span>
+<span class="nc" id="L430">                    PList.Builder&lt;Object&gt; builder = list.builder();</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">                    for (int i = 0; i &lt; num; ++i) {</span>
+<span class="nc" id="L432">                        builder.add(itemSupplier.get());</span>
                     }
-<span class="nc" id="L433">                    return builder.build();</span>
+<span class="nc" id="L434">                    return builder.build();</span>
                 };
             }
             case MAP: {
-<span class="nc" id="L437">                PMap&lt;Object, Object&gt; map = (PMap&lt;Object, Object&gt;) descriptor;</span>
-<span class="nc" id="L438">                Supplier&lt;Object&gt; keySupplier = getValueSupplier(map.keyDescriptor());</span>
-<span class="nc" id="L439">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(map.itemDescriptor());</span>
-<span class="nc" id="L440">                return () -&gt; {</span>
-<span class="nc" id="L441">                    int num = nextCollectionSize();</span>
+<span class="nc" id="L438">                PMap&lt;Object, Object&gt; map = (PMap&lt;Object, Object&gt;) descriptor;</span>
+<span class="nc" id="L439">                Supplier&lt;Object&gt; keySupplier = getValueSupplier(map.keyDescriptor());</span>
+<span class="nc" id="L440">                Supplier&lt;Object&gt; itemSupplier = getValueSupplier(map.itemDescriptor());</span>
+<span class="nc" id="L441">                return () -&gt; {</span>
+<span class="nc" id="L442">                    int num = nextCollectionSize();</span>
                     // Maps does not necessary allow conflicting keys.
-<span class="nc" id="L443">                    Map&lt;Object, Object&gt; builder = new LinkedHashMap&lt;&gt;();</span>
-<span class="nc bnc" id="L444" title="All 2 branches missed.">                    for (int i = 0; i &lt; num; ++i) {</span>
-<span class="nc" id="L445">                        builder.put(keySupplier.get(), itemSupplier.get());</span>
+<span class="nc" id="L444">                    Map&lt;Object, Object&gt; builder = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">                    for (int i = 0; i &lt; num; ++i) {</span>
+<span class="nc" id="L446">                        builder.put(keySupplier.get(), itemSupplier.get());</span>
                     }
-<span class="nc" id="L447">                    return map.builder()</span>
-<span class="nc" id="L448">                              .putAll(builder)</span>
-<span class="nc" id="L449">                              .build();</span>
+<span class="nc" id="L448">                    return map.builder()</span>
+<span class="nc" id="L449">                              .putAll(builder)</span>
+<span class="nc" id="L450">                              .build();</span>
                 };
             }
             case MESSAGE:
-<span class="nc" id="L453">                return () -&gt; generateInternal((PMessageDescriptor) descriptor);</span>
+<span class="nc" id="L454">                return () -&gt; generateInternal((PMessageDescriptor) descriptor);</span>
             case VOID:
-<span class="nc" id="L455">                return () -&gt; Boolean.TRUE;</span>
+<span class="nc" id="L456">                return () -&gt; Boolean.TRUE;</span>
             default:
-<span class="nc" id="L457">                throw new IllegalArgumentException(descriptor.getType() + &quot; field in message&quot;);</span>
+<span class="nc" id="L458">                throw new IllegalArgumentException(descriptor.getType() + &quot; field in message&quot;);</span>
         }
     }
 
@@ -462,57 +463,55 @@ import static org.junit.Assert.assertNotNull;
 
     @Override
     protected void starting(Description description) {
-<span class="nc" id="L465">        super.starting(description);</span>
-<span class="nc bnc" id="L466" title="All 4 branches missed.">        if (!description.isEmpty() &amp;&amp; description.getMethodName() == null) {</span>
-<span class="nc" id="L467">            throw new AssertionError(&quot;MessageGenerator instantiated as class rule: forbidden&quot;);</span>
+<span class="nc" id="L466">        super.starting(description);</span>
+<span class="nc bnc" id="L467" title="All 4 branches missed.">        if (!description.isEmpty() &amp;&amp; description.getMethodName() == null) {</span>
+<span class="nc" id="L468">            throw new AssertionError(&quot;MessageGenerator instantiated as class rule: forbidden&quot;);</span>
         }
 
-<span class="nc" id="L470">        random = globalRandom;</span>
-<span class="nc" id="L471">        fairy = globalFairy;</span>
-<span class="nc" id="L472">        writer = globalWriter;</span>
-<span class="nc" id="L473">        reader = globalReader;</span>
-<span class="nc" id="L474">        factories = new LinkedList&lt;&gt;(globalFactories);</span>
-<span class="nc" id="L475">        dumpOnFailure = globalDumpOnFailure;</span>
-<span class="nc" id="L476">        outputSerializer = globalOutputSerializer;</span>
-<span class="nc" id="L477">        maxCollectionItems = globalMaxCollectionItems;</span>
-<span class="nc" id="L478">        fillRate = globalFillRate;</span>
+<span class="nc" id="L471">        random = globalRandom;</span>
+<span class="nc" id="L472">        fairy = globalFairy;</span>
+<span class="nc" id="L473">        writer = globalWriter;</span>
+<span class="nc" id="L474">        reader = globalReader;</span>
+<span class="nc" id="L475">        factories = new LinkedList&lt;&gt;(globalFactories);</span>
+<span class="nc" id="L476">        dumpOnFailure = globalDumpOnFailure;</span>
+<span class="nc" id="L477">        outputSerializer = globalOutputSerializer;</span>
+<span class="nc" id="L478">        maxCollectionItems = globalMaxCollectionItems;</span>
+<span class="nc" id="L479">        fillRate = globalFillRate;</span>
 
         // Reset content.
-<span class="nc" id="L481">        generated = new LinkedList&lt;&gt;();</span>
-<span class="nc" id="L482">        started = true;</span>
-<span class="nc" id="L483">    }</span>
+<span class="nc" id="L482">        generated = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L483">        started = true;</span>
+<span class="nc" id="L484">    }</span>
 
     @Override
     protected void failed(Throwable e, Description description) {
-<span class="nc bnc" id="L487" title="All 2 branches missed.">        if (dumpOnFailure) {</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">        if (dumpOnFailure) {</span>
             try {
-<span class="nc" id="L489">                dumpGeneratedMessages();</span>
-<span class="nc" id="L490">            } catch (IOException e1) {</span>
-<span class="nc" id="L491">                e1.printStackTrace();</span>
-<span class="nc" id="L492">                e.addSuppressed(e1);</span>
-<span class="nc" id="L493">            }</span>
+<span class="nc" id="L490">                dumpGeneratedMessages();</span>
+<span class="nc" id="L491">            } catch (IOException e1) {</span>
+<span class="nc" id="L492">                e1.printStackTrace();</span>
+<span class="nc" id="L493">                e.addSuppressed(e1);</span>
+<span class="nc" id="L494">            }</span>
         }
-<span class="nc" id="L495">    }</span>
+<span class="nc" id="L496">    }</span>
 
     @Override
     protected void finished(Description description) {
         // generated kept in case of secondary watchers.
-<span class="nc" id="L500">        started = false;</span>
+<span class="nc" id="L501">        started = false;</span>
 
         // Set some interesting stated back to be the global.
-<span class="nc" id="L503">        dumpOnFailure = globalDumpOnFailure;</span>
-<span class="nc" id="L504">        maxCollectionItems = globalMaxCollectionItems;</span>
-<span class="nc" id="L505">        outputSerializer = globalOutputSerializer;</span>
-<span class="nc" id="L506">        factories = globalFactories;</span>
-<span class="nc" id="L507">        fairy = globalFairy;</span>
-<span class="nc" id="L508">        random = globalRandom;</span>
-<span class="nc" id="L509">        writer = globalWriter;</span>
-<span class="nc" id="L510">        reader = globalReader;</span>
-<span class="nc" id="L511">        fillRate = globalFillRate;</span>
-<span class="nc" id="L512">    }</span>
+<span class="nc" id="L504">        dumpOnFailure = globalDumpOnFailure;</span>
+<span class="nc" id="L505">        maxCollectionItems = globalMaxCollectionItems;</span>
+<span class="nc" id="L506">        outputSerializer = globalOutputSerializer;</span>
+<span class="nc" id="L507">        factories = globalFactories;</span>
+<span class="nc" id="L508">        fairy = globalFairy;</span>
+<span class="nc" id="L509">        random = globalRandom;</span>
+<span class="nc" id="L510">        writer = globalWriter;</span>
+<span class="nc" id="L511">        reader = globalReader;</span>
+<span class="nc" id="L512">        fillRate = globalFillRate;</span>
+<span class="nc" id="L513">    }</span>
 
-    // --- PRIVATE ---
-    private final ValueSupplierFactory defaultFactory;
     // --- Global: set before starting(),
     //             and copied below in starting().
     private Random                     globalRandom;
@@ -541,53 +540,65 @@ import static org.junit.Assert.assertNotNull;
     private boolean                    started;
 
     private int nextCollectionSize() {
-<span class="nc" id="L544">        return abs(random.nextInt() % maxCollectionItems);</span>
+<span class="nc" id="L543">        return abs(random.nextInt() % maxCollectionItems);</span>
     }
 
     private Supplier&lt;Object&gt; getValueSupplier(PField field) {
-<span class="nc bnc" id="L548" title="All 2 branches missed.">        for (ValueSupplierFactory factory : factories) {</span>
-<span class="nc" id="L549">            Supplier&lt;Object&gt; supplier = factory.get(field);</span>
-<span class="nc bnc" id="L550" title="All 2 branches missed.">            if (supplier != null) {</span>
-<span class="nc" id="L551">                return supplier;</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">        for (ValueSupplierFactory factory : factories) {</span>
+<span class="nc" id="L548">            Supplier&lt;Object&gt; supplier = factory.get(field);</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">            if (supplier != null) {</span>
+<span class="nc" id="L550">                return supplier;</span>
             }
-<span class="nc" id="L553">        }</span>
-<span class="nc" id="L554">        return defaultFactory.get(field);</span>
+<span class="nc" id="L552">        }</span>
+<span class="nc" id="L553">        return getFillRateValueSupplier(field);</span>
     }
 
-    private Supplier&lt;Object&gt; getDefaultValueSupplier(PField field) {
-<span class="nc bnc" id="L558" title="All 2 branches missed.">        if (field.getRequirement() != PRequirement.REQUIRED) {</span>
-<span class="nc bnc" id="L559" title="All 4 branches missed.">            if (fillRate &lt; 1.0 &amp;&amp; random.nextDouble() &lt; fillRate) {</span>
-<span class="nc" id="L560">                return () -&gt; null;</span>
+    private Supplier&lt;Object&gt; getUnionValueSupplier(PField field) {
+<span class="nc bnc" id="L557" title="All 2 branches missed.">        for (ValueSupplierFactory factory : factories) {</span>
+<span class="nc" id="L558">            Supplier&lt;Object&gt; supplier = factory.get(field);</span>
+<span class="nc bnc" id="L559" title="All 2 branches missed.">            if (supplier != null) {</span>
+<span class="nc" id="L560">                return supplier;</span>
             }
-        }
+<span class="nc" id="L562">        }</span>
 <span class="nc" id="L563">        return getValueSupplier(field.getDescriptor());</span>
     }
 
-    private &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generateInternal(PMessageDescriptor&lt;M, F&gt; descriptor) {
-<span class="nc" id="L567">        PMessageBuilder&lt;M, F&gt; builder = descriptor.builder();</span>
-<span class="nc bnc" id="L568" title="All 2 branches missed.">        if (descriptor.getVariant() == PMessageVariant.UNION) {</span>
-<span class="nc" id="L569">            F field = descriptor.getFields()[random.nextInt(descriptor.getFields().length)];</span>
-<span class="nc" id="L570">            Supplier&lt;Object&gt; supplier = getValueSupplier(field);</span>
-<span class="nc" id="L571">            assertNotNull(&quot;No supplier for field: &quot; + descriptor.getQualifiedName() + &quot;.&quot; + field.getName(), supplier);</span>
-
-            // Only non-null values are set.
-<span class="nc" id="L574">            Object value = supplier.get();</span>
-<span class="nc bnc" id="L575" title="All 2 branches missed.">            if (value != null) {</span>
-<span class="nc" id="L576">                builder.set(field, value);</span>
+    private Supplier&lt;Object&gt; getFillRateValueSupplier(PField field) {
+<span class="nc bnc" id="L567" title="All 2 branches missed.">        if (field.getRequirement() != PRequirement.REQUIRED) {</span>
+<span class="nc bnc" id="L568" title="All 4 branches missed.">            if (fillRate &lt; 1.0 &amp;&amp; random.nextDouble() &gt;= fillRate) {</span>
+<span class="nc" id="L569">                return () -&gt; null;</span>
             }
-<span class="nc" id="L578">        } else {</span>
-<span class="nc bnc" id="L579" title="All 2 branches missed.">            for (F field : descriptor.getFields()) {</span>
-<span class="nc" id="L580">                Supplier&lt;Object&gt; supplier = getValueSupplier(field);</span>
-<span class="nc" id="L581">                assertNotNull(&quot;No supplier for field: &quot; + descriptor.getQualifiedName() + &quot;.&quot; + field.getName(),</span>
+        }
+<span class="nc" id="L572">        return getValueSupplier(field.getDescriptor());</span>
+    }
+
+    private &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generateInternal(PMessageDescriptor&lt;M, F&gt; descriptor) {
+<span class="nc" id="L576">        PMessageBuilder&lt;M, F&gt; builder = descriptor.builder();</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">        if (descriptor.getVariant() == PMessageVariant.UNION) {</span>
+            // Select one random field.
+<span class="nc" id="L579">            F[] fields = descriptor.getFields();</span>
+<span class="nc" id="L580">            F field = fields[random.nextInt(fields.length)];</span>
+<span class="nc" id="L581">            Supplier&lt;Object&gt; supplier = getUnionValueSupplier(field);</span>
+<span class="nc" id="L582">            assertNotNull(&quot;No supplier for field: &quot; + descriptor.getQualifiedName() + &quot;.&quot; + field.getName(), supplier);</span>
+
+            // Always set field in unions.
+<span class="nc" id="L585">            Object value = supplier.get();</span>
+<span class="nc" id="L586">            assertNotNull(&quot;No value for union field: &quot; + descriptor.getQualifiedName() + &quot;.&quot; + field.getName(), value);</span>
+<span class="nc" id="L587">            builder.set(field, value);</span>
+<span class="nc" id="L588">        } else {</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">            for (F field : descriptor.getFields()) {</span>
+<span class="nc" id="L590">                Supplier&lt;Object&gt; supplier = getValueSupplier(field);</span>
+<span class="nc" id="L591">                assertNotNull(&quot;No supplier for field: &quot; + descriptor.getQualifiedName() + &quot;.&quot; + field.getName(),</span>
                               supplier);
                 // Only non-null values are set.
-<span class="nc" id="L584">                Object value = supplier.get();</span>
-<span class="nc bnc" id="L585" title="All 2 branches missed.">                if (value != null) {</span>
-<span class="nc" id="L586">                    builder.set(field, value);</span>
+<span class="nc" id="L594">                Object value = supplier.get();</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">                if (value != null) {</span>
+<span class="nc" id="L596">                    builder.set(field, value);</span>
                 }
             }
         }
-<span class="nc" id="L590">        return builder.build();</span>
+<span class="nc" id="L600">        builder.validate();</span>
+<span class="nc" id="L601">        return builder.build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

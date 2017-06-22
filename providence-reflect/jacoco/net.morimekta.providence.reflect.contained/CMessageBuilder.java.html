@@ -58,238 +58,262 @@ public abstract class CMessageBuilder&lt;Builder extends CMessageBuilder&lt;Buil
 <span class="fc" id="L58">                        break;</span>
                     case SET:
 <span class="fc bfc" id="L60" title="All 2 branches covered.">                        if (values.containsKey(key)) {</span>
-<span class="fc" id="L61">                            ((Set&lt;Object&gt;) values.get(key)).addAll((Collection&lt;Object&gt;) from.get(key));</span>
-                        } else {
-<span class="fc" id="L63">                            set(key, from.get(key));</span>
+<span class="fc" id="L61">                            Set&lt;Object&gt; set = (Set&lt;Object&gt;) values.get(key);</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">                            if (!(set instanceof LinkedHashSet)) {</span>
+<span class="fc" id="L63">                                set = new LinkedHashSet&lt;&gt;(set);</span>
+<span class="fc" id="L64">                                values.put(key, set);</span>
+                            }
+<span class="fc" id="L66">                            set.addAll((Collection&lt;Object&gt;) from.get(key));</span>
+<span class="fc" id="L67">                        } else {</span>
+<span class="fc" id="L68">                            set(key, from.get(key));</span>
                         }
-<span class="fc" id="L65">                        break;</span>
+<span class="fc" id="L70">                        break;</span>
                     case MAP:
-<span class="fc bfc" id="L67" title="All 2 branches covered.">                        if (values.containsKey(key)) {</span>
-<span class="fc" id="L68">                            ((Map&lt;Object, Object&gt;) values.get(key)).putAll((Map&lt;Object, Object&gt;) from.get(key));</span>
-                        } else {
-<span class="fc" id="L70">                            set(key, from.get(key));</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                        if (values.containsKey(key)) {</span>
+<span class="fc" id="L73">                            Map&lt;Object, Object&gt; map = (Map&lt;Object, Object&gt;) values.get(key);</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                            if (!(map instanceof LinkedHashMap)) {</span>
+<span class="fc" id="L75">                                map = new LinkedHashMap&lt;&gt;(map);</span>
+<span class="fc" id="L76">                                values.put(key, map);</span>
+                            }
+<span class="fc" id="L78">                            map.putAll((Map&lt;Object, Object&gt;) from.get(key));</span>
+<span class="fc" id="L79">                        } else {</span>
+<span class="fc" id="L80">                            set(key, from.get(key));</span>
                         }
-<span class="fc" id="L72">                        break;</span>
+<span class="fc" id="L82">                        break;</span>
                     default:
-<span class="fc" id="L74">                        set(key, from.get(key));</span>
+<span class="fc" id="L84">                        set(key, from.get(key));</span>
                         break;
                 }
-<span class="fc" id="L77">                modified.add(key);</span>
+<span class="fc" id="L87">                modified.add(key);</span>
             }
         }
 
-<span class="fc" id="L81">        return (Builder) this;</span>
+<span class="fc" id="L91">        return (Builder) this;</span>
     }
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public PMessageBuilder mutator(int key) {
-<span class="fc" id="L88">        CField field = descriptor().findFieldById(key);</span>
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (field == null) {</span>
-<span class="nc" id="L90">            throw new IllegalArgumentException(&quot;No such field ID &quot; + key);</span>
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        } else if (field.getType() != PType.MESSAGE) {</span>
-<span class="nc" id="L92">            throw new IllegalArgumentException(&quot;Not a message field ID &quot; + key + &quot;: &quot; + field.getName());</span>
+<span class="fc" id="L98">        CField field = descriptor().findFieldById(key);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (field == null) {</span>
+<span class="nc" id="L100">            throw new IllegalArgumentException(&quot;No such field ID &quot; + key);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        } else if (field.getType() != PType.MESSAGE) {</span>
+<span class="nc" id="L102">            throw new IllegalArgumentException(&quot;Not a message field ID &quot; + key + &quot;: &quot; + field.getName());</span>
         }
 
-<span class="fc" id="L95">        Object current = values.get(key);</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (current == null) {</span>
-<span class="fc" id="L97">            current = ((PMessageDescriptor) field.getDescriptor()).builder();</span>
-<span class="fc" id="L98">            values.put(key, current);</span>
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        } else if (current instanceof PMessage) {</span>
-<span class="fc" id="L100">            current = ((PMessage) current).mutate();</span>
-<span class="fc" id="L101">            values.put(key, current);</span>
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        } else if (!(current instanceof PMessageBuilder)) {</span>
+<span class="fc" id="L105">        Object current = values.get(key);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (current == null) {</span>
+<span class="fc" id="L107">            current = ((PMessageDescriptor) field.getDescriptor()).builder();</span>
+<span class="fc" id="L108">            values.put(key, current);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        } else if (current instanceof PMessage) {</span>
+<span class="fc" id="L110">            current = ((PMessage) current).mutate();</span>
+<span class="fc" id="L111">            values.put(key, current);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        } else if (!(current instanceof PMessageBuilder)) {</span>
             // This should in theory not be possible. This is just a safe-guard.
-<span class="nc" id="L104">            throw new IllegalArgumentException(&quot;Invalid value in map on message type: &quot; + current.getClass().getSimpleName());</span>
+<span class="nc" id="L114">            throw new IllegalArgumentException(&quot;Invalid value in map on message type: &quot; + current.getClass().getSimpleName());</span>
         }
-<span class="fc" id="L106">        modified.add(key);</span>
+<span class="fc" id="L116">        modified.add(key);</span>
 
-<span class="fc" id="L108">        return (PMessageBuilder) current;</span>
+<span class="fc" id="L118">        return (PMessageBuilder) current;</span>
     }
 
     @Override
     public boolean valid() {
-<span class="nc bnc" id="L113" title="All 2 branches missed.">        for (PField field : descriptor().getFields()) {</span>
-<span class="nc bnc" id="L114" title="All 2 branches missed.">            if (field.getRequirement() == PRequirement.REQUIRED) {</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">                if (!values.containsKey(field.getId())) {</span>
-<span class="nc" id="L116">                    return false;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        for (PField field : descriptor().getFields()) {</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (field.getRequirement() == PRequirement.REQUIRED) {</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                if (!values.containsKey(field.getId())) {</span>
+<span class="nc" id="L126">                    return false;</span>
                 }
             }
         }
 
-<span class="nc" id="L121">        return true;</span>
+<span class="nc" id="L131">        return true;</span>
     }
 
     @Override
     public void validate() {
-<span class="nc" id="L126">        LinkedList&lt;String&gt; missing = new LinkedList&lt;&gt;();</span>
-<span class="nc bnc" id="L127" title="All 2 branches missed.">        for (PField field : descriptor().getFields()) {</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (field.getRequirement() == PRequirement.REQUIRED) {</span>
-<span class="nc bnc" id="L129" title="All 2 branches missed.">                if (!values.containsKey(field.getId())) {</span>
-<span class="nc" id="L130">                    missing.add(field.getName());</span>
+<span class="nc" id="L136">        LinkedList&lt;String&gt; missing = new LinkedList&lt;&gt;();</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        for (PField field : descriptor().getFields()) {</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (field.getRequirement() == PRequirement.REQUIRED) {</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                if (!values.containsKey(field.getId())) {</span>
+<span class="nc" id="L140">                    missing.add(field.getName());</span>
                 }
             }
         }
 
-<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (missing.size() &gt; 0) {</span>
-<span class="nc" id="L136">            throw new IllegalStateException(</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if (missing.size() &gt; 0) {</span>
+<span class="nc" id="L146">            throw new IllegalStateException(</span>
                     &quot;Missing required fields &quot; +
-<span class="nc" id="L138">                    String.join(&quot;,&quot;, missing) +</span>
-<span class="nc" id="L139">                    &quot; in message &quot; + descriptor().getQualifiedName());</span>
+<span class="nc" id="L148">                    String.join(&quot;,&quot;, missing) +</span>
+<span class="nc" id="L149">                    &quot; in message &quot; + descriptor().getQualifiedName());</span>
         }
-<span class="nc" id="L141">    }</span>
+<span class="nc" id="L151">    }</span>
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public Builder set(int key, Object value) {
-<span class="fc" id="L147">        CField field = descriptor().findFieldById(key);</span>
-<span class="fc bfc" id="L148" title="All 2 branches covered.">        if (field == null) {</span>
-<span class="fc" id="L149">            return (Builder) this; // soft ignoring unsupported fields.</span>
+<span class="fc" id="L157">        CField field = descriptor().findFieldById(key);</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (field == null) {</span>
+<span class="fc" id="L159">            return (Builder) this; // soft ignoring unsupported fields.</span>
         }
-<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (value == null) {</span>
-<span class="fc" id="L152">            values.remove(key);</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (value == null) {</span>
+<span class="fc" id="L162">            values.remove(key);</span>
         } else {
-<span class="fc bfc" id="L154" title="All 4 branches covered.">            switch (field.getType()) {</span>
+<span class="fc bfc" id="L164" title="All 4 branches covered.">            switch (field.getType()) {</span>
                 case LIST: {
-<span class="fc" id="L156">                    values.put(key, ImmutableList.copyOf((Collection&lt;Object&gt;) value));</span>
-<span class="fc" id="L157">                    break;</span>
+<span class="fc" id="L166">                    values.put(key, ImmutableList.copyOf((Collection) value));</span>
+<span class="fc" id="L167">                    break;</span>
                 }
                 case SET: {
-<span class="fc" id="L160">                    values.put(key, new LinkedHashSet&lt;&gt;((Set) value));</span>
-<span class="fc" id="L161">                    break;</span>
+<span class="fc" id="L170">                    ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                    if (ctype == ThriftCollection.SORTED) {</span>
+<span class="nc" id="L172">                        values.put(key, ImmutableSortedSet.copyOf((Set) value));</span>
+                    } else {
+<span class="fc" id="L174">                        values.put(key, ImmutableSet.copyOf((Set) value));</span>
+                    }
+<span class="fc" id="L176">                    break;</span>
                 }
                 case MAP: {
-<span class="fc" id="L164">                    values.put(key, new LinkedHashMap&lt;&gt;((Map) value));</span>
-<span class="fc" id="L165">                    break;</span>
+<span class="fc" id="L179">                    ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">                    if (ctype == ThriftCollection.SORTED) {</span>
+<span class="nc" id="L181">                        values.put(key, ImmutableSortedMap.copyOf((Map) value));</span>
+                    } else {
+<span class="fc" id="L183">                        values.put(key, ImmutableMap.copyOf((Map) value));</span>
+                    }
+<span class="fc" id="L185">                    break;</span>
                 }
                 default:
-<span class="fc" id="L168">                    values.put(key, value);</span>
+<span class="fc" id="L188">                    values.put(key, value);</span>
                     break;
             }
         }
 
-<span class="fc" id="L173">        modified.add(key);</span>
-<span class="fc" id="L174">        return (Builder) this;</span>
+<span class="fc" id="L193">        modified.add(key);</span>
+<span class="fc" id="L194">        return (Builder) this;</span>
     }
 
     @Override
     public boolean isSet(int key) {
-<span class="fc" id="L179">        return values.containsKey(key);</span>
+<span class="fc" id="L199">        return values.containsKey(key);</span>
     }
 
     @Override
     public boolean isModified(int key) {
-<span class="nc" id="L184">        return modified.contains(key);</span>
+<span class="nc" id="L204">        return modified.contains(key);</span>
     }
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public Builder addTo(int key, Object value) {
-<span class="nc" id="L191">        CField field = descriptor().findFieldById(key);</span>
-<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (field == null) {</span>
-<span class="nc" id="L193">            return (Builder) this; // soft ignoring unsupported fields.</span>
+<span class="nc" id="L211">        CField field = descriptor().findFieldById(key);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (field == null) {</span>
+<span class="nc" id="L213">            return (Builder) this; // soft ignoring unsupported fields.</span>
         }
-<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (value == null) {</span>
-<span class="nc" id="L196">            throw new IllegalArgumentException(&quot;Adding null value&quot;);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (value == null) {</span>
+<span class="nc" id="L216">            throw new IllegalArgumentException(&quot;Adding null value&quot;);</span>
         }
-<span class="nc bnc" id="L198" title="All 2 branches missed.">        if (field.getType() == PType.LIST) {</span>
-<span class="nc" id="L199">            List&lt;Object&gt; list = (List&lt;Object&gt;) values.get(field.getId());</span>
-<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (list == null) {</span>
-<span class="nc" id="L201">                list = new LinkedList&lt;&gt;();</span>
-<span class="nc" id="L202">                values.put(field.getId(), list);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        if (field.getType() == PType.LIST) {</span>
+<span class="nc" id="L219">            List&lt;Object&gt; list = (List&lt;Object&gt;) values.get(field.getId());</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">            if (list == null) {</span>
+<span class="nc" id="L221">                list = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L222">                values.put(field.getId(), list);</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">            } else if (!(list instanceof LinkedList)) {</span>
+<span class="nc" id="L224">                list = new LinkedList&lt;&gt;(list);</span>
+<span class="nc" id="L225">                values.put(field.getId(), list);</span>
             }
-<span class="nc" id="L204">            list.add(value);</span>
-<span class="nc bnc" id="L205" title="All 2 branches missed.">        } else if (field.getType() == PType.SET) {</span>
-<span class="nc" id="L206">            ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
-
-<span class="nc" id="L208">            Set&lt;Object&gt; set = (Set&lt;Object&gt;) values.get(field.getId());</span>
-<span class="nc bnc" id="L209" title="All 2 branches missed.">            if (set == null) {</span>
-<span class="nc" id="L210">                set = new LinkedHashSet&lt;&gt;();</span>
-<span class="nc" id="L211">                values.put(field.getId(), set);</span>
+<span class="nc" id="L227">            list.add(value);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        } else if (field.getType() == PType.SET) {</span>
+<span class="nc" id="L229">            Set&lt;Object&gt; set = (Set&lt;Object&gt;) values.get(field.getId());</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            if (set == null) {</span>
+<span class="nc" id="L231">                set = new LinkedHashSet&lt;&gt;();</span>
+<span class="nc" id="L232">                values.put(field.getId(), set);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            } else if (!(set instanceof LinkedHashSet)) {</span>
+<span class="nc" id="L234">                set = new LinkedHashSet&lt;&gt;(set);</span>
+<span class="nc" id="L235">                values.put(field.getId(), set);</span>
             }
-<span class="nc" id="L213">            set.add(value);</span>
-<span class="nc" id="L214">        } else {</span>
-<span class="nc" id="L215">            throw new IllegalArgumentException(&quot;Key &quot; + key + &quot; is not a collection: &quot; + field.getType());</span>
+<span class="nc" id="L237">            set.add(value);</span>
+<span class="nc" id="L238">        } else {</span>
+<span class="nc" id="L239">            throw new IllegalArgumentException(&quot;Key &quot; + key + &quot; is not a collection: &quot; + field.getType());</span>
         }
-<span class="nc" id="L217">        modified.add(key);</span>
-<span class="nc" id="L218">        return (Builder) this;</span>
+<span class="nc" id="L241">        modified.add(key);</span>
+<span class="nc" id="L242">        return (Builder) this;</span>
     }
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public Builder clear(int key) {
-<span class="fc" id="L225">        values.remove(key);</span>
-<span class="fc" id="L226">        modified.add(key);</span>
-<span class="fc" id="L227">        return (Builder) this;</span>
+<span class="fc" id="L249">        values.remove(key);</span>
+<span class="fc" id="L250">        modified.add(key);</span>
+<span class="fc" id="L251">        return (Builder) this;</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
     Map&lt;Integer, Object&gt; getValueMap() {
-<span class="fc" id="L232">        ImmutableMap.Builder&lt;Integer, Object&gt; out = ImmutableMap.builder();</span>
-<span class="fc bfc" id="L233" title="All 2 branches covered.">        for (CField field : descriptor().getFields()) {</span>
-<span class="fc" id="L234">            int key = field.getId();</span>
-<span class="fc bfc" id="L235" title="All 2 branches covered.">            if (values.containsKey(key)) {</span>
-<span class="fc bfc" id="L236" title="All 5 branches covered.">                switch (field.getType()) {</span>
+<span class="fc" id="L256">        ImmutableMap.Builder&lt;Integer, Object&gt; out = ImmutableMap.builder();</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        for (CField field : descriptor().getFields()) {</span>
+<span class="fc" id="L258">            int key = field.getId();</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">            if (values.containsKey(key)) {</span>
+<span class="fc bfc" id="L260" title="All 5 branches covered.">                switch (field.getType()) {</span>
                     case LIST:
-<span class="fc" id="L238">                        out.put(key, ImmutableList.copyOf((List&lt;Object&gt;) values.get(key)));</span>
-<span class="fc" id="L239">                        break;</span>
+<span class="fc" id="L262">                        out.put(key, ImmutableList.copyOf((List&lt;Object&gt;) values.get(key)));</span>
+<span class="fc" id="L263">                        break;</span>
                     case SET: {
-<span class="fc" id="L241">                        ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
-<span class="pc bpc" id="L242" title="1 of 2 branches missed.">                        switch (ctype) {</span>
+<span class="fc" id="L265">                        ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">                        switch (ctype) {</span>
                             case SORTED:
-<span class="nc" id="L244">                                out.put(key, ImmutableSortedSet.copyOf((Set) values.get(key)));</span>
-<span class="nc" id="L245">                                break;</span>
+<span class="nc" id="L268">                                out.put(key, ImmutableSortedSet.copyOf((Set) values.get(key)));</span>
+<span class="nc" id="L269">                                break;</span>
                             default:
-<span class="fc" id="L247">                                out.put(key, ImmutableSet.copyOf((Set) values.get(key)));</span>
-<span class="fc" id="L248">                                break;</span>
+<span class="fc" id="L271">                                out.put(key, ImmutableSet.copyOf((Set) values.get(key)));</span>
+<span class="fc" id="L272">                                break;</span>
                         }
                         break;
                     }
                     case MAP: {
-<span class="fc" id="L253">                        ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
-<span class="pc bpc" id="L254" title="1 of 2 branches missed.">                        switch (ctype) {</span>
+<span class="fc" id="L277">                        ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">                        switch (ctype) {</span>
                             case SORTED:
-<span class="nc" id="L256">                                out.put(key, ImmutableSortedMap.copyOf((Map) values.get(key)));</span>
-<span class="nc" id="L257">                                break;</span>
+<span class="nc" id="L280">                                out.put(key, ImmutableSortedMap.copyOf((Map) values.get(key)));</span>
+<span class="nc" id="L281">                                break;</span>
                             default:
-<span class="fc" id="L259">                                out.put(key, ImmutableMap.copyOf((Map) values.get(key)));</span>
-<span class="fc" id="L260">                                break;</span>
+<span class="fc" id="L283">                                out.put(key, ImmutableMap.copyOf((Map) values.get(key)));</span>
+<span class="fc" id="L284">                                break;</span>
                         }
                         break;
                     }
                     case MESSAGE:
-<span class="fc" id="L265">                        Object current = values.get(key);</span>
-<span class="fc bfc" id="L266" title="All 2 branches covered.">                        if (current instanceof PMessageBuilder) {</span>
-<span class="fc" id="L267">                            out.put(key, ((PMessageBuilder) current).build());</span>
+<span class="fc" id="L289">                        Object current = values.get(key);</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">                        if (current instanceof PMessageBuilder) {</span>
+<span class="fc" id="L291">                            out.put(key, ((PMessageBuilder) current).build());</span>
                         } else {
-<span class="fc" id="L269">                            out.put(key, current);</span>
+<span class="fc" id="L293">                            out.put(key, current);</span>
                         }
-<span class="fc" id="L271">                        break;</span>
+<span class="fc" id="L295">                        break;</span>
                     default:
-<span class="fc" id="L273">                        out.put(key, values.get(key));</span>
-<span class="fc" id="L274">                        break;</span>
+<span class="fc" id="L297">                        out.put(key, values.get(key));</span>
+<span class="fc" id="L298">                        break;</span>
                 }
-<span class="fc bfc" id="L276" title="All 2 branches covered.">            } else if (field.getRequirement() != PRequirement.OPTIONAL) {</span>
-<span class="pc bpc" id="L277" title="1 of 2 branches missed.">                if (field.hasDefaultValue()) {</span>
-<span class="nc" id="L278">                    out.put(key, field.getDefaultValue());</span>
-<span class="fc bfc" id="L279" title="All 2 branches covered.">                } else if (field.getDescriptor().getDefaultValue() != null) {</span>
-<span class="fc" id="L280">                    out.put(key, field.getDescriptor().getDefaultValue());</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">            } else if (field.getRequirement() != PRequirement.OPTIONAL) {</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">                if (field.hasDefaultValue()) {</span>
+<span class="nc" id="L302">                    out.put(key, field.getDefaultValue());</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">                } else if (field.getDescriptor().getDefaultValue() != null) {</span>
+<span class="fc" id="L304">                    out.put(key, field.getDescriptor().getDefaultValue());</span>
                 }
             }
         }
-<span class="fc" id="L284">        return out.build();</span>
+<span class="fc" id="L308">        return out.build();</span>
     }
 
     @Override
     public String toString() {
-<span class="nc" id="L289">        return MoreObjects.toStringHelper(getClass())</span>
-<span class="nc" id="L290">                          .add(&quot;values&quot;, values)</span>
-<span class="nc" id="L291">                          .add(&quot;modified&quot;, modified)</span>
-<span class="nc" id="L292">                          .toString();</span>
+<span class="nc" id="L313">        return MoreObjects.toStringHelper(getClass())</span>
+<span class="nc" id="L314">                          .add(&quot;values&quot;, values)</span>
+<span class="nc" id="L315">                          .add(&quot;modified&quot;, modified)</span>
+<span class="nc" id="L316">                          .toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

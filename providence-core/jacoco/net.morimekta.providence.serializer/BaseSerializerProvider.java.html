@@ -29,15 +29,15 @@ import java.util.Map;
  */
 public abstract class BaseSerializerProvider implements SerializerProvider {
     private final Map&lt;String, Serializer&gt; serializerMap;
-    private final String defaultContentType;
+    private final String                  defaultMediaType;
 
     /**
-     * Get provider with the given default content type.
+     * Get provider with the given default media type.
      *
-     * @param defaultContentType The default mime-type.
+     * @param defaultMediaType The default media-type.
      */
-<span class="fc" id="L39">    public BaseSerializerProvider(String defaultContentType) {</span>
-<span class="fc" id="L40">        this.defaultContentType = defaultContentType;</span>
+<span class="fc" id="L39">    public BaseSerializerProvider(String defaultMediaType) {</span>
+<span class="fc" id="L40">        this.defaultMediaType = defaultMediaType;</span>
 <span class="fc" id="L41">        this.serializerMap = new HashMap&lt;&gt;();</span>
 <span class="fc" id="L42">    }</span>
 
@@ -54,18 +54,19 @@ public abstract class BaseSerializerProvider implements SerializerProvider {
     @Override
     @Nonnull
     public Serializer getDefault() {
-<span class="fc" id="L57">        return getSerializer(defaultContentType);</span>
+<span class="fc" id="L57">        return getSerializer(defaultMediaType);</span>
     }
 
     /**
-     * Register the serializer with a given set of mime-types.
+     * Register the serializer with a given set of media types.
+     *
      * @param serializer The serializer to register.
      * @param mediaTypes The media types to register it for.
      */
     protected void register(Serializer serializer, String... mediaTypes) {
-<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (String mimeType : mediaTypes) {</span>
-<span class="fc" id="L67">            this.serializerMap.put(mimeType, serializer);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (String mediaType : mediaTypes) {</span>
+<span class="fc" id="L68">            this.serializerMap.put(mediaType, serializer);</span>
         }
-<span class="fc" id="L69">    }</span>
+<span class="fc" id="L70">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

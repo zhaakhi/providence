@@ -21,6 +21,7 @@
 package net.morimekta.providence.generator.format.java;
 
 import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.GeneratorOptions;
 import net.morimekta.providence.generator.format.java.program.extras.HazelcastPortableProgramFormatter;
 import net.morimekta.providence.generator.format.java.shared.BaseEnumFormatter;
 import net.morimekta.providence.generator.format.java.shared.BaseGenerator;
@@ -36,37 +37,50 @@ import net.morimekta.util.io.IndentedPrintWriter;
  * @since 05.09.15
  */
 public class JavaGenerator extends BaseGenerator {
-    private final JavaOptions options;
+    private final JavaOptions javaOptions;
 
-    public JavaGenerator(FileManager manager, ProgramRegistry registry, JavaOptions options) throws GeneratorException {
-<span class="fc" id="L42">        super(manager, registry);</span>
+    public JavaGenerator(FileManager manager,
+                         ProgramRegistry registry,
+                         GeneratorOptions generatorOptions,
+                         JavaOptions javaOptions) throws GeneratorException {
+<span class="fc" id="L46">        super(manager, registry, generatorOptions);</span>
 
-<span class="fc" id="L44">        this.options = options;</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L48">        this.javaOptions = javaOptions;</span>
+<span class="fc" id="L49">    }</span>
 
     @Override
     protected BaseMessageFormatter messageFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L49">        return new JavaMessageFormatter(writer, helper, options);</span>
+<span class="fc" id="L53">        return new JavaMessageFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
     @Override
     protected BaseEnumFormatter enumFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L54">        return new JavaEnumFormatter(writer, options);</span>
+<span class="fc" id="L58">        return new JavaEnumFormatter(writer, generatorOptions, javaOptions);</span>
     }
 
     @Override
     protected BaseProgramFormatter constFomatter(IndentedPrintWriter writer) {
-<span class="fc" id="L59">        return new JavaConstantsFormatter(writer, helper);</span>
+<span class="fc" id="L63">        return new JavaConstantsFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
     @Override
     protected BaseProgramFormatter hazelcastFomatter(IndentedPrintWriter writer) {
-<span class="fc" id="L64">        return new HazelcastPortableProgramFormatter(writer, helper);</span>
+<span class="fc" id="L68">        return new HazelcastPortableProgramFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
     @Override
     protected BaseServiceFormatter serviceFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L69">        return new JavaServiceFormatter(writer, helper, new JavaMessageFormatter(true, true, writer, helper, options), options);</span>
+<span class="fc" id="L73">        return new JavaServiceFormatter(</span>
+                writer,
+                helper,
+                new JavaMessageFormatter(true,
+                                         true,
+                                         writer,
+                                         helper,
+                                         generatorOptions,
+                                         javaOptions),
+                generatorOptions,
+                javaOptions);
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

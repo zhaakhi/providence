@@ -274,8 +274,8 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 <span class="nc" id="L274">                                BigEndianBinaryWriter.class.getName(),</span>
                                 baosTemp)
 <span class="nc" id="L276">                      .begin()</span>
-<span class="nc" id="L277">                      .formatln(&quot;%s.writeInt(%s.build().size());&quot;, bebwTemp, field.member())</span>
-<span class="nc" id="L278">                      .formatln(&quot;for( %s.Entry&lt;%s,%s&gt; %s : %s.build().entrySet() ) {&quot;,</span>
+<span class="nc" id="L277">                      .formatln(&quot;%s.writeInt(%s.size());&quot;, bebwTemp, field.member())</span>
+<span class="nc" id="L278">                      .formatln(&quot;for( %s.Entry&lt;%s,%s&gt; %s : %s.entrySet() ) {&quot;,</span>
 <span class="nc" id="L279">                                Map.class.getName(),</span>
 <span class="nc" id="L280">                                helper.getFieldType(pMap.keyDescriptor()),</span>
 <span class="nc" id="L281">                                helper.getFieldType(pMap.itemDescriptor()),</span>
@@ -302,7 +302,7 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 <span class="nc" id="L302">                                    BigEndianBinaryWriter.class.getName(),</span>
                                     baosTemp)
 <span class="nc" id="L304">                          .begin();</span>
-<span class="nc" id="L305">                    writePortableBinary(field, bebwTemp, field.member() + &quot;.build()&quot;, field.toPList());</span>
+<span class="nc" id="L305">                    writePortableBinary(field, bebwTemp, field.member(), field.toPList());</span>
 <span class="nc" id="L306">                    writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toByteArray());&quot;,</span>
                                     PORTABLE_WRITER,
 <span class="nc" id="L308">                                    field.name(),</span>
@@ -327,7 +327,7 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 <span class="nc" id="L327">                                    BigEndianBinaryWriter.class.getName(),</span>
                                     baosTemp)
 <span class="nc" id="L329">                          .begin();</span>
-<span class="nc" id="L330">                    writePortableBinary(field, bebwTemp, field.member() + &quot;.build()&quot;, field.toPSet());</span>
+<span class="nc" id="L330">                    writePortableBinary(field, bebwTemp, field.member(), field.toPSet());</span>
 <span class="nc" id="L331">                    writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toByteArray());&quot;,</span>
                                     PORTABLE_WRITER,
 <span class="nc" id="L333">                                    field.name(),</span>

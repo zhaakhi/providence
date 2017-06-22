@@ -21,39 +21,44 @@
 package net.morimekta.providence.reflect.util;
 
 import javax.annotation.Nonnull;
+import java.io.File;
 
 /**
  * Simple utility for type checking and matching.
  */
-<span class="nc" id="L28">public class ReflectionUtils {</span>
+<span class="nc" id="L29">public class ReflectionUtils {</span>
+    public static boolean isThriftFile(@Nonnull File file) {
+<span class="nc" id="L31">        return isThriftFile(file.getName());</span>
+    }
+
     public static boolean isThriftFile(@Nonnull String filePath) {
         // This is in case windows has default upper-cased the file name.
-<span class="fc bfc" id="L31" title="All 2 branches covered.">        return programNameFromPath(filePath).length() &gt; 0;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        return programNameFromPath(filePath).length() &gt; 0;</span>
     }
 
     @Nonnull
     public static String programNameFromPath(@Nonnull String filePath) {
-<span class="fc" id="L36">        String lowerCased = filePath.toLowerCase();</span>
+<span class="fc" id="L41">        String lowerCased = filePath.toLowerCase();</span>
 
-<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (!lowerCased.endsWith(&quot;.providence&quot;) &amp;&amp;</span>
-<span class="fc bfc" id="L39" title="All 2 branches covered.">            !lowerCased.endsWith(&quot;.thrift&quot;) &amp;&amp;</span>
-<span class="fc bfc" id="L40" title="All 2 branches covered.">            !lowerCased.endsWith(&quot;.thr&quot;) &amp;&amp;</span>
-<span class="fc bfc" id="L41" title="All 2 branches covered.">            !lowerCased.endsWith(&quot;.pvd&quot;)) {</span>
-<span class="fc" id="L42">            return &quot;&quot;;</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (!lowerCased.endsWith(&quot;.providence&quot;) &amp;&amp;</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            !lowerCased.endsWith(&quot;.thrift&quot;) &amp;&amp;</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            !lowerCased.endsWith(&quot;.thr&quot;) &amp;&amp;</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            !lowerCased.endsWith(&quot;.pvd&quot;)) {</span>
+<span class="fc" id="L47">            return &quot;&quot;;</span>
         }
 
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (lowerCased.endsWith(&quot;.providence&quot;)) {</span>
-<span class="fc" id="L46">            filePath = filePath.substring(0, filePath.length() - 11);</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">        } else if (lowerCased.endsWith(&quot;.thrift&quot;)) {</span>
-<span class="fc" id="L48">            filePath = filePath.substring(0, filePath.length() - 7);</span>
-<span class="pc bpc" id="L49" title="1 of 4 branches missed.">        } else if (lowerCased.endsWith(&quot;.thr&quot;) || lowerCased.endsWith(&quot;.pvd&quot;)) {</span>
-<span class="fc" id="L50">            filePath = filePath.substring(0, filePath.length() - 4);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (lowerCased.endsWith(&quot;.providence&quot;)) {</span>
+<span class="fc" id="L51">            filePath = filePath.substring(0, filePath.length() - 11);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        } else if (lowerCased.endsWith(&quot;.thrift&quot;)) {</span>
+<span class="fc" id="L53">            filePath = filePath.substring(0, filePath.length() - 7);</span>
+<span class="pc bpc" id="L54" title="1 of 4 branches missed.">        } else if (lowerCased.endsWith(&quot;.thr&quot;) || lowerCased.endsWith(&quot;.pvd&quot;)) {</span>
+<span class="fc" id="L55">            filePath = filePath.substring(0, filePath.length() - 4);</span>
         }
-<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (filePath.contains(&quot;/&quot;) || filePath.contains(&quot;\\&quot;)) {</span>
-<span class="fc" id="L53">            filePath = filePath.replaceAll(&quot;.*[/\\\\]&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L57" title="All 4 branches covered.">        if (filePath.contains(&quot;/&quot;) || filePath.contains(&quot;\\&quot;)) {</span>
+<span class="fc" id="L58">            filePath = filePath.replaceAll(&quot;.*[/\\\\]&quot;, &quot;&quot;);</span>
         }
 
-<span class="fc" id="L56">        return filePath.replaceAll(&quot;[-.]&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L61">        return filePath.replaceAll(&quot;[-.]&quot;, &quot;_&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

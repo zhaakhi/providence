@@ -78,54 +78,55 @@ public class ProvidenceServlet extends HttpServlet {
 <span class="fc" id="L78">            Serializer requestSerializer = serializerProvider.getDefault();</span>
 <span class="pc bpc" id="L79" title="1 of 2 branches missed.">            if (req.getContentType() != null) {</span>
                 try {
-<span class="fc" id="L81">                    requestSerializer = serializerProvider.getSerializer(req.getContentType());</span>
-<span class="nc" id="L82">                } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L83">                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, &quot;Unknown content-type: &quot; + req.getContentType());</span>
-<span class="nc" id="L84">                    LOGGER.warn(&quot;Unknown content type in request&quot;, e);</span>
-<span class="nc" id="L85">                    return;</span>
-<span class="fc" id="L86">                }</span>
+<span class="fc" id="L81">                    MediaType mediaType = MediaType.parse(req.getContentType());</span>
+<span class="fc" id="L82">                    requestSerializer = serializerProvider.getSerializer(mediaType.withoutParameters().toString());</span>
+<span class="nc" id="L83">                } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L84">                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, &quot;Unknown content-type: &quot; + req.getContentType());</span>
+<span class="nc" id="L85">                    LOGGER.warn(&quot;Unknown content type in request&quot;, e);</span>
+<span class="nc" id="L86">                    return;</span>
+<span class="fc" id="L87">                }</span>
             } else {
-<span class="nc" id="L88">                LOGGER.debug(&quot;Request is missing content type.&quot;);</span>
+<span class="nc" id="L89">                LOGGER.debug(&quot;Request is missing content type.&quot;);</span>
             }
 
-<span class="fc" id="L91">            Serializer responseSerializer = requestSerializer;</span>
-<span class="fc" id="L92">            String acceptHeader = resp.getHeader(&quot;Accept&quot;);</span>
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">            if (acceptHeader != null) {</span>
-<span class="nc" id="L94">                String[] entries = acceptHeader.split(&quot;[,]&quot;);</span>
-<span class="nc bnc" id="L95" title="All 2 branches missed.">                for (String entry : entries) {</span>
-<span class="nc" id="L96">                    entry = entry.trim();</span>
-<span class="nc bnc" id="L97" title="All 2 branches missed.">                    if (entry.isEmpty()) {</span>
-<span class="nc" id="L98">                        continue;</span>
+<span class="fc" id="L92">            Serializer responseSerializer = requestSerializer;</span>
+<span class="fc" id="L93">            String acceptHeader = resp.getHeader(&quot;Accept&quot;);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">            if (acceptHeader != null) {</span>
+<span class="nc" id="L95">                String[] entries = acceptHeader.split(&quot;[,]&quot;);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                for (String entry : entries) {</span>
+<span class="nc" id="L97">                    entry = entry.trim();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                    if (entry.isEmpty()) {</span>
+<span class="nc" id="L99">                        continue;</span>
                     }
 
                     try {
-<span class="nc" id="L102">                        MediaType mediaType = MediaType.parse(entry);</span>
-<span class="nc" id="L103">                        responseSerializer = serializerProvider.getSerializer(mediaType.type() + &quot;/&quot; + mediaType.subtype());</span>
-<span class="nc" id="L104">                        break;</span>
-<span class="nc" id="L105">                    } catch (IllegalArgumentException ignore) {</span>
+<span class="nc" id="L103">                        MediaType mediaType = MediaType.parse(entry);</span>
+<span class="nc" id="L104">                        responseSerializer = serializerProvider.getSerializer(mediaType.type() + &quot;/&quot; + mediaType.subtype());</span>
+<span class="nc" id="L105">                        break;</span>
+<span class="nc" id="L106">                    } catch (IllegalArgumentException ignore) {</span>
                         // Ignore. Bad header input is pretty common.
                     }
                 }
             }
 
-<span class="fc" id="L111">            MessageReader reader = new IOMessageReader(req.getInputStream(), requestSerializer);</span>
+<span class="fc" id="L112">            MessageReader reader = new IOMessageReader(req.getInputStream(), requestSerializer);</span>
 
-<span class="fc" id="L113">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="fc" id="L114">            MessageWriter writer = new IOMessageWriter(baos, responseSerializer);</span>
+<span class="fc" id="L114">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L115">            MessageWriter writer = new IOMessageWriter(baos, responseSerializer);</span>
 
             // Create a new processor handler instance for each request, as
             // they may be request context dependent. E.g. depends on
             // information in header, servlet context etc.
-<span class="fc" id="L119">            new DefaultProcessorHandler(processor).process(reader, writer);</span>
+<span class="fc" id="L120">            new DefaultProcessorHandler(processor).process(reader, writer);</span>
 
-<span class="fc" id="L121">            resp.setStatus(HttpServletResponse.SC_OK);</span>
-<span class="fc" id="L122">            resp.setContentType(responseSerializer.mimeType());</span>
-<span class="fc" id="L123">            resp.setContentLength(baos.size());</span>
-<span class="fc" id="L124">            resp.getOutputStream().write(baos.toByteArray());</span>
-<span class="nc" id="L125">        } catch (Exception e) {</span>
-<span class="nc" id="L126">            LOGGER.error(&quot;Exception in service call for &quot; + processor.getDescriptor().getQualifiedName(), e);</span>
-<span class="nc" id="L127">            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Internal error: &quot; + e.getMessage());</span>
-<span class="fc" id="L128">        }</span>
-<span class="fc" id="L129">    }</span>
+<span class="fc" id="L122">            resp.setStatus(HttpServletResponse.SC_OK);</span>
+<span class="fc" id="L123">            resp.setContentType(responseSerializer.mediaType());</span>
+<span class="fc" id="L124">            resp.setContentLength(baos.size());</span>
+<span class="fc" id="L125">            resp.getOutputStream().write(baos.toByteArray());</span>
+<span class="nc" id="L126">        } catch (Exception e) {</span>
+<span class="nc" id="L127">            LOGGER.error(&quot;Exception in service call for &quot; + processor.getDescriptor().getQualifiedName(), e);</span>
+<span class="nc" id="L128">            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Internal error: &quot; + e.getMessage());</span>
+<span class="fc" id="L129">        }</span>
+<span class="fc" id="L130">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

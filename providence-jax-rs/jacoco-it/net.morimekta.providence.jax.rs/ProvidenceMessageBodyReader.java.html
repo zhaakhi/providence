@@ -25,6 +25,8 @@ import net.morimekta.providence.descriptor.PMessageDescriptor;
 import net.morimekta.providence.serializer.SerializerException;
 import net.morimekta.providence.serializer.SerializerProvider;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
@@ -43,57 +45,66 @@ import java.lang.reflect.Type;
 public abstract class ProvidenceMessageBodyReader implements MessageBodyReader&lt;PMessage&gt; {
     private final SerializerProvider provider;
 
-<span class="nc" id="L46">    protected ProvidenceMessageBodyReader(SerializerProvider provider) {</span>
-<span class="nc" id="L47">        this.provider = provider;</span>
-<span class="nc" id="L48">    }</span>
+<span class="nc" id="L48">    protected ProvidenceMessageBodyReader(SerializerProvider provider) {</span>
+<span class="nc" id="L49">        this.provider = provider;</span>
+<span class="nc" id="L50">    }</span>
 
+    @Nullable
     private PMessageDescriptor getDescriptor(Class&lt;?&gt; type) {
         try {
-<span class="nc bnc" id="L52" title="All 2 branches missed.">            if (!PMessage.class.isAssignableFrom(type)) {</span>
-<span class="nc" id="L53">                return null;</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            if (!PMessage.class.isAssignableFrom(type)) {</span>
+<span class="nc" id="L56">                return null;</span>
             }
-<span class="nc" id="L55">            Field descField = type.getDeclaredField(&quot;kDescriptor&quot;);</span>
-<span class="nc" id="L56">            Object desc = descField.get(null);</span>
-<span class="nc bnc" id="L57" title="All 2 branches missed.">            if (desc instanceof PMessageDescriptor) {</span>
-<span class="nc" id="L58">                return (PMessageDescriptor) desc;</span>
+<span class="nc" id="L58">            Field descField = type.getDeclaredField(&quot;kDescriptor&quot;);</span>
+<span class="nc" id="L59">            Object desc = descField.get(null);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            if (desc instanceof PMessageDescriptor) {</span>
+<span class="nc" id="L61">                return (PMessageDescriptor) desc;</span>
             }
-<span class="nc" id="L60">        } catch (NoSuchFieldException | IllegalAccessException e) {</span>
-            // e.printStackTrace();
-<span class="nc" id="L62">        }</span>
-<span class="nc" id="L63">        return null;</span>
+<span class="nc" id="L63">        } catch (NoSuchFieldException | IllegalAccessException ignore) {</span>
+            // ignore.printStackTrace();
+<span class="nc" id="L65">        }</span>
+<span class="nc" id="L66">        return null;</span>
+    }
+
+    @Nonnull
+    private PMessageDescriptor getDescriptorOrFail(Class&lt;?&gt; type) {
+<span class="nc" id="L71">        PMessageDescriptor descriptor = getDescriptor(type);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (descriptor == null) throw new NotSupportedException(&quot;No providence descriptor for class &quot; + type.getName());</span>
+<span class="nc" id="L73">        return descriptor;</span>
     }
 
     @Override
-    public boolean isReadable(Class&lt;?&gt; type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-<span class="nc bnc" id="L68" title="All 4 branches missed.">        if (type == null || getDescriptor(type) == null) {</span>
-<span class="nc" id="L69">            return false;</span>
+    public boolean isReadable(Class&lt;?&gt; type,
+                              Type genericType,
+                              Annotation[] annotations,
+                              MediaType mediaType) {
+<span class="nc bnc" id="L81" title="All 4 branches missed.">        if (type == null || getDescriptor(type) == null) {</span>
+<span class="nc" id="L82">            return false;</span>
         }
-<span class="nc" id="L71">        String contentType = mediaType.getType() + &quot;/&quot; + mediaType.getSubtype();</span>
+<span class="nc" id="L84">        String contentType = mediaType.getType() + &quot;/&quot; + mediaType.getSubtype();</span>
         try {
-<span class="nc" id="L73">            provider.getSerializer(contentType);</span>
-<span class="nc" id="L74">            return true;</span>
-<span class="nc" id="L75">        } catch (Exception e) {</span>
-<span class="nc" id="L76">            return false;</span>
+<span class="nc" id="L86">            provider.getSerializer(contentType);</span>
+<span class="nc" id="L87">            return true;</span>
+<span class="nc" id="L88">        } catch (Exception e) {</span>
+<span class="nc" id="L89">            return false;</span>
         }
     }
 
     @Override
     public PMessage readFrom(Class&lt;PMessage&gt; type,
-                      Type genericType,
-                      Annotation[] annotations,
-                      MediaType mediaType,
-                      MultivaluedMap&lt;String, String&gt; httpHeaders,
-                      InputStream entityStream) throws IOException, WebApplicationException {
-<span class="nc" id="L87">        String contentType = mediaType.getType() + &quot;/&quot; + mediaType.getSubtype();</span>
+                             Type genericType,
+                             Annotation[] annotations,
+                             MediaType mediaType,
+                             MultivaluedMap&lt;String, String&gt; httpHeaders,
+                             InputStream entityStream) throws IOException, WebApplicationException {
+<span class="nc" id="L100">        String contentType = mediaType.getType() + &quot;/&quot; + mediaType.getSubtype();</span>
 
         try {
-<span class="nc" id="L90">            PMessageDescriptor descriptor = getDescriptor(type);</span>
-<span class="nc" id="L91">            return provider.getSerializer(contentType)</span>
-<span class="nc" id="L92">                           .deserialize(entityStream, descriptor);</span>
-<span class="nc" id="L93">        } catch (NullPointerException e) {</span>
-<span class="nc" id="L94">            throw new NotSupportedException(&quot;Unknown media type: &quot; + mediaType, e);</span>
-<span class="nc" id="L95">        } catch (SerializerException e) {</span>
-<span class="nc" id="L96">            throw new ProcessingException(&quot;Unable to deserialize entity&quot;, e);</span>
+<span class="nc" id="L103">            PMessageDescriptor&lt;?, ?&gt; descriptor = getDescriptorOrFail(type);</span>
+<span class="nc" id="L104">            return provider.getSerializer(contentType)</span>
+<span class="nc" id="L105">                           .deserialize(entityStream, descriptor);</span>
+<span class="nc" id="L106">        } catch (SerializerException e) {</span>
+<span class="nc" id="L107">            throw new ProcessingException(&quot;Unable to deserialize entity&quot;, e);</span>
         }
     }
 }

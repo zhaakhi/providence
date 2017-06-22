@@ -63,7 +63,7 @@ public class CException extends Exception implements CMessage&lt;CException&gt; 
     @Override
     @Nonnull
     public PMessageBuilder&lt;CException,CField&gt; mutate() {
-<span class="nc" id="L66">        return new Builder(descriptor).merge(this);</span>
+<span class="fc" id="L66">        return new Builder(descriptor).merge(this);</span>
     }
 
     @Nonnull
@@ -88,7 +88,17 @@ public class CException extends Exception implements CMessage&lt;CException&gt; 
         @Nonnull
         @Override
         public CException build() {
-<span class="fc" id="L91">            return new CException(this);</span>
+<span class="fc" id="L91">            CException e = new CException(this);</span>
+
+            try {
+<span class="fc" id="L94">                StackTraceElement[] stackTrace = e.getStackTrace();</span>
+<span class="fc" id="L95">                StackTraceElement[] subTrace = new StackTraceElement[stackTrace.length - 1];</span>
+<span class="fc" id="L96">                System.arraycopy(stackTrace, 1, subTrace, 0, subTrace.length);</span>
+<span class="fc" id="L97">                e.setStackTrace(subTrace);</span>
+<span class="nc" id="L98">            } catch (Throwable ignored) {</span>
+<span class="fc" id="L99">            }</span>
+
+<span class="fc" id="L101">            return e;</span>
         }
     }
 }

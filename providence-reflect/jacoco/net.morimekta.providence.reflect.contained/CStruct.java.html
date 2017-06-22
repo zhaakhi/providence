@@ -157,13 +157,14 @@ public class CStruct implements CMessage&lt;CStruct&gt;, JsonCompactible {
      * Prints a jsonCompact string representation of the message.
      *
      * @param message The message to stringify.
+     * @param &lt;Message&gt; The contained message type.
      * @return The resulting string.
      */
     protected static &lt;Message extends PMessage&lt;Message, CField&gt;&gt;
     String asString(Message message) {
-<span class="fc" id="L164">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="fc" id="L165">        PRETTY_SERIALIZER.serialize(baos, message);</span>
-<span class="fc" id="L166">        return new String(baos.toByteArray(), UTF_8);</span>
+<span class="fc" id="L165">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L166">        PRETTY_SERIALIZER.serialize(baos, message);</span>
+<span class="fc" id="L167">        return new String(baos.toByteArray(), UTF_8);</span>
     }
 
     /**
@@ -176,37 +177,37 @@ public class CStruct implements CMessage&lt;CStruct&gt;, JsonCompactible {
      */
     @SuppressWarnings(&quot;unchecked&quot;)
     private static &lt;T extends Comparable&lt;T&gt;&gt; int compare(T o1, T o2) {
-<span class="pc bpc" id="L179" title="2 of 4 branches missed.">        if (o1 == null || o2 == null) {</span>
-<span class="nc bnc" id="L180" title="All 4 branches missed.">            return Boolean.compare(o1 != null, o2 != null);</span>
-<span class="pc bpc" id="L181" title="3 of 4 branches missed.">        } else if (o1 instanceof PMessage &amp;&amp; o2 instanceof PMessage) {</span>
-<span class="nc" id="L182">            return compareMessages((PMessage) o1, (PMessage) o2);</span>
+<span class="pc bpc" id="L180" title="2 of 4 branches missed.">        if (o1 == null || o2 == null) {</span>
+<span class="nc bnc" id="L181" title="All 4 branches missed.">            return Boolean.compare(o1 != null, o2 != null);</span>
+<span class="pc bpc" id="L182" title="3 of 4 branches missed.">        } else if (o1 instanceof PMessage &amp;&amp; o2 instanceof PMessage) {</span>
+<span class="nc" id="L183">            return compareMessages((PMessage) o1, (PMessage) o2);</span>
         }
-<span class="fc" id="L184">        return o1.compareTo(o2);</span>
+<span class="fc" id="L185">        return o1.compareTo(o2);</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
     static &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt; int compareMessages(T m1, T m2) {
-<span class="fc" id="L189">        int c = m1.descriptor()</span>
-<span class="fc" id="L190">                  .getQualifiedName()</span>
-<span class="fc" id="L191">                  .compareTo(m2.descriptor()</span>
-<span class="fc" id="L192">                               .getQualifiedName());</span>
-<span class="pc bpc" id="L193" title="1 of 2 branches missed.">        if (c != 0) {</span>
-<span class="nc" id="L194">            return c;</span>
+<span class="fc" id="L190">        int c = m1.descriptor()</span>
+<span class="fc" id="L191">                  .getQualifiedName()</span>
+<span class="fc" id="L192">                  .compareTo(m2.descriptor()</span>
+<span class="fc" id="L193">                               .getQualifiedName());</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (c != 0) {</span>
+<span class="nc" id="L195">            return c;</span>
         }
-<span class="fc bfc" id="L196" title="All 2 branches covered.">        for (PField field : m1.descriptor()</span>
-<span class="fc" id="L197">                              .getFields()) {</span>
-<span class="fc" id="L198">            c = Boolean.compare(m1.has(field.getId()), m2.has(field.getId()));</span>
-<span class="pc bpc" id="L199" title="1 of 2 branches missed.">            if (c != 0) {</span>
-<span class="nc" id="L200">                return c;</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        for (PField field : m1.descriptor()</span>
+<span class="fc" id="L198">                              .getFields()) {</span>
+<span class="fc" id="L199">            c = Boolean.compare(m1.has(field.getId()), m2.has(field.getId()));</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            if (c != 0) {</span>
+<span class="nc" id="L201">                return c;</span>
             }
-<span class="fc bfc" id="L202" title="All 2 branches covered.">            if (m1.has(field.getId())) {</span>
-<span class="fc" id="L203">                c = compare((Comparable) m1.get(field.getId()), (Comparable) m2.get(field.getId()));</span>
-<span class="fc bfc" id="L204" title="All 2 branches covered.">                if (c != 0) {</span>
-<span class="fc" id="L205">                    return c;</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            if (m1.has(field.getId())) {</span>
+<span class="fc" id="L204">                c = compare((Comparable) m1.get(field.getId()), (Comparable) m2.get(field.getId()));</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                if (c != 0) {</span>
+<span class="fc" id="L206">                    return c;</span>
                 }
             }
         }
-<span class="fc" id="L209">        return 0;</span>
+<span class="fc" id="L210">        return 0;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

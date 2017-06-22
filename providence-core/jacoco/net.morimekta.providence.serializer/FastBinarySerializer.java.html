@@ -62,7 +62,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * See data definition file &lt;code&gt;docs/fast-binary.md&lt;/code&gt; for format spec.
  */
 public class FastBinarySerializer extends Serializer {
-    public static final String MIME_TYPE = &quot;application/vnd.morimekta.providence.binary&quot;;
+    public static final String MEDIA_TYPE = &quot;application/vnd.morimekta.providence.binary&quot;;
 
     private final boolean readStrict;
 
@@ -180,8 +180,8 @@ public class FastBinarySerializer extends Serializer {
 
     @Nonnull
     @Override
-    public String mimeType() {
-<span class="nc" id="L184">        return MIME_TYPE;</span>
+    public String mediaType() {
+<span class="nc" id="L184">        return MEDIA_TYPE;</span>
     }
 
     // --- MESSAGE ---
@@ -191,11 +191,11 @@ public class FastBinarySerializer extends Serializer {
             throws IOException {
 <span class="fc" id="L192">        int len = 0;</span>
 <span class="fc bfc" id="L193" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
-<span class="fc" id="L194">            PField field = ((PUnion) message).unionField();</span>
-<span class="pc bpc" id="L195" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">            if (((PUnion) message).unionFieldIsSet()) {</span>
+<span class="fc" id="L195">                PField field = ((PUnion) message).unionField();</span>
 <span class="fc" id="L196">                len += writeFieldValue(out, field.getId(), field.getDescriptor(), message.get(field.getId()));</span>
-            }
-<span class="fc" id="L198">        } else {</span>
+<span class="fc" id="L197">            }</span>
+        } else {
 <span class="fc bfc" id="L199" title="All 2 branches covered.">            for (PField field : message.descriptor()</span>
 <span class="fc" id="L200">                                          .getFields()) {</span>
 <span class="fc bfc" id="L201" title="All 2 branches covered.">                if (message.has(field.getId())) {</span>

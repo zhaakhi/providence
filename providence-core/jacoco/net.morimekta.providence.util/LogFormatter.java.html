@@ -148,8 +148,8 @@ public class LogFormatter {
 <span class="fc" id="L148">              .begin();</span>
 
 <span class="fc bfc" id="L150" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
-<span class="fc" id="L151">            PField field = ((PUnion) message).unionField();</span>
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">            if (((PUnion) message).unionFieldIsSet()) {</span>
+<span class="fc" id="L152">                PField field = ((PUnion) message).unionField();</span>
 <span class="fc" id="L153">                Object o = message.get(field.getId());</span>
 
 <span class="fc" id="L155">                writer.appendln()</span>
@@ -158,8 +158,8 @@ public class LogFormatter {
 <span class="fc" id="L158">                      .append(Token.kFieldValueSep)</span>
 <span class="fc" id="L159">                      .append(space);</span>
 <span class="fc" id="L160">                appendFieldValue(writer, field, o);</span>
-            }
-<span class="fc" id="L162">        } else {</span>
+<span class="fc" id="L161">            }</span>
+        } else {
 <span class="fc" id="L163">            boolean first = true;</span>
 <span class="fc bfc" id="L164" title="All 2 branches covered.">            for (PField field : type.getFields()) {</span>
 <span class="fc bfc" id="L165" title="All 2 branches covered.">                if (message.has(field.getId())) {</span>

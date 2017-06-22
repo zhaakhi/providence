@@ -97,8 +97,8 @@ import static java.util.Objects.requireNonNull;
  * &lt;/pre&gt;
  */
 public class JsonSerializer extends Serializer {
-    public static final String MIME_TYPE = &quot;application/vnd.morimekta.providence.json&quot;;
-    public static final String JSON_MIME_TYPE = &quot;application/json&quot;;
+    public static final String MEDIA_TYPE      = &quot;application/vnd.morimekta.providence.json&quot;;
+    public static final String JSON_MEDIA_TYPE = &quot;application/json&quot;;
 
     public JsonSerializer() {
 <span class="fc" id="L104">        this(DEFAULT_STRICT, false, IdType.ID, IdType.ID);</span>
@@ -189,8 +189,8 @@ public class JsonSerializer extends Serializer {
 
     @Nonnull
     @Override
-    public String mimeType() {
-<span class="fc" id="L193">        return MIME_TYPE;</span>
+    public String mediaType() {
+<span class="fc" id="L193">        return MEDIA_TYPE;</span>
     }
 
     // ------------------- PRIVATE ONLY ------------------
@@ -373,8 +373,8 @@ public class JsonSerializer extends Serializer {
     private void consume(JsonToken token, JsonTokenizer tokenizer) throws IOException, JsonException {
 <span class="fc bfc" id="L374" title="All 2 branches covered.">        if (token.isSymbol()) {</span>
 <span class="fc bfc" id="L375" title="All 2 branches covered.">            if (token.isSymbol(JsonToken.kListStart)) {</span>
-<span class="pc bpc" id="L376" title="1 of 2 branches missed.">                if (tokenizer.peek(&quot;lists end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
-<span class="nc" id="L377">                    tokenizer.next();</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">                if (tokenizer.peek(&quot;lists end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
+<span class="fc" id="L377">                    tokenizer.next();</span>
                 } else {
 <span class="fc" id="L379">                    char sep = JsonToken.kListStart;</span>
 <span class="fc bfc" id="L380" title="All 2 branches covered.">                    while (sep != JsonToken.kListEnd) {</span>
@@ -383,8 +383,8 @@ public class JsonSerializer extends Serializer {
                     }
 <span class="fc" id="L384">                }</span>
 <span class="pc bpc" id="L385" title="1 of 2 branches missed.">            } else if (token.isSymbol(JsonToken.kMapStart)) {</span>
-<span class="fc bfc" id="L386" title="All 2 branches covered.">                if (tokenizer.peek(&quot;map end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
-<span class="fc" id="L387">                    tokenizer.next();</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">                if (tokenizer.peek(&quot;map end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
+<span class="nc" id="L387">                    tokenizer.next();</span>
                 } else {
 <span class="fc" id="L389">                    char sep = JsonToken.kMapStart;</span>
 <span class="fc bfc" id="L390" title="All 2 branches covered.">                    while (sep != JsonToken.kMapEnd) {</span>
@@ -525,8 +525,8 @@ public class JsonSerializer extends Serializer {
                 @SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L526">                PSet.Builder&lt;Object&gt; set = ((PSet&lt;Object&gt;) t).builder();</span>
 
-<span class="pc bpc" id="L528" title="1 of 2 branches missed.">                if (tokenizer.peek(&quot;set end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
-<span class="nc" id="L529">                    tokenizer.next();</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">                if (tokenizer.peek(&quot;set end or value&quot;).isSymbol(JsonToken.kListEnd)) {</span>
+<span class="fc" id="L529">                    tokenizer.next();</span>
                 } else {
 <span class="fc" id="L531">                    char sep = JsonToken.kListStart;</span>
 <span class="fc bfc" id="L532" title="All 2 branches covered.">                    while (sep != JsonToken.kListEnd) {</span>
@@ -658,8 +658,8 @@ public class JsonSerializer extends Serializer {
 <span class="fc" id="L658">        PMessageDescriptor&lt;?, ?&gt; type = message.descriptor();</span>
 <span class="fc bfc" id="L659" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
 <span class="fc" id="L660">            writer.object();</span>
-<span class="fc" id="L661">            PField field = ((PUnion) message).unionField();</span>
-<span class="pc bpc" id="L662" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="pc bpc" id="L661" title="1 of 2 branches missed.">            if (((PUnion) message).unionFieldIsSet()) {</span>
+<span class="fc" id="L662">                PField field = ((PUnion) message).unionField();</span>
 <span class="fc" id="L663">                Object value = message.get(field.getId());</span>
 <span class="fc bfc" id="L664" title="All 2 branches covered.">                if (IdType.ID.equals(fieldIdType)) {</span>
 <span class="fc" id="L665">                    writer.key(field.getId());</span>
@@ -669,7 +669,7 @@ public class JsonSerializer extends Serializer {
 <span class="fc" id="L669">                appendTypedValue(writer, field.getDescriptor(), value);</span>
             }
 <span class="fc" id="L671">            writer.endObject();</span>
-<span class="fc" id="L672">        } else {</span>
+        } else {
 <span class="fc bfc" id="L673" title="All 2 branches covered.">            if (isCompact(message)) {</span>
 <span class="fc" id="L674">                writer.array();</span>
 <span class="fc bfc" id="L675" title="All 2 branches covered.">                for (PField field : type.getFields()) {</span>

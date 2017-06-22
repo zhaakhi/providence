@@ -20,6 +20,7 @@
  */
 package net.morimekta.providence.generator.format.java;
 
+import net.morimekta.providence.generator.GeneratorOptions;
 import net.morimekta.providence.generator.format.java.enums.CommonMemberFormatter;
 import net.morimekta.providence.generator.format.java.enums.CoreMemberFormatter;
 import net.morimekta.providence.generator.format.java.enums.extras.JacksonEnumFormatter;
@@ -37,21 +38,24 @@ import java.util.List;
  */
 public class JavaEnumFormatter extends BaseEnumFormatter {
     JavaEnumFormatter(IndentedPrintWriter writer,
+                      GeneratorOptions generatorOptions,
                       JavaOptions options) {
-<span class="fc" id="L41">        super(writer, getFormatters(writer, options));</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L43">        super(writer, getFormatters(writer, generatorOptions, options));</span>
+<span class="fc" id="L44">    }</span>
 
-    private static List&lt;EnumMemberFormatter&gt; getFormatters(IndentedPrintWriter writer, JavaOptions options) {
-<span class="fc" id="L45">        ImmutableList.Builder&lt;EnumMemberFormatter&gt; builder = ImmutableList.builder();</span>
+    private static List&lt;EnumMemberFormatter&gt; getFormatters(IndentedPrintWriter writer,
+                                                           GeneratorOptions generatorOptions,
+                                                           JavaOptions options) {
+<span class="fc" id="L49">        ImmutableList.Builder&lt;EnumMemberFormatter&gt; builder = ImmutableList.builder();</span>
 
-<span class="fc" id="L47">        builder.add(new CommonMemberFormatter(writer, options))</span>
-<span class="fc" id="L48">               .add(new CoreMemberFormatter(writer));</span>
+<span class="fc" id="L51">        builder.add(new CommonMemberFormatter(writer, generatorOptions, options))</span>
+<span class="fc" id="L52">               .add(new CoreMemberFormatter(writer));</span>
 
-<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (options.jackson) {</span>
-<span class="fc" id="L51">            builder.add(new JacksonEnumFormatter(writer));</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (options.jackson) {</span>
+<span class="fc" id="L55">            builder.add(new JacksonEnumFormatter(writer));</span>
         }
 
-<span class="fc" id="L54">        return builder.build();</span>
+<span class="fc" id="L58">        return builder.build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

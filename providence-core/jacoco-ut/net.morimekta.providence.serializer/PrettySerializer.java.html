@@ -63,7 +63,7 @@ import java.util.Map;
  * @since 25.08.15
  */
 public class PrettySerializer extends Serializer {
-    public final static String MIME_TYPE = &quot;text/plain&quot;;
+    public final static String MEDIA_TYPE = &quot;text/plain&quot;;
 
     private final static String INDENT   = &quot;  &quot;;
     private final static String SPACE    = &quot; &quot;;
@@ -537,8 +537,8 @@ public class PrettySerializer extends Serializer {
 
     @Nonnull
     @Override
-    public String mimeType() {
-<span class="nc" id="L541">        return MIME_TYPE;</span>
+    public String mediaType() {
+<span class="nc" id="L541">        return MEDIA_TYPE;</span>
     }
 
     private void appendMessage(IndentedPrintWriter builder, PMessage&lt;?,?&gt; message, boolean enclose) {
@@ -550,8 +550,8 @@ public class PrettySerializer extends Serializer {
         }
 
 <span class="fc bfc" id="L552" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
-<span class="fc" id="L553">            PField field = ((PUnion) message).unionField();</span>
-<span class="pc bpc" id="L554" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="pc bpc" id="L553" title="1 of 2 branches missed.">            if (((PUnion) message).unionFieldIsSet()) {</span>
+<span class="fc" id="L554">                PField field = ((PUnion) message).unionField();</span>
 <span class="fc" id="L555">                Object o = message.get(field.getId());</span>
 
 <span class="pc bpc" id="L557" title="1 of 2 branches missed.">                if (enclose) {</span>
@@ -563,8 +563,8 @@ public class PrettySerializer extends Serializer {
 <span class="fc" id="L563">                       .append(Token.kFieldValueSep)</span>
 <span class="fc" id="L564">                       .append(space);</span>
 <span class="fc" id="L565">                appendTypedValue(builder, field.getDescriptor(), o);</span>
-            }
-<span class="fc" id="L567">        } else {</span>
+<span class="fc" id="L566">            }</span>
+        } else {
 <span class="fc" id="L568">            boolean first = true;</span>
 <span class="fc bfc" id="L569" title="All 2 branches covered.">            for (PField field : type.getFields()) {</span>
 <span class="fc bfc" id="L570" title="All 2 branches covered.">                if (message.has(field.getId())) {</span>
@@ -718,7 +718,7 @@ public class PrettySerializer extends Serializer {
 <span class="fc bfc" id="L718" title="All 2 branches covered.">        if (token.isSymbol(Token.kMessageStart)) {</span>
             // message or map.
 <span class="fc" id="L720">            token = tokenizer.expect(&quot;map or message first entry&quot;);</span>
-<span class="fc bfc" id="L721" title="All 2 branches covered.">            if (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="pc bpc" id="L721" title="1 of 2 branches missed.">            if (!token.isSymbol(Token.kMessageEnd)) {</span>
                 // ignore empty map or message.
 <span class="fc bfc" id="L723" title="All 2 branches covered.">                if (!tokenizer.peek().isSymbol(Token.kFieldValueSep)) {</span>
                     // assume map.
@@ -749,7 +749,7 @@ public class PrettySerializer extends Serializer {
             }
 <span class="fc bfc" id="L750" title="All 2 branches covered.">        } else if (token.isSymbol(Token.kListStart)) {</span>
 <span class="fc" id="L751">            token = tokenizer.next();</span>
-<span class="pc bpc" id="L752" title="1 of 2 branches missed.">            while (!token.isSymbol(Token.kListEnd)) {</span>
+<span class="fc bfc" id="L752" title="All 2 branches covered.">            while (!token.isSymbol(Token.kListEnd)) {</span>
 <span class="fc" id="L753">                consumeValue(tokenizer, token);</span>
                 // lists and sets require list separator (,), and allows trailing separator.
 <span class="fc bfc" id="L755" title="All 2 branches covered.">                if (tokenizer.expectSymbol(&quot;list separator or end&quot;, Token.kLineSep1, Token.kListEnd) == Token.kListEnd) {</span>
