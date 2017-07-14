@@ -57,15 +57,17 @@ public class IOMessageWriter implements MessageWriter {
     public int separator() throws IOException {
 <span class="fc bfc" id="L58" title="All 2 branches covered.">        if (!serializer.binaryProtocol()) {</span>
 <span class="fc" id="L59">            out.write(MessageStreams.READABLE_ENTRY_SEP);</span>
-<span class="fc" id="L60">            return MessageStreams.READABLE_ENTRY_SEP.length;</span>
+<span class="fc" id="L60">            out.flush();</span>
+<span class="fc" id="L61">            return MessageStreams.READABLE_ENTRY_SEP.length;</span>
         }
+<span class="fc" id="L63">        out.flush();</span>
 
-<span class="fc" id="L63">        return 0;</span>
+<span class="fc" id="L65">        return 0;</span>
     }
 
     @Override
     public void close() throws IOException {
-<span class="fc" id="L68">        out.close();</span>
-<span class="fc" id="L69">    }</span>
+<span class="fc" id="L70">        out.close();</span>
+<span class="fc" id="L71">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

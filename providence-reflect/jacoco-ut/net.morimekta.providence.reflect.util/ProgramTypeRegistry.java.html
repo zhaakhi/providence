@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProgramTypeRegistry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Reflection</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.reflect.util</a> &gt; <span class="el_source">ProgramTypeRegistry.java</span></div><h1>ProgramTypeRegistry.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.reflect.util;
+
+import net.morimekta.providence.descriptor.PDeclaredDescriptor;
+import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.reflect.contained.CProgram;
+
+import javax.annotation.Nonnull;
+
+/**
+ * A recursive type registry that also knows the program that it
+ * represents.
+ */
+public class ProgramTypeRegistry extends RecursiveTypeRegistry {
+    private CProgram program;
+
+    public ProgramTypeRegistry(@Nonnull String localProgramContext) {
+<span class="fc" id="L17">        super(localProgramContext);</span>
+<span class="fc" id="L18">    }</span>
+
+    @Nonnull
+    public CProgram getProgramForName(String programName) {
+<span class="nc" id="L22">        RecursiveTypeRegistry tmp = getRegistryForProgramName(programName);</span>
+<span class="nc bnc" id="L23" title="All 4 branches missed.">        if (tmp != null &amp;&amp; tmp instanceof ProgramTypeRegistry) {</span>
+<span class="nc" id="L24">            return ((ProgramTypeRegistry) tmp).getProgram();</span>
+        }
+<span class="nc" id="L26">        throw new IllegalArgumentException(&quot;No program for name &quot; + programName);</span>
+    }
+
+    public CProgram getProgram() {
+<span class="nc" id="L30">        return program;</span>
+    }
+
+    public void setProgram(CProgram program) {
+<span class="fc" id="L34">        this.program = program;</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (isEmpty()) {</span>
+<span class="nc" id="L36">            program.getTypedefs().forEach((id, type) -&gt; {</span>
+<span class="nc" id="L37">                registerTypedef(id, getLocalProgramContext(), type);</span>
+<span class="nc" id="L38">            });</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">            for (PDeclaredDescriptor&lt;?&gt; descriptor : program.getDeclaredTypes()) {</span>
+<span class="nc" id="L40">                registerRecursively(descriptor);</span>
+<span class="nc" id="L41">            }</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">            for (PService service : program.getServices()) {</span>
+<span class="nc" id="L43">                registerRecursively(service);</span>
+<span class="nc" id="L44">            }</span>
+        }
+<span class="fc" id="L46">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -20,46 +20,33 @@
  */
 package net.morimekta.providence.reflect.util;
 
-import net.morimekta.providence.descriptor.PDescriptor;
+import net.morimekta.providence.descriptor.PDeclaredDescriptor;
 import net.morimekta.providence.descriptor.PDescriptorProvider;
-import net.morimekta.providence.descriptor.PList;
-import net.morimekta.providence.descriptor.PMap;
-import net.morimekta.providence.descriptor.PPrimitive;
 import net.morimekta.providence.descriptor.PService;
 import net.morimekta.providence.descriptor.PServiceProvider;
-import net.morimekta.providence.descriptor.PSet;
 import net.morimekta.providence.reflect.contained.CProgram;
-import net.morimekta.providence.reflect.parser.ThriftProgramParser;
 import net.morimekta.providence.util.TypeRegistry;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+
+import static net.morimekta.providence.reflect.util.ReflectionUtils.programNameFromPath;
 
 /**
- * @author Stein Eldar Johnsen
- * @since 07.09.15
+ * Program scope type registry.
  */
-public class ProgramRegistry extends TypeRegistry {
-    private final Map&lt;String, CProgram&gt; documents;
+public class ProgramRegistry implements TypeRegistry {
+    private final Map&lt;String, ProgramTypeRegistry&gt; registryMap;
 
-<span class="fc" id="L46">    public ProgramRegistry() {</span>
-<span class="fc" id="L47">        documents = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L43">    public ProgramRegistry() {</span>
+<span class="fc" id="L44">        registryMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L45">    }</span>
 
-    /**
-     * Puts the given document into the registry.
-     *
-     * @param path File path the document was found.
-     * @param doc The contained document.
-     * @return True if the document was not already there.
-     */
-    public boolean putDocument(String path, CProgram doc) {
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (!documents.containsKey(path)) {</span>
-<span class="fc" id="L59">            documents.put(path, doc);</span>
-<span class="fc" id="L60">            return true;</span>
-        }
-<span class="nc" id="L62">        return false;</span>
+    @Nonnull
+    public ProgramTypeRegistry registryForPath(String path) {
+<span class="fc" id="L49">        return registryMap.computeIfAbsent(path, p -&gt; new ProgramTypeRegistry(programNameFromPath(path)));</span>
     }
 
     /**
@@ -68,103 +55,65 @@ public class ProgramRegistry extends TypeRegistry {
      * @param path The file path.
      * @return The contained document, or null if not found.
      */
-    public CProgram getDocument(String path) {
-<span class="nc" id="L72">        return documents.get(path);</span>
+    public boolean containsProgramPath(String path) {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        return registryForPath(path).getProgram() != null;</span>
     }
 
-    public CProgram getDocumentForPackage(String packageContext) {
-<span class="nc bnc" id="L76" title="All 2 branches missed.">        for (CProgram document : documents.values()) {</span>
-<span class="nc" id="L77">            if (document.getProgramName()</span>
-<span class="nc bnc" id="L78" title="All 2 branches missed.">                        .equals(packageContext)) {</span>
-<span class="nc" id="L79">                return document;</span>
-            }
-<span class="nc" id="L81">        }</span>
-<span class="nc" id="L82">        return null;</span>
+    public void putProgram(String path, CProgram program) {
+<span class="fc" id="L63">        registryForPath(path).setProgram(program);</span>
+<span class="fc" id="L64">    }</span>
+
+    @Nonnull
+    @Override
+    public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String typeName,
+                                                                @Nonnull String programContext) {
+<span class="nc" id="L70">        return handle(typeName, programContext,</span>
+<span class="nc" id="L71">                      p -&gt; p.getDeclaredType(typeName, programContext));</span>
     }
 
-    /**
-     * Given a type name and a package context, fetches the type provider for the given type.
-     *
-     * @param name        Name of type, without any spaces.
-     * @param context     The package context of the type.
-     * @param annotations Annotations on the type.
-     * @return The type provider.
-     */
-    @SuppressWarnings(&quot;unchecked&quot;)
-    public PDescriptorProvider getProvider(String name, final String context, Map&lt;String, String&gt; annotations) {
-<span class="fc" id="L95">        name = finalTypename(name, context);</span>
-
-        // Prepend package context to name
-<span class="fc" id="L98">        PPrimitive primitive = PPrimitive.findByName(name);</span>
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (primitive != null) {</span>
-<span class="fc" id="L100">            return primitive.provider();</span>
-        }
-
-<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (annotations == null) {</span>
-<span class="fc" id="L104">            annotations = Collections.EMPTY_MAP;</span>
-        }
-
-        // Collection types are a bit complex, so handle it here.
-<span class="pc bpc" id="L108" title="1 of 4 branches missed.">        if (name.startsWith(&quot;map&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="fc" id="L109">            String[] parts = name.substring(4, name.length() - 1)</span>
-<span class="fc" id="L110">                                     .split(&quot;,&quot;, 2);</span>
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">            if (parts.length != 2) {</span>
-<span class="nc" id="L112">                throw new IllegalArgumentException(name + &quot; is not a valid map descriptor, wrong number of types.&quot;);</span>
-            }
-<span class="fc" id="L114">            String keyType = parts[0];</span>
-<span class="fc" id="L115">            String valueType = parts[1];</span>
-<span class="pc bpc" id="L116" title="3 of 4 branches missed.">            switch (ThriftCollection.forName(annotations.get(ThriftAnnotation.CONTAINER.tag))) {</span>
-                case SORTED:
-<span class="nc" id="L118">                    return PMap.sortedProvider(getProvider(keyType, context, null),</span>
-<span class="nc" id="L119">                                               getProvider(valueType, context, null));</span>
-                case ORDERED:
-<span class="nc" id="L121">                    return PMap.orderedProvider(getProvider(keyType, context, null),</span>
-<span class="nc" id="L122">                                                getProvider(valueType, context, null));</span>
-                case DEFAULT:
-<span class="fc" id="L124">                    return PMap.provider(getProvider(keyType, context, null),</span>
-<span class="fc" id="L125">                                         getProvider(valueType, context, null));</span>
-            }
-        }
-<span class="pc bpc" id="L128" title="1 of 4 branches missed.">        if (name.startsWith(&quot;set&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="fc" id="L129">            String itemType = name.substring(4, name.length() - 1);</span>
-<span class="pc bpc" id="L130" title="3 of 4 branches missed.">            switch (ThriftCollection.forName(annotations.get(ThriftAnnotation.CONTAINER.tag))) {</span>
-                case SORTED:
-<span class="nc" id="L132">                    return PSet.sortedProvider(getProvider(itemType, context, null));</span>
-                case ORDERED:
-<span class="nc" id="L134">                    return PSet.orderedProvider(getProvider(itemType, context, null));</span>
-                case DEFAULT:
-<span class="fc" id="L136">                    return PSet.provider(getProvider(itemType, context, null));</span>
-            }
-        }
-<span class="pc bpc" id="L139" title="1 of 4 branches missed.">        if (name.startsWith(&quot;list&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="fc" id="L140">            String itemType = name.substring(5, name.length() - 1);</span>
-<span class="fc" id="L141">            return PList.provider(getProvider(itemType, context, null));</span>
-        }
-
-<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (!ThriftProgramParser.VALID_NAMESPACE.matcher(name).matches()) {</span>
-<span class="nc" id="L145">            throw new IllegalArgumentException(name + &quot; is not a valid declared type identifier.&quot;);</span>
-        }
-
-<span class="fc" id="L148">        final String finalName = name;</span>
-
-        // Otherwise it's a declared type.
-<span class="fc" id="L151">        return () -&gt; {</span>
-<span class="fc" id="L152">            PDescriptor descriptor = getDeclaredType(finalName, context);</span>
-<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            if (descriptor == null) {</span>
-<span class="nc" id="L154">                throw new IllegalStateException(&quot;No such type &quot; + finalName + &quot; in context &quot; + context);</span>
-            }
-<span class="fc" id="L156">            return descriptor;</span>
-        };
+    @Nonnull
+    @Override
+    public PService getService(String serviceName, String programContext) {
+<span class="nc" id="L77">        return handle(serviceName, programContext,</span>
+<span class="nc" id="L78">                      r -&gt; r.getService(serviceName, programContext));</span>
     }
 
-    public PServiceProvider getServiceProvider(final String serviceName, final String packageContext) {
-<span class="nc" id="L161">        return () -&gt; {</span>
-<span class="nc" id="L162">            PService service = getService(serviceName, packageContext);</span>
-<span class="nc bnc" id="L163" title="All 2 branches missed.">            if (service == null) {</span>
-<span class="nc" id="L164">                throw new IllegalStateException(&quot;No such service &quot; + serviceName + &quot; in context &quot; + packageContext);</span>
+    @Override
+    public PDescriptorProvider getProvider(String typeName, String programContext, Map&lt;String, String&gt; annotations) {
+<span class="nc" id="L83">        return handle(typeName, programContext,</span>
+<span class="nc" id="L84">                      r -&gt; r.getProvider(typeName, programContext, annotations));</span>
+    }
+
+    @Override
+    public PServiceProvider getServiceProvider(String serviceName, String programContext) {
+<span class="nc" id="L89">        return handle(serviceName, programContext,</span>
+<span class="nc" id="L90">                      r -&gt; r.getServiceProvider(serviceName, programContext));</span>
+    }
+
+    private &lt;T&gt; T handle(String typeName, String programContext, Function&lt;ProgramTypeRegistry, T&gt; f) {
+<span class="nc" id="L94">        Exception e = null;</span>
+<span class="nc" id="L95">        String context = getProgramContext(typeName, programContext);</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        for (ProgramTypeRegistry registry : registryMap.values()) {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (registry.getLocalProgramContext().equals(context)) {</span>
+                try {
+<span class="nc" id="L100">                    return f.apply(registry);</span>
+<span class="nc" id="L101">                } catch (Exception ignored) {</span>
+<span class="nc" id="L102">                    e = ignored;</span>
+                }
             }
-<span class="nc" id="L166">            return service;</span>
-        };
+<span class="nc" id="L105">        }</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (e != null) {</span>
+<span class="nc" id="L107">            throw new IllegalArgumentException(e.getMessage(), e);</span>
+        }
+<span class="nc" id="L109">        throw new IllegalArgumentException(&quot;No program \&quot;&quot; + context + &quot;\&quot; found for type \&quot;&quot; + typeName + &quot;\&quot;&quot;);</span>
+    }
+
+    private String getProgramContext(String typeName, String programContext) {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (typeName.contains(&quot;.&quot;)) {</span>
+<span class="nc" id="L114">            return typeName.substring(0, typeName.indexOf(&quot;.&quot;));</span>
+        }
+<span class="nc" id="L116">        return programContext;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

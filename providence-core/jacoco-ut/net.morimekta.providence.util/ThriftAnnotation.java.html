@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThriftAnnotation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.util</a> &gt; <span class="el_source">ThriftAnnotation.java</span></div><h1>ThriftAnnotation.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.util;
+
+import javax.annotation.Nonnull;
+
+/**
+ * Enum containing known &quot;general&quot; thrift annotations.
+ */
+<span class="nc" id="L28">public enum ThriftAnnotation {</span>
+<span class="nc" id="L29">    NONE(null),</span>
+    /**
+     * Whether a set-like container are normal (hash-), ordered (linked-hash-)
+     * or sorted (tree-). Valid for set and map type fields.
+     * &lt;p&gt;
+     * container = &quot;ORDERED&quot;
+     */
+<span class="nc" id="L36">    CONTAINER(&quot;container&quot;),</span>
+
+    /**
+     * If the field, message, service or method is not supposed to be used any
+     * more. Whatever is in the value part may be used as the 'deprecated'
+     * reason.
+     * &lt;p&gt;
+     * deprecated = &quot;For some reason&quot;
+     */
+<span class="nc" id="L45">    DEPRECATED(&quot;deprecated&quot;),</span>
+
+    /**
+     * If a struct can use a compact serialized format. Only valid for struct,
+     * not for union and exception.
+     * &lt;p&gt;
+     * json.compact = &quot;&quot;
+     */
+<span class="nc" id="L53">    JSON_COMPACT(&quot;json.compact&quot;),</span>
+
+    /**
+     * Add extra interfaces to a struct. Not allowed on unions or exceptions.
+     *
+     * The interface methods must either match the methods implemented by the
+     * struct, &lt;b&gt;or&lt;/b&gt; have a default implementation.
+     * &lt;p&gt;
+     * java.implements = &quot;my.package.MyInterface&quot;
+     */
+<span class="nc" id="L63">    JAVA_IMPLEMENTS(&quot;java.implements&quot;),</span>
+
+    /**
+     * Specify exception class to extend for exception structs. The default is
+     * to extend {@link java.lang.Exception}, this will override that verbatim.
+     * The exception class &lt;b&gt;must&lt;/b&gt; be available at compile time.
+     * &lt;p&gt;
+     * java.exception.class = &quot;my.package.MyException&quot;
+     */
+<span class="nc" id="L72">    JAVA_EXCEPTION_CLASS(&quot;java.exception.class&quot;),</span>
+
+    /**
+     * For struct and exception. If true will add a public create constructor
+     * with all fields available as parameters. Default is not.
+     */
+<span class="nc" id="L78">    JAVA_PUBLIC_CONSTRUCTOR(&quot;java.public.constructor&quot;),</span>
+
+    /**
+     * Specify an exception class to throw &lt;b&gt;instead&lt;/b&gt; of the default
+     * declared exceptions. This is only valid for the Service.Iface interface,
+     * and not for the Service.Client implementation.
+     * &lt;p&gt;
+     * Non-declared exceptions, even if extending the declared exception, will
+     * be handled as a system failure, and wrapped in an IOException or sent as
+     * an application exception.
+     * &lt;p&gt;
+     * java.service.methods.throws = &quot;my.package.MyException&quot;
+     */
+<span class="nc" id="L91">    JAVA_SERVICE_METHOD_THROWS(&quot;java.service.methods.throws&quot;),</span>
+    /**
+     * Specify if a file should generate with support with hazelcast portable
+     * implementaiton.
+     * &lt;p&gt;
+     * The id needs to be a unique int id for each file that is generated with
+     * support for hazelcast.
+     * &lt;/p&gt;
+     *
+     * hazelcast.factory.id = &quot;1&quot;
+     */
+<span class="nc" id="L102">    JAVA_HAZELCAST_FACTORY_ID(&quot;hazelcast.factory.id&quot;),</span>
+    /**
+     * Specify if a stuct should be generated using hazelcast.portable interface
+     * to be compatible with serialization and deserialization of hazelcast portable.
+     * &lt;p&gt;
+     * The id needs to be a unique int id for each struct in the class.
+     * &lt;/p&gt;
+     * hazelcast.factory.id = &quot;1&quot;
+     */
+<span class="nc" id="L111">    JAVA_HAZELCAST_CLASS_ID(&quot;hazelcast.class.id&quot;),</span>
+    ;
+
+    public final String tag;
+
+<span class="nc" id="L116">    ThriftAnnotation(String tag) {</span>
+<span class="nc" id="L117">        this.tag = tag;</span>
+<span class="nc" id="L118">    }</span>
+
+    @Nonnull
+    public static ThriftAnnotation forTag(@Nonnull String tag) {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for (ThriftAnnotation annotation : values()) {</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (tag.equals(annotation.tag)) {</span>
+<span class="nc" id="L124">                return annotation;</span>
+            }
+        }
+<span class="nc" id="L127">        return NONE;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -20,57 +20,66 @@
  */
 package net.morimekta.providence.generator.format.java;
 
+import net.morimekta.providence.descriptor.PDeclaredDescriptor;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.generator.Generator;
 import net.morimekta.providence.generator.GeneratorException;
 import net.morimekta.providence.generator.GeneratorOptions;
 import net.morimekta.providence.generator.format.java.program.extras.HazelcastPortableProgramFormatter;
 import net.morimekta.providence.generator.format.java.shared.BaseEnumFormatter;
-import net.morimekta.providence.generator.format.java.shared.BaseGenerator;
 import net.morimekta.providence.generator.format.java.shared.BaseMessageFormatter;
 import net.morimekta.providence.generator.format.java.shared.BaseProgramFormatter;
 import net.morimekta.providence.generator.format.java.shared.BaseServiceFormatter;
+import net.morimekta.providence.generator.format.java.utils.JHelper;
+import net.morimekta.providence.generator.format.java.utils.JUtils;
 import net.morimekta.providence.generator.util.FileManager;
-import net.morimekta.providence.reflect.util.ProgramRegistry;
+import net.morimekta.providence.reflect.contained.CEnumDescriptor;
+import net.morimekta.providence.reflect.contained.CProgram;
+import net.morimekta.providence.reflect.contained.CService;
+import net.morimekta.providence.reflect.util.ProgramTypeRegistry;
 import net.morimekta.util.io.IndentedPrintWriter;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author Stein Eldar Johnsen
  * @since 05.09.15
  */
-public class JavaGenerator extends BaseGenerator {
-    private final JavaOptions javaOptions;
+public class JavaGenerator extends Generator {
+    private final JHelper          helper;
+    private final GeneratorOptions generatorOptions;
+    private final   JavaOptions      javaOptions;
 
     public JavaGenerator(FileManager manager,
-                         ProgramRegistry registry,
+                         ProgramTypeRegistry registry,
                          GeneratorOptions generatorOptions,
                          JavaOptions javaOptions) throws GeneratorException {
-<span class="fc" id="L46">        super(manager, registry, generatorOptions);</span>
+<span class="fc" id="L58">        super(manager);</span>
 
-<span class="fc" id="L48">        this.javaOptions = javaOptions;</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L60">        this.generatorOptions = generatorOptions;</span>
+<span class="fc" id="L61">        this.helper = new JHelper(registry);</span>
+<span class="fc" id="L62">        this.javaOptions = javaOptions;</span>
+<span class="fc" id="L63">    }</span>
 
-    @Override
-    protected BaseMessageFormatter messageFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L53">        return new JavaMessageFormatter(writer, helper, generatorOptions, javaOptions);</span>
+    private BaseMessageFormatter messageFormatter(IndentedPrintWriter writer) {
+<span class="fc" id="L66">        return new JavaMessageFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
-    @Override
-    protected BaseEnumFormatter enumFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L58">        return new JavaEnumFormatter(writer, generatorOptions, javaOptions);</span>
+    private BaseEnumFormatter enumFormatter(IndentedPrintWriter writer) {
+<span class="fc" id="L70">        return new JavaEnumFormatter(writer, generatorOptions, javaOptions);</span>
     }
 
-    @Override
-    protected BaseProgramFormatter constFomatter(IndentedPrintWriter writer) {
-<span class="fc" id="L63">        return new JavaConstantsFormatter(writer, helper, generatorOptions, javaOptions);</span>
+    private BaseProgramFormatter constFomatter(IndentedPrintWriter writer) {
+<span class="fc" id="L74">        return new JavaConstantsFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
-    @Override
-    protected BaseProgramFormatter hazelcastFomatter(IndentedPrintWriter writer) {
-<span class="fc" id="L68">        return new HazelcastPortableProgramFormatter(writer, helper, generatorOptions, javaOptions);</span>
+    private BaseProgramFormatter hazelcastFomatter(IndentedPrintWriter writer) {
+<span class="fc" id="L78">        return new HazelcastPortableProgramFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
-    @Override
-    protected BaseServiceFormatter serviceFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L73">        return new JavaServiceFormatter(</span>
+    private BaseServiceFormatter serviceFormatter(IndentedPrintWriter writer) {
+<span class="fc" id="L82">        return new JavaServiceFormatter(</span>
                 writer,
                 helper,
                 new JavaMessageFormatter(true,
@@ -82,5 +91,107 @@ public class JavaGenerator extends BaseGenerator {
                 generatorOptions,
                 javaOptions);
     }
+
+    @Override
+    @SuppressWarnings(&quot;resource&quot;)
+    public void generate(CProgram program) throws IOException, GeneratorException {
+<span class="fc" id="L98">        String javaPackage = JUtils.getJavaPackage(program);</span>
+
+<span class="fc" id="L100">        String path = JUtils.getPackageClassPath(javaPackage);</span>
+
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (program.getConstants().size() &gt; 0) {</span>
+<span class="fc" id="L103">            String file = helper.getConstantsClassName(program) + &quot;.java&quot;;</span>
+<span class="fc" id="L104">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L106">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+
+<span class="fc" id="L108">                appendFileHeader(writer, program);</span>
+<span class="fc" id="L109">                constFomatter(writer).appendProgramClass(program);</span>
+
+<span class="fc" id="L111">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L113">                try {</span>
+<span class="pc" id="L114">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L115">                } catch (IOException e) {</span>
+<span class="nc" id="L116">                    e.printStackTrace();</span>
+<span class="pc" id="L117">                }</span>
+<span class="nc" id="L118">            }</span>
+        }
+
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (javaOptions.hazelcast_portable &amp;&amp;</span>
+<span class="fc" id="L122">            program.getConstants()</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                   .stream().anyMatch(t -&gt; t.getName().equals(&quot;FACTORY_ID&quot;))) {</span>
+
+<span class="fc" id="L125">            String file = helper.getHazelcastFactoryClassName(program) + &quot;.java&quot;;</span>
+<span class="fc" id="L126">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L128">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+
+<span class="fc" id="L130">                appendFileHeader(writer, program);</span>
+<span class="fc" id="L131">                hazelcastFomatter(writer).appendProgramClass(program);</span>
+
+<span class="fc" id="L133">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L135">                try {</span>
+<span class="pc" id="L136">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L137">                } catch (IOException e) {</span>
+<span class="nc" id="L138">                    e.printStackTrace();</span>
+<span class="pc" id="L139">                }</span>
+<span class="nc" id="L140">            }</span>
+        }
+
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        for (PDeclaredDescriptor&lt;?&gt; type : program.getDeclaredTypes()) {</span>
+<span class="fc" id="L144">            String file = JUtils.getClassName(type) + &quot;.java&quot;;</span>
+<span class="fc" id="L145">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L147">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+
+<span class="fc" id="L149">                appendFileHeader(writer, program);</span>
+
+<span class="pc bpc" id="L151" title="1 of 3 branches missed.">                switch (type.getType()) {</span>
+                    case MESSAGE:
+<span class="fc" id="L153">                        messageFormatter(writer).appendMessageClass((PMessageDescriptor&lt;?, ?&gt;) type);</span>
+<span class="fc" id="L154">                        break;</span>
+                    case ENUM:
+<span class="fc" id="L156">                        enumFormatter(writer).appendEnumClass((CEnumDescriptor) type);</span>
+<span class="fc" id="L157">                        break;</span>
+                    default:
+<span class="nc" id="L159">                        throw new GeneratorException(&quot;Unhandled declaration type.&quot;);</span>
+
+                }
+<span class="fc" id="L162">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L164">                try {</span>
+<span class="pc" id="L165">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L166">                } catch (IOException e) {</span>
+<span class="nc" id="L167">                    e.printStackTrace();</span>
+<span class="pc" id="L168">                }</span>
+<span class="nc" id="L169">            }</span>
+<span class="fc" id="L170">        }</span>
+
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        for (CService service : program.getServices()) {</span>
+<span class="fc" id="L173">            String file = JUtils.getClassName(service) + &quot;.java&quot;;</span>
+<span class="fc" id="L174">            OutputStream out = getFileManager().create(path, file);</span>
+            try {
+<span class="fc" id="L176">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
+<span class="fc" id="L177">                appendFileHeader(writer, program);</span>
+<span class="fc" id="L178">                serviceFormatter(writer).appendServiceClass(service);</span>
+<span class="fc" id="L179">                writer.flush();</span>
+            } finally {
+<span class="nc" id="L181">                try {</span>
+<span class="pc" id="L182">                    getFileManager().finalize(out);</span>
+<span class="nc" id="L183">                } catch (IOException e) {</span>
+<span class="nc" id="L184">                    e.printStackTrace();</span>
+<span class="pc" id="L185">                }</span>
+<span class="nc" id="L186">            }</span>
+<span class="fc" id="L187">        }</span>
+<span class="fc" id="L188">    }</span>
+
+    private void appendFileHeader(IndentedPrintWriter writer,
+                                  CProgram document)
+            throws GeneratorException, IOException {
+<span class="fc" id="L193">        writer.format(&quot;package %s;&quot;, helper.getJavaPackage(document))</span>
+<span class="fc" id="L194">              .newline();</span>
+<span class="fc" id="L195">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -20,250 +20,94 @@
  */
 package net.morimekta.providence.util;
 
-import net.morimekta.providence.PType;
-import net.morimekta.providence.descriptor.PContainer;
 import net.morimekta.providence.descriptor.PDeclaredDescriptor;
-import net.morimekta.providence.descriptor.PDescriptor;
-import net.morimekta.providence.descriptor.PField;
-import net.morimekta.providence.descriptor.PMap;
-import net.morimekta.providence.descriptor.PMessageDescriptor;
-import net.morimekta.providence.descriptor.PPrimitive;
+import net.morimekta.providence.descriptor.PDescriptorProvider;
 import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.descriptor.PServiceProvider;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * @author Stein Eldar Johnsen
- * @since 07.09.15
+ * Basic type registry used in managing content.
  */
-public class TypeRegistry {
-    private final Map&lt;String, PDeclaredDescriptor&lt;?&gt;&gt; declaredTypes;
-    private final HashSet&lt;String&gt;                     knownPrograms;
-    private final Map&lt;String, String&gt;                 typedefs;
-    private final Map&lt;String, PService&gt;               services;
-
-<span class="fc" id="L50">    public TypeRegistry() {</span>
-<span class="fc" id="L51">        knownPrograms = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L52">        declaredTypes = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L53">        typedefs      = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L54">        services      = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L55">    }</span>
-
+public interface TypeRegistry {
     /**
-     * Get the declared type with the given name and package context.
+     * Get the declared type with the given name and program context.
      *
-     * @param name    Name of type, without any spaces.
-     * @param context The program context of the type.
-     * @param &lt;T&gt;     The described type.
-     * @return The type descriptor.
+     * @param typeName       The type name.
+     * @param programContext The program context of the type.
+     * @param &lt;T&gt;            The described type.
+     * @return The declared type descriptor.
      */
     @Nonnull
-    @SuppressWarnings(&quot;unchecked&quot;)
-    public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String name,
-                                                                @Nonnull String context) {
-<span class="fc" id="L69">        String declaredTypeName = finalTypename(name, context);</span>
-
-<span class="fc" id="L71">        context = declaredTypeName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
-<span class="fc" id="L72">        name = declaredTypeName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
-
-<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
-<span class="fc" id="L75">            return (T) declaredTypes.get(declaredTypeName);</span>
-        }
-
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (knownPrograms.contains(context)) {</span>
-<span class="fc" id="L79">            throw new IllegalArgumentException(&quot;No such type \&quot;&quot; + name + &quot;\&quot; in package \&quot;&quot; + context + &quot;\&quot;&quot;);</span>
-        } else {
-<span class="fc" id="L81">            throw new IllegalArgumentException(&quot;No such package \&quot;&quot; + context + &quot;\&quot; exists for type \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
-        }
-    }
+    &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String typeName,
+                                                         @Nonnull String programContext);
 
     /**
      * Get a declared type by its qualified type name.
      *
-     * @param name The name of the type.
-     * @param &lt;T&gt;  The described type.
+     * @param typeName The type name.
+     * @param &lt;T&gt;      The described type.
      * @return The type descriptor.
      */
     @Nonnull
-    public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String name) {
-<span class="fc" id="L94">        String[] parts = name.split(&quot;\\.&quot;);</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (parts.length &lt; 2) {</span>
-<span class="fc" id="L96">            throw new IllegalArgumentException(&quot;Requesting global typename without package: \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
-<span class="fc bfc" id="L97" title="All 2 branches covered.">        } else if (parts.length &gt; 2) {</span>
-<span class="fc" id="L98">            throw new IllegalArgumentException(&quot;Invalid declared type: \&quot;&quot; + name + &quot;\&quot;&quot;);</span>
+    default &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String typeName) {
+<span class="fc" id="L56">        String[] parts = typeName.split(&quot;\\.&quot;);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (parts.length &lt; 2) {</span>
+<span class="fc" id="L58">            throw new IllegalArgumentException(&quot;Requesting global type name without program name: \&quot;&quot; + typeName + &quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        } else if (parts.length &gt; 2) {</span>
+<span class="fc" id="L60">            throw new IllegalArgumentException(&quot;Invalid identifier: \&quot;&quot; + typeName + &quot;\&quot;&quot;);</span>
         }
-<span class="fc" id="L100">        return getDeclaredType(parts[1],</span>
-                               parts[0]);
+<span class="fc" id="L62">        return getDeclaredType(parts[1], parts[0]);</span>
     }
 
     /**
-     * Put a declared type into the registry.
+     * Get a service definition from the name and program context.
      *
-     * @param declaredType The type to register.
-     * @param &lt;T&gt; The descriptor object type.
-     */
-    public &lt;T&gt; void putDeclaredType(@Nonnull PDeclaredDescriptor&lt;T&gt; declaredType) {
-<span class="fc" id="L111">        String declaredTypeName = declaredType.getQualifiedName();</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
-<span class="nc" id="L113">            throw new IllegalStateException(&quot;Type &quot; + declaredTypeName + &quot; already exists&quot;);</span>
-        }
-<span class="fc" id="L115">        knownPrograms.add(declaredType.getProgramName());</span>
-<span class="fc" id="L116">        declaredTypes.put(declaredTypeName, declaredType);</span>
-<span class="fc" id="L117">    }</span>
-
-    /**
-     * Services are not handled as &quot;declared types&quot;, so they need to be registered
-     * separately.
-     *
-     * @param service the service to register.
-     */
-    public void putService(PService service) {
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (service == null) {</span>
-<span class="fc" id="L127">            throw new IllegalArgumentException(&quot;No service to register&quot;);</span>
-        }
-        // Services cannot be aliased with typedefs, so no need to resolve the
-        // qualified or final name.
-<span class="fc" id="L131">        String name = service.getQualifiedName();</span>
-<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (services.containsKey(name)) {</span>
-<span class="fc" id="L133">            throw new IllegalStateException(&quot;Service &quot; + name + &quot; already registered&quot;);</span>
-        }
-<span class="fc" id="L135">        services.put(name, service);</span>
-<span class="fc" id="L136">    }</span>
-
-    /**
-     * Get a service definition from the name and context.
-     *
-     * @param name    The service name.
-     * @param context The context to get the service for.
+     * @param serviceName    The service name.
+     * @param programContext The program context name to get the service in.
      * @return The service or null if not found.
      */
-    @Nullable
-    public PService getService(String name, String context) {
-<span class="fc" id="L147">        return services.get(qualifiedName(name, context));</span>
-    }
+    @Nonnull
+    PService getService(String serviceName, String programContext);
 
     /**
-     * Register a declared type recursively. If the type is a message, then
-     * iterate through the fields and register those types recursively.
+     * Get a service definition from it's qualified service name.
      *
-     * @param declaredType The descriptor for the type.
-     * @param &lt;T&gt; The declared java type.
-     */
-    public &lt;T&gt; void registerRecursively(PDeclaredDescriptor&lt;T&gt; declaredType) {
-<span class="fc" id="L158">        String declaredTypeName = declaredType.getQualifiedName();</span>
-<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (declaredTypes.containsKey(declaredTypeName)) {</span>
-<span class="fc" id="L160">            return;</span>
-        }
-<span class="fc" id="L162">        putDeclaredType(declaredType);</span>
-<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (declaredType instanceof PMessageDescriptor) {</span>
-<span class="fc" id="L164">            PMessageDescriptor descriptor = (PMessageDescriptor) declaredType;</span>
-<span class="fc bfc" id="L165" title="All 2 branches covered.">            for (PField field : descriptor.getFields()) {</span>
-<span class="fc bfc" id="L166" title="All 4 branches covered.">                if (field.getType() == PType.ENUM || field.getType() == PType.MESSAGE) {</span>
-<span class="fc" id="L167">                    registerRecursively((PDeclaredDescriptor&lt;?&gt;) field.getDescriptor());</span>
-<span class="pc bpc" id="L168" title="1 of 2 branches missed.">                } else if (field.getType() == PType.MAP ||</span>
-<span class="fc bfc" id="L169" title="All 2 branches covered.">                           field.getType() == PType.LIST ||</span>
-<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                           field.getType() == PType.SET) {</span>
-<span class="fc" id="L171">                    registerListType((PContainer) field.getDescriptor());</span>
-                }
-            }
-        }
-<span class="fc" id="L175">    }</span>
-
-    /**
-     * Registers a typedef definition.
-     *
-     * @param identifier The typedef name (the alias) to put.
-     * @param context The package context of the typedef.
-     * @param target The qualified name that the name represents.
-     */
-    public void putTypedef(String identifier, String context, String target) {
-<span class="pc bpc" id="L185" title="3 of 6 branches missed.">        if (identifier == null || context == null || target == null) {</span>
-<span class="nc" id="L186">            throw new IllegalArgumentException(&quot;Null argument to putTypedef&quot;);</span>
-        }
-
-<span class="fc" id="L189">        identifier = qualifiedTypename(identifier, context);</span>
-<span class="fc" id="L190">        target = qualifiedTypename(target, context);</span>
-<span class="fc" id="L191">        typedefs.put(identifier, target);</span>
-<span class="fc" id="L192">    }</span>
-
-    /**
-     * Get the final typename of the given identifier within the context.
-     *
-     * @param name The identifier name.
-     * @param context The package context.
-     * @return The final typename.
-     */
-    protected String finalTypename(String name, String context) {
-<span class="fc" id="L202">        String typename = qualifiedTypename(name, context);</span>
-<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (typedefs.containsKey(typename)) {</span>
-<span class="fc" id="L204">            typename = typedefs.get(typename);</span>
-<span class="fc" id="L205">            return finalTypename(typename, context);</span>
-        }
-<span class="fc" id="L207">        return typename;</span>
-    }
-
-    /**
-     * Get the qualified name of the type. Note that this will put in the
-     * &lt;i&gt;final&lt;/i&gt; typename for generic types.
-     *
-     * @param name The identifier name.
-     * @param context The package context.
-     * @return The qualified typename.
+     * @param serviceName The service name.
+     * @return the service or null of not found.
      */
     @Nonnull
-    private String qualifiedTypename(String name, String context) {
-<span class="pc bpc" id="L220" title="2 of 4 branches missed.">        if (name == null || context == null) {</span>
-<span class="nc" id="L221">            throw new IllegalArgumentException(&quot;Null argument for qualified typename&quot;);</span>
+    default PService getService(String serviceName) {
+<span class="nc" id="L83">        String[] parts = serviceName.split(&quot;\\.&quot;);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (parts.length &lt; 2) {</span>
+<span class="nc" id="L85">            throw new IllegalArgumentException(&quot;Requesting global service name without package: \&quot;&quot; + serviceName + &quot;\&quot;&quot;);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        } else if (parts.length &gt; 2) {</span>
+<span class="nc" id="L87">            throw new IllegalArgumentException(&quot;Invalid identifier: \&quot;&quot; + serviceName + &quot;\&quot;&quot;);</span>
         }
-<span class="fc bfc" id="L223" title="All 2 branches covered.">        if (PPrimitive.findByName(name) != null) return name;</span>
-<span class="pc bpc" id="L224" title="3 of 4 branches missed.">        if (name.startsWith(&quot;map&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="nc" id="L225">            String[] generic = name.substring(4, name.length() - 1).split(&quot;,&quot;);</span>
-<span class="nc bnc" id="L226" title="All 2 branches missed.">            if (generic.length != 2) {</span>
-<span class="nc" id="L227">                throw new IllegalArgumentException();</span>
-            }
-<span class="nc" id="L229">            return &quot;map&lt;&quot; + finalTypename(generic[0].trim(), context) +</span>
-<span class="nc" id="L230">                   &quot;,&quot; + finalTypename(generic[1].trim(), context) + &quot;&gt;&quot;;</span>
-<span class="pc bpc" id="L231" title="1 of 4 branches missed.">        } else if (name.startsWith(&quot;set&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="fc" id="L232">            String generic = name.substring(4, name.length() - 1);</span>
-<span class="fc" id="L233">            return &quot;set&lt;&quot; + finalTypename(generic.trim(), context) + &quot;&gt;&quot;;</span>
-<span class="pc bpc" id="L234" title="1 of 4 branches missed.">        } else if (name.startsWith(&quot;list&lt;&quot;) &amp;&amp; name.endsWith(&quot;&gt;&quot;)) {</span>
-<span class="fc" id="L235">            String generic = name.substring(5, name.length() - 1);</span>
-<span class="fc" id="L236">            return &quot;list&lt;&quot; + finalTypename(generic.trim(), context) + &quot;&gt;&quot;;</span>
-        } else {
-<span class="fc" id="L238">            return qualifiedName(name, context);</span>
-        }
+<span class="nc" id="L89">        return getService(parts[1], parts[0]);</span>
     }
 
-    private void registerListType(PContainer containerType) {
-<span class="fc" id="L243">        PDescriptor itemType = containerType.itemDescriptor();</span>
-<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        if (itemType.getType() == PType.MAP ||</span>
-<span class="pc bpc" id="L245" title="1 of 2 branches missed.">            itemType.getType() == PType.LIST ||</span>
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">            itemType.getType() == PType.SET) {</span>
-<span class="nc" id="L247">            registerListType((PContainer) itemType);</span>
-<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        } else if (itemType.getType() == PType.ENUM ||</span>
-<span class="pc bpc" id="L249" title="1 of 2 branches missed.">                   itemType.getType() == PType.MESSAGE){</span>
-<span class="fc" id="L250">            registerRecursively((PDeclaredDescriptor&lt;?&gt;) itemType);</span>
-        }
-<span class="pc bpc" id="L252" title="1 of 2 branches missed.">        if (containerType instanceof PMap) {</span>
-<span class="nc" id="L253">            PDescriptor keyType = containerType.itemDescriptor();</span>
-<span class="nc bnc" id="L254" title="All 2 branches missed.">            if (keyType.getType() == PType.ENUM ||</span>
-<span class="nc bnc" id="L255" title="All 2 branches missed.">                keyType.getType() == PType.MESSAGE){</span>
-<span class="nc" id="L256">                registerRecursively((PDeclaredDescriptor&lt;?&gt;) keyType);</span>
-            }
-        }
-        // Else ignore.
-<span class="fc" id="L260">    }</span>
+    /**
+     * Given a type name and a package context, fetches the type provider for
+     * the given type.
+     *
+     * @param typeName       Name of type, without any spaces.
+     * @param programContext The program context of the reference.
+     * @param annotations    Annotations affecting the type.
+     * @return The type provider.
+     */
+    PDescriptorProvider getProvider(String typeName, final String programContext, Map&lt;String, String&gt; annotations);
 
-    private static String qualifiedName(String name, String context) {
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (!name.contains(&quot;.&quot;)) {</span>
-<span class="fc" id="L264">            return context + &quot;.&quot; + name;</span>
-        }
-<span class="fc" id="L266">        return name;</span>
-    }
+    /**
+     * Given a service name and program context, fetches the service provider
+     * for the given service.
+     *
+     * @param serviceName    Name of the service.
+     * @param programContext The program context of the reference.
+     * @return The service provider.
+     */
+    PServiceProvider getServiceProvider(final String serviceName, final String programContext);
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

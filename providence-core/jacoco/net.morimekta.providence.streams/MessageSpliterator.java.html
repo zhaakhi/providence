@@ -171,7 +171,7 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
 <span class="fc" id="L171">            return serializer.deserialize(in, descriptor);</span>
 <span class="fc" id="L172">        } catch (IOException e) {</span>
 <span class="fc" id="L173">            close(e);</span>
-<span class="fc" id="L174">            throw new UncheckedIOException(e);</span>
+<span class="fc" id="L174">            throw new UncheckedIOException(e.getMessage(), e);</span>
         } finally {
 <span class="fc" id="L176">            ++num;</span>
         }
@@ -183,7 +183,7 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
 <span class="fc" id="L183">                closer.close();</span>
 <span class="fc" id="L184">            } catch (IOException e) {</span>
 <span class="pc bpc" id="L185" title="1 of 2 branches missed.">                if (cause == null) {</span>
-<span class="nc" id="L186">                    throw new UncheckedIOException(e);</span>
+<span class="nc" id="L186">                    throw new UncheckedIOException(e.getMessage(), e);</span>
                 } else {
 <span class="fc" id="L188">                    cause.addSuppressed(e);</span>
                 }
