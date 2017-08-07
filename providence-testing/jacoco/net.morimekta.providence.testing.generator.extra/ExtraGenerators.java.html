@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExtraGenerators.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Testing</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.testing.generator.extra</a> &gt; <span class="el_source">ExtraGenerators.java</span></div><h1>ExtraGenerators.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.testing.generator.extra;
+
+import net.morimekta.providence.testing.generator.GeneratorContext;
+
+import java.util.Collection;
+
+/**
+ * Some common extra convenient value generators.
+ */
+public class ExtraGenerators {
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+    ByteRangeGenerator&lt;Context&gt; byteRange(int fromIncluding, int toExcluding) {
+<span class="pc bpc" id="L13" title="1 of 4 branches missed.">        if (fromIncluding &lt; Byte.MIN_VALUE || fromIncluding &gt; Byte.MAX_VALUE) {</span>
+<span class="fc" id="L14">            throw new AssertionError(&quot;Bad byte value, from: &quot; + fromIncluding);</span>
+        }
+<span class="pc bpc" id="L16" title="1 of 4 branches missed.">        if (toExcluding &lt; Byte.MIN_VALUE || toExcluding &gt; Byte.MAX_VALUE) {</span>
+<span class="fc" id="L17">            throw new AssertionError(&quot;Bad byte value, to: &quot; + toExcluding);</span>
+        }
+<span class="fc" id="L19">        return byteRange((byte) fromIncluding, (byte) toExcluding);</span>
+    }
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+    ByteRangeGenerator&lt;Context&gt; byteRange(byte fromIncluding, byte toExcluding) {
+<span class="fc" id="L23">        return new ByteRangeGenerator&lt;&gt;(fromIncluding, toExcluding);</span>
+    }
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+    ShortRangeGenerator&lt;Context&gt; shortRange(int fromIncluding, int toExcluding) {
+<span class="pc bpc" id="L27" title="1 of 4 branches missed.">        if (fromIncluding &lt; Short.MIN_VALUE || fromIncluding &gt; Short.MAX_VALUE) {</span>
+<span class="fc" id="L28">            throw new AssertionError(&quot;Bad short value, from: &quot; + fromIncluding);</span>
+        }
+<span class="pc bpc" id="L30" title="1 of 4 branches missed.">        if (toExcluding &lt; Short.MIN_VALUE || toExcluding &gt; Short.MAX_VALUE) {</span>
+<span class="fc" id="L31">            throw new AssertionError(&quot;Bad short value, to: &quot; + toExcluding);</span>
+        }
+<span class="fc" id="L33">        return shortRange((short) fromIncluding, (short) toExcluding);</span>
+    }
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+    ShortRangeGenerator&lt;Context&gt; shortRange(short fromIncluding, short toExcluding) {
+<span class="fc" id="L37">        return new ShortRangeGenerator&lt;&gt;(fromIncluding, toExcluding);</span>
+    }
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+    IntRangeGenerator&lt;Context&gt; intRange(int fromIncluding, int toExcluding) {
+<span class="fc" id="L41">        return new IntRangeGenerator&lt;&gt;(fromIncluding, toExcluding);</span>
+    }
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+    LongRangeGenerator&lt;Context&gt; longRange(long fromIncluding, long toExcluding) {
+<span class="fc" id="L45">        return new LongRangeGenerator&lt;&gt;(fromIncluding, toExcluding);</span>
+    }
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+    DoubleRangeGenerator&lt;Context&gt; doubleRange(double fromIncluding, double toExcluding) {
+<span class="fc" id="L49">        return new DoubleRangeGenerator&lt;&gt;(fromIncluding, toExcluding);</span>
+    }
+
+    @SafeVarargs
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;, T&gt;
+    OneOfGenerator&lt;Context, T&gt; oneOf(T... selection) {
+<span class="fc" id="L55">        return new OneOfGenerator&lt;&gt;(selection);</span>
+    }
+    public static &lt;Context extends GeneratorContext&lt;Context&gt;, T&gt;
+    OneOfGenerator&lt;Context, T&gt; oneOf(Collection&lt;T&gt; selection) {
+<span class="fc" id="L59">        return new OneOfGenerator&lt;&gt;(selection);</span>
+    }
+
+    // -- Defeat instantiation --
+<span class="fc" id="L63">    private ExtraGenerators() {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

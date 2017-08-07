@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Testing</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.testing.generator.defaults</a> &gt; <span class="el_source">SetGenerator.java</span></div><h1>SetGenerator.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.testing.generator.defaults;
+
+import net.morimekta.providence.descriptor.PSet;
+import net.morimekta.providence.testing.generator.Generator;
+import net.morimekta.providence.testing.generator.GeneratorContext;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+/**
+ * Default generator for set fields.
+ */
+public class SetGenerator&lt;Context extends GeneratorContext&lt;Context&gt;&gt;
+        implements Generator&lt;Context, Set&lt;Object&gt;&gt; {
+    private final PSet&lt;Object&gt;            set;
+
+<span class="nc" id="L17">    public SetGenerator(PSet&lt;Object&gt; set) {</span>
+<span class="nc" id="L18">        this.set = set;</span>
+<span class="nc" id="L19">    }</span>
+
+    @Override
+    public Set&lt;Object&gt; generate(Context ctx) {
+<span class="nc" id="L23">        int num = ctx.nextDefaultCollectionSize();</span>
+<span class="nc" id="L24">        Generator&lt;Context, ?&gt; generator = ctx.generatorFor(set.itemDescriptor());</span>
+
+        // Sets does not necessary allow conflicting items.
+<span class="nc" id="L27">        Set&lt;Object&gt; builder = new LinkedHashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        for (int i = 0; i &lt; num; ++i) {</span>
+<span class="nc" id="L29">            builder.add(generator.generate(ctx));</span>
+        }
+<span class="nc" id="L31">        return set.builder()</span>
+<span class="nc" id="L32">                  .addAll(builder)</span>
+<span class="nc" id="L33">                  .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

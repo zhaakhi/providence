@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Testing</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.testing.generator</a> &gt; <span class="el_source">MessageGenerator.java</span></div><h1>MessageGenerator.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.testing.generator;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PMessageVariant;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PRequirement;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Message generator for generating a specific message.
+ */
+public class MessageGenerator&lt;
+        Context extends GeneratorContext&lt;Context&gt;,
+        Message extends PMessage&lt;Message, Field&gt;,
+        Field extends PField&gt;
+        implements Generator&lt;Context, Message&gt; {
+    private final PMessageDescriptor&lt;Message, Field&gt; descriptor;
+
+    private final Map&lt;Field, Generator&lt;Context, ?&gt;&gt; fieldValueGenerators;
+    private final Map&lt;Field, Boolean&gt;               fieldPresenceOverrides;
+
+    public MessageGenerator(PMessageDescriptor&lt;Message, Field&gt; descriptor) {
+<span class="fc" id="L33">        this(descriptor, new HashMap&lt;&gt;(), new HashMap&lt;&gt;());</span>
+<span class="fc" id="L34">    }</span>
+
+    private MessageGenerator(PMessageDescriptor&lt;Message, Field&gt; descriptor,
+                             Map&lt;Field, Generator&lt;Context, ?&gt;&gt; fieldValueGenerators,
+<span class="fc" id="L38">                             Map&lt;Field, Boolean&gt; fieldPresenceOverrides) {</span>
+<span class="fc" id="L39">        this.descriptor = descriptor;</span>
+<span class="fc" id="L40">        this.fieldValueGenerators = fieldValueGenerators;</span>
+<span class="fc" id="L41">        this.fieldPresenceOverrides = fieldPresenceOverrides;</span>
+<span class="fc" id="L42">    }</span>
+
+    /**
+     * Set which fields must always be generated. Note that unions only
+     * allow for one single field to be always present.
+     *
+     * @param fields The fields that must be generated for each instance.
+     * @return The message generator.
+     */
+    @SafeVarargs
+    public final MessageGenerator&lt;Context,Message,Field&gt; setAlwaysPresent(Field... fields) {
+<span class="fc" id="L53">        return setAlwaysPresent(Arrays.asList(fields));</span>
+    }
+
+    /**
+     * Set which fields must always be generated. Note that unions only
+     * allow for one single field to be always present.
+     *
+     * @param fields The fields that must be generated for each instance.
+     * @return The message generator.
+     */
+    public MessageGenerator&lt;Context,Message,Field&gt; setAlwaysPresent(@Nonnull Collection&lt;Field&gt; fields) {
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (Field field : fields) {</span>
+<span class="fc" id="L65">            fieldPresenceOverrides.put(field, Boolean.TRUE);</span>
+<span class="fc" id="L66">        }</span>
+<span class="fc" id="L67">        return this;</span>
+    }
+
+    /**
+     * Set which fields must never be generated. If the message is a union
+     * then these fields will not be selected when getting a random field
+     * to get value for.
+     *
+     * @param fields The fields that should always be absent.
+     * @return The message generator.
+     */
+    @SafeVarargs
+    public final MessageGenerator&lt;Context,Message,Field&gt; setAlwaysAbsent(Field... fields) {
+<span class="fc" id="L80">        return setAlwaysAbsent(Arrays.asList(fields));</span>
+    }
+
+    /**
+     * Set which fields must never be generated. If the message is a union
+     * then these fields will not be selected when getting a random field
+     * to get value for.
+     *
+     * @param fields The fields that should always be absent.
+     * @return The message generator.
+     */
+    public MessageGenerator&lt;Context,Message,Field&gt; setAlwaysAbsent(@Nonnull Collection&lt;Field&gt; fields) {
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (Field field : fields) {</span>
+<span class="fc" id="L93">            fieldPresenceOverrides.put(field, Boolean.FALSE);</span>
+<span class="fc" id="L94">        }</span>
+<span class="fc" id="L95">        return this;</span>
+    }
+
+    /**
+     * Set default presence probability based on the default fill rate
+     * in the generator options instance.
+     *
+     * @param fields The fields the should have default presence probability.
+     * @return The message generator.
+     */
+    @SafeVarargs
+    public final MessageGenerator&lt;Context,Message,Field&gt; setDefaultPresence(Field... fields) {
+<span class="nc" id="L107">        return setDefaultPresence(Arrays.asList(fields));</span>
+    }
+
+    /**
+     * Set default presence probability based on the default fill rate
+     * in the generator options instance.
+     *
+     * @param fields The fields the should have default presence probability.
+     * @return The message generator.
+     */
+    public MessageGenerator&lt;Context,Message,Field&gt; setDefaultPresence(@Nonnull Collection&lt;Field&gt; fields) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        for (Field field : fields) {</span>
+<span class="nc" id="L119">            fieldPresenceOverrides.remove(field);</span>
+<span class="nc" id="L120">        }</span>
+<span class="nc" id="L121">        return this;</span>
+    }
+
+    /**
+     * Reset all field presence probabilities to default based on the
+     * fill rate of the message generator options.
+     *
+     * @return The message generator.
+     */
+    public MessageGenerator&lt;Context,Message,Field&gt; resetDefaultPresence() {
+<span class="fc" id="L131">        fieldPresenceOverrides.clear();</span>
+<span class="fc" id="L132">        return this;</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public MessageGenerator&lt;Context,Message,Field&gt; setValueGenerator(Field field, Generator&lt;Context, ?&gt; generator) {
+<span class="fc" id="L137">        fieldValueGenerators.put(field, generator);</span>
+<span class="fc" id="L138">        return this;</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public Message generate(Context options) {
+<span class="fc" id="L143">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (descriptor.getVariant() == PMessageVariant.UNION) {</span>
+<span class="fc" id="L145">            Field selectedField = null;</span>
+<span class="fc" id="L146">            Set&lt;Field&gt; blockedFields = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">            for (Map.Entry&lt;Field, Boolean&gt; entry : fieldPresenceOverrides.entrySet()) {</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                if (entry.getValue()) {</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">                    if (selectedField != null) {</span>
+<span class="nc" id="L150">                        throw new IllegalStateException(&quot;More than one required union field&quot;);</span>
+                    }
+<span class="fc" id="L152">                    selectedField = entry.getKey();</span>
+                } else {
+<span class="fc" id="L154">                    blockedFields.add(entry.getKey());</span>
+                }
+<span class="fc" id="L156">            }</span>
+
+            // select a random field, and set that, unless the field presence
+            // overrides has a single required field, then use that. More than
+            // one required field is not allowed with unions.
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            if (selectedField == null) {</span>
+<span class="fc" id="L162">                ArrayList&lt;Field&gt; allowed = new ArrayList&lt;&gt;(Arrays.asList(descriptor.getFields()));</span>
+<span class="fc" id="L163">                allowed.removeAll(blockedFields);</span>
+
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">                if (allowed.size() &lt; 1) {</span>
+<span class="nc" id="L166">                    throw new IllegalStateException(&quot;No remaining fields allowed after &quot; + blockedFields.size() + &quot; was blocked&quot;);</span>
+                }
+
+<span class="fc" id="L169">                int idx = options.getRandom().nextInt(allowed.size());</span>
+<span class="fc" id="L170">                selectedField = allowed.get(idx);</span>
+            }
+<span class="fc" id="L172">            builder.set(selectedField, makeFieldValue(selectedField, options));</span>
+<span class="fc" id="L173">        } else {</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">            for (Field field : descriptor.getFields()) {</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">                if (fieldPresenceOverrides.containsKey(field)) {</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">                    if (fieldPresenceOverrides.get(field)) {</span>
+<span class="fc" id="L177">                        builder.set(field, makeFieldValue(field, options));</span>
+                    }
+                    continue;
+                }
+
+                // Default presence calculation.
+<span class="fc bfc" id="L183" title="All 4 branches covered.">                if (field.getRequirement() != PRequirement.REQUIRED &amp;&amp; options.getDefaultFillRate() &lt; 1.0) {</span>
+<span class="fc" id="L184">                    if (options.getRandom()</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">                               .nextDouble() &lt; options.getDefaultFillRate()) {</span>
+<span class="fc" id="L186">                        builder.set(field, makeFieldValue(field, options));</span>
+                    }
+                } else {
+                    // Required or fill rate is 100% (1.0)
+<span class="fc" id="L190">                    builder.set(field, makeFieldValue(field, options));</span>
+                }
+            }
+        }
+<span class="fc" id="L194">        return builder.build();</span>
+    }
+
+    protected MessageGenerator&lt;Context, Message, Field&gt; deepCopy() {
+<span class="fc" id="L198">        return new MessageGenerator&lt;&gt;(</span>
+                descriptor,
+                new HashMap&lt;&gt;(fieldValueGenerators),
+                new HashMap&lt;&gt;(fieldPresenceOverrides));
+    }
+
+    /**
+     * When the field is decided to be present, this will generate the
+     * actual value based on a simple algorithm.
+     *
+     * @param field The field to generate for.
+     * @param context The context to build the field around.
+     * @return The value to be set for the field.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private Object makeFieldValue(Field field,
+                                  Context context) {
+        // This will try to make a field value for the given field regardless of access.
+<span class="fc" id="L216">        Generator&lt;Context, ?&gt; generator = fieldValueGenerators.get(field);</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (generator == null) {</span>
+<span class="fc" id="L218">            generator = context.generatorFor(field.getDescriptor());</span>
+        }
+<span class="fc" id="L220">        return generator.generate(context);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

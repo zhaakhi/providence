@@ -16,16 +16,8 @@ import java.util.Map;
 /**
  * Interface for storing messages of a single type.
  */
-public interface MessageStore&lt;K, M extends PMessage&lt;M,F&gt;, F extends PField&gt; {
-    /**
-     * Look up a set of keys from the storage.
-     *
-     * @param keys The keys to look up.
-     * @return The map of all the found key value pairs.
-     */
-    @Nonnull
-    Map&lt;K,M&gt; getAll(@Nonnull Collection&lt;K&gt; keys);
-
+public interface MessageStore&lt;K, M extends PMessage&lt;M,F&gt;, F extends PField&gt;
+        extends MessageReadOnlyStore&lt;K, M, F&gt; {
     /**
      * @param values Put all key value pairs form this map into the storage.
      * @return Map of replaced values.
@@ -42,79 +34,39 @@ public interface MessageStore&lt;K, M extends PMessage&lt;M,F&gt;, F extends PFi
     Map&lt;K,M&gt; removeAll(Collection&lt;K&gt; keys);
 
     /**
-     * @param key The key to look up.
-     * @return True if the key was contained in the map.
-     */
-    boolean containsKey(@Nonnull K key);
-
-    /**
-     * Get a collection of all the keys in the store.
-     * @return Key collection.
-     */
-    @Nonnull
-    Collection&lt;K&gt; keys();
-
-    /**
-     * Get a single value from the storage.
-     *
-     * @param key The key to look up.
-     * @return The value if present.
-     */
-    @Nullable
-    default M get(@Nonnull K key) {
-<span class="fc" id="L65">        return getAll(ImmutableList.of(key)).get(key);</span>
-    }
-
-    /**
      * @param key The key to put message at.
      * @param message The message to put.
      * @return Replaced value if any.
      */
     @Nullable
     default M put(@Nonnull K key, @Nonnull M message) {
-<span class="fc" id="L75">        return putAll(ImmutableMap.of(key, message)).get(key);</span>
+<span class="fc" id="L43">        return putAll(ImmutableMap.of(key, message)).get(key);</span>
     }
 
     @Nullable
     default M remove(@Nonnull K key) {
-<span class="fc" id="L80">        return removeAll(ImmutableList.of(key)).get(key);</span>
-    }
-
-    @Nullable
-    @SuppressWarnings(&quot;unchecked&quot;)
-    default &lt;B extends PMessageBuilder&lt;M,F&gt;&gt;
-    B getBuilder(@Nonnull K key) {
-<span class="fc" id="L87">        return (B) getAllBuilders(ImmutableList.of(key)).get(key);</span>
-    }
-
-    @Nonnull
-    @SuppressWarnings(&quot;unchecked&quot;)
-    default &lt;B extends PMessageBuilder&lt;M,F&gt;&gt;
-    Map&lt;K,B&gt; getAllBuilders(@Nonnull Collection&lt;K&gt; keys) {
-<span class="fc" id="L94">        Map&lt;K,B&gt; out = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L95">        getAll(keys).forEach((k, v) -&gt; out.put(k, (B) v.mutate()));</span>
-<span class="fc" id="L96">        return out;</span>
+<span class="fc" id="L48">        return removeAll(ImmutableList.of(key)).get(key);</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
     default &lt;B extends PMessageBuilder&lt;M,F&gt;&gt;
     B putBuilder(@Nonnull K key, @Nonnull B builder) {
-<span class="fc" id="L102">        M tmp = put(key, builder.build());</span>
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (tmp != null) {</span>
-<span class="nc" id="L104">            return (B) tmp.mutate();</span>
+<span class="fc" id="L54">        M tmp = put(key, builder.build());</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (tmp != null) {</span>
+<span class="nc" id="L56">            return (B) tmp.mutate();</span>
         }
-<span class="fc" id="L106">        return null;</span>
+<span class="fc" id="L58">        return null;</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
     default &lt;B extends PMessageBuilder&lt;M,F&gt;&gt;
     Map&lt;K,B&gt; putAllBuilders(@Nonnull Map&lt;K,B&gt; builders) {
-<span class="fc" id="L112">        Map&lt;K,M&gt; instances = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L113">        builders.forEach((k,b) -&gt; instances.put(k, b.build()));</span>
-<span class="fc" id="L114">        Map&lt;K,M&gt; replaced = putAll(instances);</span>
-<span class="fc" id="L115">        Map&lt;K,B&gt; out = new HashMap&lt;&gt;();</span>
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        replaced.forEach((k,m) -&gt; out.put(k,m==null?null:(B)m.mutate()));</span>
-<span class="fc" id="L117">        return out;</span>
+<span class="fc" id="L64">        Map&lt;K,M&gt; instances = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L65">        builders.forEach((k,b) -&gt; instances.put(k, b.build()));</span>
+<span class="fc" id="L66">        Map&lt;K,M&gt; replaced = putAll(instances);</span>
+<span class="fc" id="L67">        Map&lt;K,B&gt; out = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        replaced.forEach((k,m) -&gt; out.put(k,m==null?null:(B)m.mutate()));</span>
+<span class="fc" id="L69">        return out;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

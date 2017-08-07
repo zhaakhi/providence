@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeneratorWatcher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Testing</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.testing.generator</a> &gt; <span class="el_source">GeneratorWatcher.java</span></div><h1>GeneratorWatcher.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.testing.generator;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.mio.IOMessageReader;
+import net.morimekta.providence.mio.IOMessageWriter;
+import net.morimekta.providence.mio.MessageReader;
+import net.morimekta.providence.mio.MessageWriter;
+import net.morimekta.providence.serializer.PrettySerializer;
+import net.morimekta.providence.serializer.Serializer;
+
+import com.google.common.collect.ImmutableList;
+import io.codearte.jfairy.Fairy;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.function.Consumer;
+
+/**
+ * Providence message serializer that can be used as a junit rule.
+ *
+ * &lt;pre&gt;{@code
+ * class MyTest {
+ *    {@literal @}Rule
+ *     public SimpleGeneratorWatcher gen = GeneratorWatcher
+ *             .create()
+ *             .dumpOnFailure()
+ *             .withGenerator(MyMessage.kDescriptor, gen -&gt; {
+ *                 gen.setAlwaysPresent(MyMessage._Fields.UUID, MyMessage._Fields.NAME);
+ *                 gen.setValueGenerator(MyMessage._Fields.UUID, () -&gt; UUID.randomUUID().toString());
+ *             });
+ *
+ *    {@literal @}Test
+ *     public testSomething() {
+ *         MyMessage msg = gen.generate(MyMessage.kDescriptor);
+ *         sut.doSomething(msg);
+ *
+ *         assertThat(sut.state(), is(SystemToTest.CORRECT));
+ *     }
+ *
+ *    {@literal @}Test
+ *     public testSomethingElse() {
+ *         gen.generatorFor(MyMessage.kDescriptor)
+ *            .setValueGenerator(MyMessage._Field.NAME, () -&gt; &quot;Mi Nome&quot;)
+ *            .setAlwaysPresent(MyMessage._Field.AGE)
+ *            .setValueGenerator(MyMessage._Field.AGE, () -&gt; 35);
+ *
+ *         MyMessage msg = gen.generate(MyMessage.kDescriptor);
+ *         sut.doSomething(msg);
+ *
+ *         assertThat(sut.state(), is(SystemToTest.CORRECT));
+ *     }
+ * }
+ * }&lt;/pre&gt;
+ */
+<span class="nc bnc" id="L62" title="All 2 branches missed.">public class GeneratorWatcher&lt;</span>
+        Base extends GeneratorBase&lt;Base, Context&gt;,
+        Context extends GeneratorContext&lt;Context&gt;&gt;
+        extends TestWatcher {
+    /**
+     * Create a default message generator watcher.
+     *
+     * @return The watcher instance.
+     */
+    public static SimpleGeneratorWatcher create() {
+<span class="nc" id="L72">        return SimpleGeneratorWatcher.create();</span>
+    }
+
+    /**
+     * Create a message generator watcher with the given base context.
+     *
+     * @param base The base generator to use when generating messages.
+     * @param &lt;Base&gt; The base generator type.
+     * @param &lt;Context&gt; The context type.
+     * @return The watcher instance.
+     */
+    public static
+    &lt;Context extends GeneratorContext&lt;Context&gt;, Base extends GeneratorBase&lt;Base,Context&gt;&gt; GeneratorWatcher&lt;Base, Context&gt; create(Base base) {
+<span class="nc" id="L85">        return new GeneratorWatcher&lt;&gt;(base);</span>
+    }
+
+    /**
+     * Make a simple default message generator.
+     *
+     * @param base The base generator to use when generating messages.
+     */
+<span class="nc" id="L93">    public GeneratorWatcher(Base base) {</span>
+<span class="nc" id="L94">        this.globalOutputSerializer = this.outputSerializer = new PrettySerializer().config();</span>
+<span class="nc" id="L95">        this.globalDumpOnFailure    = this.dumpOnFailure    = false;</span>
+<span class="nc" id="L96">        this.globalReader           = this.reader           = null;</span>
+<span class="nc" id="L97">        this.globalWriter           = this.writer           = null;</span>
+<span class="nc" id="L98">        this.globalBase             = this.base             = base;</span>
+
+<span class="nc" id="L100">        this.generated              = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L101">        this.started                = false;</span>
+<span class="nc" id="L102">    }</span>
+
+    /**
+     * Generate a message with random content using the default generator
+     * for the message type.
+     *
+     * @param descriptor Message descriptor to generate message from.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The field type.
+     * @return The generated message.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generate(
+            PMessageDescriptor&lt;M, F&gt; descriptor) {
+<span class="nc" id="L116">        return generate(base.createContext(), descriptor);</span>
+    }
+
+    /**
+     * Generate a message with random content using the default generator
+     * for the message type.
+     *
+     * @param context The specific context to use when generating.
+     * @param descriptor Message descriptor to generate message from.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The field type.
+     * @return The generated message.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generate(
+            Context context,
+            PMessageDescriptor&lt;M, F&gt; descriptor) {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (!started) {</span>
+<span class="nc" id="L134">            throw new IllegalStateException(&quot;Watcher is not started&quot;);</span>
+        }
+
+        M instance;
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (reader != null) {</span>
+            try {
+<span class="nc" id="L140">                instance = reader.read(descriptor);</span>
+<span class="nc" id="L141">            } catch (IOException e) {</span>
+<span class="nc" id="L142">                throw new AssertionError(e.getMessage(), e);</span>
+<span class="nc" id="L143">            }</span>
+        } else {
+<span class="nc" id="L145">            instance = base.messageGeneratorFor(descriptor).generate(context);</span>
+        }
+<span class="nc" id="L147">        generated.add(instance);</span>
+<span class="nc" id="L148">        return instance;</span>
+    }
+
+    /**
+     * Get the modifiable message generator for descriptor.
+     *
+     * @param descriptor the message descriptor constant.
+     * @param modificationConsumer Consumer to handle modifications on the generator
+     *                             instance.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The message field type.
+     * @return The message generator watcher.
+     */
+    public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; GeneratorWatcher&lt;Base, Context&gt; withGenerator(
+            PMessageDescriptor&lt;M,F&gt; descriptor,
+            Consumer&lt;MessageGenerator&lt;Context,M,F&gt;&gt; modificationConsumer) {
+<span class="nc" id="L164">        modificationConsumer.accept(getDefaultGenerator(descriptor));</span>
+<span class="nc" id="L165">        return this;</span>
+    }
+
+    /**
+     * Get the default generator used to generate given message.
+     *
+     * @param descriptor the message descriptor constant.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The message field type.
+     * @return The message generator watcher.
+     */
+    public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
+    MessageGenerator&lt;Context,M,F&gt; getDefaultGenerator(PMessageDescriptor&lt;M,F&gt; descriptor) {
+<span class="nc" id="L178">        return getBaseContext().messageGeneratorFor(descriptor);</span>
+    }
+
+    /**
+     * Create a new non-default generator used to generate given message.
+     * This generator will add it's results to the watchers list of generated
+     * messages.
+     *
+     * @param descriptor the message descriptor constant.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The message field type.
+     * @return The message generator watcher.
+     */
+    public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
+    MessageGenerator&lt;Context, M, F&gt; newReportingGenerator(PMessageDescriptor&lt;M,F&gt; descriptor) {
+<span class="nc" id="L193">        return new MessageGenerator&lt;Context, M, F&gt;(descriptor) {</span>
+            @Override
+            public M generate(Context context) {
+<span class="nc" id="L196">                M message = super.generate(context);</span>
+<span class="nc" id="L197">                generated.add(message);</span>
+<span class="nc" id="L198">                return message;</span>
+            }
+        };
+    }
+
+    /**
+     * Get all generated messages. It will return the messages that was *requested*
+     * to be generated with all contained messages, not all messages generated all
+     * over the place.
+     *
+     * @return The list of generated messages.
+     */
+    public List&lt;PMessage&gt; allGenerated() {
+<span class="nc" id="L211">        return ImmutableList.copyOf(generated);</span>
+    }
+
+    /**
+     * Dump all generated messages.
+     *
+     * @throws IOException If writing the messages failed.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public void dumpGeneratedMessages() throws IOException {
+<span class="nc" id="L221">        MessageWriter writer = this.writer;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        if (writer == null) {</span>
+<span class="nc" id="L223">            writer = new IOMessageWriter(System.err, outputSerializer);</span>
+        }
+
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        for (PMessage message : generated) {</span>
+<span class="nc" id="L227">            writer.write(message);</span>
+<span class="nc" id="L228">            writer.separator();</span>
+<span class="nc" id="L229">        }</span>
+<span class="nc" id="L230">    }</span>
+
+    // --- generator setup ---:
+
+    /**
+     * @return The watchers message generator options.
+     */
+    public Base getBaseContext() {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L239">            return base;</span>
+        } else {
+<span class="nc" id="L241">            return globalBase;</span>
+        }
+    }
+
+    /**
+     * Set the random generator being used.
+     *
+     * @param random The random generator.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setRandom(Random random) {
+<span class="nc" id="L252">        getBaseContext().setRandom(random);</span>
+<span class="nc" id="L253">        return this;</span>
+    }
+
+    /**
+     * Set the feiry data generator being used.
+     *
+     * @param fairy The fairy data generator.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setFairy(Fairy fairy) {
+<span class="nc" id="L263">        getBaseContext().setFairy(fairy);</span>
+<span class="nc" id="L264">        return this;</span>
+    }
+
+    /**
+     * Set the locale to generate values for. Applies to default string
+     * values. Known good locales are:
+     * &lt;ul&gt;
+     *     &lt;li&gt;Engligh (US)
+     *     &lt;li&gt;German  (DE)
+     *     &lt;li&gt;French  (FR)
+     *     &lt;li&gt;Italian (IT)
+     *     &lt;li&gt;Spanish (ES)
+     *     &lt;li&gt;Polish  (PL)
+     *     &lt;li&gt;Swedish (SV)
+     *     &lt;li&gt;Chinese (ZH)
+     * &lt;/ul&gt;
+     *
+     * @param locale The locale to set.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setLocale(Locale locale) {
+<span class="nc" id="L285">        return setFairy(Fairy.create(locale));</span>
+    }
+
+    /**
+     * Set the field fill rate in the range &amp;lt;0.0 .. 1.0].
+     *
+     * @param fillRate The new fill rate.
+     * @return The message generator watcher.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setFillRate(double fillRate) {
+<span class="nc bnc" id="L295" title="All 6 branches missed.">        assert fillRate &gt; 0.0 &amp;&amp; fillRate &lt;= 1.0 : &quot;Fill rate outside the range &lt; 0.0 .. 1.0 ]: &quot; + fillRate;</span>
+<span class="nc" id="L296">        getBaseContext().setDefaultFillRate(fillRate);</span>
+<span class="nc" id="L297">        return this;</span>
+    }
+
+    /**
+     * Set the message writer in case of failure.
+     *
+     * @param writer The message writer.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setMessageWriter(MessageWriter writer) {
+<span class="nc bnc" id="L307" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L308">            this.writer = writer;</span>
+        } else {
+<span class="nc" id="L310">            this.globalWriter = writer;</span>
+<span class="nc" id="L311">            this.writer = writer;</span>
+        }
+<span class="nc" id="L313">        return this;</span>
+    }
+
+    /**
+     * Set the message reader for the generator.
+     *
+     * @param reader The message reader. All messages will be read from this
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setMessageReader(MessageReader reader) {
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L324">            this.reader = reader;</span>
+        } else {
+<span class="nc bnc" id="L326" title="All 4 branches missed.">            assert globalReader == null : &quot;Generator already contains reader for messages.&quot;;</span>
+<span class="nc" id="L327">            this.globalReader = reader;</span>
+<span class="nc" id="L328">            this.reader = reader;</span>
+        }
+<span class="nc" id="L330">        return this;</span>
+    }
+
+    /**
+     * Read messages from the given resource (pretty formatted).
+     *
+     * @param resource The resource path.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setResourceReader(String resource) {
+<span class="nc" id="L340">        return setResourceReader(resource, new PrettySerializer());</span>
+    }
+
+    /**
+     * Read messages from the given resource.
+     *
+     * @param resource The resource path.
+     * @param serializer Serializer to use for reading resource.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setResourceReader(String resource,
+                                                             Serializer serializer) {
+<span class="nc" id="L352">        return setMessageReader(new IOMessageReader(</span>
+<span class="nc" id="L353">                getClass().getResourceAsStream(resource),</span>
+                serializer));
+    }
+
+    /**
+     * Set default serializer to standard output. If test case not started and a
+     * writer is already set, this method fails. Not that this will remove any
+     * previously set message writer.
+     *
+     * @param defaultSerializer The new default serializer.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setOutputSerializer(Serializer defaultSerializer) {
+<span class="nc bnc" id="L366" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L367">            this.writer = null;</span>
+<span class="nc" id="L368">            this.outputSerializer = defaultSerializer;</span>
+        } else {
+<span class="nc bnc" id="L370" title="All 4 branches missed.">            assert globalWriter == null : &quot;Generator already has a writer.&quot;;</span>
+<span class="nc" id="L371">            this.outputSerializer = defaultSerializer;</span>
+<span class="nc" id="L372">            this.globalOutputSerializer = defaultSerializer;</span>
+        }
+<span class="nc" id="L374">        return this;</span>
+    }
+
+    /**
+     * Set the max collection items for default generated collections.
+     *
+     * @param max The max number of items.
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; setMaxCollectionItems(int max) {
+<span class="nc bnc" id="L384" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L385">            this.base.setDefaultMaxCollectionSize(max);</span>
+        } else {
+<span class="nc" id="L387">            this.globalBase.setDefaultMaxCollectionSize(max);</span>
+        }
+<span class="nc" id="L389">        return this;</span>
+    }
+
+    /**
+     * Dump all generated messages on failure for this test only.
+     *
+     * @return The message generator.
+     */
+    public GeneratorWatcher&lt;Base, Context&gt; dumpOnFailure() {
+<span class="nc bnc" id="L398" title="All 2 branches missed.">        if (started) {</span>
+<span class="nc" id="L399">            this.dumpOnFailure = true;</span>
+        } else {
+<span class="nc" id="L401">            this.globalDumpOnFailure = true;</span>
+        }
+<span class="nc" id="L403">        return this;</span>
+    }
+
+    // -------------- INHERITED --------------
+
+    @Override
+    protected void starting(Description description) {
+<span class="nc" id="L410">        super.starting(description);</span>
+<span class="nc bnc" id="L411" title="All 4 branches missed.">        if (!description.isEmpty() &amp;&amp; description.getMethodName() == null) {</span>
+<span class="nc" id="L412">            throw new AssertionError(&quot;MessageGenerator instantiated as class rule: forbidden&quot;);</span>
+        }
+
+<span class="nc" id="L415">        writer           = globalWriter;</span>
+<span class="nc" id="L416">        reader           = globalReader;</span>
+<span class="nc" id="L417">        dumpOnFailure    = globalDumpOnFailure;</span>
+<span class="nc" id="L418">        outputSerializer = globalOutputSerializer;</span>
+<span class="nc" id="L419">        base = globalBase.deepCopy();</span>
+
+        // Reset content.
+<span class="nc" id="L422">        generated = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L423">        started = true;</span>
+<span class="nc" id="L424">    }</span>
+
+    @Override
+    protected void failed(Throwable e, Description description) {
+<span class="nc bnc" id="L428" title="All 2 branches missed.">        if (dumpOnFailure) {</span>
+            try {
+<span class="nc" id="L430">                dumpGeneratedMessages();</span>
+<span class="nc" id="L431">            } catch (IOException e1) {</span>
+<span class="nc" id="L432">                e1.printStackTrace();</span>
+<span class="nc" id="L433">                e.addSuppressed(e1);</span>
+<span class="nc" id="L434">            }</span>
+        }
+<span class="nc" id="L436">    }</span>
+
+    @Override
+    protected void finished(Description description) {
+        // generated kept in case of secondary watchers.
+<span class="nc" id="L441">        started = false;</span>
+
+        // Set some interesting stated back to be the global.
+<span class="nc" id="L444">        dumpOnFailure = globalDumpOnFailure;</span>
+<span class="nc" id="L445">        outputSerializer = globalOutputSerializer;</span>
+<span class="nc" id="L446">        writer = globalWriter;</span>
+<span class="nc" id="L447">        reader = globalReader;</span>
+<span class="nc" id="L448">        base = globalBase;</span>
+<span class="nc" id="L449">    }</span>
+
+    // --- Global: set before starting(),
+    //             and copied below in starting().
+    private Serializer    globalOutputSerializer;
+    private boolean       globalDumpOnFailure;
+    private MessageWriter globalWriter;
+    private MessageReader globalReader;
+    private Base          globalBase;
+
+    // --- Per test: set after starting()
+    private Serializer    outputSerializer;
+    private boolean       dumpOnFailure;
+    private MessageWriter writer;
+    private MessageReader reader;
+    private Base          base;
+
+    // generated during test.
+    private List&lt;PMessage&gt; generated;
+    private boolean        started;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
