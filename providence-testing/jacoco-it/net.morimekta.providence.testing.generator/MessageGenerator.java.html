@@ -30,16 +30,16 @@ public class MessageGenerator&lt;
     private final Map&lt;Field, Boolean&gt;               fieldPresenceOverrides;
 
     public MessageGenerator(PMessageDescriptor&lt;Message, Field&gt; descriptor) {
-<span class="nc" id="L33">        this(descriptor, new HashMap&lt;&gt;(), new HashMap&lt;&gt;());</span>
-<span class="nc" id="L34">    }</span>
+<span class="fc" id="L33">        this(descriptor, new HashMap&lt;&gt;(), new HashMap&lt;&gt;());</span>
+<span class="fc" id="L34">    }</span>
 
     private MessageGenerator(PMessageDescriptor&lt;Message, Field&gt; descriptor,
                              Map&lt;Field, Generator&lt;Context, ?&gt;&gt; fieldValueGenerators,
-<span class="nc" id="L38">                             Map&lt;Field, Boolean&gt; fieldPresenceOverrides) {</span>
-<span class="nc" id="L39">        this.descriptor = descriptor;</span>
-<span class="nc" id="L40">        this.fieldValueGenerators = fieldValueGenerators;</span>
-<span class="nc" id="L41">        this.fieldPresenceOverrides = fieldPresenceOverrides;</span>
-<span class="nc" id="L42">    }</span>
+<span class="fc" id="L38">                             Map&lt;Field, Boolean&gt; fieldPresenceOverrides) {</span>
+<span class="fc" id="L39">        this.descriptor = descriptor;</span>
+<span class="fc" id="L40">        this.fieldValueGenerators = fieldValueGenerators;</span>
+<span class="fc" id="L41">        this.fieldPresenceOverrides = fieldPresenceOverrides;</span>
+<span class="fc" id="L42">    }</span>
 
     /**
      * Set which fields must always be generated. Note that unions only
@@ -140,8 +140,8 @@ public class MessageGenerator&lt;
 
     @SuppressWarnings(&quot;unchecked&quot;)
     public Message generate(Context options) {
-<span class="nc" id="L143">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
-<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (descriptor.getVariant() == PMessageVariant.UNION) {</span>
+<span class="fc" id="L143">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (descriptor.getVariant() == PMessageVariant.UNION) {</span>
 <span class="nc" id="L145">            Field selectedField = null;</span>
 <span class="nc" id="L146">            Set&lt;Field&gt; blockedFields = new HashSet&lt;&gt;();</span>
 <span class="nc bnc" id="L147" title="All 2 branches missed.">            for (Map.Entry&lt;Field, Boolean&gt; entry : fieldPresenceOverrides.entrySet()) {</span>
@@ -171,8 +171,8 @@ public class MessageGenerator&lt;
             }
 <span class="nc" id="L172">            builder.set(selectedField, makeFieldValue(selectedField, options));</span>
 <span class="nc" id="L173">        } else {</span>
-<span class="nc bnc" id="L174" title="All 2 branches missed.">            for (Field field : descriptor.getFields()) {</span>
-<span class="nc bnc" id="L175" title="All 2 branches missed.">                if (fieldPresenceOverrides.containsKey(field)) {</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">            for (Field field : descriptor.getFields()) {</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                if (fieldPresenceOverrides.containsKey(field)) {</span>
 <span class="nc bnc" id="L176" title="All 2 branches missed.">                    if (fieldPresenceOverrides.get(field)) {</span>
 <span class="nc" id="L177">                        builder.set(field, makeFieldValue(field, options));</span>
                     }
@@ -180,18 +180,18 @@ public class MessageGenerator&lt;
                 }
 
                 // Default presence calculation.
-<span class="nc bnc" id="L183" title="All 4 branches missed.">                if (field.getRequirement() != PRequirement.REQUIRED &amp;&amp; options.getDefaultFillRate() &lt; 1.0) {</span>
+<span class="pc bpc" id="L183" title="1 of 4 branches missed.">                if (field.getRequirement() != PRequirement.REQUIRED &amp;&amp; options.getDefaultFillRate() &lt; 1.0) {</span>
 <span class="nc" id="L184">                    if (options.getRandom()</span>
 <span class="nc bnc" id="L185" title="All 2 branches missed.">                               .nextDouble() &lt; options.getDefaultFillRate()) {</span>
 <span class="nc" id="L186">                        builder.set(field, makeFieldValue(field, options));</span>
                     }
                 } else {
                     // Required or fill rate is 100% (1.0)
-<span class="nc" id="L190">                    builder.set(field, makeFieldValue(field, options));</span>
+<span class="fc" id="L190">                    builder.set(field, makeFieldValue(field, options));</span>
                 }
             }
         }
-<span class="nc" id="L194">        return builder.build();</span>
+<span class="fc" id="L194">        return builder.build();</span>
     }
 
     protected MessageGenerator&lt;Context, Message, Field&gt; deepCopy() {
@@ -213,11 +213,11 @@ public class MessageGenerator&lt;
     private Object makeFieldValue(Field field,
                                   Context context) {
         // This will try to make a field value for the given field regardless of access.
-<span class="nc" id="L216">        Generator&lt;Context, ?&gt; generator = fieldValueGenerators.get(field);</span>
-<span class="nc bnc" id="L217" title="All 2 branches missed.">        if (generator == null) {</span>
-<span class="nc" id="L218">            generator = context.generatorFor(field.getDescriptor());</span>
+<span class="fc" id="L216">        Generator&lt;Context, ?&gt; generator = fieldValueGenerators.get(field);</span>
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">        if (generator == null) {</span>
+<span class="fc" id="L218">            generator = context.generatorFor(field.getDescriptor());</span>
         }
-<span class="nc" id="L220">        return generator.generate(context);</span>
+<span class="fc" id="L220">        return generator.generate(context);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

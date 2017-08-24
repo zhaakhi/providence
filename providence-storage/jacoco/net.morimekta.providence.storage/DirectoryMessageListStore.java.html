@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirectoryMessageListStore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Storage</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.storage</a> &gt; <span class="el_source">DirectoryMessageListStore.java</span></div><h1>DirectoryMessageListStore.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.storage;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.streams.MessageCollectors;
+import net.morimekta.providence.streams.MessageStreams;
+import net.morimekta.util.concurrent.ReadWriteMutex;
+import net.morimekta.util.concurrent.ReentrantReadWriteMutex;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import javax.annotation.Nonnull;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+/**
+ * Simple file-based storage of lists of providence messages that keeps
+ * an in-memory key index, a message cache, and stores message lists
+ * to individual files in a single directly.
+ * &lt;p&gt;
+ * Note that the directory store is parallel compatible between
+ * instances, as all of them would be able to read, write etc all
+ * the files all the time.
+ * &lt;p&gt;
+ * &lt;b&gt;TL;DR Each directory can only have one
+ * {@link DirectoryMessageListStore} instance active at a time.&lt;/b&gt;
+ */
+public class DirectoryMessageListStore&lt;K, M extends PMessage&lt;M,F&gt;, F extends PField&gt;
+        implements MessageListStore&lt;K,M,F&gt;, Closeable {
+    private static final String TMP_DIR = &quot;.tmp&quot;;
+
+    private final File                     directory;
+    private final File                     tempDir;
+    private final Function&lt;K, String&gt;      keyBuilder;
+    private final Function&lt;String, K&gt;      keyParser;
+    private final Serializer               serializer;
+    private final PMessageDescriptor&lt;M, F&gt; descriptor;
+
+    private final ReadWriteMutex    mutex;
+    private final Cache&lt;K, List&lt;M&gt;&gt; cache;
+    private final Set&lt;K&gt;            keyset;
+
+    public DirectoryMessageListStore(@Nonnull File directory,
+                                     @Nonnull Function&lt;K, String&gt; keyBuilder,
+                                     @Nonnull Function&lt;String, K&gt; keyParser,
+                                     @Nonnull PMessageDescriptor&lt;M,F&gt; descriptor,
+<span class="fc" id="L68">                                     @Nonnull Serializer serializer) {</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (!directory.isDirectory()) {</span>
+<span class="nc" id="L70">            throw new IllegalArgumentException(&quot;Not a directory: &quot; + directory.toString());</span>
+        }
+
+<span class="fc" id="L73">        this.directory = directory;</span>
+<span class="fc" id="L74">        this.tempDir = new File(directory, TMP_DIR);</span>
+<span class="pc bpc" id="L75" title="1 of 4 branches missed.">        if (!tempDir.exists() &amp;&amp; !tempDir.mkdirs()) {</span>
+<span class="nc" id="L76">            throw new IllegalStateException(&quot;Unable to create temp directory: &quot; + tempDir.toString());</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        } else if (!tempDir.isDirectory()) {</span>
+<span class="nc" id="L78">            throw new IllegalStateException(&quot;File blocking temp directory: &quot; + tempDir.toString());</span>
+        }
+<span class="fc" id="L80">        this.keyBuilder = keyBuilder;</span>
+<span class="fc" id="L81">        this.keyParser = keyParser;</span>
+<span class="fc" id="L82">        this.descriptor = descriptor;</span>
+<span class="fc" id="L83">        this.serializer = serializer;</span>
+
+<span class="fc" id="L85">        this.mutex = new ReentrantReadWriteMutex();</span>
+<span class="fc" id="L86">        this.cache = CacheBuilder.newBuilder()</span>
+<span class="fc" id="L87">                                 .build();</span>
+<span class="fc" id="L88">        this.keyset = initKeySet();</span>
+<span class="fc" id="L89">    }</span>
+
+    @Override
+    public boolean containsKey(@Nonnull K key) {
+<span class="fc" id="L93">        return mutex.lockForReading(() -&gt; keyset.contains(key));</span>
+    }
+
+    @Override @Nonnull
+    public Collection&lt;K&gt; keys() {
+<span class="fc" id="L98">        return mutex.lockForReading(() -&gt; ImmutableSet.copyOf(keyset));</span>
+    }
+
+    @Override @Nonnull
+    public Map&lt;K, List&lt;M&gt;&gt; getAll(@Nonnull Collection&lt;K&gt; keys) {
+<span class="fc" id="L103">        return mutex.lockForReading(() -&gt; {</span>
+<span class="fc" id="L104">            HashMap&lt;K,List&lt;M&gt;&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L105">            TreeSet&lt;K&gt; tmp = new TreeSet&lt;&gt;(keys);</span>
+<span class="fc" id="L106">            tmp.retainAll(keyset);</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            for (K key : tmp) {</span>
+                try {
+<span class="fc" id="L109">                    out.put(key, cache.get(key, () -&gt; read(key)));</span>
+<span class="nc" id="L110">                } catch (ExecutionException e) {</span>
+<span class="nc" id="L111">                    throw new RuntimeException(&quot;Unable to read &quot; + keyBuilder.apply(key), e);</span>
+<span class="fc" id="L112">                }</span>
+<span class="fc" id="L113">            }</span>
+<span class="fc" id="L114">            return out;</span>
+        });
+    }
+
+    @Override @Nonnull
+    public Map&lt;K,List&lt;M&gt;&gt; putAll(@Nonnull Map&lt;K, List&lt;M&gt;&gt; values) {
+<span class="fc" id="L120">        return mutex.lockForWriting(() -&gt; {</span>
+<span class="fc" id="L121">            Map&lt;K,List&lt;M&gt;&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L122">            values.forEach((key, value) -&gt; {</span>
+                try {
+<span class="fc" id="L124">                    value = ImmutableList.copyOf(value);</span>
+<span class="fc" id="L125">                    write(key, value);</span>
+<span class="fc" id="L126">                    cache.put(key, value);</span>
+<span class="fc" id="L127">                    keyset.add(key);</span>
+<span class="nc" id="L128">                } catch (IOException e) {</span>
+<span class="nc" id="L129">                    throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L130">                }</span>
+<span class="fc" id="L131">            });</span>
+<span class="fc" id="L132">            return out;</span>
+        });
+    }
+
+    @Override @Nonnull
+    public Map&lt;K,List&lt;M&gt;&gt; removeAll(Collection&lt;K&gt; keys) {
+<span class="fc" id="L138">        return mutex.lockForWriting(() -&gt; {</span>
+            try {
+<span class="fc" id="L140">                Map&lt;K, List&lt;M&gt;&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                for (K key : keys) {</span>
+<span class="fc" id="L142">                    File file = fileFor(key, false);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">                    if (file.exists()) {</span>
+                        try {
+<span class="fc" id="L145">                            out.put(key, cache.get(key, () -&gt; read(key)));</span>
+<span class="nc" id="L146">                        } catch (ExecutionException e) {</span>
+                            // Best effort, as we could not read the message.
+                            // At least it was present.
+<span class="nc" id="L149">                            out.put(key, new LinkedList&lt;&gt;());</span>
+                        } finally {
+<span class="pc" id="L151">                            file.delete();</span>
+<span class="pc" id="L152">                        }</span>
+<span class="fc" id="L153">                        cache.invalidate(key);</span>
+<span class="fc" id="L154">                        keyset.remove(key);</span>
+                    }
+<span class="fc" id="L156">                }</span>
+<span class="fc" id="L157">                return out;</span>
+<span class="nc" id="L158">            } catch (IOException e) {</span>
+<span class="nc" id="L159">                throw new UncheckedIOException(e.getMessage(), e);</span>
+            }
+        });
+    }
+
+    private Set&lt;K&gt; initKeySet() {
+<span class="fc" id="L165">        HashSet&lt;K&gt; set = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        for (String file : directory.list()) {</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">            if (new File(directory, file).isFile()) {</span>
+                try {
+<span class="fc" id="L169">                    set.add(keyParser.apply(file));</span>
+<span class="nc" id="L170">                } catch (Exception e) {</span>
+<span class="nc" id="L171">                    throw new IllegalStateException(&quot;Unable to get key from file: &quot; + file, e);</span>
+<span class="fc" id="L172">                }</span>
+            }
+        }
+<span class="fc" id="L175">        return set;</span>
+    }
+
+    private List&lt;M&gt; read(K key) throws IOException {
+        try {
+<span class="fc" id="L180">            return MessageStreams.file(fileFor(key, false), serializer, descriptor)</span>
+<span class="fc" id="L181">                                 .collect(Collectors.toList());</span>
+<span class="nc" id="L182">        } catch (UncheckedIOException e) {</span>
+<span class="nc" id="L183">            throw new IOException(&quot;Unable to read &quot; + keyBuilder.apply(key), e.getCause());</span>
+        }
+    }
+
+    private void write(K key, List&lt;M&gt; message) throws IOException {
+<span class="fc" id="L188">        File tmp = fileFor(key, true);</span>
+<span class="fc" id="L189">        File file = fileFor(key, false);</span>
+<span class="pc bpc" id="L190" title="3 of 4 branches missed.">        if (tmp.exists() &amp;&amp; !tmp.delete()) {</span>
+<span class="nc" id="L191">            throw new IOException(&quot;Unable to delete old tmp file: &quot; + tmp.getAbsolutePath());</span>
+        }
+        try {
+<span class="fc" id="L194">            message.stream().collect(MessageCollectors.toFile(tmp, serializer));</span>
+<span class="nc" id="L195">        } catch (UncheckedIOException e) {</span>
+<span class="nc" id="L196">            throw new IOException(&quot;Unable to write &quot; + keyBuilder.apply(key), e.getCause());</span>
+<span class="fc" id="L197">        }</span>
+<span class="fc" id="L198">        Files.move(tmp.toPath(), file.toPath(), REPLACE_EXISTING);</span>
+<span class="fc" id="L199">    }</span>
+
+    private File fileFor(K key, boolean temp) throws IOException {
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        return new File(temp ? tempDir : directory,</span>
+<span class="fc" id="L203">                        validateKey(keyBuilder.apply(key)))</span>
+<span class="fc" id="L204">                .getCanonicalFile();</span>
+    }
+
+    private String validateKey(String key) {
+        // TODO: Make true file-name validation.
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">        if (key.contains(File.separator)) {</span>
+<span class="nc" id="L210">            throw new IllegalArgumentException(&quot;Path name separator in key &quot; + key);</span>
+        }
+<span class="fc" id="L212">        return key;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+<span class="fc" id="L217">        cache.invalidateAll();</span>
+<span class="fc" id="L218">        keyset.clear();</span>
+<span class="fc" id="L219">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

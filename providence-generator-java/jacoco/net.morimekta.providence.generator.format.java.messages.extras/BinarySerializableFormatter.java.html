@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BinarySerializableFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java.messages.extras</a> &gt; <span class="el_source">BinarySerializableFormatter.java</span></div><h1>BinarySerializableFormatter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.generator.format.java.messages.extras;
+
+import net.morimekta.providence.generator.GeneratorException;
+import net.morimekta.providence.generator.format.java.shared.MessageMemberFormatter;
+import net.morimekta.providence.generator.format.java.utils.JHelper;
+import net.morimekta.providence.generator.format.java.utils.JMessage;
+import net.morimekta.providence.serializer.BinarySerializer;
+import net.morimekta.util.io.IndentedPrintWriter;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * @author Stein Eldar Johnsen
+ * @since 08.01.16.
+ */
+public class BinarySerializableFormatter implements MessageMemberFormatter {
+    public static final String T_SERIALIZE_INSTANCE = &quot;tSerializeInstance&quot;;
+<span class="fc" id="L42">    private final AtomicInteger nextId = new AtomicInteger(1);</span>
+
+    private final IndentedPrintWriter writer;
+    private final JHelper helper;
+
+<span class="fc" id="L47">    public BinarySerializableFormatter(IndentedPrintWriter writer, JHelper helper) {</span>
+<span class="fc" id="L48">        this.writer = writer;</span>
+<span class="fc" id="L49">        this.helper = helper;</span>
+<span class="fc" id="L50">    }</span>
+
+    @Override
+    public void appendFields(JMessage&lt;?&gt; message) throws GeneratorException {
+<span class="fc" id="L54">        writer.appendln(&quot;// Transient object used during java deserialization.&quot;)</span>
+<span class="fc" id="L55">              .formatln(&quot;private transient %s &quot; + T_SERIALIZE_INSTANCE + &quot;;&quot;, message.instanceType())</span>
+<span class="fc" id="L56">              .newline();</span>
+<span class="fc" id="L57">    }</span>
+
+    @Override
+    public void appendMethods(JMessage&lt;?&gt; message) {
+<span class="fc" id="L61">        appendWriteObject();</span>
+<span class="fc" id="L62">        appendReadObject(message);</span>
+<span class="fc" id="L63">        appendReadResolve();</span>
+<span class="fc" id="L64">    }</span>
+
+    private void appendWriteObject() {
+<span class="fc" id="L67">        writer.formatln(&quot;private void writeObject(%s oos) throws %s {&quot;,</span>
+<span class="fc" id="L68">                        ObjectOutputStream.class.getName(),</span>
+<span class="fc" id="L69">                        IOException.class.getName())</span>
+<span class="fc" id="L70">              .appendln(&quot;    oos.defaultWriteObject();&quot;)</span>
+<span class="fc" id="L71">              .formatln(&quot;    %s serializer = new %s(false);&quot;,</span>
+<span class="fc" id="L72">                        BinarySerializer.class.getName(),</span>
+<span class="fc" id="L73">                        BinarySerializer.class.getName())</span>
+<span class="fc" id="L74">              .appendln(&quot;    serializer.serialize(oos, this);&quot;)</span>
+<span class="fc" id="L75">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L76">              .newline();</span>
+<span class="fc" id="L77">    }</span>
+
+    private void appendReadObject(JMessage&lt;?&gt; message) {
+<span class="fc" id="L80">        writer.formatln(&quot;private void readObject(%s ois)&quot;,</span>
+<span class="fc" id="L81">                        ObjectInputStream.class.getName())</span>
+<span class="fc" id="L82">              .formatln(&quot;        throws %s, %s {&quot;,</span>
+<span class="fc" id="L83">                        IOException.class.getName(),</span>
+<span class="fc" id="L84">                        ClassNotFoundException.class.getSimpleName())</span>
+<span class="fc" id="L85">              .begin()</span>
+<span class="fc" id="L86">              .formatln(&quot;ois.defaultReadObject();&quot;)</span>
+<span class="fc" id="L87">              .formatln(&quot;%s serializer = new %s(false);&quot;,</span>
+<span class="fc" id="L88">                        BinarySerializer.class.getName(),</span>
+<span class="fc" id="L89">                        BinarySerializer.class.getName())</span>
+<span class="fc" id="L90">              .appendln(T_SERIALIZE_INSTANCE + &quot; = serializer.deserialize(ois, kDescriptor);&quot;);</span>
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (message.isException()) {</span>
+            // Also transfer exception cause and stack trace.
+<span class="fc" id="L94">            writer.appendln(&quot;if (getCause() != null) {&quot;)</span>
+<span class="fc" id="L95">                  .formatln(&quot;    &quot; + T_SERIALIZE_INSTANCE + &quot;.initCause(getCause());&quot;)</span>
+<span class="fc" id="L96">                  .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L97">                  .appendln(T_SERIALIZE_INSTANCE + &quot;.setStackTrace(getStackTrace());&quot;);</span>
+        }
+
+<span class="fc" id="L100">        writer.end()</span>
+<span class="fc" id="L101">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L102">              .newline();</span>
+<span class="fc" id="L103">    }</span>
+
+    private void appendReadResolve() {
+<span class="fc" id="L106">        writer.formatln(&quot;private Object readResolve() throws %s {&quot;,</span>
+<span class="fc" id="L107">                        ObjectStreamException.class.getName())</span>
+<span class="fc" id="L108">              .appendln(&quot;    return &quot; + T_SERIALIZE_INSTANCE + &quot;;&quot;)</span>
+<span class="fc" id="L109">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L110">              .newline();</span>
+<span class="fc" id="L111">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

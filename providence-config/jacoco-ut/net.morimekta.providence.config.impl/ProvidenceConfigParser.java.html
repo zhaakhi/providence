@@ -1,0 +1,1049 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProvidenceConfigParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config.impl</a> &gt; <span class="el_source">ProvidenceConfigParser.java</span></div><h1>ProvidenceConfigParser.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.config.impl;
+
+import net.morimekta.providence.PEnumValue;
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.PType;
+import net.morimekta.providence.config.ProvidenceConfigException;
+import net.morimekta.providence.descriptor.PDescriptor;
+import net.morimekta.providence.descriptor.PEnumDescriptor;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PList;
+import net.morimekta.providence.descriptor.PMap;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.descriptor.PSet;
+import net.morimekta.providence.serializer.pretty.Token;
+import net.morimekta.providence.serializer.pretty.Tokenizer;
+import net.morimekta.providence.serializer.pretty.TokenizerException;
+import net.morimekta.providence.util.TypeRegistry;
+import net.morimekta.util.Binary;
+import net.morimekta.util.Pair;
+
+import com.google.common.collect.ImmutableSet;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+import static net.morimekta.providence.config.impl.ProvidenceConfigUtil.asBoolean;
+import static net.morimekta.providence.config.impl.ProvidenceConfigUtil.asDouble;
+import static net.morimekta.providence.config.impl.ProvidenceConfigUtil.asInteger;
+import static net.morimekta.providence.config.impl.ProvidenceConfigUtil.asLong;
+import static net.morimekta.providence.config.impl.ProvidenceConfigUtil.asString;
+
+/**
+ * This parser parses config files. The class in itself should be stateless, so
+ * can safely be used in multiple threads safely. This is a utility class created
+ * in order to simplify testing.
+ */
+public class ProvidenceConfigParser {
+    /**
+     * Simple stage separation. The content *must* come in this order.
+     */
+<span class="pc" id="L58">    private enum Stage {</span>
+<span class="fc" id="L59">        INCLUDES,</span>
+<span class="fc" id="L60">        DEFINES,</span>
+<span class="fc" id="L61">        MESSAGE</span>
+    }
+
+<span class="fc" id="L64">    public ProvidenceConfigParser(TypeRegistry registry, boolean strict) {</span>
+<span class="fc" id="L65">        this.registry = registry;</span>
+<span class="fc" id="L66">        this.strict = strict;</span>
+<span class="fc" id="L67">    }</span>
+
+    @Nonnull
+    &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
+    Pair&lt;M, Set&lt;String&gt;&gt; parseConfig(@Nonnull File configFile, @Nullable M parent) throws ProvidenceConfigException {
+<span class="fc" id="L72">        configFile = absoluteCanonical(configFile);</span>
+<span class="fc" id="L73">        Pair&lt;M, Set&lt;String&gt;&gt; result = checkAndParseInternal(configFile, parent);</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (result == null) {</span>
+<span class="nc" id="L75">            throw new IllegalArgumentException(&quot;No config: &quot; + configFile.toString());</span>
+        }
+<span class="fc" id="L77">        return result;</span>
+    }
+
+    private File absoluteCanonical(File f) throws ProvidenceConfigException {
+        try {
+<span class="fc" id="L82">            return f.getAbsoluteFile().getCanonicalFile();</span>
+<span class="nc" id="L83">        } catch (IOException e) {</span>
+<span class="nc" id="L84">            throw new ProvidenceConfigException(e, &quot;Unable to resolve config file &quot; + f);</span>
+        }
+    }
+
+    // --- private
+
+    private &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
+    Pair&lt;M, Set&lt;String&gt;&gt; checkAndParseInternal(@Nonnull File configFile,
+                                               @Nullable M parent,
+                                               String... includeStack) throws ProvidenceConfigException {
+        try {
+<span class="fc" id="L95">            configFile = configFile.getAbsoluteFile()</span>
+<span class="fc" id="L96">                                   .getCanonicalFile();</span>
+
+<span class="fc" id="L98">            String filePath = configFile.toString();</span>
+<span class="fc" id="L99">            List&lt;String&gt; stackList = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L100">            Collections.addAll(stackList, includeStack);</span>
+
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (Arrays.binarySearch(includeStack, filePath) &gt;= 0) {</span>
+<span class="fc" id="L103">                stackList.add(filePath);</span>
+<span class="fc" id="L104">                throw new ProvidenceConfigException(&quot;Circular includes detected: &quot; +</span>
+<span class="fc" id="L105">                                                    String.join(&quot; -&gt; &quot;,</span>
+<span class="fc" id="L106">                                                                stackList.stream()</span>
+<span class="fc" id="L107">                                                                         .map(p -&gt; new File(p).getName())</span>
+<span class="fc" id="L108">                                                                         .collect(Collectors.toList())));</span>
+            }
+
+<span class="fc" id="L111">            stackList.add(filePath);</span>
+
+<span class="fc" id="L113">            return parseConfigRecursively(configFile, parent, stackList.toArray(new String[stackList.size()]));</span>
+<span class="fc" id="L114">        } catch (IOException e) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (e instanceof ProvidenceConfigException) {</span>
+<span class="fc" id="L116">                ProvidenceConfigException pce = (ProvidenceConfigException) e;</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">                if (pce.getFile() == null) {</span>
+<span class="fc" id="L118">                    pce.setFile(configFile.getName());</span>
+                }
+<span class="fc" id="L120">                throw pce;</span>
+            }
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">            if (e instanceof TokenizerException) {</span>
+<span class="fc" id="L123">                TokenizerException te = (TokenizerException) e;</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                if (te.getFile() == null) {</span>
+<span class="fc" id="L125">                    te.setFile(configFile.getName());</span>
+                }
+<span class="fc" id="L127">                throw new ProvidenceConfigException(te);</span>
+            }
+<span class="nc" id="L129">            ProvidenceConfigException ex = new ProvidenceConfigException(e, e.getMessage());</span>
+<span class="nc" id="L130">            ex.setFile(configFile.getName());</span>
+<span class="nc" id="L131">            throw ex;</span>
+        }
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
+    Pair&lt;M, Set&lt;String&gt;&gt; parseConfigRecursively(@Nonnull File file,
+                                               M parent,
+                                               String[] stack) throws IOException {
+        Tokenizer tokenizer;
+<span class="pc" id="L141">        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {</span>
+            // Non-enclosed content, meaning we should read the whole file immediately.
+<span class="fc" id="L143">            tokenizer = new Tokenizer(in, false);</span>
+<span class="pc bpc" id="L144" title="6 of 8 branches missed.">        }</span>
+
+<span class="fc" id="L146">        ProvidenceConfigContext context = new ProvidenceConfigContext();</span>
+<span class="fc" id="L147">        Set&lt;String&gt; includedFilePaths = new TreeSet&lt;&gt;();</span>
+<span class="fc" id="L148">        includedFilePaths.add(file.toString());</span>
+
+<span class="fc" id="L150">        Stage lastStage = Stage.INCLUDES;</span>
+<span class="fc" id="L151">        M result = null;</span>
+
+<span class="fc" id="L153">        Token token = tokenizer.peek();</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        while (token != null) {</span>
+<span class="fc" id="L155">            tokenizer.next();</span>
+
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            if (lastStage == Stage.MESSAGE) {</span>
+<span class="fc" id="L158">                throw new TokenizerException(token, &quot;Unexpected token '&quot; + token.asString() + &quot;', expected end of file.&quot;)</span>
+<span class="fc" id="L159">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            } else if (INCLUDE.equals(token.asString())) {</span>
+                // if include &amp;&amp; stage == INCLUDES --&gt; INCLUDES
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">                if (lastStage != Stage.INCLUDES) {</span>
+<span class="nc" id="L163">                    throw new TokenizerException(token, &quot;Include added after defines or message. Only one def block allowed.&quot;)</span>
+<span class="nc" id="L164">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="fc" id="L166">                token = tokenizer.expectLiteral(&quot;file to be included&quot;);</span>
+<span class="fc" id="L167">                String includedFilePath = token.decodeLiteral(strict);</span>
+                PMessage included;
+                File includedFile;
+                try {
+<span class="fc" id="L171">                    includedFile = resolveFile(file, includedFilePath);</span>
+<span class="fc" id="L172">                    Pair&lt;PMessage, Set&lt;String&gt;&gt; tmp = checkAndParseInternal(includedFile, null, stack);</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                    if (tmp != null) {</span>
+<span class="fc" id="L174">                        includedFilePaths.add(includedFile.toString());</span>
+<span class="fc" id="L175">                        includedFilePaths.addAll(tmp.second);</span>
+<span class="fc" id="L176">                        included = tmp.first;</span>
+                    } else {
+<span class="fc" id="L178">                        included = null;</span>
+                    }
+<span class="fc" id="L180">                } catch (FileNotFoundException e) {</span>
+<span class="fc" id="L181">                    throw new TokenizerException(token, &quot;Included file \&quot;%s\&quot; not found.&quot;, includedFilePath)</span>
+<span class="fc" id="L182">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L183">                }</span>
+<span class="fc" id="L184">                token = tokenizer.expectIdentifier(&quot;the token 'as'&quot;);</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">                if (!AS.equals(token.asString())) {</span>
+<span class="fc" id="L186">                    throw new TokenizerException(token, &quot;Expected token 'as' after included file \&quot;%s\&quot;.&quot;, includedFilePath)</span>
+<span class="fc" id="L187">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="fc" id="L189">                token = tokenizer.expectIdentifier(&quot;Include alias&quot;);</span>
+<span class="fc" id="L190">                String alias = token.asString();</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">                if (RESERVED_WORDS.contains(alias)) {</span>
+<span class="fc" id="L192">                    throw new TokenizerException(token, &quot;Alias \&quot;%s\&quot; is a reserved word.&quot;, alias)</span>
+<span class="fc" id="L193">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="fc bfc" id="L195" title="All 2 branches covered.">                if (context.containsReference(alias)) {</span>
+<span class="fc" id="L196">                    throw new TokenizerException(token, &quot;Alias \&quot;%s\&quot; is already used.&quot;, alias)</span>
+<span class="fc" id="L197">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="fc" id="L199">                context.setInclude(alias, included);</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">            } else if (DEF.equals(token.asString())) {</span>
+                // if params &amp;&amp; stage == DEF --&gt; DEF
+<span class="fc" id="L202">                lastStage = Stage.DEFINES;</span>
+<span class="fc" id="L203">                parseDefinitions(context, tokenizer);</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">            } else if (token.isQualifiedIdentifier()) {</span>
+                // if a.b (type identifier) --&gt; MESSAGE
+<span class="fc" id="L206">                lastStage = Stage.MESSAGE;</span>
+                PMessageDescriptor&lt;M, F&gt; descriptor;
+                try {
+<span class="fc" id="L209">                    descriptor = (PMessageDescriptor) registry.getDeclaredType(token.asString());</span>
+<span class="fc" id="L210">                } catch (IllegalArgumentException e) {</span>
+                    // Unknown declared type. Fail if:
+                    // - strict mode, all files must be of known types.
+                    // - top of the stack. This is the config requested by the user. It should fail
+                    //   even in non-strict mode.
+<span class="pc bpc" id="L215" title="1 of 4 branches missed.">                    if (strict || stack.length == 1) {</span>
+<span class="fc" id="L216">                        throw new TokenizerException(token, &quot;Unknown declared type: %s&quot;, token.asString()).setLine(</span>
+<span class="fc" id="L217">                                tokenizer.getLine(token.getLineNo()));</span>
+                    }
+<span class="fc" id="L219">                    return null;</span>
+<span class="fc" id="L220">                }</span>
+<span class="fc" id="L221">                result = parseConfigMessage(tokenizer, context, descriptor.builder(), parent, file);</span>
+<span class="fc" id="L222">            } else {</span>
+<span class="fc" id="L223">                throw new TokenizerException(token,</span>
+<span class="fc" id="L224">                                             &quot;Unexpected token '&quot; + token.asString() +</span>
+                                             &quot;'. Expected include, defines or message type&quot;)
+<span class="fc" id="L226">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+            }
+
+<span class="fc" id="L229">            token = tokenizer.peek();</span>
+        }
+
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        if (result == null) {</span>
+<span class="fc" id="L233">            throw new TokenizerException(&quot;No message in config: &quot; + file.getName());</span>
+        }
+
+<span class="fc" id="L236">        return Pair.create(result, includedFilePaths);</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void parseDefinitions(ProvidenceConfigContext context, Tokenizer tokenizer) throws IOException {
+<span class="fc" id="L241">        Token token = tokenizer.expect(&quot;defines group start or identifier&quot;);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (token.isIdentifier()) {</span>
+<span class="fc" id="L243">            String name = context.initReference(token, tokenizer);</span>
+<span class="fc" id="L244">            tokenizer.expectSymbol(&quot;def value sep&quot;, Token.kFieldValueSep);</span>
+<span class="fc" id="L245">            context.setReference(name, parseDefinitionValue(context, tokenizer));</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">        } else if (token.isSymbol(Token.kMessageStart)) {</span>
+<span class="fc" id="L247">            token = tokenizer.expect(&quot;define or end&quot;);</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">            while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">                if (!token.isIdentifier()) {</span>
+<span class="fc" id="L250">                    throw new TokenizerException(token, &quot;Token '%s' is not valid reference name.&quot;, token.asString()).setLine(</span>
+<span class="fc" id="L251">                            tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="fc" id="L253">                String name = context.initReference(token, tokenizer);</span>
+<span class="fc" id="L254">                tokenizer.expectSymbol(&quot;def value sep&quot;, Token.kFieldValueSep);</span>
+<span class="fc" id="L255">                context.setReference(name, parseDefinitionValue(context, tokenizer));</span>
+<span class="fc" id="L256">                token = tokenizer.expect(&quot;next define or end&quot;);</span>
+<span class="fc" id="L257">            }</span>
+        } else {
+<span class="nc" id="L259">            throw new TokenizerException(token, &quot;Unexpected token after def: '%s'&quot;, token.asString()).setLine(</span>
+<span class="nc" id="L260">                    tokenizer.getLine(token.getLineNo()));</span>
+        }
+<span class="fc" id="L262">    }</span>
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private Object parseDefinitionValue(ProvidenceConfigContext context, Tokenizer tokenizer) throws IOException {
+<span class="fc" id="L266">        Token token = tokenizer.expect(&quot;Start of def value&quot;);</span>
+
+<span class="fc bfc" id="L268" title="All 2 branches covered.">        if (token.isReal()) {</span>
+<span class="fc" id="L269">            return Double.parseDouble(token.asString());</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        } else if (token.isInteger()) {</span>
+<span class="fc" id="L271">            return Long.parseLong(token.asString());</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        } else if (token.isStringLiteral()) {</span>
+<span class="fc" id="L273">            return token.decodeLiteral(strict);</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">        } else if (TRUE.equalsIgnoreCase(token.asString())) {</span>
+<span class="fc" id="L275">            return Boolean.TRUE;</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">        } else if (FALSE.equalsIgnoreCase(token.asString())) {</span>
+<span class="nc" id="L277">            return Boolean.FALSE;</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">        } else if (Token.B64.equals(token.asString())) {</span>
+<span class="nc" id="L279">            tokenizer.expectSymbol(&quot;binary data enclosing start&quot;, Token.kParamsStart);</span>
+<span class="nc" id="L280">            return Binary.fromBase64(tokenizer.readBinary(Token.kParamsEnd));</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        } else if (Token.HEX.equals(token.asString())) {</span>
+<span class="fc" id="L282">            tokenizer.expectSymbol(&quot;binary data enclosing start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L283">            return Binary.fromHexString(tokenizer.readBinary(Token.kParamsEnd));</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        } else if (token.isDoubleQualifiedIdentifier()) {</span>
+            // this may be an enum reference, must be
+            // - package.EnumType.IDENTIFIER
+
+<span class="fc" id="L288">            String id = token.asString();</span>
+<span class="fc" id="L289">            int l = id.lastIndexOf(Token.kIdentifierSep);</span>
+            try {
+                // These extra casts needs to be there, otherwise we'd get this error:
+                // incompatible types: inference variable T has incompatible upper bounds
+                // net.morimekta.providence.descriptor.PDeclaredDescriptor&lt;net.morimekta.providence.descriptor.PEnumDescriptor&gt;,
+                // net.morimekta.providence.descriptor.PEnumDescriptor
+                // TODO: Figure out a way to fix the generic cast.
+<span class="fc" id="L296">                PEnumDescriptor ed = (PEnumDescriptor) (Object) registry.getDeclaredType(id.substring(0, l));</span>
+<span class="fc" id="L297">                PEnumValue val = ed.findByName(id.substring(l + 1));</span>
+<span class="pc bpc" id="L298" title="3 of 4 branches missed.">                if (val == null &amp;&amp; strict) {</span>
+<span class="nc" id="L299">                    throw new TokenizerException(token, &quot;Unknown %s value: %s&quot;, id.substring(0, l), id.substring(l + 1))</span>
+<span class="nc" id="L300">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+                // Note that unknown enum value results in null. Therefore we don't catch null values here.
+<span class="fc" id="L303">                return val;</span>
+<span class="fc" id="L304">            } catch (IllegalArgumentException e) {</span>
+                // No such declared type.
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">                if (strict) {</span>
+<span class="fc" id="L307">                    throw new TokenizerException(token, &quot;Unknown enum identifier: %s&quot;, id.substring(0, l))</span>
+<span class="fc" id="L308">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="nc" id="L310">                consumeValue(context, tokenizer, token);</span>
+<span class="nc" id="L311">            } catch (ClassCastException e) {</span>
+                // Not an enum.
+<span class="nc" id="L313">                throw new TokenizerException(token, &quot;Identifier &quot; + id + &quot; does not reference an enum, from &quot; + token.asString())</span>
+<span class="nc" id="L314">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L315">            }</span>
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">        } else if (token.isQualifiedIdentifier()) {</span>
+            // Message type.
+            PMessageDescriptor descriptor;
+            try {
+                // These extra casts needs to be there, otherwise we'd get this error:
+                // incompatible types: inference variable T has incompatible upper bounds
+                // net.morimekta.providence.descriptor.PDeclaredDescriptor&lt;net.morimekta.providence.descriptor.PEnumDescriptor&gt;,
+                // net.morimekta.providence.descriptor.PEnumDescriptor
+                // TODO: Figure out a way to fix the generic cast.
+<span class="fc" id="L325">                descriptor = (PMessageDescriptor) (Object) registry.getDeclaredType(token.asString());</span>
+<span class="nc" id="L326">            } catch (IllegalArgumentException e) {</span>
+                // Unknown declared type. Fail if:
+                // - strict mode: all types must be known.
+<span class="nc bnc" id="L329" title="All 2 branches missed.">                if (strict) {</span>
+<span class="nc" id="L330">                    throw new TokenizerException(token, &quot;Unknown declared type: %s&quot;, token.asString()).setLine(</span>
+<span class="nc" id="L331">                            tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="nc" id="L333">                consumeValue(context, tokenizer, token);</span>
+<span class="nc" id="L334">                return null;</span>
+<span class="fc" id="L335">            }</span>
+<span class="fc" id="L336">            PMessageBuilder builder = descriptor.builder();</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">            if (tokenizer.expectSymbol(&quot;message start or inherits&quot;, '{', ':') == ':') {</span>
+<span class="nc" id="L338">                token = tokenizer.expect(&quot;inherits reference&quot;);</span>
+<span class="nc" id="L339">                PMessage inheritsFrom = resolve(context, token, tokenizer, descriptor);</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">                if (inheritsFrom == null) {</span>
+<span class="nc" id="L341">                    throw new TokenizerException(token, &quot;Inheriting from null reference: %s&quot;, token.asString())</span>
+<span class="nc" id="L342">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+
+<span class="nc" id="L345">                builder.merge(inheritsFrom);</span>
+<span class="nc" id="L346">                tokenizer.expectSymbol(&quot;message start&quot;, '{');</span>
+            }
+
+<span class="fc" id="L349">            return parseMessage(tokenizer, context, builder);</span>
+        } else {
+<span class="nc" id="L351">            throw new TokenizerException(token, &quot;Invalid define value &quot; + token.asString())</span>
+<span class="nc" id="L352">                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
+        }
+
+<span class="nc" id="L355">        return null;</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M parseConfigMessage(Tokenizer tokenizer,
+                                                                              ProvidenceConfigContext context,
+                                                                              PMessageBuilder&lt;M, F&gt; builder,
+                                                                              M parent,
+                                                                              File file)
+            throws IOException {
+<span class="fc bfc" id="L365" title="All 2 branches covered.">        if (tokenizer.expectSymbol(&quot;extension marker&quot;, Token.kKeyValueSep, Token.kMessageStart) == Token.kKeyValueSep) {</span>
+<span class="fc" id="L366">            Token token = tokenizer.expect(&quot;extension object&quot;);</span>
+
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">            if (parent != null) {</span>
+<span class="nc" id="L369">                throw new TokenizerException(token, &quot;Config in '&quot; + file.getName() + &quot;' has both defined parent and inherits from&quot;)</span>
+<span class="nc" id="L370">                        .setLine(tokenizer.getLine(token.getLineNo()))</span>
+<span class="nc" id="L371">                        .setFile(file.getName());</span>
+            }
+
+<span class="pc bpc" id="L374" title="1 of 2 branches missed.">            if (token.isReferenceIdentifier()) {</span>
+                try {
+<span class="fc" id="L376">                    builder.merge(resolveRequired(context, token, tokenizer, builder.descriptor()));</span>
+<span class="nc" id="L377">                } catch (ClassCastException e) {</span>
+<span class="nc" id="L378">                    throw new TokenizerException(token, &quot;Config type mismatch, expected  &quot;)</span>
+<span class="nc" id="L379">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L380">                } catch (ProvidenceConfigException e) {</span>
+<span class="nc" id="L381">                    throw new TokenizerException(token, e.getMessage())</span>
+<span class="nc" id="L382">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L383">                }</span>
+<span class="fc" id="L384">                tokenizer.expectSymbol(&quot;object begin&quot;, Token.kMessageStart);</span>
+            } else {
+<span class="nc" id="L386">                throw new TokenizerException(token, &quot;Unexpected token &quot; + token.asString() + &quot;, expected reference identifier&quot;)</span>
+<span class="nc" id="L387">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+            }
+<span class="fc bfc" id="L389" title="All 2 branches covered.">        } else if (parent != null) {</span>
+<span class="fc" id="L390">            builder.merge(parent);</span>
+        }
+
+<span class="fc" id="L393">        return parseMessage(tokenizer, context, builder);</span>
+    }
+
+    private void consumeValue(ProvidenceConfigContext context, Tokenizer tokenizer, Token token) throws IOException {
+<span class="pc bpc" id="L397" title="1 of 2 branches missed.">        if (UNDEFINED.equals(token.asString())) {</span>
+            // ignore undefined.
+<span class="nc" id="L399">            return;</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">        } else if (token.isReferenceIdentifier()) {</span>
+<span class="pc bpc" id="L401" title="1 of 2 branches missed.">            if (!tokenizer.peek().isSymbol(Token.kMessageStart)) {</span>
+                // just a reference.
+<span class="nc" id="L403">                return;</span>
+            }
+            // reference + message.
+<span class="fc" id="L406">            token = tokenizer.next();</span>
+        }
+<span class="fc bfc" id="L408" title="All 2 branches covered.">        if (token.isSymbol(Token.kMessageStart)) {</span>
+            // message or map.
+<span class="fc" id="L410">            token = tokenizer.expect(&quot;map or message first entry&quot;);</span>
+
+<span class="pc bpc" id="L412" title="2 of 4 branches missed.">            if (!token.isSymbol(Token.kMessageEnd) &amp;&amp; !token.isIdentifier()) {</span>
+                // assume map.
+<span class="nc bnc" id="L414" title="All 2 branches missed.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="nc bnc" id="L415" title="All 4 branches missed.">                    if (token.isIdentifier() || token.isReferenceIdentifier()) {</span>
+<span class="nc" id="L416">                        throw new TokenizerException(token, &quot;Invalid map key: &quot; + token.asString())</span>
+<span class="nc" id="L417">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                    }
+<span class="nc" id="L419">                    consumeValue(context, tokenizer, token);</span>
+<span class="nc" id="L420">                    tokenizer.expectSymbol(&quot;key value sep.&quot;, Token.kKeyValueSep);</span>
+<span class="nc" id="L421">                    consumeValue(context, tokenizer, tokenizer.expect(&quot;map value&quot;));</span>
+
+                    // maps do *not* require separator, but allows ',' separator, and separator after last.
+<span class="nc" id="L424">                    token = tokenizer.expect(&quot;map key, end or sep&quot;);</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="nc" id="L426">                        token = tokenizer.expect(&quot;map key or end&quot;);</span>
+                    }
+                }
+            } else {
+                // assume message.
+<span class="fc bfc" id="L431" title="All 2 branches covered.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="pc bpc" id="L432" title="1 of 2 branches missed.">                    if (!token.isIdentifier()) {</span>
+<span class="nc" id="L433">                        throw new TokenizerException(token, &quot;Invalid field name: &quot; + token.asString())</span>
+<span class="nc" id="L434">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                    }
+<span class="fc bfc" id="L436" title="All 2 branches covered.">                    if (tokenizer.peek().isSymbol(DEFINE_REFERENCE)) {</span>
+<span class="fc" id="L437">                        tokenizer.next();</span>
+<span class="pc" id="L438">                        context.setReference(</span>
+<span class="nc" id="L439">                                context.initReference(</span>
+<span class="fc" id="L440">                                        tokenizer.expectIdentifier(&quot;reference name&quot;), tokenizer),</span>
+                                null);
+                    }
+
+<span class="pc bpc" id="L444" title="1 of 2 branches missed.">                    if (tokenizer.peek().isSymbol(Token.kMessageStart)) {</span>
+                        // direct inheritance of message field.
+<span class="nc" id="L446">                        consumeValue(context, tokenizer, tokenizer.next());</span>
+                    } else {
+<span class="fc" id="L448">                        tokenizer.expectSymbol(&quot;field value sep.&quot;, Token.kFieldValueSep);</span>
+<span class="fc" id="L449">                        consumeValue(context, tokenizer, tokenizer.next());</span>
+                    }
+<span class="fc" id="L451">                    token = nextNotLineSep(tokenizer, &quot;message field or end&quot;);</span>
+                }
+            }
+<span class="pc bpc" id="L454" title="1 of 2 branches missed.">        } else if (token.isSymbol(Token.kListStart)) {</span>
+<span class="nc" id="L455">            token = tokenizer.next();</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">            while (!token.isSymbol(Token.kListEnd)) {</span>
+<span class="nc" id="L457">                consumeValue(context, tokenizer, token);</span>
+                // lists and sets require list separator (,), and allows trailing separator.
+<span class="nc bnc" id="L459" title="All 2 branches missed.">                if (tokenizer.expectSymbol(&quot;list separator or end&quot;, Token.kLineSep1, Token.kListEnd) == Token.kListEnd) {</span>
+<span class="nc" id="L460">                    break;</span>
+                }
+<span class="nc" id="L462">                token = tokenizer.expect(&quot;list value or end&quot;);</span>
+            }
+<span class="pc bpc" id="L464" title="1 of 2 branches missed.">        } else if (token.asString().equals(Token.HEX)) {</span>
+<span class="nc" id="L465">            tokenizer.expectSymbol(&quot;hex body start&quot;, Token.kParamsStart);</span>
+<span class="nc" id="L466">            tokenizer.readBinary(Token.kParamsEnd);</span>
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">        } else if (!(token.isReal() ||  // number (double)</span>
+<span class="fc bfc" id="L468" title="All 2 branches covered.">                     token.isInteger() ||  // number (int)</span>
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">                     token.isStringLiteral() ||  // string literal</span>
+<span class="nc bnc" id="L470" title="All 2 branches missed.">                     token.isIdentifier())) {  // enum value reference.</span>
+<span class="nc" id="L471">            throw new TokenizerException(token, &quot;Unknown value token '%s'&quot;, token.asString())</span>
+<span class="nc" id="L472">                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
+        }
+<span class="fc" id="L474">    }</span>
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M parseMessage(Tokenizer tokenizer,
+                                                                        ProvidenceConfigContext context,
+                                                                        PMessageBuilder&lt;M, F&gt; builder)
+            throws IOException {
+<span class="fc" id="L481">        PMessageDescriptor&lt;M, F&gt; descriptor = builder.descriptor();</span>
+
+<span class="fc" id="L483">        Token token = tokenizer.expect(&quot;object end or field&quot;);</span>
+<span class="fc bfc" id="L484" title="All 2 branches covered.">        while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="pc bpc" id="L485" title="1 of 2 branches missed.">            if (!token.isIdentifier()) {</span>
+<span class="nc" id="L486">                throw new TokenizerException(token, &quot;Invalid field name: &quot; + token.asString())</span>
+<span class="nc" id="L487">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+            }
+
+<span class="fc" id="L490">            F field = descriptor.findFieldByName(token.asString());</span>
+<span class="fc bfc" id="L491" title="All 2 branches covered.">            if (field == null) {</span>
+<span class="fc bfc" id="L492" title="All 2 branches covered.">                if (strict) {</span>
+<span class="fc" id="L493">                    throw new TokenizerException(&quot;No such field &quot; + token.asString() + &quot; in &quot; + descriptor.getQualifiedName())</span>
+<span class="fc" id="L494">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                } else {
+<span class="fc" id="L496">                    token = tokenizer.expect(&quot;field value sep, message start or reference start&quot;);</span>
+<span class="fc bfc" id="L497" title="All 2 branches covered.">                    if (token.isSymbol(DEFINE_REFERENCE)) {</span>
+<span class="pc" id="L498">                        context.setReference(</span>
+<span class="nc" id="L499">                                context.initReference(tokenizer.expectIdentifier(&quot;reference name&quot;), tokenizer),</span>
+                                null);
+                        // Ignore reference.
+<span class="nc" id="L502">                        token = tokenizer.expect(&quot;field value sep or message start&quot;);</span>
+                    }
+<span class="fc bfc" id="L504" title="All 2 branches covered.">                    if (token.isSymbol(Token.kFieldValueSep)) {</span>
+<span class="fc" id="L505">                        token = tokenizer.expect(&quot;value declaration&quot;);</span>
+<span class="pc bpc" id="L506" title="1 of 2 branches missed.">                    } else if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L507">                        throw new TokenizerException(token, &quot;Expected field-value separator or inherited message&quot;)</span>
+<span class="nc" id="L508">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                    }
+                    // Non-strict will just consume unknown fields, this way
+                    // we can be forward-compatible when reading config.
+<span class="fc" id="L512">                    consumeValue(context, tokenizer, token);</span>
+<span class="fc" id="L513">                    token = nextNotLineSep(tokenizer, &quot;field or message end&quot;);</span>
+<span class="fc" id="L514">                    continue;</span>
+                }
+            }
+
+<span class="fc bfc" id="L518" title="All 2 branches covered.">            if (field.getType() == PType.MESSAGE) {</span>
+                // go recursive with optional
+<span class="fc" id="L520">                String reference = null;</span>
+<span class="fc" id="L521">                char symbol = tokenizer.expectSymbol(</span>
+                        &quot;Message assigner or start&quot;,
+                        Token.kFieldValueSep,
+                        Token.kMessageStart,
+                        DEFINE_REFERENCE);
+<span class="fc bfc" id="L526" title="All 2 branches covered.">                if (symbol == DEFINE_REFERENCE) {</span>
+<span class="fc" id="L527">                    reference = context.initReference(tokenizer.expectIdentifier(&quot;reference name&quot;), tokenizer);</span>
+<span class="fc" id="L528">                    symbol = tokenizer.expectSymbol(&quot;Message assigner or start after &quot; + reference, Token.kFieldValueSep, Token.kMessageStart);</span>
+                }
+
+                PMessageBuilder bld;
+<span class="fc bfc" id="L532" title="All 2 branches covered.">                if (symbol == Token.kFieldValueSep) {</span>
+<span class="fc" id="L533">                    token = tokenizer.expect(&quot;reference or message start&quot;);</span>
+<span class="fc bfc" id="L534" title="All 2 branches covered.">                    if (UNDEFINED.equals(token.asString())) {</span>
+                        // unset.
+<span class="fc" id="L536">                        builder.clear(field.getId());</span>
+<span class="fc" id="L537">                        context.setReference(reference, null);</span>
+
+                        // special casing this, as we don't want to duplicate the parse line below.
+<span class="fc" id="L540">                        token = nextNotLineSep(tokenizer, &quot;field or message end&quot;);</span>
+<span class="fc" id="L541">                        continue;</span>
+                    }
+                    // overwrite with new.
+<span class="fc" id="L544">                    bld = ((PMessageDescriptor) field.getDescriptor()).builder();</span>
+<span class="fc bfc" id="L545" title="All 2 branches covered.">                    if (token.isReferenceIdentifier()) {</span>
+                        // Inherit from reference.
+                        try {
+<span class="fc" id="L548">                            PMessage ref = resolve(context, token, tokenizer, field.getDescriptor());</span>
+<span class="pc bpc" id="L549" title="1 of 2 branches missed.">                            if (ref != null) {</span>
+<span class="fc" id="L550">                                bld.merge(ref);</span>
+                            } else {
+<span class="nc bnc" id="L552" title="All 2 branches missed.">                                if (tokenizer.peek().isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L553">                                    throw new TokenizerException(token, &quot;Inherit from unknown reference %s&quot;, token.asString())</span>
+<span class="nc" id="L554">                                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">                                } else if (strict) {</span>
+<span class="nc" id="L556">                                    throw new TokenizerException(token, &quot;Unknown reference %s&quot;, token.asString())</span>
+<span class="nc" id="L557">                                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                                }
+                            }
+<span class="nc" id="L560">                        } catch (ProvidenceConfigException e) {</span>
+<span class="nc" id="L561">                            throw new TokenizerException(token, &quot;Unknown inherited reference '%s'&quot;, token.asString())</span>
+<span class="nc" id="L562">                                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L563">                        }</span>
+
+<span class="fc" id="L565">                        token = tokenizer.expect(&quot;after message reference&quot;);</span>
+                        // if the following symbol is *not* message start,
+                        // we assume a new field or end of current message.
+<span class="fc bfc" id="L568" title="All 2 branches covered.">                        if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="fc" id="L569">                            builder.set(field.getId(), context.setReference(reference, bld.build()));</span>
+<span class="fc" id="L570">                            continue;</span>
+                        }
+<span class="pc bpc" id="L572" title="1 of 2 branches missed.">                    } else if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L573">                        throw new TokenizerException(token,</span>
+<span class="nc" id="L574">                                                     &quot;Unexpected token &quot; + token.asString() +</span>
+<span class="nc" id="L575">                                                     &quot;, expected message start&quot;).setLine(tokenizer.getLine(token.getLineNo()));</span>
+                    }
+                } else {
+                    // extend in-line.
+<span class="fc" id="L579">                    bld = builder.mutator(field.getId());</span>
+                }
+<span class="fc" id="L581">                builder.set(field.getId(), context.setReference(reference, parseMessage(tokenizer, context, bld)));</span>
+<span class="fc bfc" id="L582" title="All 2 branches covered.">            } else if (field.getType() == PType.MAP) {</span>
+                // maps can be extended the same way as
+<span class="fc" id="L584">                token = tokenizer.expect(&quot;field sep or value start&quot;);</span>
+<span class="fc" id="L585">                Map baseValue = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L586">                String reference = null;</span>
+<span class="pc bpc" id="L587" title="1 of 2 branches missed.">                if (token.isSymbol(DEFINE_REFERENCE)) {</span>
+<span class="nc" id="L588">                    reference = context.initReference(tokenizer.expectIdentifier(&quot;reference name&quot;), tokenizer);</span>
+<span class="nc" id="L589">                    token = tokenizer.expect(&quot;field sep or value start&quot;);</span>
+                }
+
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">                if (token.isSymbol(Token.kFieldValueSep)) {</span>
+<span class="fc" id="L593">                    token = tokenizer.expect(&quot;field id or start&quot;);</span>
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">                    if (UNDEFINED.equals(token.asString())) {</span>
+<span class="nc" id="L595">                        builder.clear(field.getId());</span>
+<span class="nc" id="L596">                        context.setReference(reference, null);</span>
+
+<span class="nc" id="L598">                        token = tokenizer.expect(&quot;message end or field&quot;);</span>
+<span class="nc" id="L599">                        continue;</span>
+<span class="pc bpc" id="L600" title="1 of 2 branches missed.">                    } else if (token.isReferenceIdentifier()) {</span>
+                        try {
+<span class="nc" id="L602">                            baseValue = resolve(context, token, tokenizer, field.getDescriptor());</span>
+<span class="nc" id="L603">                        } catch (ProvidenceConfigException e) {</span>
+<span class="nc" id="L604">                            throw new TokenizerException(token, e.getMessage())</span>
+<span class="nc" id="L605">                                    .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="nc" id="L606">                        }</span>
+
+<span class="nc" id="L608">                        token = tokenizer.expect(&quot;map start or next field&quot;);</span>
+<span class="nc bnc" id="L609" title="All 2 branches missed.">                        if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L610">                            builder.set(field.getId(), context.setReference(reference, baseValue));</span>
+<span class="nc" id="L611">                            continue;</span>
+<span class="nc bnc" id="L612" title="All 2 branches missed.">                        } else if (baseValue == null) {</span>
+<span class="nc" id="L613">                            baseValue = new LinkedHashMap&lt;&gt;();</span>
+                        }
+                    }
+                } else {
+<span class="nc" id="L617">                    baseValue.putAll((Map) builder.build().get(field.getId()));</span>
+                }
+
+<span class="pc bpc" id="L620" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L621">                    throw new TokenizerException(token, &quot;Expected map start, but got '%s'&quot;, token.asString())</span>
+<span class="nc" id="L622">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+                }
+<span class="fc" id="L624">                Map map =  parseMapValue(tokenizer, context, (PMap) field.getDescriptor(), baseValue);</span>
+<span class="fc" id="L625">                builder.set(field.getId(), context.setReference(reference, map));</span>
+<span class="fc" id="L626">            } else {</span>
+<span class="fc" id="L627">                String reference = null;</span>
+                // Simple fields *must* have the '=' separation, may have '&amp;' reference.
+<span class="fc bfc" id="L629" title="All 2 branches covered.">                if (tokenizer.expectSymbol(&quot;field value sep&quot;, Token.kFieldValueSep, DEFINE_REFERENCE) ==</span>
+                    DEFINE_REFERENCE) {
+<span class="fc" id="L631">                    reference = context.initReference(tokenizer.expectIdentifier(&quot;reference name&quot;), tokenizer);</span>
+<span class="fc" id="L632">                    tokenizer.expectSymbol(&quot;field value sep&quot;, Token.kFieldValueSep);</span>
+                }
+<span class="fc" id="L634">                token = tokenizer.expect(&quot;field value&quot;);</span>
+<span class="pc bpc" id="L635" title="1 of 2 branches missed.">                if (UNDEFINED.equals(token.asString())) {</span>
+<span class="nc" id="L636">                    builder.clear(field.getId());</span>
+<span class="nc" id="L637">                    context.setReference(reference, null);</span>
+                } else {
+<span class="fc" id="L639">                    Object value = parseFieldValue(token, tokenizer, context, field.getDescriptor());</span>
+<span class="fc" id="L640">                    builder.set(field.getId(), context.setReference(reference, value));</span>
+                }
+            }
+
+<span class="fc" id="L644">            token = nextNotLineSep(tokenizer, &quot;field or message end&quot;);</span>
+<span class="fc" id="L645">        }</span>
+
+<span class="fc" id="L647">        return builder.build();</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private Map parseMapValue(Tokenizer tokenizer,
+                              ProvidenceConfigContext context,
+                              PMap descriptor,
+                              Map builder) throws IOException {
+<span class="fc" id="L655">        Token next = tokenizer.expect(&quot;map key or end&quot;);</span>
+<span class="fc bfc" id="L656" title="All 2 branches covered.">        while (!next.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L657">            Object key = parseFieldValue(next, tokenizer, context, descriptor.keyDescriptor());</span>
+<span class="fc" id="L658">            tokenizer.expectSymbol(&quot;map key value sep&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L659">            next = tokenizer.expect(&quot;map value&quot;);</span>
+<span class="pc bpc" id="L660" title="1 of 2 branches missed.">            if (UNDEFINED.equals(next.asString())) {</span>
+<span class="nc" id="L661">                builder.remove(key);</span>
+            } else {
+<span class="fc" id="L663">                Object value = parseFieldValue(next, tokenizer, context, descriptor.itemDescriptor());</span>
+<span class="fc" id="L664">                builder.put(key, value);</span>
+            }
+            // maps do *not* require separator, but allows ',' separator, and separator after last.
+<span class="fc" id="L667">            next = tokenizer.expect(&quot;map key, end or sep&quot;);</span>
+<span class="pc bpc" id="L668" title="1 of 2 branches missed.">            if (next.isSymbol(Token.kLineSep1)) {</span>
+<span class="nc" id="L669">                next = tokenizer.expect(&quot;map key or end&quot;);</span>
+            }
+<span class="fc" id="L671">        }</span>
+
+<span class="fc" id="L673">        return descriptor.builder().putAll(builder).build();</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private Object parseFieldValue(Token next,
+                                   Tokenizer tokenizer,
+                                   ProvidenceConfigContext context,
+                                   PDescriptor descriptor) throws IOException {
+        try {
+<span class="pc bpc" id="L682" title="4 of 14 branches missed.">            switch (descriptor.getType()) {</span>
+                case BOOL:
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">                    if (TRUE.equals(next.asString())) {</span>
+<span class="nc" id="L685">                        return true;</span>
+<span class="fc bfc" id="L686" title="All 2 branches covered.">                    } else if (FALSE.equals(next.asString())) {</span>
+<span class="fc" id="L687">                        return false;</span>
+<span class="pc bpc" id="L688" title="1 of 2 branches missed.">                    } else if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L689">                        return resolve(context, next, tokenizer, descriptor);</span>
+                    }
+                    break;
+                case BYTE:
+<span class="pc bpc" id="L693" title="1 of 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L694">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="nc bnc" id="L695" title="All 2 branches missed.">                    } else if (next.isInteger()) {</span>
+<span class="nc" id="L696">                        return (byte) next.parseInteger();</span>
+                    }
+                    break;
+                case I16:
+<span class="fc bfc" id="L700" title="All 2 branches covered.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L701">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="pc bpc" id="L702" title="1 of 2 branches missed.">                    } else if (next.isInteger()) {</span>
+<span class="fc" id="L703">                        return (short) next.parseInteger();</span>
+                    }
+                    break;
+                case I32:
+<span class="pc bpc" id="L707" title="1 of 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L708">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="nc bnc" id="L709" title="All 2 branches missed.">                    } else if (next.isInteger()) {</span>
+<span class="nc" id="L710">                        return (int) next.parseInteger();</span>
+                    }
+                    break;
+                case I64:
+<span class="pc bpc" id="L714" title="1 of 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L715">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">                    } else if (next.isInteger()) {</span>
+<span class="nc" id="L717">                        return next.parseInteger();</span>
+                    }
+                    break;
+                case DOUBLE:
+<span class="pc bpc" id="L721" title="1 of 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L722">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="nc bnc" id="L723" title="All 4 branches missed.">                    } else if (next.isInteger() || next.isReal()) {</span>
+<span class="nc" id="L724">                        return next.parseDouble();</span>
+                    }
+                    break;
+                case STRING:
+<span class="fc bfc" id="L728" title="All 2 branches covered.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L729">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="pc bpc" id="L730" title="1 of 2 branches missed.">                    } else if (next.isStringLiteral()) {</span>
+<span class="fc" id="L731">                        return next.decodeLiteral(strict);</span>
+                    }
+                    break;
+                case BINARY:
+<span class="fc bfc" id="L735" title="All 2 branches covered.">                    if (Token.B64.equals(next.asString())) {</span>
+<span class="fc" id="L736">                        tokenizer.expectSymbol(&quot;binary data enclosing start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L737">                        return Binary.fromBase64(tokenizer.readBinary(Token.kParamsEnd));</span>
+<span class="pc bpc" id="L738" title="1 of 2 branches missed.">                    } else if (Token.HEX.equals(next.asString())) {</span>
+<span class="nc" id="L739">                        tokenizer.expectSymbol(&quot;binary data enclosing start&quot;, Token.kParamsStart);</span>
+<span class="nc" id="L740">                        return Binary.fromHexString(tokenizer.readBinary(Token.kParamsEnd));</span>
+<span class="pc bpc" id="L741" title="1 of 2 branches missed.">                    } else if (next.isReferenceIdentifier()) {</span>
+<span class="fc" id="L742">                        return resolve(context, next, tokenizer, descriptor);</span>
+                    }
+                    break;
+                case ENUM: {
+<span class="fc" id="L746">                    PEnumDescriptor ed = (PEnumDescriptor) descriptor;</span>
+                    PEnumValue value;
+<span class="pc bpc" id="L748" title="1 of 2 branches missed.">                    if (next.isInteger()) {</span>
+<span class="nc" id="L749">                        value = ed.findById((int) next.parseInteger());</span>
+<span class="pc bpc" id="L750" title="1 of 2 branches missed.">                    } else if (next.isIdentifier()) {</span>
+<span class="fc" id="L751">                        value = ed.findByName(next.asString());</span>
+<span class="pc bpc" id="L752" title="1 of 4 branches missed.">                        if (value == null &amp;&amp; context.containsReference(next.asString())) {</span>
+<span class="fc" id="L753">                            value = resolve(context, next, tokenizer, ed);</span>
+                        }
+<span class="nc bnc" id="L755" title="All 2 branches missed.">                    } else if (next.isReferenceIdentifier()) {</span>
+<span class="nc" id="L756">                        value = resolve(context, next, tokenizer, descriptor);</span>
+                    } else {
+                        break;
+                    }
+<span class="fc bfc" id="L760" title="All 4 branches covered.">                    if (value == null &amp;&amp; strict) {</span>
+<span class="fc" id="L761">                        throw new TokenizerException(next, &quot;No such enum value %s for %s.&quot;,</span>
+<span class="fc" id="L762">                                                     next.asString(),</span>
+<span class="fc" id="L763">                                                     ed.getQualifiedName())</span>
+<span class="fc" id="L764">                                .setLine(tokenizer.getLine(next.getLineNo()));</span>
+                    }
+<span class="fc" id="L766">                    return value;</span>
+                }
+                case MESSAGE:
+<span class="nc bnc" id="L769" title="All 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="nc" id="L770">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">                    } else if (next.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L772">                        return parseMessage(tokenizer, context, ((PMessageDescriptor) descriptor).builder());</span>
+                    }
+                    break;
+                case MAP: {
+<span class="nc bnc" id="L776" title="All 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+                        Map resolved;
+                        try {
+                            // Make sure the reference is to a map.
+<span class="nc" id="L780">                            resolved = resolve(context, next, tokenizer, descriptor);</span>
+<span class="nc" id="L781">                        } catch (ClassCastException e) {</span>
+<span class="nc" id="L782">                            throw new TokenizerException(next, &quot;Reference %s is not a map field &quot;, next.asString())</span>
+<span class="nc" id="L783">                                    .setLine(tokenizer.getLine(next.getLineNo()));</span>
+<span class="nc" id="L784">                        }</span>
+<span class="nc" id="L785">                        return resolved;</span>
+<span class="nc bnc" id="L786" title="All 2 branches missed.">                    } else if (next.isSymbol(Token.kMessageStart)) {</span>
+<span class="nc" id="L787">                        return parseMapValue(tokenizer, context, (PMap) descriptor, new LinkedHashMap());</span>
+                    }
+                    break;
+                }
+                case SET: {
+<span class="nc bnc" id="L792" title="All 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="nc" id="L793">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="nc bnc" id="L794" title="All 2 branches missed.">                    } else if (next.isSymbol(Token.kListStart)) {</span>
+                        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L796">                        PSet&lt;Object&gt; ct = (PSet) descriptor;</span>
+<span class="nc" id="L797">                        Set&lt;Object&gt; value = new LinkedHashSet&lt;&gt;();</span>
+
+<span class="nc" id="L799">                        next = tokenizer.expect(&quot;set value or end&quot;);</span>
+<span class="nc bnc" id="L800" title="All 2 branches missed.">                        while (!next.isSymbol(Token.kListEnd)) {</span>
+<span class="nc" id="L801">                            value.add(parseFieldValue(next, tokenizer, context, ct.itemDescriptor()));</span>
+                            // sets require separator, and allows separator after last.
+<span class="nc bnc" id="L803" title="All 2 branches missed.">                            if (tokenizer.expectSymbol(&quot;set separator or end&quot;, Token.kLineSep1, Token.kListEnd) == Token.kListEnd) {</span>
+<span class="nc" id="L804">                                break;</span>
+                            }
+<span class="nc" id="L806">                            next = tokenizer.expect(&quot;set value or end&quot;);</span>
+                        }
+
+<span class="nc" id="L809">                        return ct.builder()</span>
+<span class="nc" id="L810">                                 .addAll(value)</span>
+<span class="nc" id="L811">                                 .build();</span>
+                    }
+                    break;
+                }
+                case LIST: {
+<span class="pc bpc" id="L816" title="1 of 2 branches missed.">                    if (next.isReferenceIdentifier()) {</span>
+<span class="nc" id="L817">                        return resolve(context, next, tokenizer, descriptor);</span>
+<span class="pc bpc" id="L818" title="1 of 2 branches missed.">                    } else if (next.isSymbol(Token.kListStart)) {</span>
+                        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L820">                        PList&lt;Object&gt; ct = (PList) descriptor;</span>
+<span class="fc" id="L821">                        PList.Builder&lt;Object&gt; builder = ct.builder();</span>
+
+<span class="fc" id="L823">                        next = tokenizer.expect(&quot;list value or end&quot;);</span>
+<span class="pc bpc" id="L824" title="1 of 2 branches missed.">                        while (!next.isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L825">                            builder.add(parseFieldValue(next, tokenizer, context, ct.itemDescriptor()));</span>
+                            // lists require separator, and allows separator after last.
+<span class="pc bpc" id="L827" title="1 of 2 branches missed.">                            if (tokenizer.expectSymbol(&quot;list separator or end&quot;, Token.kLineSep1, Token.kListEnd) == Token.kListEnd) {</span>
+<span class="fc" id="L828">                                break;</span>
+                            }
+<span class="nc" id="L830">                            next = tokenizer.expect(&quot;list value or end&quot;);</span>
+                        }
+
+<span class="fc" id="L833">                        return builder.build();</span>
+                    }
+                    break;
+                }
+                default: {
+<span class="nc" id="L838">                    throw new TokenizerException(next, descriptor.getType() + &quot; not supported!&quot;).setLine(tokenizer.getLine(</span>
+<span class="nc" id="L839">                            next.getLineNo()));</span>
+                }
+            }
+<span class="nc" id="L842">        } catch (ProvidenceConfigException e) {</span>
+<span class="nc" id="L843">            throw new TokenizerException(next, e.getMessage())</span>
+<span class="nc" id="L844">                    .setLine(tokenizer.getLine(next.getLineNo()));</span>
+<span class="nc" id="L845">        }</span>
+
+<span class="nc" id="L847">        throw new TokenizerException(next, &quot;Unhandled value \&quot;%s\&quot; for type %s&quot;,</span>
+<span class="nc" id="L848">                                     next.asString(),</span>
+<span class="nc" id="L849">                                     descriptor.getType())</span>
+<span class="nc" id="L850">                .setLine(tokenizer.getLine(next.getLineNo()));</span>
+    }
+
+    private Token nextNotLineSep(Tokenizer tokenizer, String message) throws IOException {
+<span class="pc bpc" id="L854" title="1 of 2 branches missed.">        if (tokenizer.peek().isSymbol(Token.kLineSep1) ||</span>
+<span class="pc bpc" id="L855" title="1 of 2 branches missed.">            tokenizer.peek().isSymbol(Token.kLineSep2)) {</span>
+<span class="nc" id="L856">            tokenizer.expect(message);</span>
+        }
+<span class="fc" id="L858">        return tokenizer.expect(message);</span>
+    }
+
+    @Nonnull
+    private &lt;V&gt; V resolveRequired(ProvidenceConfigContext context,
+                                  Token token,
+                                  Tokenizer tokenizer,
+                                  PDescriptor descriptor) throws TokenizerException {
+<span class="fc" id="L866">        V result = resolve(context, token, tokenizer, descriptor);</span>
+<span class="pc bpc" id="L867" title="1 of 2 branches missed.">        if (result == null) {</span>
+<span class="nc" id="L868">            throw new TokenizerException(&quot;Nu&quot;);</span>
+        }
+<span class="fc" id="L870">        return result;</span>
+    }
+
+    /**
+     * Resolve a value reference.
+     *
+     * @param context The parsing context.
+     * @param token The ID token to look for.
+     * @param tokenizer The tokenizer.
+     * @param descriptor The item descriptor.
+     * @return The value at the given key, or exception if not found.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private &lt;V&gt; V resolve(ProvidenceConfigContext context,
+                          Token token,
+                          Tokenizer tokenizer,
+                          PDescriptor descriptor) throws TokenizerException {
+<span class="fc" id="L887">        Object value = resolveAny(context, token, tokenizer);</span>
+<span class="pc bpc" id="L888" title="1 of 2 branches missed.">        if (value == null) {</span>
+<span class="nc" id="L889">            return null;</span>
+        }
+<span class="pc bpc" id="L891" title="3 of 13 branches missed.">        switch (descriptor.getType()) {</span>
+            case BOOL:
+<span class="fc" id="L893">                return (V) (Object) asBoolean(value);</span>
+            case BYTE:
+<span class="fc" id="L895">                return (V) (Object) (byte) asInteger(value);</span>
+            case I16:
+<span class="fc" id="L897">                return (V) (Object) (short) asInteger(value);</span>
+            case I32:
+<span class="fc" id="L899">                return (V) (Object) asInteger(value);</span>
+            case I64:
+<span class="fc" id="L901">                return (V) (Object) asLong(value);</span>
+            case DOUBLE:
+<span class="fc" id="L903">                return (V) (Object) asDouble(value);</span>
+            case ENUM:
+<span class="pc bpc" id="L905" title="1 of 2 branches missed.">                if (value instanceof PEnumValue) {</span>
+<span class="fc" id="L906">                    PEnumValue verified = ((PEnumDescriptor) descriptor).findById(((PEnumValue) value).asInteger());</span>
+<span class="pc bpc" id="L907" title="1 of 2 branches missed.">                    if (value.equals(verified)) {</span>
+<span class="fc" id="L908">                        return (V) value;</span>
+                    }
+<span class="nc bnc" id="L910" title="All 2 branches missed.">                } else if (value instanceof Number) {</span>
+<span class="nc" id="L911">                    return (V) ((PEnumDescriptor) descriptor).findById(((Number) value).intValue());</span>
+<span class="nc bnc" id="L912" title="All 2 branches missed.">                } else if (value instanceof CharSequence) {</span>
+<span class="nc" id="L913">                    return (V) ((PEnumDescriptor) descriptor).findByName(value.toString());</span>
+                }
+<span class="nc" id="L915">                throw new ProvidenceConfigException(value.getClass().getSimpleName() + &quot; is not compatible with &quot; + descriptor.getQualifiedName());</span>
+            case STRING:
+<span class="fc" id="L917">                return (V) asString(value);</span>
+            case BINARY:
+<span class="pc bpc" id="L919" title="1 of 2 branches missed.">                if (value instanceof Binary) {</span>
+<span class="fc" id="L920">                    return (V) value;</span>
+<span class="nc bnc" id="L921" title="All 2 branches missed.">                } else if (value instanceof CharSequence) {</span>
+<span class="nc" id="L922">                    return (V) Binary.fromBase64(value.toString());</span>
+                }
+<span class="nc" id="L924">                throw new ProvidenceConfigException(value.getClass().getSimpleName() + &quot; is not compatible with binary&quot;);</span>
+            case MAP:
+<span class="nc bnc" id="L926" title="All 2 branches missed.">                if (value instanceof Map) {</span>
+<span class="nc" id="L927">                    return (V) value;</span>
+                }
+<span class="nc" id="L929">                throw new ProvidenceConfigException(value.getClass().getSimpleName() + &quot; is not compatible with map&quot;);</span>
+            case SET:
+            case LIST:
+<span class="nc bnc" id="L932" title="All 2 branches missed.">                if (value instanceof Collection) {</span>
+<span class="nc" id="L933">                    return (V) value;</span>
+                }
+<span class="nc" id="L935">                throw new ProvidenceConfigException(value.getClass().getSimpleName() + &quot; is not compatible with &quot; + descriptor.getType());</span>
+            case MESSAGE:
+<span class="pc bpc" id="L937" title="1 of 2 branches missed.">                if (value instanceof PMessage) {</span>
+<span class="pc bpc" id="L938" title="1 of 2 branches missed.">                    if (descriptor.equals(((PMessage) value).descriptor())) {</span>
+<span class="fc" id="L939">                        return (V) value;</span>
+                    }
+                }
+<span class="nc" id="L942">                throw new ProvidenceConfigException(value.getClass().getSimpleName() + &quot; is not compatible with &quot; + descriptor.getQualifiedName());</span>
+            default:
+<span class="nc" id="L944">                throw new IllegalArgumentException(&quot;Type &quot; + descriptor.getType() + &quot; is not handled by config.&quot;);</span>
+        }
+    }
+
+    private Object resolveAny(ProvidenceConfigContext context, Token token, Tokenizer tokenizer)
+            throws TokenizerException {
+<span class="fc" id="L950">        String key = token.asString();</span>
+
+<span class="fc" id="L952">        String name = key;</span>
+<span class="fc" id="L953">        String subKey = null;</span>
+
+<span class="pc bpc" id="L955" title="1 of 2 branches missed.">        if (key.contains(IDENTIFIER_SEP)) {</span>
+<span class="nc" id="L956">            int idx = key.indexOf(IDENTIFIER_SEP);</span>
+<span class="nc" id="L957">            name = key.substring(0, idx);</span>
+<span class="nc" id="L958">            subKey = key.substring(idx + 1);</span>
+        }
+
+<span class="fc" id="L961">        Object value = context.getReference(name, token, tokenizer);</span>
+<span class="pc bpc" id="L962" title="1 of 2 branches missed.">        if (subKey != null) {</span>
+<span class="nc bnc" id="L963" title="All 2 branches missed.">            if (!(value instanceof PMessage)) {</span>
+<span class="nc" id="L964">                throw new TokenizerException(token, &quot;Reference name &quot; + key + &quot; not declared&quot;);</span>
+            }
+            try {
+<span class="nc" id="L967">                return ProvidenceConfigUtil.getInMessage((PMessage) value, subKey, null);</span>
+<span class="nc" id="L968">            } catch (ProvidenceConfigException e) {</span>
+<span class="nc" id="L969">                throw new TokenizerException(token, e.getMessage())</span>
+<span class="nc" id="L970">                        .setLine(tokenizer.getLine(token.getLineNo()))</span>
+<span class="nc" id="L971">                        .initCause(e);</span>
+            }
+        }
+<span class="fc" id="L974">        return value;</span>
+    }
+
+
+    /**
+     * Type registry for looking up the base config types.
+     */
+    private final TypeRegistry registry;
+
+    /**
+     * If config should be parsed strictly.
+     */
+    private final boolean strict;
+
+    // --- static
+
+    private static final String IDENTIFIER_SEP = &quot;.&quot;;
+    private static final char DEFINE_REFERENCE = '&amp;';
+
+    private static final String FALSE     = &quot;false&quot;;
+    private static final String TRUE      = &quot;true&quot;;
+    private static final String DEF       = &quot;def&quot;;
+    public static final  String UNDEFINED = &quot;undefined&quot;;
+    private static final String INCLUDE   = &quot;include&quot;;
+    private static final String AS        = &quot;as&quot;;
+
+<span class="fc" id="L1000">    static final Set&lt;String&gt; RESERVED_WORDS = ImmutableSet.of(</span>
+            TRUE,
+            FALSE,
+            UNDEFINED,
+            DEF,
+            AS,
+            INCLUDE
+    );
+
+    /**
+     * Resolve a file path within the source roots.
+     *
+     * @param ref A file or directory reference
+     * @param path The file reference to resolve.
+     * @return The resolved file.
+     * @throws FileNotFoundException When the file is not found.
+     * @throws IOException When unable to make canonical path.
+     */
+    protected static File resolveFile(File ref, String path) throws IOException {
+<span class="fc bfc" id="L1019" title="All 2 branches covered.">        if (ref == null) {</span>
+            // relative to PWD from initial load file path.
+<span class="fc" id="L1021">            File tmp = new File(path).getCanonicalFile().getAbsoluteFile();</span>
+<span class="fc bfc" id="L1022" title="All 2 branches covered.">            if (tmp.exists()) {</span>
+<span class="fc bfc" id="L1023" title="All 2 branches covered.">                if (tmp.isFile()) {</span>
+<span class="fc" id="L1024">                    return tmp;</span>
+                }
+<span class="fc" id="L1026">                throw new FileNotFoundException(path + &quot; is a directory, expected file&quot;);</span>
+            }
+<span class="fc" id="L1028">            throw new FileNotFoundException(&quot;File &quot; + path + &quot; not found&quot;);</span>
+<span class="fc bfc" id="L1029" title="All 2 branches covered.">        } else if (path.startsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L1030">            throw new FileNotFoundException(&quot;Absolute path includes not allowed: &quot; + path);</span>
+        } else {
+            // relative to reference file. Parent directory lookup (..) allowed.
+
+<span class="pc bpc" id="L1034" title="1 of 2 branches missed.">            if (!ref.isDirectory()) {</span>
+<span class="fc" id="L1035">                ref = ref.getParentFile();</span>
+            }
+<span class="fc" id="L1037">            File tmp = new File(ref, path).getCanonicalFile()</span>
+<span class="fc" id="L1038">                                          .getAbsoluteFile();</span>
+<span class="fc bfc" id="L1039" title="All 2 branches covered.">            if (tmp.exists()) {</span>
+<span class="fc bfc" id="L1040" title="All 2 branches covered.">                if (tmp.isFile()) {</span>
+<span class="fc" id="L1041">                    return tmp;</span>
+                }
+<span class="fc" id="L1043">                throw new FileNotFoundException(path + &quot; is a directory, expected file&quot;);</span>
+            }
+<span class="fc" id="L1045">            throw new FileNotFoundException(&quot;Included file &quot; + path + &quot; not found&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

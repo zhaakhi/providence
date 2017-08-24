@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HazelcastMessageStorage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Storage / Hazelcast</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.storage.hazelcast</a> &gt; <span class="el_source">HazelcastMessageStorage.java</span></div><h1>HazelcastMessageStorage.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.storage.hazelcast;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.storage.MessageStore;
+
+import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IMap;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+/**
+ * Note that the hazelcast message store is backed by the PMessage
+ * serializable property, which makes the message fields &lt;b&gt;not indexable&lt;/b&gt;.
+ * If that is needed, use the {@link HazelcastMessageBuilderStorage} instead.
+ * &lt;p&gt;
+ * On the other hand, this type of map is somewhat more efficient, and does not
+ * require the message to be generated with hazelcast portable
+ * support.
+ */
+public class HazelcastMessageStorage&lt;Key, Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+        implements MessageStore&lt;Key, Message, Field&gt; {
+    private final IMap&lt;Key, Message&gt; hazelcastMap;
+
+<span class="fc" id="L30">    public HazelcastMessageStorage(IMap&lt;Key, Message&gt; hazelcastMap) {</span>
+<span class="fc" id="L31">        this.hazelcastMap = hazelcastMap;</span>
+<span class="fc" id="L32">    }</span>
+
+    @Nonnull
+    @Override
+    public Map&lt;Key, Message&gt; putAll(@Nonnull Map&lt;Key, Message&gt; values) {
+<span class="fc" id="L37">        Map&lt;Key, ICompletableFuture&lt;Message&gt;&gt; futureMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L38">        values.forEach((key, message) -&gt; futureMap.put(key, hazelcastMap.putAsync(key, message)));</span>
+<span class="fc" id="L39">        Map&lt;Key, Message&gt; ret = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L40">        futureMap.forEach((key, future) -&gt; {</span>
+            try {
+<span class="fc" id="L42">                Message value = future.get();</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">                if (value != null) {</span>
+<span class="fc" id="L44">                    ret.put(key, value);</span>
+                }
+<span class="nc" id="L46">            } catch (ExecutionException | InterruptedException e) {</span>
+                // TODO: Figure out if we timed out or were interrupted...
+<span class="nc" id="L48">                throw new RuntimeException(e.getMessage(), e);</span>
+<span class="fc" id="L49">            }</span>
+<span class="fc" id="L50">        });</span>
+<span class="fc" id="L51">        return ret;</span>
+    }
+
+    @Nonnull
+    @Override
+    public Map&lt;Key, Message&gt; removeAll(Collection&lt;Key&gt; keys) {
+<span class="fc" id="L57">        Map&lt;Key, ICompletableFuture&lt;Message&gt;&gt; futureMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L58">        keys.forEach(key -&gt; futureMap.put(key, hazelcastMap.removeAsync(key)));</span>
+<span class="fc" id="L59">        Map&lt;Key, Message&gt; ret = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L60">        futureMap.forEach((key, future) -&gt; {</span>
+            try {
+<span class="fc" id="L62">                Message value = future.get();</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                if (value != null) {</span>
+<span class="fc" id="L64">                    ret.put(key, value);</span>
+                }
+<span class="nc" id="L66">            } catch (ExecutionException | InterruptedException e) {</span>
+                // TODO: Figure out if we timed out or were interrupted...
+<span class="nc" id="L68">                throw new RuntimeException(e.getMessage(), e);</span>
+<span class="fc" id="L69">            }</span>
+<span class="fc" id="L70">        });</span>
+<span class="fc" id="L71">        return ret;</span>
+    }
+
+    @Nonnull
+    @Override
+    public Map&lt;Key, Message&gt; getAll(@Nonnull Collection&lt;Key&gt; keys) {
+<span class="fc" id="L77">        Map&lt;Key, Message&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L78">        hazelcastMap.getAll(new HashSet&lt;&gt;(keys)).forEach((key, v) -&gt; {</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">            if (v != null) {</span>
+<span class="fc" id="L80">                out.put(key, v);</span>
+            }
+<span class="fc" id="L82">        });</span>
+<span class="fc" id="L83">        return out;</span>
+    }
+
+    @Override
+    public boolean containsKey(@Nonnull Key key) {
+<span class="fc" id="L88">        return hazelcastMap.containsKey(key);</span>
+    }
+
+    @Nonnull
+    @Override
+    public Collection&lt;Key&gt; keys() {
+<span class="fc" id="L94">        return hazelcastMap.keySet();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

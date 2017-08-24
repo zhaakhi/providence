@@ -383,8 +383,8 @@ public class JsonSerializer extends Serializer {
                     }
 <span class="fc" id="L384">                }</span>
 <span class="pc bpc" id="L385" title="1 of 2 branches missed.">            } else if (token.isSymbol(JsonToken.kMapStart)) {</span>
-<span class="fc bfc" id="L386" title="All 2 branches covered.">                if (tokenizer.peek(&quot;map end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
-<span class="fc" id="L387">                    tokenizer.next();</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">                if (tokenizer.peek(&quot;map end or key&quot;).isSymbol(JsonToken.kMapEnd)) {</span>
+<span class="nc" id="L387">                    tokenizer.next();</span>
                 } else {
 <span class="fc" id="L389">                    char sep = JsonToken.kMapStart;</span>
 <span class="fc bfc" id="L390" title="All 2 branches covered.">                    while (sep != JsonToken.kMapEnd) {</span>
@@ -638,10 +638,10 @@ public class JsonSerializer extends Serializer {
                     try {
 <span class="fc" id="L639">                        JsonTokenizer tokenizer = new JsonTokenizer(input);</span>
 <span class="fc" id="L640">                        if (JsonToken.kMapStart ==</span>
-<span class="pc bpc" id="L641" title="1 of 2 branches missed.">                            tokenizer.expectSymbol(&quot;message start&quot;, JsonToken.kMapStart, JsonToken.kListStart)) {</span>
+<span class="fc bfc" id="L641" title="All 2 branches covered.">                            tokenizer.expectSymbol(&quot;message start&quot;, JsonToken.kMapStart, JsonToken.kListStart)) {</span>
 <span class="nc" id="L642">                            return parseMessage(tokenizer, st);</span>
                         } else {
-<span class="nc" id="L644">                            return parseCompactMessage(tokenizer, st);</span>
+<span class="fc" id="L644">                            return parseCompactMessage(tokenizer, st);</span>
                         }
 <span class="fc" id="L646">                    } catch (JsonException | IOException e) {</span>
 <span class="fc" id="L647">                        throw new SerializerException(e, &quot;Error parsing message key: &quot; + e.getMessage());</span>
@@ -766,21 +766,21 @@ public class JsonSerializer extends Serializer {
 <span class="fc" id="L766">            writer.key(((Double) primitive));</span>
 <span class="fc bfc" id="L767" title="All 2 branches covered.">        } else if (primitive instanceof String) {</span>
 <span class="fc" id="L768">            writer.key((String) primitive);</span>
-<span class="pc bpc" id="L769" title="1 of 2 branches missed.">        } else if (primitive instanceof Binary) {</span>
+<span class="fc bfc" id="L769" title="All 2 branches covered.">        } else if (primitive instanceof Binary) {</span>
 <span class="fc" id="L770">            writer.key((Binary) primitive);</span>
-<span class="nc bnc" id="L771" title="All 2 branches missed.">        } else if (primitive instanceof PMessage) {</span>
-<span class="nc" id="L772">            PMessage&lt;?,?&gt; message = (PMessage&lt;?,?&gt;) primitive;</span>
-<span class="nc bnc" id="L773" title="All 2 branches missed.">            if (!message.descriptor().isSimple()) {</span>
+<span class="pc bpc" id="L771" title="1 of 2 branches missed.">        } else if (primitive instanceof PMessage) {</span>
+<span class="fc" id="L772">            PMessage&lt;?,?&gt; message = (PMessage&lt;?,?&gt;) primitive;</span>
+<span class="pc bpc" id="L773" title="1 of 2 branches missed.">            if (!message.descriptor().isSimple()) {</span>
 <span class="nc" id="L774">                throw new SerializerException(&quot;Only simple messages can be used as map keys. &quot; +</span>
 <span class="nc" id="L775">                                              message.descriptor()</span>
 <span class="nc" id="L776">                                                     .getQualifiedName() + &quot; is not.&quot;);</span>
             }
-<span class="nc" id="L778">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="nc" id="L779">            JsonWriter json = new JsonWriter(baos);</span>
-<span class="nc" id="L780">            appendMessage(json, message);</span>
-<span class="nc" id="L781">            json.flush();</span>
-<span class="nc" id="L782">            writer.key(new String(baos.toByteArray(), StandardCharsets.UTF_8));</span>
-<span class="nc" id="L783">        } else {</span>
+<span class="fc" id="L778">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L779">            JsonWriter json = new JsonWriter(baos);</span>
+<span class="fc" id="L780">            appendMessage(json, message);</span>
+<span class="fc" id="L781">            json.flush();</span>
+<span class="fc" id="L782">            writer.key(new String(baos.toByteArray(), StandardCharsets.UTF_8));</span>
+<span class="fc" id="L783">        } else {</span>
 <span class="nc" id="L784">            throw new SerializerException(&quot;illegal simple type class &quot; + primitive.getClass()</span>
 <span class="nc" id="L785">                                                                                  .getSimpleName());</span>
         }

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InMemoryMessageListStore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Storage</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.storage</a> &gt; <span class="el_source">InMemoryMessageListStore.java</span></div><h1>InMemoryMessageListStore.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.storage;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.util.concurrent.ReadWriteMutex;
+import net.morimekta.util.concurrent.ReentrantReadWriteMutex;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Simple in-memory storage of lists providence messages. Uses a local hash map for
+ * storing the instances.The store is thread safe through using reentrand
+ * read-write mutex handling, so reading can happen in parallel.
+ */
+public class InMemoryMessageListStore&lt;K, M extends PMessage&lt;M,F&gt;, F extends PField&gt; implements MessageListStore&lt;K,M,F&gt; {
+    private final Map&lt;K, List&lt;M&gt;&gt; map;
+    private final ReadWriteMutex  mutex;
+
+<span class="fc" id="L27">    public InMemoryMessageListStore() {</span>
+<span class="fc" id="L28">        map   = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L29">        mutex = new ReentrantReadWriteMutex();</span>
+<span class="fc" id="L30">    }</span>
+
+    @Nonnull
+    @Override
+    public Map&lt;K, List&lt;M&gt;&gt; getAll(@Nonnull Collection&lt;K&gt; keys) {
+<span class="fc" id="L35">        return mutex.lockForReading(() -&gt; {</span>
+<span class="fc" id="L36">            Map&lt;K, List&lt;M&gt;&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">            for (K key : keys) {</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">                if (map.containsKey(key)) {</span>
+<span class="fc" id="L39">                    out.put(key, map.get(key));</span>
+                }
+<span class="fc" id="L41">            }</span>
+<span class="fc" id="L42">            return ImmutableMap.copyOf(out);</span>
+        });
+    }
+
+    @Override
+    public boolean containsKey(@Nonnull K key) {
+<span class="fc" id="L48">        return mutex.lockForReading(() -&gt; map.containsKey(key));</span>
+    }
+
+    @Override @Nonnull
+    public Collection&lt;K&gt; keys() {
+<span class="fc" id="L53">        return mutex.lockForReading(() -&gt; ImmutableSet.copyOf(map.keySet()));</span>
+    }
+
+    @Override @Nonnull
+    public Map&lt;K,List&lt;M&gt;&gt; putAll(@Nonnull Map&lt;K, List&lt;M&gt;&gt; values) {
+<span class="fc" id="L58">        return mutex.lockForWriting(() -&gt; {</span>
+<span class="fc" id="L59">            Map&lt;K,List&lt;M&gt;&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            for (Map.Entry&lt;K,List&lt;M&gt;&gt; entry : values.entrySet()) {</span>
+<span class="fc" id="L61">                List&lt;M&gt; tmp = map.put(entry.getKey(), ImmutableList.copyOf(entry.getValue()));</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">                if (tmp != null) {</span>
+<span class="fc" id="L63">                    out.put(entry.getKey(), tmp);</span>
+                }
+<span class="fc" id="L65">            }</span>
+<span class="fc" id="L66">            return out;</span>
+        });
+    }
+
+    @Override @Nonnull
+    public Map&lt;K,List&lt;M&gt;&gt; removeAll(Collection&lt;K&gt; keys) {
+<span class="fc" id="L72">        return mutex.lockForWriting(() -&gt; {</span>
+<span class="fc" id="L73">            Map&lt;K,List&lt;M&gt;&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            for (K key : keys) {</span>
+<span class="fc" id="L75">                List&lt;M&gt; tmp = map.remove(key);</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">                if (tmp != null) {</span>
+<span class="fc" id="L77">                    out.put(key, tmp);</span>
+                }
+<span class="fc" id="L79">            }</span>
+<span class="fc" id="L80">            return out;</span>
+        });
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

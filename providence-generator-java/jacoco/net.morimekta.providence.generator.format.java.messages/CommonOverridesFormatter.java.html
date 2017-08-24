@@ -75,7 +75,7 @@ public class CommonOverridesFormatter implements MessageMemberFormatter {
 
     @Override
     public void appendFields(JMessage&lt;?&gt; message) throws GeneratorException {
-<span class="fc" id="L78">        writer.appendln(&quot;private volatile int tHashCode;&quot;)</span>
+<span class="fc" id="L78">        writer.appendln(&quot;private volatile transient int tHashCode;&quot;)</span>
 <span class="fc" id="L79">              .newline();</span>
 <span class="fc" id="L80">    }</span>
 
@@ -334,130 +334,132 @@ public class CommonOverridesFormatter implements MessageMemberFormatter {
 <span class="fc" id="L334">              .begin();</span>
 
 <span class="fc bfc" id="L336" title="All 2 branches covered.">        if (message.isUnion()) {</span>
-<span class="fc" id="L337">            writer.formatln(&quot;int c = %s.compareTo(other.%s);&quot;,</span>
+<span class="fc" id="L337">            writer.formatln(&quot;if (%s == null || other.%s == null) return Boolean.compare(%s != null, other.%s != null);&quot;,</span>
+                            UNION_FIELD, UNION_FIELD, UNION_FIELD, UNION_FIELD)
+<span class="fc" id="L339">                  .formatln(&quot;int c = %s.compareTo(other.%s);&quot;,</span>
                             UNION_FIELD, UNION_FIELD)
-<span class="fc" id="L339">                  .appendln(&quot;if (c != 0) return c;&quot;)</span>
-<span class="fc" id="L340">                  .newline()</span>
-<span class="fc" id="L341">                  .formatln(&quot;switch (%s) {&quot;, UNION_FIELD)</span>
-<span class="fc" id="L342">                  .begin();</span>
+<span class="fc" id="L341">                  .appendln(&quot;if (c != 0) return c;&quot;)</span>
+<span class="fc" id="L342">                  .newline()</span>
+<span class="fc" id="L343">                  .formatln(&quot;switch (%s) {&quot;, UNION_FIELD)</span>
+<span class="fc" id="L344">                  .begin();</span>
 
-<span class="fc bfc" id="L344" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
-<span class="fc" id="L345">                writer.formatln(&quot;case %s:&quot;, caseFieldConstant(field))</span>
-<span class="fc" id="L346">                      .begin();</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L347">                writer.formatln(&quot;case %s:&quot;, caseFieldConstant(field))</span>
+<span class="fc" id="L348">                      .begin();</span>
 
-<span class="fc bfc" id="L348" title="All 10 branches covered.">                switch (field.type()) {</span>
+<span class="fc bfc" id="L350" title="All 10 branches covered.">                switch (field.type()) {</span>
                     case BOOL:
-<span class="fc" id="L350">                        writer.formatln(&quot;return Boolean.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L351">                        break;</span>
+<span class="fc" id="L352">                        writer.formatln(&quot;return Boolean.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L353">                        break;</span>
                     case BYTE:
-<span class="fc" id="L353">                        writer.formatln(&quot;return Byte.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L354">                        break;</span>
+<span class="fc" id="L355">                        writer.formatln(&quot;return Byte.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L356">                        break;</span>
                     case I16:
-<span class="fc" id="L356">                        writer.formatln(&quot;return Short.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L357">                        break;</span>
+<span class="fc" id="L358">                        writer.formatln(&quot;return Short.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L359">                        break;</span>
                     case I32:
-<span class="fc" id="L359">                        writer.formatln(&quot;return Integer.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L360">                        break;</span>
+<span class="fc" id="L361">                        writer.formatln(&quot;return Integer.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L362">                        break;</span>
                     case I64:
-<span class="fc" id="L362">                        writer.formatln(&quot;return Long.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L363">                        break;</span>
+<span class="fc" id="L364">                        writer.formatln(&quot;return Long.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L365">                        break;</span>
                     case DOUBLE:
-<span class="fc" id="L365">                        writer.formatln(&quot;return Double.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L366">                        break;</span>
+<span class="fc" id="L367">                        writer.formatln(&quot;return Double.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L368">                        break;</span>
                     case STRING:
                     case BINARY:
                     case MESSAGE:
-<span class="fc" id="L370">                        writer.formatln(&quot;return %s.compareTo(other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L371">                        break;</span>
+<span class="fc" id="L372">                        writer.formatln(&quot;return %s.compareTo(other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L373">                        break;</span>
                     case ENUM:
-<span class="fc" id="L373">                        writer.formatln(&quot;return Integer.compare(%s.asInteger(), other.%s.asInteger());&quot;,</span>
-<span class="fc" id="L374">                                        field.member(),</span>
-<span class="fc" id="L375">                                        field.member());</span>
-<span class="fc" id="L376">                        break;</span>
+<span class="fc" id="L375">                        writer.formatln(&quot;return Integer.compare(%s.asInteger(), other.%s.asInteger());&quot;,</span>
+<span class="fc" id="L376">                                        field.member(),</span>
+<span class="fc" id="L377">                                        field.member());</span>
+<span class="fc" id="L378">                        break;</span>
                     case SET:
                     case LIST:
                     case MAP:
                         // containers aren't really comparable, just make some consistent comparison.
-<span class="fc" id="L381">                        writer.formatln(&quot;return Integer.compare(%s.hashCode(), other.%s.hashCode());&quot;,</span>
-<span class="fc" id="L382">                                        field.member(),</span>
-<span class="fc" id="L383">                                        field.member());</span>
-<span class="fc" id="L384">                        break;</span>
+<span class="fc" id="L383">                        writer.formatln(&quot;return Integer.compare(%s.hashCode(), other.%s.hashCode());&quot;,</span>
+<span class="fc" id="L384">                                        field.member(),</span>
+<span class="fc" id="L385">                                        field.member());</span>
+<span class="fc" id="L386">                        break;</span>
                     default:
                         break;
                 }
 
-<span class="fc" id="L389">                writer.end();</span>
-<span class="fc" id="L390">            }</span>
-<span class="fc" id="L391">            writer.appendln(&quot;default: return 0;&quot;)</span>
-<span class="fc" id="L392">                  .end()</span>
-<span class="fc" id="L393">                  .appendln('}');</span>
+<span class="fc" id="L391">                writer.end();</span>
+<span class="fc" id="L392">            }</span>
+<span class="fc" id="L393">            writer.appendln(&quot;default: return 0;&quot;)</span>
+<span class="fc" id="L394">                  .end()</span>
+<span class="fc" id="L395">                  .appendln('}');</span>
         } else {
-<span class="fc" id="L395">            writer.appendln(&quot;int c;&quot;);</span>
+<span class="fc" id="L397">            writer.appendln(&quot;int c;&quot;);</span>
 
-<span class="fc bfc" id="L397" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
-<span class="fc" id="L398">                writer.newline();</span>
+<span class="fc bfc" id="L399" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L400">                writer.newline();</span>
 
-<span class="fc bfc" id="L400" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
-<span class="fc" id="L401">                    writer.formatln(&quot;c = Boolean.compare(%s != null, other.%s != null);&quot;,</span>
-<span class="fc" id="L402">                                    field.member(),</span>
-<span class="fc" id="L403">                                    field.member())</span>
-<span class="fc" id="L404">                          .appendln(&quot;if (c != 0) return c;&quot;)</span>
-<span class="fc" id="L405">                          .formatln(&quot;if (%s != null) {&quot;, field.member())</span>
-<span class="fc" id="L406">                          .begin();</span>
+<span class="fc bfc" id="L402" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L403">                    writer.formatln(&quot;c = Boolean.compare(%s != null, other.%s != null);&quot;,</span>
+<span class="fc" id="L404">                                    field.member(),</span>
+<span class="fc" id="L405">                                    field.member())</span>
+<span class="fc" id="L406">                          .appendln(&quot;if (c != 0) return c;&quot;)</span>
+<span class="fc" id="L407">                          .formatln(&quot;if (%s != null) {&quot;, field.member())</span>
+<span class="fc" id="L408">                          .begin();</span>
                 }
-<span class="pc bpc" id="L408" title="1 of 10 branches missed.">                switch (field.type()) {</span>
+<span class="pc bpc" id="L410" title="1 of 10 branches missed.">                switch (field.type()) {</span>
                     case BOOL:
-<span class="fc" id="L410">                        writer.formatln(&quot;c = Boolean.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L411">                        break;</span>
+<span class="fc" id="L412">                        writer.formatln(&quot;c = Boolean.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L413">                        break;</span>
                     case BYTE:
-<span class="fc" id="L413">                        writer.formatln(&quot;c = Byte.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L414">                        break;</span>
+<span class="fc" id="L415">                        writer.formatln(&quot;c = Byte.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L416">                        break;</span>
                     case I16:
-<span class="fc" id="L416">                        writer.formatln(&quot;c = Short.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L417">                        break;</span>
+<span class="fc" id="L418">                        writer.formatln(&quot;c = Short.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L419">                        break;</span>
                     case I32:
-<span class="fc" id="L419">                        writer.formatln(&quot;c = Integer.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L420">                        break;</span>
+<span class="fc" id="L421">                        writer.formatln(&quot;c = Integer.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L422">                        break;</span>
                     case I64:
-<span class="fc" id="L422">                        writer.formatln(&quot;c = Long.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L423">                        break;</span>
+<span class="fc" id="L424">                        writer.formatln(&quot;c = Long.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L425">                        break;</span>
                     case DOUBLE:
-<span class="fc" id="L425">                        writer.formatln(&quot;c = Double.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L426">                        break;</span>
+<span class="fc" id="L427">                        writer.formatln(&quot;c = Double.compare(%s, other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L428">                        break;</span>
                     case STRING:
                     case BINARY:
                     case MESSAGE:
-<span class="fc" id="L430">                        writer.formatln(&quot;c = %s.compareTo(other.%s);&quot;, field.member(), field.member());</span>
-<span class="fc" id="L431">                        break;</span>
+<span class="fc" id="L432">                        writer.formatln(&quot;c = %s.compareTo(other.%s);&quot;, field.member(), field.member());</span>
+<span class="fc" id="L433">                        break;</span>
                     case ENUM:
-<span class="fc" id="L433">                        writer.formatln(&quot;c = Integer.compare(%s.ordinal(), %s.ordinal());&quot;,</span>
-<span class="fc" id="L434">                                        field.member(),</span>
-<span class="fc" id="L435">                                        field.member());</span>
-<span class="fc" id="L436">                        break;</span>
+<span class="fc" id="L435">                        writer.formatln(&quot;c = Integer.compare(%s.ordinal(), %s.ordinal());&quot;,</span>
+<span class="fc" id="L436">                                        field.member(),</span>
+<span class="fc" id="L437">                                        field.member());</span>
+<span class="fc" id="L438">                        break;</span>
                     case SET:
                     case LIST:
                     case MAP:
-<span class="fc" id="L440">                        writer.formatln(&quot;c = Integer.compare(%s.hashCode(), other.%s.hashCode());&quot;,</span>
-<span class="fc" id="L441">                                        field.member(),</span>
-<span class="fc" id="L442">                                        field.member());</span>
-<span class="fc" id="L443">                        break;</span>
+<span class="fc" id="L442">                        writer.formatln(&quot;c = Integer.compare(%s.hashCode(), other.%s.hashCode());&quot;,</span>
+<span class="fc" id="L443">                                        field.member(),</span>
+<span class="fc" id="L444">                                        field.member());</span>
+<span class="fc" id="L445">                        break;</span>
                     default:
                         break;
                 }
-<span class="fc" id="L447">                writer.appendln(&quot;if (c != 0) return c;&quot;);</span>
+<span class="fc" id="L449">                writer.appendln(&quot;if (c != 0) return c;&quot;);</span>
 
-<span class="fc bfc" id="L449" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
-<span class="fc" id="L450">                    writer.end()</span>
-<span class="fc" id="L451">                          .appendln('}');</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">                if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L452">                    writer.end()</span>
+<span class="fc" id="L453">                          .appendln('}');</span>
                 }
-<span class="fc" id="L453">            }</span>
-<span class="fc" id="L454">            writer.newline()</span>
-<span class="fc" id="L455">                  .appendln(&quot;return 0;&quot;);</span>
+<span class="fc" id="L455">            }</span>
+<span class="fc" id="L456">            writer.newline()</span>
+<span class="fc" id="L457">                  .appendln(&quot;return 0;&quot;);</span>
         }
 
-<span class="fc" id="L458">        writer.end()</span>
-<span class="fc" id="L459">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L460">              .newline();</span>
-<span class="fc" id="L461">    }</span>
+<span class="fc" id="L460">        writer.end()</span>
+<span class="fc" id="L461">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L462">              .newline();</span>
+<span class="fc" id="L463">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

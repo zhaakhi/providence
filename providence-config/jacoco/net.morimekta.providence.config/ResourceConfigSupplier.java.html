@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResourceConfigSupplier.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config</a> &gt; <span class="el_source">ResourceConfigSupplier.java</span></div><h1>ResourceConfigSupplier.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.config;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PMessageDescriptor;
+import net.morimekta.providence.serializer.JsonSerializer;
+import net.morimekta.providence.serializer.PrettySerializer;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.serializer.SerializerException;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * A supplier to get a config (aka message) from a resource location. This is
+ * a fixed static supplier, so listening to changes will never do anything.
+ *
+ * &lt;pre&gt;
+ *     ConfigSupplier&amp;lt;Service, Service._Field&amp;gt; supplier =
+ *             new ResourceConfigSupplier&amp;lt;&amp;gt;(resourceName, Service.kDescriptor);
+ * &lt;/pre&gt;
+ */
+public class ResourceConfigSupplier&lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+        extends ConfigSupplier&lt;Message, Field&gt; {
+    /**
+     * Create a config that wraps a providence message instance. This message
+     * will be exposed without any key prefix. Note that reading from properties
+     * are &lt;b&gt;never&lt;/b&gt; strict.
+     *
+     * @param resourceName The resource name to load.
+     * @param descriptor The message type descriptor.
+     * @throws ProvidenceConfigException If message overriding failed
+     */
+    public ResourceConfigSupplier(String resourceName, PMessageDescriptor&lt;Message, Field&gt; descriptor)
+            throws ProvidenceConfigException {
+<span class="fc" id="L56">        super(loadInternal(resourceName, descriptor));</span>
+<span class="fc" id="L57">    }</span>
+
+    @Override
+    public void addListener(ConfigListener&lt;Message, Field&gt; listener) {
+        // ignore, this never changes.
+<span class="nc" id="L62">    }</span>
+
+    @Override
+    public void removeListener(ConfigListener&lt;Message, Field&gt; listener) {
+        // ignore, this never changes.
+<span class="nc" id="L67">    }</span>
+
+    private static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    Message loadInternal(String resourceName, PMessageDescriptor&lt;Message, Field&gt; descriptor) throws ProvidenceConfigException {
+<span class="fc" id="L71">        int lastDot = resourceName.lastIndexOf(&quot;.&quot;);</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (lastDot &lt; 1) {</span>
+<span class="nc" id="L73">            throw new ProvidenceConfigException(&quot;No file ending, or no resource file name: &quot; + resourceName);</span>
+        }
+<span class="fc" id="L75">        String suffix = resourceName.substring(lastDot).toLowerCase();</span>
+        Serializer serializer;
+<span class="pc bpc" id="L77" title="16 of 22 branches missed.">        switch (suffix) {</span>
+            case &quot;.json&quot;:
+<span class="fc" id="L79">                serializer = new JsonSerializer();</span>
+<span class="fc" id="L80">                break;</span>
+            case &quot;.cfg&quot;:
+            case &quot;.cnf&quot;:
+            case &quot;.config&quot;:
+            case &quot;.pvd&quot;:
+            case &quot;.providence&quot;:
+<span class="fc" id="L86">                serializer = new PrettySerializer().config();</span>
+<span class="fc" id="L87">                break;</span>
+            // TODO: Add YAML serializer to the file options. Could be a wrapper around SnakeYAML.
+            default:
+<span class="nc" id="L90">                throw new ProvidenceConfigException(</span>
+<span class="nc" id="L91">                        String.format(&quot;Unrecognized resource config type: %s (%s)&quot;,</span>
+                                      suffix, resourceName));
+        }
+<span class="fc" id="L94">        ClassLoader classLoader = ClassLoader.getSystemClassLoader();</span>
+<span class="fc" id="L95">        InputStream in = classLoader.getResourceAsStream(resourceName);</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        if (in == null) {</span>
+<span class="fc" id="L97">            in = ResourceConfigSupplier.class.getResourceAsStream(resourceName);</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">            if (in == null) {</span>
+<span class="nc" id="L99">                throw new ProvidenceConfigException(&quot;No such config resource: &quot; + resourceName);</span>
+            }
+        }
+
+        try {
+<span class="fc" id="L104">            return serializer.deserialize(in, descriptor);</span>
+<span class="nc" id="L105">        } catch (SerializerException se) {</span>
+<span class="nc" id="L106">            throw new ProvidenceConfigException(se);</span>
+<span class="nc" id="L107">        } catch (IOException e) {</span>
+<span class="nc" id="L108">            throw new ProvidenceConfigException(e, &quot;Unknown serializer exception: &quot; + e.getMessage());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

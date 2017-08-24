@@ -312,10 +312,10 @@ public class ThriftProgramParser implements ProgramParser {
 <span class="fc" id="L312">        Token identifier = tokenizer.expectIdentifier(&quot;service name&quot;);</span>
 <span class="fc" id="L313">        service.setName(identifier.asString());</span>
 
-<span class="pc bpc" id="L315" title="1 of 2 branches missed.">        if (tokenizer.peek(&quot;service start or extends&quot;).strEquals(kExtends)) {</span>
-<span class="nc" id="L316">            tokenizer.next();</span>
-<span class="nc" id="L317">            service.setExtend(tokenizer.expect(&quot;service extending identifier&quot;,</span>
-<span class="nc bnc" id="L318" title="All 4 branches missed.">                                               t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()).asString());</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">        if (tokenizer.peek(&quot;service start or extends&quot;).strEquals(kExtends)) {</span>
+<span class="fc" id="L316">            tokenizer.next();</span>
+<span class="fc" id="L317">            service.setExtend(tokenizer.expect(&quot;service extending identifier&quot;,</span>
+<span class="pc bpc" id="L318" title="1 of 4 branches missed.">                                               t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()).asString());</span>
         }
 
 <span class="fc" id="L321">        tokenizer.expectSymbol(&quot;reading service start&quot;, Token.kMessageStart);</span>
@@ -468,8 +468,8 @@ public class ThriftProgramParser implements ProgramParser {
 <span class="fc" id="L468">                    method.addToExceptions(field.build());</span>
 
 <span class="fc" id="L470">                    token = tokenizer.peek(&quot;method exceptions&quot;);</span>
-<span class="pc bpc" id="L471" title="2 of 4 branches missed.">                    if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
-<span class="nc" id="L472">                        tokenizer.next();</span>
+<span class="pc bpc" id="L471" title="1 of 4 branches missed.">                    if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L472">                        tokenizer.next();</span>
                     }
 <span class="fc" id="L474">                }</span>
             }

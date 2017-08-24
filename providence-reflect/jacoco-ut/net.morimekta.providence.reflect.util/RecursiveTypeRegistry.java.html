@@ -62,97 +62,101 @@ public class RecursiveTypeRegistry extends BaseTypeRegistry {
      * @param registry The registry for the given program.
      */
     public void registerInclude(String programName, RecursiveTypeRegistry registry) {
-<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (includes.containsKey(programName)) {</span>
-<span class="nc" id="L66">            return;</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (registry == this) {</span>
+<span class="nc" id="L66">            throw new IllegalArgumentException(&quot;Registering include back to itself: &quot; + programName);</span>
         }
-<span class="nc" id="L68">        includes.put(programName, registry);</span>
-<span class="nc" id="L69">    }</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (includes.containsKey(programName)) {</span>
+<span class="fc" id="L69">            return;</span>
+        }
+<span class="fc" id="L71">        includes.put(programName, registry);</span>
+<span class="fc" id="L72">    }</span>
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String typeName,
                                                                 @Nonnull String programContext) {
-<span class="fc" id="L76">        String finalName = finalTypename(typeName, programContext);</span>
+<span class="fc" id="L79">        String finalName = finalTypename(typeName, programContext);</span>
 
-<span class="fc" id="L78">        String program = finalName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
-<span class="fc" id="L79">        String name = finalName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
+<span class="fc" id="L81">        String program = finalName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
+<span class="fc" id="L82">        String name = finalName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
 
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (declaredTypes.containsKey(name)) {</span>
-<span class="fc" id="L82">            return (T) declaredTypes.get(name);</span>
-        }
-<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (localProgramContext.equals(program)) {</span>
-<span class="nc" id="L85">            throw new IllegalArgumentException(</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (localProgramContext.equals(program)) {</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            if (declaredTypes.containsKey(name)) {</span>
+<span class="fc" id="L86">                return (T) declaredTypes.get(name);</span>
+            }
+<span class="nc" id="L88">            throw new IllegalArgumentException(</span>
                     &quot;No such type \&quot;&quot; + name + &quot;\&quot; in program \&quot;&quot; + program + &quot;\&quot;&quot;);
         }
-<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (includes.containsKey(program)) {</span>
-<span class="nc" id="L89">            return includes.get(program).getDeclaredType(name, program);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (includes.containsKey(program)) {</span>
+<span class="nc" id="L92">            return includes.get(program).getDeclaredType(name, program);</span>
         }
-<span class="nc" id="L91">        throw new IllegalArgumentException(</span>
+<span class="nc" id="L94">        throw new IllegalArgumentException(</span>
                 &quot;No such program \&quot;&quot; + program + &quot;\&quot; known for type \&quot;&quot; + typeName + &quot;\&quot;&quot;);
     }
 
     @Nonnull
     @Override
     public PService getService(String serviceName, String programContext) {
-<span class="nc" id="L98">        String finalName = qualifiedNameFromIdAndContext(serviceName, programContext);</span>
+<span class="fc" id="L101">        String finalName = qualifiedNameFromIdAndContext(serviceName, programContext);</span>
 
-<span class="nc" id="L100">        String program = finalName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
-<span class="nc" id="L101">        String name = finalName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
+<span class="fc" id="L103">        String program = finalName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
+<span class="fc" id="L104">        String name = finalName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
 
-<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (services.containsKey(name)) {</span>
-<span class="nc" id="L104">            return services.get(name);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (localProgramContext.equals(program)) {</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            if (services.containsKey(name)) {</span>
+<span class="fc" id="L108">                return services.get(name);</span>
+            }
+<span class="nc" id="L110">            throw new IllegalArgumentException(&quot;No such service \&quot;&quot; + name + &quot;\&quot; in program \&quot;&quot; + program + &quot;\&quot;&quot;);</span>
         }
-<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (localProgramContext.equals(program)) {</span>
-<span class="nc" id="L107">            throw new IllegalArgumentException(&quot;No such service \&quot;&quot; + name + &quot;\&quot; in program \&quot;&quot; + program + &quot;\&quot;&quot;);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (includes.containsKey(program)) {</span>
+<span class="fc" id="L113">            return includes.get(program).getService(name, program);</span>
         }
-<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (services.containsKey(finalName)) {</span>
-<span class="nc" id="L110">            return services.get(finalName);</span>
-        }
-<span class="nc" id="L112">        throw new IllegalArgumentException(&quot;No such program \&quot;&quot; + program + &quot;\&quot; known for service \&quot;&quot; + serviceName + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L115">        throw new IllegalArgumentException(&quot;No such program \&quot;&quot; + program + &quot;\&quot; known for service \&quot;&quot; + serviceName + &quot;\&quot;&quot;);</span>
     }
 
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public boolean register(@Nonnull PService service) {
-<span class="nc" id="L118">        String program = service.getProgramName();</span>
+<span class="fc" id="L121">        String program = service.getProgramName();</span>
 
-<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (!localProgramContext.equals(program)) {</span>
-<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (!includes.containsKey(program)) {</span>
-<span class="nc" id="L122">                includes.get(program).registerRecursively(service);</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (!localProgramContext.equals(program)) {</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (includes.containsKey(program)) {</span>
+<span class="fc" id="L125">                includes.get(program).registerRecursively(service);</span>
+<span class="fc" id="L126">                return true;</span>
             }
-<span class="nc" id="L124">            throw new IllegalArgumentException(&quot;&quot;);</span>
+<span class="nc" id="L128">            throw new IllegalArgumentException(&quot;No such include \&quot;&quot; + program + &quot;\&quot; for type &quot; + service.getQualifiedName() + &quot; in &quot; + localProgramContext);</span>
         }
-<span class="nc" id="L126">        String serviceName = service.getName();</span>
+<span class="fc" id="L130">        String serviceName = service.getName();</span>
 
-<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (services.containsKey(serviceName)) {</span>
-<span class="nc" id="L129">            return false;</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (services.containsKey(serviceName)) {</span>
+<span class="fc" id="L133">            return false;</span>
         }
-<span class="nc" id="L131">        services.put(serviceName, service);</span>
-<span class="nc" id="L132">        return true;</span>
+<span class="fc" id="L135">        services.put(serviceName, service);</span>
+<span class="fc" id="L136">        return true;</span>
     }
 
     @Override
     public &lt;T&gt; boolean register(PDeclaredDescriptor&lt;T&gt; declaredType) {
-<span class="fc" id="L137">        String program = declaredType.getProgramName();</span>
+<span class="fc" id="L141">        String program = declaredType.getProgramName();</span>
 
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (!localProgramContext.equals(program)) {</span>
-<span class="nc bnc" id="L140" title="All 2 branches missed.">            if (includes.containsKey(program)) {</span>
-<span class="nc" id="L141">                includes.get(program).registerRecursively(declaredType);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (!localProgramContext.equals(program)) {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (includes.containsKey(program)) {</span>
+<span class="nc" id="L145">                includes.get(program).registerRecursively(declaredType);</span>
             }
-<span class="nc" id="L143">            throw new IllegalArgumentException(&quot;&quot;);</span>
+<span class="nc" id="L147">            throw new IllegalArgumentException(&quot;No include for type: &quot; + declaredType.getQualifiedName());</span>
         }
-<span class="fc" id="L145">        String typeName = declaredType.getName();</span>
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (declaredTypes.containsKey(typeName)) {</span>
-<span class="nc" id="L147">            return false;</span>
+<span class="fc" id="L149">        String typeName = declaredType.getName();</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (declaredTypes.containsKey(typeName)) {</span>
+<span class="nc" id="L151">            return false;</span>
         }
 
-<span class="fc" id="L150">        declaredTypes.put(typeName, declaredType);</span>
-<span class="fc" id="L151">        return true;</span>
+<span class="fc" id="L154">        declaredTypes.put(typeName, declaredType);</span>
+<span class="fc" id="L155">        return true;</span>
     }
 
     protected boolean isEmpty() {
-<span class="pc bpc" id="L155" title="3 of 4 branches missed.">        return declaredTypes.isEmpty() &amp;&amp; services.isEmpty();</span>
+<span class="pc bpc" id="L159" title="3 of 4 branches missed.">        return declaredTypes.isEmpty() &amp;&amp; services.isEmpty();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

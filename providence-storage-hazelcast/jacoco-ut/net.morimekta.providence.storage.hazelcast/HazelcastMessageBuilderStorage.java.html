@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HazelcastMessageBuilderStorage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Storage / Hazelcast</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.storage.hazelcast</a> &gt; <span class="el_source">HazelcastMessageBuilderStorage.java</span></div><h1>HazelcastMessageBuilderStorage.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.storage.hazelcast;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.storage.MessageStore;
+
+import com.google.common.collect.ImmutableMap;
+import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IMap;
+import com.hazelcast.nio.serialization.Portable;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+/**
+ * A message store containing message builders. Note that there are
+ * no 'list' variants of this type of store. The benefit of using
+ * the {@link HazelcastMessageBuilderStorage} is that it can be
+ * combined with using the hazelcast Portable indexing and query
+ * systems.
+ *
+ * @see Portable And
+ *     &lt;a href=&quot;http://docs.hazelcast.org/docs/3.8.4/manual/html-single/index.html&quot;&gt;Hazelcast Docs&lt;/a&gt;
+ *     for reference on how to utilize portable and querying the
+ *     data grid.
+ */
+public class HazelcastMessageBuilderStorage&lt;
+        Key,
+        Message extends PMessage&lt;Message, Field&gt;,
+        Field extends PField,
+        Builder extends PMessageBuilder&lt;Message, Field&gt; &amp; Portable&gt;
+        implements MessageStore&lt;Key, Message, Field&gt; {
+    private final IMap&lt;Key, Builder&gt; hazelcastMap;
+
+<span class="fc" id="L40">    public HazelcastMessageBuilderStorage(IMap&lt;Key, Builder&gt; hazelcastMap) {</span>
+<span class="fc" id="L41">        this.hazelcastMap = hazelcastMap;</span>
+<span class="fc" id="L42">    }</span>
+
+    @Nonnull
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public Map&lt;Key, Message&gt; putAll(@Nonnull Map&lt;Key, Message&gt; values) {
+<span class="fc" id="L48">        Map&lt;Key, Builder&gt; tmpIn = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L49">        values.forEach((key, message) -&gt; tmpIn.put(key, (Builder) message.mutate()));</span>
+<span class="fc" id="L50">        Map&lt;Key, Builder&gt; tmpOut = putAllBuilders(tmpIn);</span>
+<span class="fc" id="L51">        Map&lt;Key, Message&gt; ret = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L52">        tmpOut.forEach((key, builder) -&gt; ret.put(key, builder.build()));</span>
+<span class="fc" id="L53">        return ImmutableMap.copyOf(ret);</span>
+    }
+
+    @Nonnull
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;B extends PMessageBuilder&lt;Message, Field&gt;&gt; Map&lt;Key, B&gt; putAllBuilders(@Nonnull Map&lt;Key, B&gt; builders) {
+<span class="fc" id="L60">        Map&lt;Key, ICompletableFuture&lt;Builder&gt;&gt; futureMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L61">        builders.forEach((key, builder) -&gt; futureMap.put(key, hazelcastMap.putAsync(key, (Builder) builder)));</span>
+<span class="fc" id="L62">        Map&lt;Key, B&gt; ret = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L63">        futureMap.forEach((key, future) -&gt; {</span>
+            try {
+<span class="fc" id="L65">                Builder value = future.get();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                if (value != null) {</span>
+<span class="fc" id="L67">                    ret.put(key, (B) value);</span>
+                }
+<span class="nc" id="L69">            } catch (ExecutionException | InterruptedException e) {</span>
+                // TODO: Figure out if we timed out or were interrupted...
+<span class="nc" id="L71">                throw new RuntimeException(e.getMessage(), e);</span>
+<span class="fc" id="L72">            }</span>
+
+<span class="fc" id="L74">        });</span>
+<span class="fc" id="L75">        return ret;</span>
+    }
+
+    @Nonnull
+    @Override
+    public Map&lt;Key, Message&gt; removeAll(Collection&lt;Key&gt; keys) {
+<span class="fc" id="L81">        Map&lt;Key, ICompletableFuture&lt;Builder&gt;&gt; futureMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L82">        keys.forEach(key -&gt; futureMap.put(key, hazelcastMap.removeAsync(key)));</span>
+<span class="fc" id="L83">        Map&lt;Key, Message&gt; ret = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L84">        futureMap.forEach((key, builder) -&gt; {</span>
+            try {
+<span class="fc" id="L86">                Builder value = builder.get();</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">                if (value != null) {</span>
+<span class="fc" id="L88">                    ret.put(key, value.build());</span>
+                }
+<span class="nc" id="L90">            } catch (ExecutionException | InterruptedException e) {</span>
+                // TODO: Figure out if we timed out or were interrupted...
+<span class="nc" id="L92">                throw new RuntimeException(e.getMessage(), e);</span>
+<span class="fc" id="L93">            }</span>
+<span class="fc" id="L94">        });</span>
+<span class="fc" id="L95">        return ret;</span>
+    }
+
+    @Nonnull
+    @Override
+    public Map&lt;Key, Message&gt; getAll(@Nonnull Collection&lt;Key&gt; keys) {
+<span class="fc" id="L101">        Map&lt;Key, Message&gt; ret = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L102">        getAllBuilders(keys).forEach((key, builder) -&gt; ret.put(key, builder.build()));</span>
+<span class="fc" id="L103">        return ImmutableMap.copyOf(ret);</span>
+    }
+
+    @Nonnull
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;B extends PMessageBuilder&lt;Message, Field&gt;&gt; Map&lt;Key, B&gt; getAllBuilders(@Nonnull Collection&lt;Key&gt; keys) {
+<span class="fc" id="L110">        Map&lt;Key, B&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L111">        hazelcastMap.getAll(new HashSet&lt;&gt;(keys)).forEach((key, v) -&gt; {</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if (v != null) {</span>
+<span class="fc" id="L113">                out.put(key, (B) v);</span>
+            }
+<span class="fc" id="L115">        });</span>
+<span class="fc" id="L116">        return out;</span>
+    }
+
+    @Override
+    public boolean containsKey(@Nonnull Key key) {
+<span class="fc" id="L121">        return hazelcastMap.containsKey(key);</span>
+    }
+
+    @Nonnull
+    @Override
+    public Collection&lt;Key&gt; keys() {
+<span class="fc" id="L127">        return hazelcastMap.keySet();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

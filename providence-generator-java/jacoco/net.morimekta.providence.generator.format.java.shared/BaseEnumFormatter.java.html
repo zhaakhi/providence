@@ -26,6 +26,7 @@ import net.morimekta.providence.generator.format.java.utils.JAnnotation;
 import net.morimekta.providence.generator.format.java.utils.JUtils;
 import net.morimekta.providence.reflect.contained.CEnumDescriptor;
 import net.morimekta.providence.reflect.contained.CEnumValue;
+import net.morimekta.providence.util.ThriftAnnotation;
 import net.morimekta.util.io.IndentedPrintWriter;
 
 import com.google.common.collect.ImmutableList;
@@ -42,88 +43,107 @@ public class BaseEnumFormatter {
     private final List&lt;EnumMemberFormatter&gt; formatters;
 
     public BaseEnumFormatter(IndentedPrintWriter writer,
-<span class="fc" id="L45">                             List&lt;EnumMemberFormatter&gt; formatters) {</span>
-<span class="fc" id="L46">        this.writer = writer;</span>
-<span class="fc" id="L47">        this.formatters = ImmutableList.copyOf(formatters);</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L46">                             List&lt;EnumMemberFormatter&gt; formatters) {</span>
+<span class="fc" id="L47">        this.writer = writer;</span>
+<span class="fc" id="L48">        this.formatters = ImmutableList.copyOf(formatters);</span>
+<span class="fc" id="L49">    }</span>
 
     public void appendEnumClass(CEnumDescriptor type) throws GeneratorException {
-<span class="fc" id="L51">        String simpleClass = JUtils.getClassName(type);</span>
+<span class="fc" id="L52">        String simpleClass = JUtils.getClassName(type);</span>
 
-<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (type.getDocumentation() != null) {</span>
-<span class="nc" id="L54">            new BlockCommentBuilder(writer)</span>
-<span class="nc" id="L55">                    .comment(type.getDocumentation())</span>
-<span class="nc" id="L56">                    .finish();</span>
+<span class="fc" id="L54">        BlockCommentBuilder classComment = null;</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (type.getDocumentation() != null) {</span>
+<span class="nc" id="L56">            classComment = new BlockCommentBuilder(writer);</span>
+<span class="nc" id="L57">            classComment.comment(type.getDocumentation());</span>
         }
-<span class="fc" id="L58">        formatters.forEach(f -&gt; f.appendClassAnnotations(type));</span>
 
-<span class="fc" id="L60">        writer.formatln(&quot;public enum %s&quot;, simpleClass)</span>
-<span class="fc" id="L61">              .begin();</span>
+<span class="fc" id="L60">        String deprecatedReason = type.getAnnotationValue(ThriftAnnotation.DEPRECATED);</span>
+<span class="pc bpc" id="L61" title="3 of 4 branches missed.">        if (deprecatedReason != null &amp;&amp; deprecatedReason.trim().length() &gt; 0) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (classComment == null) {</span>
+<span class="nc" id="L63">                classComment = new BlockCommentBuilder(writer);</span>
+            } else {
+<span class="nc" id="L65">                classComment.newline();</span>
+            }
+<span class="nc" id="L67">            classComment.deprecated_(deprecatedReason);</span>
+        }
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (classComment != null) {</span>
+<span class="nc" id="L70">            classComment.finish();</span>
+        }
 
-<span class="fc" id="L63">        Set&lt;String&gt; impl = new LinkedHashSet&lt;&gt;();</span>
-<span class="fc" id="L64">        formatters.forEach(f -&gt; impl.addAll(f.getExtraImplements(type)));</span>
-<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (impl.size() &gt; 0) {</span>
-<span class="fc" id="L66">            writer.formatln(&quot;    implements &quot;)</span>
-<span class="fc" id="L67">                  .begin(   &quot;               &quot;);</span>
-<span class="fc" id="L68">            boolean first = true;</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">            for (String i : impl) {</span>
-<span class="pc bpc" id="L70" title="1 of 2 branches missed.">                if (first) {</span>
-<span class="fc" id="L71">                    first = false;</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if (type.getDocumentation() != null) {</span>
+<span class="nc" id="L74">            new BlockCommentBuilder(writer)</span>
+<span class="nc" id="L75">                    .comment(type.getDocumentation())</span>
+<span class="nc" id="L76">                    .finish();</span>
+        }
+<span class="fc" id="L78">        formatters.forEach(f -&gt; f.appendClassAnnotations(type));</span>
+
+<span class="fc" id="L80">        writer.formatln(&quot;public enum %s&quot;, simpleClass)</span>
+<span class="fc" id="L81">              .begin();</span>
+
+<span class="fc" id="L83">        Set&lt;String&gt; impl = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L84">        formatters.forEach(f -&gt; impl.addAll(f.getExtraImplements(type)));</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (impl.size() &gt; 0) {</span>
+<span class="fc" id="L86">            writer.formatln(&quot;    implements &quot;)</span>
+<span class="fc" id="L87">                  .begin(   &quot;               &quot;);</span>
+<span class="fc" id="L88">            boolean first = true;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            for (String i : impl) {</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">                if (first) {</span>
+<span class="fc" id="L91">                    first = false;</span>
                 } else {
-<span class="nc" id="L73">                    writer.append(',').appendln();</span>
+<span class="nc" id="L93">                    writer.append(',').appendln();</span>
                 }
-<span class="fc" id="L75">                writer.append(i);</span>
-<span class="fc" id="L76">            }</span>
-<span class="fc" id="L77">            writer.end();</span>
+<span class="fc" id="L95">                writer.append(i);</span>
+<span class="fc" id="L96">            }</span>
+<span class="fc" id="L97">            writer.end();</span>
         }
 
-<span class="fc" id="L80">        writer.append(&quot; {&quot;);</span>
+<span class="fc" id="L100">        writer.append(&quot; {&quot;);</span>
 
-<span class="fc" id="L82">        appendEnumValues(type);</span>
-<span class="fc" id="L83">        appendEnumFields(type);</span>
-<span class="fc" id="L84">        appendEnumConstructor(type);</span>
+<span class="fc" id="L102">        appendEnumValues(type);</span>
+<span class="fc" id="L103">        appendEnumFields(type);</span>
+<span class="fc" id="L104">        appendEnumConstructor(type);</span>
 
-<span class="fc" id="L86">        formatters.forEach(f -&gt; f.appendMethods(type));</span>
-<span class="fc" id="L87">        formatters.forEach(f -&gt; f.appendExtraProperties(type));</span>
+<span class="fc" id="L106">        formatters.forEach(f -&gt; f.appendMethods(type));</span>
+<span class="fc" id="L107">        formatters.forEach(f -&gt; f.appendExtraProperties(type));</span>
 
-<span class="fc" id="L89">        writer.end()</span>
-<span class="fc" id="L90">              .appendln('}')</span>
-<span class="fc" id="L91">              .newline();</span>
-<span class="fc" id="L92">    }</span>
+<span class="fc" id="L109">        writer.end()</span>
+<span class="fc" id="L110">              .appendln('}')</span>
+<span class="fc" id="L111">              .newline();</span>
+<span class="fc" id="L112">    }</span>
 
     private void appendEnumValues(CEnumDescriptor type) {
-<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (CEnumValue v : type.getValues()) {</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">            if (v.getDocumentation() != null) {</span>
-<span class="fc" id="L97">                new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L98">                        .comment(v.getDocumentation())</span>
-<span class="fc" id="L99">                        .finish();</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        for (CEnumValue v : type.getValues()) {</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (v.getDocumentation() != null) {</span>
+<span class="fc" id="L117">                new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L118">                        .comment(v.getDocumentation())</span>
+<span class="fc" id="L119">                        .finish();</span>
             }
-<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            if (JAnnotation.isDeprecated(v)) {</span>
-<span class="nc" id="L102">                writer.appendln(JAnnotation.DEPRECATED);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if (JAnnotation.isDeprecated(v)) {</span>
+<span class="nc" id="L122">                writer.appendln(JAnnotation.DEPRECATED);</span>
             }
-<span class="fc" id="L104">            writer.formatln(&quot;%s(%d, \&quot;%s\&quot;),&quot;,</span>
-<span class="fc" id="L105">                            JUtils.enumConst(v),</span>
-<span class="fc" id="L106">                            v.asInteger(),</span>
-<span class="fc" id="L107">                            v.asString());</span>
+<span class="fc" id="L124">            writer.formatln(&quot;%s(%d, \&quot;%s\&quot;),&quot;,</span>
+<span class="fc" id="L125">                            JUtils.enumConst(v),</span>
+<span class="fc" id="L126">                            v.asInteger(),</span>
+<span class="fc" id="L127">                            v.asString());</span>
         }
-<span class="fc" id="L109">        writer.appendln(';')</span>
-<span class="fc" id="L110">              .newline();</span>
-<span class="fc" id="L111">    }</span>
+<span class="fc" id="L129">        writer.appendln(';')</span>
+<span class="fc" id="L130">              .newline();</span>
+<span class="fc" id="L131">    }</span>
 
     private void appendEnumFields(CEnumDescriptor type) {
-<span class="fc" id="L114">        writer.appendln(&quot;private final int    mId;&quot;)</span>
-<span class="fc" id="L115">              .appendln(&quot;private final String mName;&quot;)</span>
-<span class="fc" id="L116">              .newline();</span>
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L134">        writer.appendln(&quot;private final int    mId;&quot;)</span>
+<span class="fc" id="L135">              .appendln(&quot;private final String mName;&quot;)</span>
+<span class="fc" id="L136">              .newline();</span>
+<span class="fc" id="L137">    }</span>
 
     private void appendEnumConstructor(CEnumDescriptor type) {
-<span class="fc" id="L120">        writer.formatln(&quot;%s(int id, String name) {&quot;, JUtils.getClassName(type))</span>
-<span class="fc" id="L121">              .begin()</span>
-<span class="fc" id="L122">              .appendln(&quot;mId = id;&quot;)</span>
-<span class="fc" id="L123">              .appendln(&quot;mName = name;&quot;)</span>
-<span class="fc" id="L124">              .end()</span>
-<span class="fc" id="L125">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L126">              .newline();</span>
-<span class="fc" id="L127">    }</span>
+<span class="fc" id="L140">        writer.formatln(&quot;%s(int id, String name) {&quot;, JUtils.getClassName(type))</span>
+<span class="fc" id="L141">              .begin()</span>
+<span class="fc" id="L142">              .appendln(&quot;mId = id;&quot;)</span>
+<span class="fc" id="L143">              .appendln(&quot;mName = name;&quot;)</span>
+<span class="fc" id="L144">              .end()</span>
+<span class="fc" id="L145">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L146">              .newline();</span>
+<span class="fc" id="L147">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

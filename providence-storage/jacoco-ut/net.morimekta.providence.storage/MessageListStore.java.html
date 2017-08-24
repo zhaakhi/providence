@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageListStore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Storage</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.storage</a> &gt; <span class="el_source">MessageListStore.java</span></div><h1>MessageListStore.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.storage;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.descriptor.PField;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static net.morimekta.providence.storage.MessageStoreUtils.buildAll;
+import static net.morimekta.providence.storage.MessageStoreUtils.mutateAll;
+
+/**
+ * Interface for storing messages of a single type.
+ */
+public interface MessageListStore&lt;K, M extends PMessage&lt;M,F&gt;, F extends PField&gt;
+        extends MessageListReadOnlyStore&lt;K, M, F&gt; {
+    /**
+     * @param values Put all key value pairs form this map into the storage.
+     *               The list of messages should not contain null items.
+     * @return Immutable map of replaced values. Values not already present should not
+     *         have an entry in the result map (no key -&amp;gt; null mapping).
+     */
+    @Nonnull
+    Map&lt;K,List&lt;M&gt;&gt; putAll(@Nonnull Map&lt;K, List&lt;M&gt;&gt; values);
+
+    /**
+     * Remove the values for the given keys;
+     * @param keys Map of removed key value pairs.
+     * @return Immutable map of removed key value pairs. Values not removed should not
+     *         have an entry in the result map (no key -&amp;gt; null mapping).
+     */
+    @Nonnull
+    Map&lt;K,List&lt;M&gt;&gt; removeAll(Collection&lt;K&gt; keys);
+
+    /**
+     * @param key The key to put message at.
+     * @param list The list of message to put. The list should not contain
+     *             null items.
+     * @return Replaced value if any.
+     */
+    @Nullable
+    default List&lt;M&gt; put(@Nonnull K key, @Nonnull List&lt;M&gt; list) {
+<span class="fc" id="L51">        return putAll(ImmutableMap.of(key, list)).get(key);</span>
+    }
+
+    /**
+     * @param key Entry key to remove from map.
+     * @return The list of messages removed or null if nothing was removed.
+     */
+    @Nullable
+    default List&lt;M&gt; remove(@Nonnull K key) {
+<span class="fc" id="L60">        return removeAll(ImmutableList.of(key)).get(key);</span>
+    }
+
+    /**
+     * Put messages into the map represented by their builders. Further
+     * modifications to the builders will not be reflected onto the contents
+     * of the store.
+     *
+     * @param key The key to put builders to.
+     * @param builders The list of builders to put.
+     * @param &lt;B&gt; The builder type.
+     * @return The list of builders representing messages replaced, or null
+     *         if new entry was created.
+     */
+    @Nullable
+    @SuppressWarnings(&quot;unchecked&quot;)
+    default &lt;B extends PMessageBuilder&lt;M,F&gt;&gt;
+    List&lt;B&gt; putBuilders(@Nonnull K key, @Nonnull List&lt;B&gt; builders) {
+<span class="fc" id="L78">        return mutateAll(put(key, buildAll(builders)));</span>
+    }
+
+    /**
+     * Put messages into the map represented by their builders. Further
+     * modifications to the builders will not be reflected onto the contents
+     * of the store.
+     *
+     * @param builders Map of key to list of builders.
+     * @param &lt;B&gt; The builder type.
+     * @return Map of builders that were replaced in the store. Will not
+     *         contain (key -&amp;gt; null) mappings.
+     */
+    @Nonnull
+    @SuppressWarnings(&quot;unchecked&quot;)
+    default &lt;B extends PMessageBuilder&lt;M,F&gt;&gt;
+    Map&lt;K,List&lt;B&gt;&gt; putAllBuilders(@Nonnull Map&lt;K, List&lt;B&gt;&gt; builders) {
+<span class="fc" id="L95">        Map&lt;K,List&lt;M&gt;&gt; instances = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L96">        builders.forEach((k,bList) -&gt; instances.put(k, buildAll(bList)));</span>
+<span class="fc" id="L97">        Map&lt;K,List&lt;M&gt;&gt; replaced = putAll(instances);</span>
+<span class="fc" id="L98">        Map&lt;K,List&lt;B&gt;&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L99">        replaced.forEach((k,list) -&gt; result.put(k, mutateAll(list)));</span>
+<span class="fc" id="L100">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

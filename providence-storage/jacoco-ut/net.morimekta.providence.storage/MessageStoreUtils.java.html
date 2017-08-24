@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageStoreUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Storage</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.storage</a> &gt; <span class="el_source">MessageStoreUtils.java</span></div><h1>MessageStoreUtils.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.storage;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PMessageBuilder;
+import net.morimekta.providence.descriptor.PField;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Utilities for message store implementations and interfaces.
+ */
+<span class="nc" id="L14">public class MessageStoreUtils {</span>
+    /**
+     * Build all items of the collection containing builders. The list must not
+     * contain any null items.
+     *
+     * @param builders List of builders.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The field type.
+     * @param &lt;B&gt; The builder type.
+     * @return List of messages or null if null input.
+     */
+    public static &lt;M extends PMessage&lt;M,F&gt;, F extends PField, B extends PMessageBuilder&lt;M,F&gt;&gt;
+    List&lt;M&gt; buildAll(Collection&lt;B&gt; builders) {
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (builders == null) {</span>
+<span class="fc" id="L28">            return null;</span>
+        }
+<span class="fc" id="L30">        return builders.stream()</span>
+<span class="fc" id="L31">                       .map(PMessageBuilder::build)</span>
+<span class="fc" id="L32">                       .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Mutate all items of the collection containing messages. The list must not
+     * contain any null items.
+     *
+     * @param messages List of messages
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The field type.
+     * @param &lt;B&gt; The builder type.
+     * @return List of builders or null if null input.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static &lt;M extends PMessage&lt;M,F&gt;, F extends PField, B extends PMessageBuilder&lt;M,F&gt;&gt;
+    List&lt;B&gt; mutateAll(Collection&lt;M&gt; messages) {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (messages == null) {</span>
+<span class="fc" id="L49">            return null;</span>
+        }
+<span class="fc" id="L51">        return (List&lt;B&gt;) messages.stream()</span>
+<span class="fc" id="L52">                                 .map(PMessage::mutate)</span>
+<span class="fc" id="L53">                                 .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Build the message from builder if it is not null.
+     *
+     * @param builder The builder to build.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The field type.
+     * @param &lt;B&gt; The builder type.
+     * @return The message or null if null input.
+     */
+    public static &lt;M extends PMessage&lt;M,F&gt;, F extends PField, B extends PMessageBuilder&lt;M,F&gt;&gt;
+    M buildIfNotNull(B builder) {
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (builder == null) {</span>
+<span class="fc" id="L68">            return null;</span>
+        }
+<span class="nc" id="L70">        return builder.build();</span>
+    }
+
+    /**
+     * Mutate the message if it is not null.
+     *
+     * @param message Message to mutate.
+     * @param &lt;M&gt; The message type.
+     * @param &lt;F&gt; The field type.
+     * @param &lt;B&gt; The builder type.
+     * @return The builder or null if null input.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static &lt;M extends PMessage&lt;M,F&gt;, F extends PField, B extends PMessageBuilder&lt;M,F&gt;&gt;
+    B mutateIfNotNull(M message) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (message == null) {</span>
+<span class="fc" id="L86">            return null;</span>
+        }
+<span class="fc" id="L88">        return (B) message.mutate();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

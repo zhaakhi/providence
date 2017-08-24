@@ -59,8 +59,8 @@ public abstract class GeneratorBase&lt;
      * Default generator context.
      */
     public GeneratorBase() {
-<span class="nc" id="L62">        this(Fairy.create(Locale.ENGLISH), new Random());</span>
-<span class="nc" id="L63">    }</span>
+<span class="fc" id="L62">        this(Fairy.create(Locale.ENGLISH), new Random());</span>
+<span class="fc" id="L63">    }</span>
 
     /**
      *
@@ -69,8 +69,8 @@ public abstract class GeneratorBase&lt;
      */
     public GeneratorBase(Fairy fairy,
                          Random random) {
-<span class="nc" id="L72">        this(fairy, random, 1.0, 10);</span>
-<span class="nc" id="L73">    }</span>
+<span class="fc" id="L72">        this(fairy, random, 1.0, 10);</span>
+<span class="fc" id="L73">    }</span>
 
     /**
      *
@@ -83,24 +83,24 @@ public abstract class GeneratorBase&lt;
                          Random random,
                          double defaultFillRate,
                          int defaultMaxCollectionSize) {
-<span class="nc" id="L86">        this(new HashMap&lt;&gt;(), new HashMap&lt;&gt;(), defaultFillRate, defaultMaxCollectionSize, fairy, random);</span>
-<span class="nc" id="L87">    }</span>
+<span class="fc" id="L86">        this(new HashMap&lt;&gt;(), new HashMap&lt;&gt;(), defaultFillRate, defaultMaxCollectionSize, fairy, random);</span>
+<span class="fc" id="L87">    }</span>
 
     private GeneratorBase(Map&lt;PMessageDescriptor, MessageGenerator&gt; defaultMessageGenerators,
                           Map&lt;PEnumDescriptor, Generator&gt; defaultEnumGenerators,
                           double defaultFillRate,
                           int defaultMaxCollectionSize,
                           Fairy fairy,
-<span class="nc" id="L94">                          Random random) {</span>
-<span class="nc" id="L95">        this.fairy = fairy;</span>
-<span class="nc" id="L96">        this.random = random;</span>
-<span class="nc" id="L97">        this.primitiveCache = new EnumMap&lt;&gt;(PType.class);</span>
+<span class="fc" id="L94">                          Random random) {</span>
+<span class="fc" id="L95">        this.fairy = fairy;</span>
+<span class="fc" id="L96">        this.random = random;</span>
+<span class="fc" id="L97">        this.primitiveCache = new EnumMap&lt;&gt;(PType.class);</span>
 
-<span class="nc" id="L99">        this.defaultFillRate = defaultFillRate;</span>
-<span class="nc" id="L100">        this.defaultMaxCollectionSize = defaultMaxCollectionSize;</span>
-<span class="nc" id="L101">        this.defaultMessageGenerators = defaultMessageGenerators;</span>
-<span class="nc" id="L102">        this.defaultEnumGenerators = defaultEnumGenerators;</span>
-<span class="nc" id="L103">    }</span>
+<span class="fc" id="L99">        this.defaultFillRate = defaultFillRate;</span>
+<span class="fc" id="L100">        this.defaultMaxCollectionSize = defaultMaxCollectionSize;</span>
+<span class="fc" id="L101">        this.defaultMessageGenerators = defaultMessageGenerators;</span>
+<span class="fc" id="L102">        this.defaultEnumGenerators = defaultEnumGenerators;</span>
+<span class="fc" id="L103">    }</span>
 
     /**
      * Create the context instance used when generating messages.
@@ -116,7 +116,7 @@ public abstract class GeneratorBase&lt;
      */
     @SuppressWarnings(&quot;unchecked&quot;)
     public GeneratorBase(GeneratorBase&lt;Base, Context&gt; copyOf) {
-<span class="nc" id="L119">        this(new HashMap&lt;&gt;(),</span>
+<span class="fc" id="L119">        this(new HashMap&lt;&gt;(),</span>
              new HashMap&lt;&gt;(),
              copyOf.defaultFillRate,
              copyOf.defaultMaxCollectionSize,
@@ -124,31 +124,31 @@ public abstract class GeneratorBase&lt;
              copyOf.random);
 
         for (Map.Entry&lt;PMessageDescriptor, MessageGenerator&gt; entry :
-<span class="nc bnc" id="L127" title="All 2 branches missed.">                copyOf.defaultMessageGenerators.entrySet()) {</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">                copyOf.defaultMessageGenerators.entrySet()) {</span>
 <span class="nc" id="L128">            defaultMessageGenerators.put(entry.getKey(), entry.getValue().deepCopy());</span>
 <span class="nc" id="L129">        }</span>
         for (Map.Entry&lt;PEnumDescriptor, Generator&gt; entry :
-<span class="nc bnc" id="L131" title="All 2 branches missed.">                copyOf.defaultEnumGenerators.entrySet()) {</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                copyOf.defaultEnumGenerators.entrySet()) {</span>
 <span class="nc" id="L132">            defaultEnumGenerators.put(entry.getKey(), entry.getValue());</span>
 <span class="nc" id="L133">        }</span>
-<span class="nc" id="L134">    }</span>
+<span class="fc" id="L134">    }</span>
 
     @Nonnull
     @SuppressWarnings(&quot;unchecked&quot;)
     public &lt;T&gt;
     Generator&lt;Context, T&gt; generatorFor(@Nonnull PDescriptor type) {
-<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (type instanceof PMessageDescriptor) {</span>
-<span class="nc" id="L141">            return messageGeneratorFor((PMessageDescriptor) type);</span>
-<span class="nc bnc" id="L142" title="All 2 branches missed.">        } else if (type instanceof PEnumDescriptor) {</span>
-<span class="nc" id="L143">            return enumGeneratorFor((PEnumDescriptor) type);</span>
-<span class="nc bnc" id="L144" title="All 2 branches missed.">        } else if (type instanceof PPrimitive) {</span>
-<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (!primitiveCache.containsKey(type.getType())) {</span>
-<span class="nc" id="L146">                primitiveCache.put(type.getType(), makeGeneratorInternal(type));</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (type instanceof PMessageDescriptor) {</span>
+<span class="fc" id="L141">            return messageGeneratorFor((PMessageDescriptor) type);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        } else if (type instanceof PEnumDescriptor) {</span>
+<span class="fc" id="L143">            return enumGeneratorFor((PEnumDescriptor) type);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        } else if (type instanceof PPrimitive) {</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">            if (!primitiveCache.containsKey(type.getType())) {</span>
+<span class="fc" id="L146">                primitiveCache.put(type.getType(), makeGeneratorInternal(type));</span>
             }
-<span class="nc" id="L148">            return (Generator&lt;Context, T&gt;) primitiveCache.get(type.getType());</span>
+<span class="fc" id="L148">            return (Generator&lt;Context, T&gt;) primitiveCache.get(type.getType());</span>
         } else {
             // Containers are not cached.
-<span class="nc" id="L151">            return makeGeneratorInternal(type);</span>
+<span class="fc" id="L151">            return makeGeneratorInternal(type);</span>
         }
     }
 
@@ -156,12 +156,12 @@ public abstract class GeneratorBase&lt;
     @SuppressWarnings(&quot;unchecked&quot;)
     public &lt;E extends PEnumValue&lt;E&gt;&gt;
     Generator&lt;Context, E&gt; enumGeneratorFor(PEnumDescriptor&lt;E&gt; descriptor) {
-<span class="nc" id="L159">        EnumGenerator&lt;Context,E&gt; generator = (EnumGenerator) defaultEnumGenerators.get(descriptor);</span>
-<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (generator == null) {</span>
-<span class="nc" id="L161">            generator = new EnumGenerator&lt;&gt;(descriptor);</span>
-<span class="nc" id="L162">            defaultEnumGenerators.put(descriptor, generator);</span>
+<span class="fc" id="L159">        EnumGenerator&lt;Context,E&gt; generator = (EnumGenerator) defaultEnumGenerators.get(descriptor);</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (generator == null) {</span>
+<span class="fc" id="L161">            generator = new EnumGenerator&lt;&gt;(descriptor);</span>
+<span class="fc" id="L162">            defaultEnumGenerators.put(descriptor, generator);</span>
         }
-<span class="nc" id="L164">        return generator;</span>
+<span class="fc" id="L164">        return generator;</span>
     }
 
     /**
@@ -177,12 +177,12 @@ public abstract class GeneratorBase&lt;
     public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
     MessageGenerator&lt;Context, M, F&gt; messageGeneratorFor(PMessageDescriptor&lt;M, F&gt; descriptor) {
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L180">        MessageGenerator&lt;Context, M, F&gt; generator = defaultMessageGenerators.get(descriptor);</span>
-<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (generator == null) {</span>
-<span class="nc" id="L182">            generator = new MessageGenerator&lt;&gt;(descriptor);</span>
-<span class="nc" id="L183">            defaultMessageGenerators.put(descriptor, generator);</span>
+<span class="fc" id="L180">        MessageGenerator&lt;Context, M, F&gt; generator = defaultMessageGenerators.get(descriptor);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (generator == null) {</span>
+<span class="fc" id="L182">            generator = new MessageGenerator&lt;&gt;(descriptor);</span>
+<span class="fc" id="L183">            defaultMessageGenerators.put(descriptor, generator);</span>
         }
-<span class="nc" id="L185">        return generator;</span>
+<span class="fc" id="L185">        return generator;</span>
     }
 
     /**
@@ -247,7 +247,7 @@ public abstract class GeneratorBase&lt;
      */
     @Nonnull
     public Fairy getFairy() {
-<span class="nc" id="L250">        return fairy;</span>
+<span class="fc" id="L250">        return fairy;</span>
     }
 
     /**
@@ -265,7 +265,7 @@ public abstract class GeneratorBase&lt;
      */
     @Nonnull
     public Random getRandom() {
-<span class="nc" id="L268">        return random;</span>
+<span class="fc" id="L268">        return random;</span>
     }
 
     /**
@@ -282,7 +282,7 @@ public abstract class GeneratorBase&lt;
      * @return The default max collection size.
      */
     public int getDefaultMaxCollectionSize() {
-<span class="nc" id="L285">        return defaultMaxCollectionSize;</span>
+<span class="fc" id="L285">        return defaultMaxCollectionSize;</span>
     }
 
     /**
@@ -299,7 +299,7 @@ public abstract class GeneratorBase&lt;
      * @return The current default fill rate.
      */
     public double getDefaultFillRate() {
-<span class="nc" id="L302">        return defaultFillRate;</span>
+<span class="fc" id="L302">        return defaultFillRate;</span>
     }
 
     /**
@@ -321,8 +321,8 @@ public abstract class GeneratorBase&lt;
     @SuppressWarnings(&quot;unchecked&quot;)
     protected Base deepCopy() {
         try {
-<span class="nc" id="L324">            Constructor constructor = getClass().getConstructor(getClass());</span>
-<span class="nc" id="L325">            return (Base) constructor.newInstance(this);</span>
+<span class="fc" id="L324">            Constructor constructor = getClass().getConstructor(getClass());</span>
+<span class="fc" id="L325">            return (Base) constructor.newInstance(this);</span>
 <span class="nc" id="L326">        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {</span>
 <span class="nc" id="L327">            throw new AssertionError(e.getMessage(), e);</span>
         }
@@ -338,27 +338,27 @@ public abstract class GeneratorBase&lt;
     @SuppressWarnings(&quot;unchecked&quot;)
     private &lt;T&gt;
     Generator&lt;Context, T&gt; makeGeneratorInternal(@Nonnull PDescriptor type) {
-<span class="nc bnc" id="L341" title="All 15 branches missed.">        switch (type.getType()) {</span>
+<span class="pc bpc" id="L341" title="6 of 15 branches missed.">        switch (type.getType()) {</span>
             case VOID:
 <span class="nc" id="L343">                return ctx -&gt; (T) Boolean.TRUE;</span>
             case BOOL:
-<span class="nc" id="L345">                return new BoolGenerator();</span>
+<span class="fc" id="L345">                return new BoolGenerator();</span>
             case BYTE:
-<span class="nc" id="L347">                return new ByteGenerator();</span>
+<span class="fc" id="L347">                return new ByteGenerator();</span>
             case I16:
-<span class="nc" id="L349">                return new ShortGenerator();</span>
+<span class="fc" id="L349">                return new ShortGenerator();</span>
             case I32:
-<span class="nc" id="L351">                return new IntGenerator();</span>
+<span class="fc" id="L351">                return new IntGenerator();</span>
             case I64:
-<span class="nc" id="L353">                return new LongGenerator();</span>
+<span class="fc" id="L353">                return new LongGenerator();</span>
             case DOUBLE:
-<span class="nc" id="L355">                return new DoubleGenerator();</span>
+<span class="fc" id="L355">                return new DoubleGenerator();</span>
             case STRING:
-<span class="nc" id="L357">                return new StringGenerator();</span>
+<span class="fc" id="L357">                return new StringGenerator();</span>
             case BINARY:
-<span class="nc" id="L359">                return new BinaryGenerator();</span>
+<span class="fc" id="L359">                return new BinaryGenerator();</span>
             case LIST:
-<span class="nc" id="L361">                return new ListGenerator((PList&lt;Object&gt;) type);</span>
+<span class="fc" id="L361">                return new ListGenerator((PList&lt;Object&gt;) type);</span>
             case SET:
 <span class="nc" id="L363">                return new SetGenerator((PSet&lt;Object&gt;) type);</span>
             case MAP:

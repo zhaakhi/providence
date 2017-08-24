@@ -92,12 +92,12 @@ public class JacksonMessageFormatter implements MessageMemberFormatter {
 <span class="fc" id="L92">                String keyGeneric = helper.getFieldType(kType);</span>
 <span class="fc" id="L93">                String mkKey = &quot;k&quot;;</span>
 <span class="fc bfc" id="L94" title="All 2 branches covered.">                if (kType.getType() == PType.BINARY) {</span>
-<span class="fc" id="L95">                    writer.formatln(&quot;%s kType = ctxt.getTypeFactory().uncheckedSimpleType(String.class);&quot;,</span>
+<span class="fc" id="L95">                    writer.formatln(&quot;%s kType = ctxt.getTypeFactory().constructSimpleType(String.class, null);&quot;,</span>
 <span class="fc" id="L96">                                    JavaType.class.getName());</span>
 <span class="fc" id="L97">                    keyGeneric = &quot;String&quot;;</span>
 <span class="fc" id="L98">                    mkKey = String.format(&quot;%s.fromBase64(k)&quot;, Binary.class.getName());</span>
                 } else {
-<span class="fc" id="L100">                    writer.formatln(&quot;%s kType = ctxt.getTypeFactory().uncheckedSimpleType(%s.class);&quot;,</span>
+<span class="fc" id="L100">                    writer.formatln(&quot;%s kType = ctxt.getTypeFactory().constructSimpleType(%s.class, null);&quot;,</span>
 <span class="fc" id="L101">                                    JavaType.class.getName(),</span>
 <span class="fc" id="L102">                                    helper.getFieldType(kType));</span>
                 }
@@ -131,12 +131,12 @@ public class JacksonMessageFormatter implements MessageMemberFormatter {
 <span class="fc" id="L131">                                    MapType.class.getName(),</span>
 <span class="fc" id="L132">                                    helper.getFieldType(iiType));</span>
 <span class="fc bfc" id="L133" title="All 2 branches covered.">                } else if (iType.getType() == PType.BINARY) {</span>
-<span class="fc" id="L134">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().uncheckedSimpleType(String.class);&quot;,</span>
+<span class="fc" id="L134">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructSimpleType(String.class, null);&quot;,</span>
 <span class="fc" id="L135">                                    JavaType.class.getName());</span>
 <span class="fc" id="L136">                    valueGeneric = &quot;String&quot;;</span>
 <span class="fc" id="L137">                    mkValue = String.format(&quot;%s.fromBase64(v)&quot;, Binary.class.getName());</span>
                 } else {
-<span class="fc" id="L139">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().uncheckedSimpleType(%s.class);&quot;,</span>
+<span class="fc" id="L139">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructSimpleType(%s.class, null);&quot;,</span>
 <span class="fc" id="L140">                                    JavaType.class.getName(),</span>
 <span class="fc" id="L141">                                    helper.getFieldType(iType));</span>
                 }

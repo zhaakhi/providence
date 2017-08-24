@@ -33,7 +33,7 @@ import java.util.function.Function;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
- * Simple file-based storage of providence messages, that keeps
+ * Simple file-based storage of providence messages that keeps
  * an in-memory key index, a message cache, and stores messages
  * to individual files in a single directly.
  * &lt;p&gt;
@@ -116,7 +116,7 @@ public class DirectoryMessageStore&lt;K, M extends PMessage&lt;M,F&gt;, F extend
     @Override @Nonnull
     public Map&lt;K,M&gt; putAll(@Nonnull Map&lt;K, M&gt; values) {
 <span class="fc" id="L118">        return mutex.lockForWriting(() -&gt; {</span>
-<span class="fc" id="L119">            Map&lt;K,M&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L119">            Map&lt;K,M&gt; out = getAll(values.keySet());</span>
 <span class="fc" id="L120">            values.forEach((key, value) -&gt; {</span>
                 try {
 <span class="fc" id="L122">                    write(key, value);</span>
@@ -136,7 +136,7 @@ public class DirectoryMessageStore&lt;K, M extends PMessage&lt;M,F&gt;, F extend
 <span class="fc" id="L136">            Map&lt;K,M&gt; out = new HashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L137" title="All 2 branches covered.">            for (K key : keys) {</span>
 <span class="fc" id="L138">                File file = fileFor(key, false);</span>
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">                if (file.exists()) {</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">                if (file.exists()) {</span>
                     try {
 <span class="pc" id="L141">                        out.put(key, cache.get(key, () -&gt; read(key)));</span>
 <span class="nc" id="L142">                    } catch (ExecutionException e) {</span>
@@ -148,67 +148,65 @@ public class DirectoryMessageStore&lt;K, M extends PMessage&lt;M,F&gt;, F extend
 <span class="pc" id="L148">                    }</span>
 <span class="fc" id="L149">                    cache.invalidate(key);</span>
 <span class="fc" id="L150">                    keyset.remove(key);</span>
-                } else {
-<span class="nc" id="L152">                    out.put(key, null);</span>
                 }
-<span class="fc" id="L154">            }</span>
-<span class="fc" id="L155">            return out;</span>
+<span class="fc" id="L152">            }</span>
+<span class="fc" id="L153">            return out;</span>
         });
     }
 
     private Set&lt;K&gt; initKeySet() {
-<span class="fc" id="L160">        HashSet&lt;K&gt; set = new HashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (String file : directory.list()) {</span>
-<span class="fc bfc" id="L162" title="All 2 branches covered.">            if (new File(directory, file).isFile()) {</span>
+<span class="fc" id="L158">        HashSet&lt;K&gt; set = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (String file : directory.list()) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (new File(directory, file).isFile()) {</span>
                 try {
-<span class="fc" id="L164">                    set.add(keyParser.apply(file));</span>
-<span class="nc" id="L165">                } catch (Exception e) {</span>
-<span class="nc" id="L166">                    throw new IllegalStateException(&quot;Unable to get key from file: &quot; + file, e);</span>
-<span class="fc" id="L167">                }</span>
+<span class="fc" id="L162">                    set.add(keyParser.apply(file));</span>
+<span class="nc" id="L163">                } catch (Exception e) {</span>
+<span class="nc" id="L164">                    throw new IllegalStateException(&quot;Unable to get key from file: &quot; + file, e);</span>
+<span class="fc" id="L165">                }</span>
             }
         }
-<span class="fc" id="L170">        return set;</span>
+<span class="fc" id="L168">        return set;</span>
     }
 
     private M read(K key) throws IOException {
-<span class="pc" id="L174">        try (FileInputStream fis = new FileInputStream(fileFor(key, false));</span>
-<span class="fc" id="L175">             BufferedInputStream bis = new BufferedInputStream(fis)) {</span>
-<span class="fc" id="L176">            return serializer.deserialize(bis, descriptor);</span>
-<span class="pc bpc" id="L177" title="12 of 16 branches missed.">        } catch (IOException e) {</span>
-<span class="nc" id="L178">            throw new IOException(&quot;Unable to read &quot; + keyBuilder.apply(key), e);</span>
+<span class="pc" id="L172">        try (FileInputStream fis = new FileInputStream(fileFor(key, false));</span>
+<span class="fc" id="L173">             BufferedInputStream bis = new BufferedInputStream(fis)) {</span>
+<span class="fc" id="L174">            return serializer.deserialize(bis, descriptor);</span>
+<span class="pc bpc" id="L175" title="12 of 16 branches missed.">        } catch (IOException e) {</span>
+<span class="nc" id="L176">            throw new IOException(&quot;Unable to read &quot; + keyBuilder.apply(key), e);</span>
         }
     }
 
     private void write(K key, M message) throws IOException {
-<span class="fc" id="L183">        File tmp = fileFor(key, true);</span>
-<span class="fc" id="L184">        File file = fileFor(key, false);</span>
-<span class="pc" id="L185">        try (FileOutputStream fos = new FileOutputStream(tmp, false);</span>
-<span class="fc" id="L186">             BufferedOutputStream bos = new BufferedOutputStream(fos)) {</span>
-<span class="fc" id="L187">            serializer.serialize(bos, message);</span>
-<span class="fc" id="L188">            bos.flush();</span>
-<span class="pc bpc" id="L189" title="12 of 16 branches missed.">        } catch (IOException e) {</span>
-<span class="nc" id="L190">            throw new IOException(&quot;Unable to write &quot; + keyBuilder.apply(key), e);</span>
-<span class="fc" id="L191">        }</span>
-<span class="fc" id="L192">        Files.move(tmp.toPath(), file.toPath(), REPLACE_EXISTING);</span>
-<span class="fc" id="L193">    }</span>
+<span class="fc" id="L181">        File tmp = fileFor(key, true);</span>
+<span class="fc" id="L182">        File file = fileFor(key, false);</span>
+<span class="pc" id="L183">        try (FileOutputStream fos = new FileOutputStream(tmp, false);</span>
+<span class="fc" id="L184">             BufferedOutputStream bos = new BufferedOutputStream(fos)) {</span>
+<span class="fc" id="L185">            serializer.serialize(bos, message);</span>
+<span class="fc" id="L186">            bos.flush();</span>
+<span class="pc bpc" id="L187" title="12 of 16 branches missed.">        } catch (IOException e) {</span>
+<span class="nc" id="L188">            throw new IOException(&quot;Unable to write &quot; + keyBuilder.apply(key), e);</span>
+<span class="fc" id="L189">        }</span>
+<span class="fc" id="L190">        Files.move(tmp.toPath(), file.toPath(), REPLACE_EXISTING);</span>
+<span class="fc" id="L191">    }</span>
 
     private File fileFor(K key, boolean temp) {
-<span class="fc bfc" id="L196" title="All 2 branches covered.">        return new File(temp ? tempDir : directory,</span>
-<span class="fc" id="L197">                        validateKey(keyBuilder.apply(key)));</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        return new File(temp ? tempDir : directory,</span>
+<span class="fc" id="L195">                        validateKey(keyBuilder.apply(key)));</span>
     }
 
     private String validateKey(String key) {
         // TODO: Make true file-name validation.
-<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (key.contains(File.separator)) {</span>
-<span class="nc" id="L203">            throw new IllegalArgumentException(&quot;Path name separator in key &quot; + key);</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        if (key.contains(File.separator)) {</span>
+<span class="nc" id="L201">            throw new IllegalArgumentException(&quot;Path name separator in key &quot; + key);</span>
         }
-<span class="fc" id="L205">        return key;</span>
+<span class="fc" id="L203">        return key;</span>
     }
 
     @Override
     public void close() throws IOException {
-<span class="fc" id="L210">        cache.invalidateAll();</span>
-<span class="fc" id="L211">        keyset.clear();</span>
-<span class="fc" id="L212">    }</span>
+<span class="fc" id="L208">        cache.invalidateAll();</span>
+<span class="fc" id="L209">        keyset.clear();</span>
+<span class="fc" id="L210">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

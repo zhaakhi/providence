@@ -52,6 +52,7 @@ import net.morimekta.providence.util.TypeRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -75,9 +76,9 @@ public class ProgramConverter {
      *
      * @param programRegistry The program registry.
      */
-<span class="fc" id="L78">    public ProgramConverter(ProgramRegistry programRegistry) {</span>
-<span class="fc" id="L79">        this.programRegistry = programRegistry;</span>
-<span class="fc" id="L80">    }</span>
+<span class="fc" id="L79">    public ProgramConverter(ProgramRegistry programRegistry) {</span>
+<span class="fc" id="L80">        this.programRegistry = programRegistry;</span>
+<span class="fc" id="L81">    }</span>
 
     /**
      * Convert document model to declared document.
@@ -88,247 +89,256 @@ public class ProgramConverter {
      * @return The declared thrift document.
      */
     public CProgram convert(String path, ProgramType program) {
-<span class="fc" id="L91">        ImmutableList.Builder&lt;PDeclaredDescriptor&lt;?&gt;&gt; declaredTypes = ImmutableList.builder();</span>
-<span class="fc" id="L92">        ImmutableList.Builder&lt;CConst&gt; constants = ImmutableList.builder();</span>
-<span class="fc" id="L93">        ImmutableMap.Builder&lt;String, String&gt; typedefs = ImmutableMap.builder();</span>
-<span class="fc" id="L94">        ImmutableList.Builder&lt;CService&gt; services = ImmutableList.builder();</span>
+<span class="fc" id="L92">        ImmutableList.Builder&lt;PDeclaredDescriptor&lt;?&gt;&gt; declaredTypes = ImmutableList.builder();</span>
+<span class="fc" id="L93">        ImmutableList.Builder&lt;CConst&gt; constants = ImmutableList.builder();</span>
+<span class="fc" id="L94">        ImmutableMap.Builder&lt;String, String&gt; typedefs = ImmutableMap.builder();</span>
+<span class="fc" id="L95">        ImmutableList.Builder&lt;CService&gt; services = ImmutableList.builder();</span>
 
-<span class="fc" id="L96">        RecursiveTypeRegistry registry = programRegistry.registryForPath(path);</span>
+<span class="fc" id="L97">        RecursiveTypeRegistry registry = programRegistry.registryForPath(path);</span>
 
-<span class="fc bfc" id="L98" title="All 2 branches covered.">        for (Declaration decl : program.getDecl()) {</span>
-<span class="pc bpc" id="L99" title="3 of 6 branches missed.">            switch (decl.unionField()) {</span>
+<span class="fc" id="L99">        File dir = new File(path).getParentFile();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (program.hasIncludes()) {</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            for (String include : program.getIncludes()) {</span>
+<span class="fc" id="L102">                String includePath = new File(dir, include).getPath();</span>
+<span class="fc" id="L103">                registry.registerInclude(ReflectionUtils.programNameFromPath(include),</span>
+<span class="fc" id="L104">                                         programRegistry.registryForPath(includePath));</span>
+<span class="fc" id="L105">            }</span>
+        }
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        for (Declaration decl : program.getDecl()) {</span>
+<span class="pc bpc" id="L109" title="2 of 6 branches missed.">            switch (decl.unionField()) {</span>
                 case DECL_ENUM: {
-<span class="fc" id="L101">                    EnumType enumType = decl.getDeclEnum();</span>
+<span class="fc" id="L111">                    EnumType enumType = decl.getDeclEnum();</span>
 
-<span class="fc" id="L103">                    int nextValue = PEnumDescriptor.DEFAULT_FIRST_VALUE;</span>
-<span class="fc" id="L104">                    CEnumDescriptor type = new CEnumDescriptor(enumType.getDocumentation(),</span>
-<span class="fc" id="L105">                                                               program.getProgramName(),</span>
-<span class="fc" id="L106">                                                               enumType.getName(),</span>
-<span class="fc" id="L107">                                                               enumType.getAnnotations());</span>
-<span class="fc" id="L108">                    List&lt;CEnumValue&gt; values = new LinkedList&lt;&gt;();</span>
-<span class="fc bfc" id="L109" title="All 2 branches covered.">                    for (EnumValue value : enumType.getValues()) {</span>
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">                        int v = value.hasId() ? value.getId() : nextValue;</span>
-<span class="fc" id="L111">                        nextValue = v + 1;</span>
-<span class="fc" id="L112">                        values.add(new CEnumValue(value.getDocumentation(), value.getId(), value.getName(), type, value.getAnnotations()));</span>
-<span class="fc" id="L113">                    }</span>
-<span class="fc" id="L114">                    type.setValues(values);</span>
-<span class="fc" id="L115">                    declaredTypes.add(type);</span>
-<span class="fc" id="L116">                    registry.register(type);</span>
-<span class="fc" id="L117">                    break;</span>
+<span class="fc" id="L113">                    int nextValue = PEnumDescriptor.DEFAULT_FIRST_VALUE;</span>
+<span class="fc" id="L114">                    CEnumDescriptor type = new CEnumDescriptor(enumType.getDocumentation(),</span>
+<span class="fc" id="L115">                                                               program.getProgramName(),</span>
+<span class="fc" id="L116">                                                               enumType.getName(),</span>
+<span class="fc" id="L117">                                                               enumType.getAnnotations());</span>
+<span class="fc" id="L118">                    List&lt;CEnumValue&gt; values = new LinkedList&lt;&gt;();</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                    for (EnumValue value : enumType.getValues()) {</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">                        int v = value.hasId() ? value.getId() : nextValue;</span>
+<span class="fc" id="L121">                        nextValue = v + 1;</span>
+<span class="fc" id="L122">                        values.add(new CEnumValue(value.getDocumentation(), value.getId(), value.getName(), type, value.getAnnotations()));</span>
+<span class="fc" id="L123">                    }</span>
+<span class="fc" id="L124">                    type.setValues(values);</span>
+<span class="fc" id="L125">                    declaredTypes.add(type);</span>
+<span class="fc" id="L126">                    registry.register(type);</span>
+<span class="fc" id="L127">                    break;</span>
                 }
                 case DECL_STRUCT: {
-<span class="fc" id="L120">                    MessageType messageType = decl.getDeclStruct();</span>
+<span class="fc" id="L130">                    MessageType messageType = decl.getDeclStruct();</span>
 
-<span class="fc" id="L122">                    List&lt;CField&gt; fields = new LinkedList&lt;&gt;();</span>
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                    if (messageType.hasFields()) {</span>
-<span class="fc" id="L124">                        fields.addAll(messageType.getFields()</span>
-<span class="fc" id="L125">                                                .stream()</span>
-<span class="fc" id="L126">                                                .map(field -&gt; makeField(registry, program.getProgramName(), field, messageType.getVariant()))</span>
-<span class="fc" id="L127">                                                .collect(Collectors.toList()));</span>
+<span class="fc" id="L132">                    List&lt;CField&gt; fields = new LinkedList&lt;&gt;();</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">                    if (messageType.hasFields()) {</span>
+<span class="fc" id="L134">                        fields.addAll(messageType.getFields()</span>
+<span class="fc" id="L135">                                                .stream()</span>
+<span class="fc" id="L136">                                                .map(field -&gt; makeField(registry, program.getProgramName(), field, messageType.getVariant()))</span>
+<span class="fc" id="L137">                                                .collect(Collectors.toList()));</span>
                     }
                     PMessageDescriptor&lt;?, ?&gt; type;
-<span class="pc bpc" id="L130" title="1 of 4 branches missed.">                    switch (messageType.getVariant()) {</span>
+<span class="pc bpc" id="L140" title="1 of 4 branches missed.">                    switch (messageType.getVariant()) {</span>
                         case STRUCT:
-<span class="fc" id="L132">                            type = new CStructDescriptor(messageType.getDocumentation(),</span>
-<span class="fc" id="L133">                                                         program.getProgramName(),</span>
-<span class="fc" id="L134">                                                         messageType.getName(),</span>
+<span class="fc" id="L142">                            type = new CStructDescriptor(messageType.getDocumentation(),</span>
+<span class="fc" id="L143">                                                         program.getProgramName(),</span>
+<span class="fc" id="L144">                                                         messageType.getName(),</span>
                                                          fields,
-<span class="fc" id="L136">                                                         messageType.getAnnotations());</span>
-<span class="fc" id="L137">                            break;</span>
+<span class="fc" id="L146">                                                         messageType.getAnnotations());</span>
+<span class="fc" id="L147">                            break;</span>
                         case UNION:
-<span class="fc" id="L139">                            type = new CUnionDescriptor(messageType.getDocumentation(),</span>
-<span class="fc" id="L140">                                                        program.getProgramName(),</span>
-<span class="fc" id="L141">                                                        messageType.getName(),</span>
+<span class="fc" id="L149">                            type = new CUnionDescriptor(messageType.getDocumentation(),</span>
+<span class="fc" id="L150">                                                        program.getProgramName(),</span>
+<span class="fc" id="L151">                                                        messageType.getName(),</span>
                                                         fields,
-<span class="fc" id="L143">                                                        messageType.getAnnotations());</span>
-<span class="fc" id="L144">                            break;</span>
+<span class="fc" id="L153">                                                        messageType.getAnnotations());</span>
+<span class="fc" id="L154">                            break;</span>
                         case EXCEPTION:
-<span class="fc" id="L146">                            type = new CExceptionDescriptor(messageType.getDocumentation(),</span>
-<span class="fc" id="L147">                                                            program.getProgramName(),</span>
-<span class="fc" id="L148">                                                            messageType.getName(),</span>
+<span class="fc" id="L156">                            type = new CExceptionDescriptor(messageType.getDocumentation(),</span>
+<span class="fc" id="L157">                                                            program.getProgramName(),</span>
+<span class="fc" id="L158">                                                            messageType.getName(),</span>
                                                             fields,
-<span class="fc" id="L150">                                                            messageType.getAnnotations());</span>
-<span class="fc" id="L151">                            break;</span>
+<span class="fc" id="L160">                                                            messageType.getAnnotations());</span>
+<span class="fc" id="L161">                            break;</span>
                         default:
-<span class="nc" id="L153">                            throw new UnsupportedOperationException(&quot;Unhandled message variant &quot; + messageType.getVariant());</span>
+<span class="nc" id="L163">                            throw new UnsupportedOperationException(&quot;Unhandled message variant &quot; + messageType.getVariant());</span>
                     }
-<span class="fc" id="L155">                    declaredTypes.add(type);</span>
-<span class="fc" id="L156">                    registry.register(type);</span>
-<span class="fc" id="L157">                    break;</span>
+<span class="fc" id="L165">                    declaredTypes.add(type);</span>
+<span class="fc" id="L166">                    registry.register(type);</span>
+<span class="fc" id="L167">                    break;</span>
                 }
                 case DECL_CONST: {
-<span class="nc" id="L160">                    ConstType constant = decl.getDeclConst();</span>
-<span class="nc" id="L161">                    constants.add(makeConst(registry, program.getProgramName(), constant));</span>
-<span class="nc" id="L162">                    break;</span>
+<span class="nc" id="L170">                    ConstType constant = decl.getDeclConst();</span>
+<span class="nc" id="L171">                    constants.add(makeConst(registry, program.getProgramName(), constant));</span>
+<span class="nc" id="L172">                    break;</span>
                 }
                 case DECL_TYPEDEF: {
-<span class="fc" id="L165">                    typedefs.put(decl.getDeclTypedef()</span>
-<span class="fc" id="L166">                                     .getName(),</span>
-<span class="fc" id="L167">                                 decl.getDeclTypedef()</span>
-<span class="fc" id="L168">                                     .getType());</span>
-<span class="fc" id="L169">                    registry.registerTypedef(decl.getDeclTypedef()</span>
-<span class="fc" id="L170">                                            .getName(),</span>
-<span class="fc" id="L171">                                        program.getProgramName(),</span>
-<span class="fc" id="L172">                                        decl.getDeclTypedef()</span>
-<span class="fc" id="L173">                                            .getType());</span>
-<span class="fc" id="L174">                    break;</span>
+<span class="fc" id="L175">                    typedefs.put(decl.getDeclTypedef()</span>
+<span class="fc" id="L176">                                     .getName(),</span>
+<span class="fc" id="L177">                                 decl.getDeclTypedef()</span>
+<span class="fc" id="L178">                                     .getType());</span>
+<span class="fc" id="L179">                    registry.registerTypedef(decl.getDeclTypedef()</span>
+<span class="fc" id="L180">                                            .getName(),</span>
+<span class="fc" id="L181">                                        program.getProgramName(),</span>
+<span class="fc" id="L182">                                        decl.getDeclTypedef()</span>
+<span class="fc" id="L183">                                            .getType());</span>
+<span class="fc" id="L184">                    break;</span>
                 }
                 case DECL_SERVICE: {
-<span class="nc" id="L177">                    ServiceType serviceType = decl.getDeclService();</span>
-<span class="nc" id="L178">                    ImmutableList.Builder&lt;CServiceMethod&gt; methodBuilder = ImmutableList.builder();</span>
-<span class="nc bnc" id="L179" title="All 2 branches missed.">                    if (serviceType.hasMethods()) {</span>
-<span class="nc bnc" id="L180" title="All 2 branches missed.">                        for (FunctionType sm : serviceType.getMethods()) {</span>
-<span class="nc" id="L181">                            List&lt;CField&gt; rqFields = new LinkedList&lt;&gt;();</span>
-<span class="nc bnc" id="L182" title="All 2 branches missed.">                            if (sm.numParams() &gt; 0) {</span>
-<span class="nc bnc" id="L183" title="All 2 branches missed.">                                for (FieldType field : sm.getParams()) {</span>
-<span class="nc" id="L184">                                    rqFields.add(makeField(registry, program.getProgramName(), field, MessageVariant.STRUCT));</span>
-<span class="nc" id="L185">                                }</span>
+<span class="fc" id="L187">                    ServiceType serviceType = decl.getDeclService();</span>
+<span class="fc" id="L188">                    ImmutableList.Builder&lt;CServiceMethod&gt; methodBuilder = ImmutableList.builder();</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                    if (serviceType.hasMethods()) {</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">                        for (FunctionType sm : serviceType.getMethods()) {</span>
+<span class="fc" id="L191">                            List&lt;CField&gt; rqFields = new LinkedList&lt;&gt;();</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">                            if (sm.numParams() &gt; 0) {</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">                                for (FieldType field : sm.getParams()) {</span>
+<span class="fc" id="L194">                                    rqFields.add(makeField(registry, program.getProgramName(), field, MessageVariant.STRUCT));</span>
+<span class="fc" id="L195">                                }</span>
                             }
-<span class="nc" id="L187">                            CStructDescriptor request = new CStructDescriptor(null,</span>
-<span class="nc" id="L188">                                                                              program.getProgramName(),</span>
-<span class="nc" id="L189">                                                                              serviceType.getName() + '.' +</span>
-<span class="nc" id="L190">                                                                              sm.getName() + &quot;.request&quot;,</span>
+<span class="fc" id="L197">                            CStructDescriptor request = new CStructDescriptor(null,</span>
+<span class="fc" id="L198">                                                                              program.getProgramName(),</span>
+<span class="fc" id="L199">                                                                              serviceType.getName() + '.' +</span>
+<span class="fc" id="L200">                                                                              sm.getName() + &quot;.request&quot;,</span>
                                                                               rqFields,
                                                                               null);
 
-<span class="nc" id="L194">                            CUnionDescriptor response = null;</span>
-<span class="nc bnc" id="L195" title="All 2 branches missed.">                            if (!sm.isOneWay()) {</span>
-<span class="nc" id="L196">                                List&lt;CField&gt; rsFields = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L204">                            CUnionDescriptor response = null;</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">                            if (!sm.isOneWay()) {</span>
+<span class="fc" id="L206">                                List&lt;CField&gt; rsFields = new LinkedList&lt;&gt;();</span>
                                 CField success;
-<span class="nc bnc" id="L198" title="All 2 branches missed.">                                if (sm.getReturnType() != null) {</span>
-<span class="nc" id="L199">                                    PDescriptorProvider type = registry.getProvider(sm.getReturnType(),</span>
-<span class="nc" id="L200">                                                                                    program.getProgramName(),</span>
-<span class="nc" id="L201">                                                                                    sm.getAnnotations());</span>
-<span class="nc" id="L202">                                    success = new CField(null, 0, PRequirement.OPTIONAL, &quot;success&quot;, type, null, null);</span>
-<span class="nc" id="L203">                                } else {</span>
-<span class="nc" id="L204">                                    success = new CField(null,</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">                                if (sm.getReturnType() != null) {</span>
+<span class="fc" id="L209">                                    PDescriptorProvider type = registry.getProvider(sm.getReturnType(),</span>
+<span class="fc" id="L210">                                                                                    program.getProgramName(),</span>
+<span class="fc" id="L211">                                                                                    sm.getAnnotations());</span>
+<span class="fc" id="L212">                                    success = new CField(null, 0, PRequirement.OPTIONAL, &quot;success&quot;, type, null, null);</span>
+<span class="fc" id="L213">                                } else {</span>
+<span class="fc" id="L214">                                    success = new CField(null,</span>
                                                          0,
                                                          PRequirement.OPTIONAL,
                                                          &quot;success&quot;,
-<span class="nc" id="L208">                                                         PPrimitive.VOID.provider(),</span>
+<span class="fc" id="L218">                                                         PPrimitive.VOID.provider(),</span>
                                                          null,
                                                          null);
                                 }
-<span class="nc" id="L212">                                rsFields.add(success);</span>
+<span class="fc" id="L222">                                rsFields.add(success);</span>
 
-<span class="nc bnc" id="L214" title="All 2 branches missed.">                                if (sm.numExceptions() &gt; 0) {</span>
-<span class="nc bnc" id="L215" title="All 2 branches missed.">                                    for (FieldType field : sm.getExceptions()) {</span>
-<span class="nc" id="L216">                                        rsFields.add(makeField(registry, program.getProgramName(), field, MessageVariant.UNION));</span>
-<span class="nc" id="L217">                                    }</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">                                if (sm.numExceptions() &gt; 0) {</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">                                    for (FieldType field : sm.getExceptions()) {</span>
+<span class="fc" id="L226">                                        rsFields.add(makeField(registry, program.getProgramName(), field, MessageVariant.UNION));</span>
+<span class="fc" id="L227">                                    }</span>
                                 }
 
-<span class="nc" id="L220">                                response = new CUnionDescriptor(null,</span>
-<span class="nc" id="L221">                                                                program.getProgramName(),</span>
-<span class="nc" id="L222">                                                                serviceType.getName() + '.' +</span>
-<span class="nc" id="L223">                                                                sm.getName() + &quot;.response&quot;,</span>
+<span class="fc" id="L230">                                response = new CUnionDescriptor(null,</span>
+<span class="fc" id="L231">                                                                program.getProgramName(),</span>
+<span class="fc" id="L232">                                                                serviceType.getName() + '.' +</span>
+<span class="fc" id="L233">                                                                sm.getName() + &quot;.response&quot;,</span>
                                                                 rsFields,
                                                                 null);
                             }
 
-<span class="nc" id="L228">                            CServiceMethod method = new CServiceMethod(sm.getDocumentation(),</span>
-<span class="nc" id="L229">                                                                       sm.getName(),</span>
-<span class="nc" id="L230">                                                                       sm.isOneWay(),</span>
+<span class="fc" id="L238">                            CServiceMethod method = new CServiceMethod(sm.getDocumentation(),</span>
+<span class="fc" id="L239">                                                                       sm.getName(),</span>
+<span class="fc" id="L240">                                                                       sm.isOneWay(),</span>
                                                                        request,
                                                                        response,
-<span class="nc" id="L233">                                                                       sm.getAnnotations());</span>
+<span class="fc" id="L243">                                                                       sm.getAnnotations());</span>
 
-<span class="nc" id="L235">                            methodBuilder.add(method);</span>
-<span class="nc" id="L236">                        }  // for each method</span>
+<span class="fc" id="L245">                            methodBuilder.add(method);</span>
+<span class="fc" id="L246">                        }  // for each method</span>
                     }  // if has methods
 
-<span class="nc" id="L239">                    PServiceProvider extendsProvider = null;</span>
-<span class="nc bnc" id="L240" title="All 2 branches missed.">                    if (serviceType.hasExtend()) {</span>
-<span class="nc" id="L241">                        extendsProvider = registry.getServiceProvider(serviceType.getExtend(), program.getProgramName());</span>
+<span class="fc" id="L249">                    PServiceProvider extendsProvider = null;</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">                    if (serviceType.hasExtend()) {</span>
+<span class="fc" id="L251">                        extendsProvider = registry.getServiceProvider(serviceType.getExtend(), program.getProgramName());</span>
                     }
 
-<span class="nc" id="L244">                    CService service = new CService(serviceType.getDocumentation(),</span>
-<span class="nc" id="L245">                                                    program.getProgramName(),</span>
-<span class="nc" id="L246">                                                    serviceType.getName(),</span>
+<span class="fc" id="L254">                    CService service = new CService(serviceType.getDocumentation(),</span>
+<span class="fc" id="L255">                                                    program.getProgramName(),</span>
+<span class="fc" id="L256">                                                    serviceType.getName(),</span>
                                                     extendsProvider,
-<span class="nc" id="L248">                                                    methodBuilder.build(),</span>
-<span class="nc" id="L249">                                                    serviceType.getAnnotations());</span>
+<span class="fc" id="L258">                                                    methodBuilder.build(),</span>
+<span class="fc" id="L259">                                                    serviceType.getAnnotations());</span>
 
-<span class="nc" id="L251">                    services.add(service);</span>
-<span class="nc" id="L252">                    registry.registerRecursively(service);</span>
+<span class="fc" id="L261">                    services.add(service);</span>
+<span class="fc" id="L262">                    registry.registerRecursively(service);</span>
                 }
             }
-<span class="fc" id="L255">        }</span>
+<span class="fc" id="L265">        }</span>
 
-<span class="fc" id="L257">        return new CProgram(path,</span>
-<span class="fc" id="L258">                            program.getDocumentation(),</span>
-<span class="fc" id="L259">                            program.getProgramName(),</span>
-<span class="fc" id="L260">                            program.getNamespaces(),</span>
-<span class="fc" id="L261">                            getIncludedProgramNames(program),</span>
-<span class="fc" id="L262">                            program.getIncludes(),</span>
-<span class="fc" id="L263">                            typedefs.build(),</span>
-<span class="fc" id="L264">                            declaredTypes.build(),</span>
-<span class="fc" id="L265">                            services.build(),</span>
-<span class="fc" id="L266">                            constants.build());</span>
+<span class="fc" id="L267">        return new CProgram(path,</span>
+<span class="fc" id="L268">                            program.getDocumentation(),</span>
+<span class="fc" id="L269">                            program.getProgramName(),</span>
+<span class="fc" id="L270">                            program.getNamespaces(),</span>
+<span class="fc" id="L271">                            getIncludedProgramNames(program),</span>
+<span class="fc" id="L272">                            program.getIncludes(),</span>
+<span class="fc" id="L273">                            typedefs.build(),</span>
+<span class="fc" id="L274">                            declaredTypes.build(),</span>
+<span class="fc" id="L275">                            services.build(),</span>
+<span class="fc" id="L276">                            constants.build());</span>
     }
 
     private Set&lt;String&gt; getIncludedProgramNames(ProgramType document) {
-<span class="fc" id="L270">        Set&lt;String&gt; out = new TreeSet&lt;&gt;();</span>
-<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        if (document.hasIncludes()) {</span>
-<span class="nc bnc" id="L272" title="All 2 branches missed.">            for (String include : document.getIncludes()) {</span>
-<span class="nc" id="L273">                String program = programNameFromPath(include);</span>
-<span class="nc bnc" id="L274" title="All 2 branches missed.">                if (out.contains(program)) {</span>
-<span class="nc" id="L275">                    throw new IllegalArgumentException(&quot;Program &quot; + document.getProgramName() + &quot; includes multiple programs of name &quot; + program);</span>
+<span class="fc" id="L280">        Set&lt;String&gt; out = new TreeSet&lt;&gt;();</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (document.hasIncludes()) {</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">            for (String include : document.getIncludes()) {</span>
+<span class="fc" id="L283">                String program = programNameFromPath(include);</span>
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">                if (out.contains(program)) {</span>
+<span class="nc" id="L285">                    throw new IllegalArgumentException(&quot;Program &quot; + document.getProgramName() + &quot; includes multiple programs of name &quot; + program);</span>
                 }
-<span class="nc" id="L277">                out.add(program);</span>
-<span class="nc" id="L278">            }</span>
+<span class="fc" id="L287">                out.add(program);</span>
+<span class="fc" id="L288">            }</span>
         }
-<span class="fc" id="L280">        return out;</span>
+<span class="fc" id="L290">        return out;</span>
     }
 
     private CConst makeConst(TypeRegistry registry, String pkg, ConstType field) {
-<span class="nc" id="L284">        PDescriptorProvider type = registry.getProvider(field.getType(), pkg, field.getAnnotations());</span>
-<span class="nc bnc" id="L285" title="All 2 branches missed.">        if (!field.hasValue()) {</span>
-<span class="nc" id="L286">            throw new IllegalArgumentException(&quot;Const &quot; + pkg + &quot;.&quot; + field.getName() + &quot; does not have a value.&quot;);</span>
+<span class="nc" id="L294">        PDescriptorProvider type = registry.getProvider(field.getType(), pkg, field.getAnnotations());</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        if (!field.hasValue()) {</span>
+<span class="nc" id="L296">            throw new IllegalArgumentException(&quot;Const &quot; + pkg + &quot;.&quot; + field.getName() + &quot; does not have a value.&quot;);</span>
         }
-<span class="nc" id="L288">        ConstProvider defaultValue = new ConstProvider(registry,</span>
-<span class="nc" id="L289">                                                       field.getType(),</span>
+<span class="nc" id="L298">        ConstProvider defaultValue = new ConstProvider(registry,</span>
+<span class="nc" id="L299">                                                       field.getType(),</span>
                                                        pkg,
-<span class="nc" id="L291">                                                       field.getValue(),</span>
-<span class="nc" id="L292">                                                       field.getStartLineNo(),</span>
-<span class="nc" id="L293">                                                       field.getStartLinePos());</span>
+<span class="nc" id="L301">                                                       field.getValue(),</span>
+<span class="nc" id="L302">                                                       field.getStartLineNo(),</span>
+<span class="nc" id="L303">                                                       field.getStartLinePos());</span>
 
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L296">        CConst made = new CConst(field.getDocumentation(),</span>
-<span class="nc" id="L297">                                 field.getName(),</span>
+<span class="nc" id="L306">        CConst made = new CConst(field.getDocumentation(),</span>
+<span class="nc" id="L307">                                 field.getName(),</span>
                                  type,
                                  defaultValue,
-<span class="nc" id="L300">                                 field.getAnnotations());</span>
-<span class="nc" id="L301">        return made;</span>
+<span class="nc" id="L310">                                 field.getAnnotations());</span>
+<span class="nc" id="L311">        return made;</span>
     }
 
     private CField makeField(TypeRegistry registry, String pkg, FieldType field, MessageVariant variant) {
-<span class="fc" id="L305">        PDescriptorProvider type = registry.getProvider(field.getType(), pkg, field.getAnnotations());</span>
-<span class="fc" id="L306">        ConstProvider defaultValue = null;</span>
-<span class="fc bfc" id="L307" title="All 2 branches covered.">        if (field.hasDefaultValue()) {</span>
-<span class="fc" id="L308">            defaultValue = new ConstProvider(registry,</span>
-<span class="fc" id="L309">                                             field.getType(),</span>
+<span class="fc" id="L315">        PDescriptorProvider type = registry.getProvider(field.getType(), pkg, field.getAnnotations());</span>
+<span class="fc" id="L316">        ConstProvider defaultValue = null;</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">        if (field.hasDefaultValue()) {</span>
+<span class="fc" id="L318">            defaultValue = new ConstProvider(registry,</span>
+<span class="fc" id="L319">                                             field.getType(),</span>
                                              pkg,
-<span class="fc" id="L311">                                             field.getDefaultValue(),</span>
-<span class="fc" id="L312">                                             field.getStartLineNo(),</span>
-<span class="fc" id="L313">                                             field.getStartLinePos());</span>
+<span class="fc" id="L321">                                             field.getDefaultValue(),</span>
+<span class="fc" id="L322">                                             field.getStartLineNo(),</span>
+<span class="fc" id="L323">                                             field.getStartLinePos());</span>
         }
-<span class="fc" id="L315">        PRequirement requirement = PRequirement.valueOf(field.getRequirement()</span>
-<span class="fc" id="L316">                                                             .asString());</span>
-<span class="fc bfc" id="L317" title="All 2 branches covered.">        if (variant == MessageVariant.UNION) {</span>
-<span class="pc bpc" id="L318" title="1 of 2 branches missed.">            if (requirement == PRequirement.REQUIRED) {</span>
-<span class="nc" id="L319">                throw new IllegalArgumentException(&quot;Required field in union&quot;);</span>
+<span class="fc" id="L325">        PRequirement requirement = PRequirement.valueOf(field.getRequirement()</span>
+<span class="fc" id="L326">                                                             .asString());</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">        if (variant == MessageVariant.UNION) {</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">            if (requirement == PRequirement.REQUIRED) {</span>
+<span class="nc" id="L329">                throw new IllegalArgumentException(&quot;Required field in union&quot;);</span>
             }
-<span class="fc" id="L321">            requirement = PRequirement.OPTIONAL;</span>
+<span class="fc" id="L331">            requirement = PRequirement.OPTIONAL;</span>
         }
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L324">        CField made = new CField(field.getDocumentation(),</span>
-<span class="fc" id="L325">                                 field.getId(),</span>
+<span class="fc" id="L334">        CField made = new CField(field.getDocumentation(),</span>
+<span class="fc" id="L335">                                 field.getId(),</span>
                                  requirement,
-<span class="fc" id="L327">                                 field.getName(),</span>
+<span class="fc" id="L337">                                 field.getName(),</span>
                                  type,
                                  defaultValue,
-<span class="fc" id="L330">                                 field.getAnnotations());</span>
-<span class="fc" id="L331">        return made;</span>
+<span class="fc" id="L340">                                 field.getAnnotations());</span>
+<span class="fc" id="L341">        return made;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

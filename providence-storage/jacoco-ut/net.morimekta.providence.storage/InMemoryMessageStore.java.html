@@ -14,61 +14,68 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Simple in-memory storage of providence objects. Uses a local hash map for
- * storing the instances.
+ * Simple in-memory storage of providence messages. Uses a local hash map for
+ * storing the instances. The store is thread safe through using reentrand
+ * read-write mutex handling, so reading can happen in parallel.
  */
 public class InMemoryMessageStore&lt;K, M extends PMessage&lt;M,F&gt;, F extends PField&gt; implements MessageStore&lt;K,M,F&gt; {
     private final Map&lt;K, M&gt;      map;
     private final ReadWriteMutex mutex;
 
-<span class="fc" id="L24">    public InMemoryMessageStore() {</span>
-<span class="fc" id="L25">        map   = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L26">        mutex = new ReentrantReadWriteMutex();</span>
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L25">    public InMemoryMessageStore() {</span>
+<span class="fc" id="L26">        map   = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L27">        mutex = new ReentrantReadWriteMutex();</span>
+<span class="fc" id="L28">    }</span>
 
     @Nonnull
     @Override
     public Map&lt;K, M&gt; getAll(@Nonnull Collection&lt;K&gt; keys) {
-<span class="fc" id="L32">        return mutex.lockForReading(() -&gt; {</span>
-<span class="fc" id="L33">            Map&lt;K, M&gt; out = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">            for (K key : keys) {</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">                if (map.containsKey(key)) {</span>
-<span class="fc" id="L36">                    out.put(key, map.get(key));</span>
+<span class="fc" id="L33">        return mutex.lockForReading(() -&gt; {</span>
+<span class="fc" id="L34">            Map&lt;K, M&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            for (K key : keys) {</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">                if (map.containsKey(key)) {</span>
+<span class="fc" id="L37">                    out.put(key, map.get(key));</span>
                 }
-<span class="fc" id="L38">            }</span>
-<span class="fc" id="L39">            return ImmutableMap.copyOf(out);</span>
+<span class="fc" id="L39">            }</span>
+<span class="fc" id="L40">            return ImmutableMap.copyOf(out);</span>
         });
     }
 
     @Override
     public boolean containsKey(@Nonnull K key) {
-<span class="fc" id="L45">        return mutex.lockForReading(() -&gt; map.containsKey(key));</span>
+<span class="fc" id="L46">        return mutex.lockForReading(() -&gt; map.containsKey(key));</span>
     }
 
     @Override @Nonnull
     public Collection&lt;K&gt; keys() {
-<span class="fc" id="L50">        return mutex.lockForReading(() -&gt; ImmutableSet.copyOf(map.keySet()));</span>
+<span class="fc" id="L51">        return mutex.lockForReading(() -&gt; ImmutableSet.copyOf(map.keySet()));</span>
     }
 
     @Override @Nonnull
     public Map&lt;K,M&gt; putAll(@Nonnull Map&lt;K, M&gt; values) {
-<span class="fc" id="L55">        return mutex.lockForWriting(() -&gt; {</span>
-<span class="fc" id="L56">            Map&lt;K,M&gt; out = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">            for (Map.Entry&lt;K,M&gt; entry : values.entrySet()) {</span>
-<span class="fc" id="L58">                out.put(entry.getKey(), map.put(entry.getKey(), entry.getValue()));</span>
-<span class="fc" id="L59">            }</span>
-<span class="fc" id="L60">            return out;</span>
+<span class="fc" id="L56">        return mutex.lockForWriting(() -&gt; {</span>
+<span class="fc" id="L57">            Map&lt;K,M&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            for (Map.Entry&lt;K,M&gt; entry : values.entrySet()) {</span>
+<span class="fc" id="L59">                M tmp = map.put(entry.getKey(), entry.getValue());</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                if (tmp != null) {</span>
+<span class="fc" id="L61">                    out.put(entry.getKey(), tmp);</span>
+                }
+<span class="fc" id="L63">            }</span>
+<span class="fc" id="L64">            return out;</span>
         });
     }
 
     @Override @Nonnull
     public Map&lt;K,M&gt; removeAll(Collection&lt;K&gt; keys) {
-<span class="fc" id="L66">        return mutex.lockForWriting(() -&gt; {</span>
-<span class="fc" id="L67">            Map&lt;K,M&gt; out = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">            for (K key : keys) {</span>
-<span class="fc" id="L69">                out.put(key, map.remove(key));</span>
-<span class="fc" id="L70">            }</span>
-<span class="fc" id="L71">            return out;</span>
+<span class="fc" id="L70">        return mutex.lockForWriting(() -&gt; {</span>
+<span class="fc" id="L71">            Map&lt;K,M&gt; out = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            for (K key : keys) {</span>
+<span class="fc" id="L73">                M tmp = map.remove(key);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                if (tmp != null) {</span>
+<span class="fc" id="L75">                    out.put(key, tmp);</span>
+                }
+<span class="fc" id="L77">            }</span>
+<span class="fc" id="L78">            return out;</span>
         });
     }
 }

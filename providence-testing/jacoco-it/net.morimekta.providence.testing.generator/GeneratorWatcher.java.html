@@ -59,7 +59,7 @@ import java.util.function.Consumer;
  * }
  * }&lt;/pre&gt;
  */
-<span class="nc bnc" id="L62" title="All 2 branches missed.">public class GeneratorWatcher&lt;</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">public class GeneratorWatcher&lt;</span>
         Base extends GeneratorBase&lt;Base, Context&gt;,
         Context extends GeneratorContext&lt;Context&gt;&gt;
         extends TestWatcher {
@@ -69,7 +69,7 @@ import java.util.function.Consumer;
      * @return The watcher instance.
      */
     public static SimpleGeneratorWatcher create() {
-<span class="nc" id="L72">        return SimpleGeneratorWatcher.create();</span>
+<span class="fc" id="L72">        return SimpleGeneratorWatcher.create();</span>
     }
 
     /**
@@ -90,16 +90,16 @@ import java.util.function.Consumer;
      *
      * @param base The base generator to use when generating messages.
      */
-<span class="nc" id="L93">    public GeneratorWatcher(Base base) {</span>
-<span class="nc" id="L94">        this.globalOutputSerializer = this.outputSerializer = new PrettySerializer().config();</span>
-<span class="nc" id="L95">        this.globalDumpOnFailure    = this.dumpOnFailure    = false;</span>
-<span class="nc" id="L96">        this.globalReader           = this.reader           = null;</span>
-<span class="nc" id="L97">        this.globalWriter           = this.writer           = null;</span>
-<span class="nc" id="L98">        this.globalBase             = this.base             = base;</span>
+<span class="fc" id="L93">    public GeneratorWatcher(Base base) {</span>
+<span class="fc" id="L94">        this.globalOutputSerializer = this.outputSerializer = new PrettySerializer().config();</span>
+<span class="fc" id="L95">        this.globalDumpOnFailure    = this.dumpOnFailure    = false;</span>
+<span class="fc" id="L96">        this.globalReader           = this.reader           = null;</span>
+<span class="fc" id="L97">        this.globalWriter           = this.writer           = null;</span>
+<span class="fc" id="L98">        this.globalBase             = this.base             = base;</span>
 
-<span class="nc" id="L100">        this.generated              = new LinkedList&lt;&gt;();</span>
-<span class="nc" id="L101">        this.started                = false;</span>
-<span class="nc" id="L102">    }</span>
+<span class="fc" id="L100">        this.generated              = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L101">        this.started                = false;</span>
+<span class="fc" id="L102">    }</span>
 
     /**
      * Generate a message with random content using the default generator
@@ -113,7 +113,7 @@ import java.util.function.Consumer;
     @SuppressWarnings(&quot;unchecked&quot;)
     public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generate(
             PMessageDescriptor&lt;M, F&gt; descriptor) {
-<span class="nc" id="L116">        return generate(base.createContext(), descriptor);</span>
+<span class="fc" id="L116">        return generate(base.createContext(), descriptor);</span>
     }
 
     /**
@@ -130,22 +130,22 @@ import java.util.function.Consumer;
     public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt; M generate(
             Context context,
             PMessageDescriptor&lt;M, F&gt; descriptor) {
-<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (!started) {</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (!started) {</span>
 <span class="nc" id="L134">            throw new IllegalStateException(&quot;Watcher is not started&quot;);</span>
         }
 
         M instance;
-<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (reader != null) {</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (reader != null) {</span>
             try {
 <span class="nc" id="L140">                instance = reader.read(descriptor);</span>
 <span class="nc" id="L141">            } catch (IOException e) {</span>
 <span class="nc" id="L142">                throw new AssertionError(e.getMessage(), e);</span>
 <span class="nc" id="L143">            }</span>
         } else {
-<span class="nc" id="L145">            instance = base.messageGeneratorFor(descriptor).generate(context);</span>
+<span class="fc" id="L145">            instance = base.messageGeneratorFor(descriptor).generate(context);</span>
         }
-<span class="nc" id="L147">        generated.add(instance);</span>
-<span class="nc" id="L148">        return instance;</span>
+<span class="fc" id="L147">        generated.add(instance);</span>
+<span class="fc" id="L148">        return instance;</span>
     }
 
     /**
@@ -395,33 +395,33 @@ import java.util.function.Consumer;
      * @return The message generator.
      */
     public GeneratorWatcher&lt;Base, Context&gt; dumpOnFailure() {
-<span class="nc bnc" id="L398" title="All 2 branches missed.">        if (started) {</span>
-<span class="nc" id="L399">            this.dumpOnFailure = true;</span>
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">        if (started) {</span>
+<span class="fc" id="L399">            this.dumpOnFailure = true;</span>
         } else {
 <span class="nc" id="L401">            this.globalDumpOnFailure = true;</span>
         }
-<span class="nc" id="L403">        return this;</span>
+<span class="fc" id="L403">        return this;</span>
     }
 
     // -------------- INHERITED --------------
 
     @Override
     protected void starting(Description description) {
-<span class="nc" id="L410">        super.starting(description);</span>
-<span class="nc bnc" id="L411" title="All 4 branches missed.">        if (!description.isEmpty() &amp;&amp; description.getMethodName() == null) {</span>
+<span class="fc" id="L410">        super.starting(description);</span>
+<span class="pc bpc" id="L411" title="2 of 4 branches missed.">        if (!description.isEmpty() &amp;&amp; description.getMethodName() == null) {</span>
 <span class="nc" id="L412">            throw new AssertionError(&quot;MessageGenerator instantiated as class rule: forbidden&quot;);</span>
         }
 
-<span class="nc" id="L415">        writer           = globalWriter;</span>
-<span class="nc" id="L416">        reader           = globalReader;</span>
-<span class="nc" id="L417">        dumpOnFailure    = globalDumpOnFailure;</span>
-<span class="nc" id="L418">        outputSerializer = globalOutputSerializer;</span>
-<span class="nc" id="L419">        base = globalBase.deepCopy();</span>
+<span class="fc" id="L415">        writer           = globalWriter;</span>
+<span class="fc" id="L416">        reader           = globalReader;</span>
+<span class="fc" id="L417">        dumpOnFailure    = globalDumpOnFailure;</span>
+<span class="fc" id="L418">        outputSerializer = globalOutputSerializer;</span>
+<span class="fc" id="L419">        base = globalBase.deepCopy();</span>
 
         // Reset content.
-<span class="nc" id="L422">        generated = new LinkedList&lt;&gt;();</span>
-<span class="nc" id="L423">        started = true;</span>
-<span class="nc" id="L424">    }</span>
+<span class="fc" id="L422">        generated = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L423">        started = true;</span>
+<span class="fc" id="L424">    }</span>
 
     @Override
     protected void failed(Throwable e, Description description) {
@@ -438,15 +438,15 @@ import java.util.function.Consumer;
     @Override
     protected void finished(Description description) {
         // generated kept in case of secondary watchers.
-<span class="nc" id="L441">        started = false;</span>
+<span class="fc" id="L441">        started = false;</span>
 
         // Set some interesting stated back to be the global.
-<span class="nc" id="L444">        dumpOnFailure = globalDumpOnFailure;</span>
-<span class="nc" id="L445">        outputSerializer = globalOutputSerializer;</span>
-<span class="nc" id="L446">        writer = globalWriter;</span>
-<span class="nc" id="L447">        reader = globalReader;</span>
-<span class="nc" id="L448">        base = globalBase;</span>
-<span class="nc" id="L449">    }</span>
+<span class="fc" id="L444">        dumpOnFailure = globalDumpOnFailure;</span>
+<span class="fc" id="L445">        outputSerializer = globalOutputSerializer;</span>
+<span class="fc" id="L446">        writer = globalWriter;</span>
+<span class="fc" id="L447">        reader = globalReader;</span>
+<span class="fc" id="L448">        base = globalBase;</span>
+<span class="fc" id="L449">    }</span>
 
     // --- Global: set before starting(),
     //             and copied below in starting().

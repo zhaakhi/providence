@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigSupplier.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config</a> &gt; <span class="el_source">ConfigSupplier.java</span></div><h1>ConfigSupplier.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.config;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.descriptor.PField;
+
+import javax.annotation.Nonnull;
+import java.lang.ref.WeakReference;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+
+/**
+ * A supplier and instance holder for config objects. This supplier can be
+ * listened to for changes in the config object. When something triggers
+ * a change (&lt;code&gt;supplier.set(config)&lt;/code&gt;) that will cause a config
+ * change call to each listener regardless of if the config values actually
+ * did change.
+ */
+public class ConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PField&gt; implements Supplier&lt;M&gt; {
+    private final AtomicReference&lt;M&gt;       instance;
+    private final LinkedList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; listeners;
+
+    /**
+     * Initialize supplier with empty config.
+     */
+<span class="fc" id="L27">    public ConfigSupplier() {</span>
+<span class="fc" id="L28">        this.instance = new AtomicReference&lt;&gt;();</span>
+<span class="fc" id="L29">        this.listeners = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * Initialize with an initial config instance.
+     *
+     * @param initialConfig The initial config instance.
+     */
+    public ConfigSupplier(@Nonnull M initialConfig) {
+<span class="fc" id="L38">        this();</span>
+<span class="fc" id="L39">        this.instance.set(initialConfig);</span>
+<span class="fc" id="L40">    }</span>
+
+    @Nonnull
+    @Override
+    public final M get() {
+<span class="fc" id="L45">        synchronized (this) {</span>
+<span class="fc" id="L46">            M config = instance.get();</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">            if (config == null) {</span>
+<span class="nc" id="L48">                throw new IllegalStateException(&quot;No config instance&quot;);</span>
+            }
+<span class="fc" id="L50">            return config;</span>
+<span class="nc" id="L51">        }</span>
+    }
+
+    /**
+     * Add a listener to changes to this config. Note that this will store a
+     * weak reference to the listener instance, so the one adding the listener
+     * must make sure the listener is not GC'd.
+     *
+     * @param listener The config change listener to be added.
+     */
+    public void addListener(ConfigListener&lt;M, F&gt; listener) {
+<span class="fc" id="L62">        synchronized (this) {</span>
+<span class="pc bpc" id="L63" title="2 of 4 branches missed.">            listeners.removeIf(ref -&gt; ref.get() == listener || ref.get() == null);</span>
+<span class="fc" id="L64">            listeners.add(new WeakReference&lt;&gt;(listener));</span>
+<span class="pc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
+
+    /**
+     * Remove a config change listener.
+     *
+     * @param listener The config change listener to be removed.
+     */
+    public void removeListener(ConfigListener&lt;M,F&gt; listener) {
+<span class="nc" id="L74">        synchronized (this) {</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">            listeners.removeIf(ref -&gt; ref.get() == null || ref.get() == listener);</span>
+<span class="nc" id="L76">        }</span>
+<span class="nc" id="L77">    }</span>
+
+    /**
+     * Set a new config value to the supplier. This is protected as it is
+     * usually up to the supplier implementation to enable updating the
+     * config at later stages.
+     *
+     * @param config The new config instance.
+     */
+    protected final void set(M config) {
+        LinkedList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; iterateOver;
+<span class="fc" id="L88">        synchronized (this) {</span>
+<span class="fc" id="L89">            instance.set(config);</span>
+<span class="fc" id="L90">            listeners.removeIf(Objects::isNull);</span>
+<span class="fc" id="L91">            iterateOver = new LinkedList&lt;&gt;(listeners);</span>
+<span class="pc" id="L92">        }</span>
+<span class="fc" id="L93">        iterateOver.forEach(ref -&gt; {</span>
+<span class="fc" id="L94">            ConfigListener&lt;M,F&gt; listener = ref.get();</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            if (listener != null) {</span>
+                try {
+<span class="fc" id="L97">                    listener.onConfigChange(config);</span>
+<span class="nc" id="L98">                } catch (Exception ignore) {</span>
+                    // Ignored... TODO: At least log?
+<span class="fc" id="L100">                }</span>
+            }
+<span class="fc" id="L102">        });</span>
+<span class="fc" id="L103">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

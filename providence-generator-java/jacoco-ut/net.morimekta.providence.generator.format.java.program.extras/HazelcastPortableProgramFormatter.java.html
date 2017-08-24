@@ -42,6 +42,9 @@ public class HazelcastPortableProgramFormatter implements BaseProgramFormatter {
     public static final String FACTORY_ID = &quot;FACTORY_ID&quot;;
 
     private static final String FACTORY_IMPL = &quot;PortableFactoryImpl&quot;;
+    private static final String PORTABLE_VERSION = &quot;portableVersion&quot;;
+    private static final String CONFIG = &quot;config&quot;;
+    private static final String INSTANCE = &quot;instance&quot;;
 
     private final JHelper             helper;
     private final IndentedPrintWriter writer;
@@ -51,93 +54,93 @@ public class HazelcastPortableProgramFormatter implements BaseProgramFormatter {
     public HazelcastPortableProgramFormatter(IndentedPrintWriter writer,
                                              JHelper helper,
                                              GeneratorOptions generatorOptions,
-<span class="fc" id="L54">                                             JavaOptions javaOptions) {</span>
-<span class="fc" id="L55">        this.writer = writer;</span>
-<span class="fc" id="L56">        this.helper = helper;</span>
-<span class="fc" id="L57">        this.generatorOptions = generatorOptions;</span>
-<span class="fc" id="L58">        this.javaOptions = javaOptions;</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L57">                                             JavaOptions javaOptions) {</span>
+<span class="fc" id="L58">        this.writer = writer;</span>
+<span class="fc" id="L59">        this.helper = helper;</span>
+<span class="fc" id="L60">        this.generatorOptions = generatorOptions;</span>
+<span class="fc" id="L61">        this.javaOptions = javaOptions;</span>
+<span class="fc" id="L62">    }</span>
 
     @Override
     public void appendProgramClass(CProgram document) throws GeneratorException {
-<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (document.getDocumentation() != null) {</span>
-<span class="nc" id="L64">            new BlockCommentBuilder(writer).comment(document.getDocumentation())</span>
-<span class="nc" id="L65">                                           .finish();</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (document.getDocumentation() != null) {</span>
+<span class="nc" id="L67">            new BlockCommentBuilder(writer).comment(document.getDocumentation())</span>
+<span class="nc" id="L68">                                           .finish();</span>
         }
 
-<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (javaOptions.generated_annotation_version) {</span>
-<span class="fc" id="L69">            writer.formatln(&quot;@%s(\&quot;%s %s\&quot;)&quot;,</span>
-<span class="fc" id="L70">                            Generated.class.getName(),</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (javaOptions.generated_annotation_version) {</span>
+<span class="fc" id="L72">            writer.formatln(&quot;@%s(\&quot;%s %s\&quot;)&quot;,</span>
+<span class="fc" id="L73">                            Generated.class.getName(),</span>
                             generatorOptions.generator_program_name,
                             generatorOptions.program_version);
         } else {
-<span class="nc" id="L74">            writer.formatln(&quot;@%s(\&quot;%s\&quot;)&quot;,</span>
-<span class="nc" id="L75">                            Generated.class.getName(),</span>
+<span class="nc" id="L77">            writer.formatln(&quot;@%s(\&quot;%s\&quot;)&quot;,</span>
+<span class="nc" id="L78">                            Generated.class.getName(),</span>
                             generatorOptions.generator_program_name);
         }
 
-<span class="fc" id="L79">        writer.formatln(&quot;public class %s {&quot;, helper.getHazelcastFactoryClassName(document))</span>
-<span class="fc" id="L80">              .begin()</span>
-<span class="fc" id="L81">              .newline();</span>
+<span class="fc" id="L82">        writer.formatln(&quot;public class %s {&quot;, helper.getHazelcastFactoryClassName(document))</span>
+<span class="fc" id="L83">              .begin()</span>
+<span class="fc" id="L84">              .newline();</span>
 
-<span class="fc" id="L83">        Optional&lt;CConst&gt; factoryID = document.getConstants()</span>
-<span class="fc" id="L84">                                             .stream()</span>
-<span class="fc" id="L85">                                             .filter(t -&gt; t.getName()</span>
-<span class="fc" id="L86">                                                           .equals(FACTORY_ID))</span>
-<span class="fc" id="L87">                                             .findFirst();</span>
+<span class="fc" id="L86">        Optional&lt;CConst&gt; factoryID = document.getConstants()</span>
+<span class="fc" id="L87">                                             .stream()</span>
+<span class="fc" id="L88">                                             .filter(t -&gt; t.getName()</span>
+<span class="fc" id="L89">                                                           .equals(FACTORY_ID))</span>
+<span class="fc" id="L90">                                             .findFirst();</span>
 
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (!factoryID.isPresent()) {</span>
-<span class="nc" id="L90">            throw new GeneratorException(</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (!factoryID.isPresent()) {</span>
+<span class="nc" id="L93">            throw new GeneratorException(</span>
                     &quot;Need to provide \&quot;const i32 FACTORY_ID = ?\&quot; in the thrift file for &quot; + &quot;hazelcast generation!&quot;);
         } else {
-<span class="fc" id="L93">            CConst c = factoryID.get();</span>
-<span class="fc" id="L94">            String type = helper.getValueType(c.getDescriptor());</span>
-<span class="fc" id="L95">            String name = c.getName();</span>
-<span class="fc" id="L96">            writer.formatln(&quot;public static final %s %s = %s.%s;&quot;,</span>
+<span class="fc" id="L96">            CConst c = factoryID.get();</span>
+<span class="fc" id="L97">            String type = helper.getValueType(c.getDescriptor());</span>
+<span class="fc" id="L98">            String name = c.getName();</span>
+<span class="fc" id="L99">            writer.formatln(&quot;public static final %s %s = %s.%s;&quot;,</span>
                             type,
                             name,
-<span class="fc" id="L99">                            helper.getConstantsClassName(document),</span>
+<span class="fc" id="L102">                            helper.getConstantsClassName(document),</span>
                             name)
-<span class="fc" id="L101">                  .newline();</span>
+<span class="fc" id="L104">                  .newline();</span>
         }
 
-<span class="fc" id="L104">        List&lt;CStructDescriptor&gt; messages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L107">        List&lt;CStructDescriptor&gt; messages = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L106" title="All 2 branches covered.">        for (PDeclaredDescriptor c : document.getDeclaredTypes()) {</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for (PDeclaredDescriptor c : document.getDeclaredTypes()) {</span>
             try {
-<span class="pc bpc" id="L108" title="1 of 4 branches missed.">                if (PType.MESSAGE == c.getType() &amp;&amp; c instanceof CStructDescriptor) {</span>
-<span class="fc" id="L109">                    CStructDescriptor message = (CStructDescriptor) c;</span>
-<span class="fc bfc" id="L110" title="All 2 branches covered.">                    if (message.hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID)) {</span>
-<span class="fc" id="L111">                        writer.formatln(&quot;public static final int %s = %s;&quot;,</span>
-<span class="fc" id="L112">                                        getHazelcastClassId(message.getName()),</span>
-<span class="fc" id="L113">                                        message.getAnnotationValue(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID));</span>
-<span class="fc" id="L114">                        messages.add(message);</span>
+<span class="pc bpc" id="L111" title="1 of 4 branches missed.">                if (PType.MESSAGE == c.getType() &amp;&amp; c instanceof CStructDescriptor) {</span>
+<span class="fc" id="L112">                    CStructDescriptor message = (CStructDescriptor) c;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                    if (message.hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID)) {</span>
+<span class="fc" id="L114">                        writer.formatln(&quot;public static final int %s = %s;&quot;,</span>
+<span class="fc" id="L115">                                        getHazelcastClassId(message.getName()),</span>
+<span class="fc" id="L116">                                        message.getAnnotationValue(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID));</span>
+<span class="fc" id="L117">                        messages.add(message);</span>
                     }
                 }
-<span class="nc" id="L117">            } catch (Exception e) {</span>
-<span class="nc" id="L118">                throw new GeneratorException(e.getMessage());</span>
-<span class="fc" id="L119">            }</span>
-<span class="fc" id="L120">        }</span>
-<span class="fc" id="L121">        writer.newline();</span>
+<span class="nc" id="L120">            } catch (Exception e) {</span>
+<span class="nc" id="L121">                throw new GeneratorException(e.getMessage());</span>
+<span class="fc" id="L122">            }</span>
+<span class="fc" id="L123">        }</span>
+<span class="fc" id="L124">        writer.newline();</span>
 
-<span class="fc" id="L123">        appendPopulateMethod(messages);</span>
+<span class="fc" id="L126">        appendPopulateMethod(messages);</span>
 
-<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (messages.isEmpty()) {</span>
-<span class="nc" id="L126">            throw new GeneratorException(&quot;No annotations available to generate!&quot;);</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (messages.isEmpty()) {</span>
+<span class="nc" id="L129">            throw new GeneratorException(&quot;No annotations available to generate!&quot;);</span>
         } else {
-<span class="fc" id="L128">            writer.formatln(&quot;private static class %s implements %s {&quot;, FACTORY_IMPL, PortableFactory.class.getName())</span>
-<span class="fc" id="L129">                  .begin()</span>
-<span class="fc" id="L130">                  .newline();</span>
-<span class="fc" id="L131">            appendCreateMethod(messages);</span>
-<span class="fc" id="L132">            appendGetDefinitions(messages);</span>
-<span class="fc" id="L133">            writer.end()</span>
-<span class="fc" id="L134">                  .appendln(&quot;}&quot;);</span>
+<span class="fc" id="L131">            writer.formatln(&quot;private static class %s implements %s {&quot;, FACTORY_IMPL, PortableFactory.class.getName())</span>
+<span class="fc" id="L132">                  .begin()</span>
+<span class="fc" id="L133">                  .newline();</span>
+<span class="fc" id="L134">            appendCreateMethod(messages);</span>
+<span class="fc" id="L135">            appendGetDefinitions(messages);</span>
+<span class="fc" id="L136">            writer.end()</span>
+<span class="fc" id="L137">                  .appendln(&quot;}&quot;);</span>
         }
 
-<span class="fc" id="L137">        writer.end()</span>
-<span class="fc" id="L138">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L139">              .newline();</span>
-<span class="fc" id="L140">    }</span>
+<span class="fc" id="L140">        writer.end()</span>
+<span class="fc" id="L141">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L142">              .newline();</span>
+<span class="fc" id="L143">    }</span>
 
     /**
      * Method to write the create method from implemented PortableFactory
@@ -158,31 +161,31 @@ public class HazelcastPortableProgramFormatter implements BaseProgramFormatter {
      * &lt;/pre&gt;
      */
     private void appendCreateMethod(List&lt;CStructDescriptor&gt; messages) {
-<span class="fc" id="L161">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L162">              .formatln(&quot;public %s create(int classId) {&quot;, Portable.class.getName())</span>
-<span class="fc" id="L163">              .begin()</span>
-<span class="fc" id="L164">              .appendln(&quot;switch(classId) {&quot;)</span>
-<span class="fc" id="L165">              .begin();</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">        for (CStructDescriptor message : messages) {</span>
-<span class="fc" id="L167">            writer.formatln(&quot;case %s: {&quot;, getHazelcastClassId(message.getName()))</span>
-<span class="fc" id="L168">                  .begin()</span>
-<span class="fc" id="L169">                  .formatln(&quot;return new %s.%s();&quot;,</span>
-<span class="fc" id="L170">                            message.getName(),</span>
+<span class="fc" id="L164">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L165">              .formatln(&quot;public %s create(int classId) {&quot;, Portable.class.getName())</span>
+<span class="fc" id="L166">              .begin()</span>
+<span class="fc" id="L167">              .appendln(&quot;switch(classId) {&quot;)</span>
+<span class="fc" id="L168">              .begin();</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        for (CStructDescriptor message : messages) {</span>
+<span class="fc" id="L170">            writer.formatln(&quot;case %s: {&quot;, getHazelcastClassId(message.getName()))</span>
+<span class="fc" id="L171">                  .begin()</span>
+<span class="fc" id="L172">                  .formatln(&quot;return new %s.%s();&quot;,</span>
+<span class="fc" id="L173">                            message.getName(),</span>
                             HazelcastPortableMessageFormatter.WRAPPER_CLASS_NAME)
-<span class="fc" id="L172">                  .end()</span>
-<span class="fc" id="L173">                  .appendln(&quot;}&quot;);</span>
-<span class="fc" id="L174">        }</span>
-<span class="fc" id="L175">        writer.appendln(&quot;default: {&quot;)</span>
-<span class="fc" id="L176">              .begin()</span>
-<span class="fc" id="L177">              .appendln(&quot;return null;&quot;)</span>
-<span class="fc" id="L178">              .end()</span>
-<span class="fc" id="L179">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L180">              .end();</span>
-<span class="fc" id="L181">        writer.appendln(&quot;}&quot;)</span>
-<span class="fc" id="L182">              .end()</span>
-<span class="fc" id="L183">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L184">              .newline();</span>
-<span class="fc" id="L185">    }</span>
+<span class="fc" id="L175">                  .end()</span>
+<span class="fc" id="L176">                  .appendln(&quot;}&quot;);</span>
+<span class="fc" id="L177">        }</span>
+<span class="fc" id="L178">        writer.appendln(&quot;default: {&quot;)</span>
+<span class="fc" id="L179">              .begin()</span>
+<span class="fc" id="L180">              .appendln(&quot;return null;&quot;)</span>
+<span class="fc" id="L181">              .end()</span>
+<span class="fc" id="L182">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L183">              .end();</span>
+<span class="fc" id="L184">        writer.appendln(&quot;}&quot;)</span>
+<span class="fc" id="L185">              .end()</span>
+<span class="fc" id="L186">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L187">              .newline();</span>
+<span class="fc" id="L188">    }</span>
 
     /**
      * Method to append populate methods for the Hazelcast Config.
@@ -200,118 +203,115 @@ public class HazelcastPortableProgramFormatter implements BaseProgramFormatter {
      * &lt;/pre&gt;
      */
     private void appendPopulateMethod(List&lt;CStructDescriptor&gt; messages) {
-<span class="fc" id="L203">        final String CONFIG = &quot;config&quot;;</span>
-<span class="fc" id="L204">        final String INSTANCE = &quot;instance&quot;;</span>
-<span class="fc" id="L205">        writer.formatln(&quot;public static final %s populateConfig(%s %s) {&quot;,</span>
-<span class="fc" id="L206">                        Config.class.getName(),</span>
+<span class="fc" id="L206">        writer.formatln(&quot;public static final %s populateConfig(%s %s, int %s) {&quot;,</span>
 <span class="fc" id="L207">                        Config.class.getName(),</span>
-                        CONFIG)
-<span class="fc" id="L209">              .begin()</span>
-<span class="fc" id="L210">              .formatln(&quot;%s %s = new %s();&quot;, FACTORY_IMPL, INSTANCE, FACTORY_IMPL)</span>
-<span class="fc" id="L211">              .formatln(&quot;%s.getSerializationConfig().addPortableFactory(%s, %s);&quot;, CONFIG, FACTORY_ID, INSTANCE);</span>
-<span class="fc" id="L212">        writer.formatln(&quot;%s.getSerializationConfig()&quot;, CONFIG)</span>
-<span class="fc" id="L213">              .begin()</span>
-<span class="fc" id="L214">              .begin();</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">        for (CStructDescriptor struct : messages) {</span>
-<span class="fc" id="L216">            writer.formatln(&quot;.addClassDefinition(%s.%s())&quot;,</span>
+<span class="fc" id="L208">                        Config.class.getName(),</span>
+                        CONFIG,
+                        PORTABLE_VERSION)
+<span class="fc" id="L211">              .begin()</span>
+<span class="fc" id="L212">              .formatln(&quot;%s %s = new %s();&quot;, FACTORY_IMPL, INSTANCE, FACTORY_IMPL)</span>
+<span class="fc" id="L213">              .formatln(&quot;%s.getSerializationConfig().addPortableFactory(%s, %s);&quot;, CONFIG, FACTORY_ID, INSTANCE)</span>
+<span class="fc" id="L214">              .formatln(&quot;%s.getSerializationConfig().setPortableVersion(%s);&quot;, CONFIG, PORTABLE_VERSION)</span>
+<span class="fc" id="L215">              .appendln()</span>
+<span class="fc" id="L216">              .formatln(&quot;%s.getSerializationConfig()&quot;, CONFIG)</span>
+<span class="fc" id="L217">              .begin()</span>
+<span class="fc" id="L218">              .begin();</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        for (CStructDescriptor struct : messages) {</span>
+<span class="fc" id="L220">            writer.formatln(&quot;.addClassDefinition(%s.%s(%s))&quot;,</span>
                             INSTANCE,
-<span class="fc" id="L218">                            camelCase(&quot;get&quot;, struct.getName() + &quot;Definition&quot;));</span>
-<span class="fc" id="L219">        }</span>
-<span class="fc" id="L220">        writer.append(&quot;;&quot;)</span>
-<span class="fc" id="L221">              .end()</span>
-<span class="fc" id="L222">              .end()</span>
-<span class="fc" id="L223">              .formatln(&quot;return %s;&quot;, CONFIG)</span>
-<span class="fc" id="L224">              .end()</span>
-<span class="fc" id="L225">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L226">              .newline();</span>
-<span class="fc" id="L227">    }</span>
+<span class="fc" id="L222">                            camelCase(&quot;get&quot;, struct.getName() + &quot;Definition&quot;),</span>
+                            PORTABLE_VERSION);
+<span class="fc" id="L224">        }</span>
+<span class="fc" id="L225">        writer.append(&quot;;&quot;)</span>
+<span class="fc" id="L226">              .end()</span>
+<span class="fc" id="L227">              .end()</span>
+<span class="fc" id="L228">              .formatln(&quot;return %s;&quot;, CONFIG)</span>
+<span class="fc" id="L229">              .end()</span>
+<span class="fc" id="L230">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L231">              .newline();</span>
+<span class="fc" id="L232">    }</span>
 
     private void appendGetDefinitions(List&lt;CStructDescriptor&gt; messages) {
-<span class="fc bfc" id="L230" title="All 2 branches covered.">        for (CStructDescriptor message : messages) {</span>
-<span class="fc" id="L231">            appendGetDefinition(new JMessage&lt;&gt;(message, helper));</span>
-<span class="fc" id="L232">        }</span>
-<span class="fc" id="L233">    }</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        for (CStructDescriptor message : messages) {</span>
+<span class="fc" id="L236">            appendGetDefinition(new JMessage&lt;&gt;(message, helper));</span>
+<span class="fc" id="L237">        }</span>
+<span class="fc" id="L238">    }</span>
 
     private void appendGetDefinition(JMessage&lt;?&gt; message) {
-<span class="fc" id="L236">        writer.formatln(&quot;public %s %s() {&quot;,</span>
-<span class="fc" id="L237">                        ClassDefinition.class.getName(),</span>
-<span class="fc" id="L238">                        camelCase(&quot;get&quot;,</span>
-<span class="fc" id="L239">                                  message.descriptor()</span>
-<span class="fc" id="L240">                                         .getName() + &quot;Definition&quot;))</span>
-<span class="fc" id="L241">              .begin()</span>
-<span class="fc" id="L242">              .formatln(&quot;return new %s(%s, %s)&quot;,</span>
-<span class="fc" id="L243">                        ClassDefinitionBuilder.class.getName(),</span>
+<span class="fc" id="L241">        writer.formatln(&quot;public %s %s(int %s) {&quot;,</span>
+<span class="fc" id="L242">                        ClassDefinition.class.getName(),</span>
+<span class="fc" id="L243">                        camelCase(&quot;get&quot;,</span>
+<span class="fc" id="L244">                                  message.descriptor()</span>
+<span class="fc" id="L245">                                         .getName() + &quot;Definition&quot;),</span>
+                        PORTABLE_VERSION)
+<span class="fc" id="L247">              .begin()</span>
+<span class="fc" id="L248">              .formatln(&quot;return new %s(%s, %s, %s)&quot;,</span>
+<span class="fc" id="L249">                        ClassDefinitionBuilder.class.getName(),</span>
                         FACTORY_ID,
-<span class="fc" id="L245">                        getHazelcastClassId(message.instanceType()))</span>
-<span class="fc" id="L246">              .begin()</span>
-<span class="fc" id="L247">              .begin();</span>
-<span class="fc bfc" id="L248" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc" id="L249">            writer.formatln(&quot;.addBooleanField(\&quot;%s\&quot;)&quot;, field.hasName());</span>
-<span class="fc" id="L250">            appendTypeField(field);</span>
-<span class="fc" id="L251">        }</span>
-<span class="fc" id="L252">        writer.appendln(&quot;.build();&quot;)</span>
-<span class="fc" id="L253">              .end()</span>
-<span class="fc" id="L254">              .end()</span>
-<span class="fc" id="L255">              .end()</span>
-<span class="fc" id="L256">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L257">              .newline();</span>
-<span class="fc" id="L258">    }</span>
+<span class="fc" id="L251">                        getHazelcastClassId(message.instanceType()),</span>
+                        PORTABLE_VERSION)
+<span class="fc" id="L253">              .begin()</span>
+<span class="fc" id="L254">              .begin();</span>
+<span class="fc" id="L255">        writer.formatln(&quot;.addIntArrayField(\&quot;__fields__\&quot;)&quot;);</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L257">            appendTypeField(field);</span>
+<span class="fc" id="L258">        }</span>
+<span class="fc" id="L259">        writer.appendln(&quot;.build();&quot;)</span>
+<span class="fc" id="L260">              .end()</span>
+<span class="fc" id="L261">              .end()</span>
+<span class="fc" id="L262">              .end()</span>
+<span class="fc" id="L263">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L264">              .newline();</span>
+<span class="fc" id="L265">    }</span>
 
     private void appendTypeField(JField field) {
-<span class="pc bpc" id="L261" title="2 of 12 branches missed.">        switch (field.type()) {</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">        if (field.portableRequiresBinarySerialization()) {</span>
+<span class="nc" id="L269">            writer.formatln(&quot;.addByteArrayField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="nc" id="L270">            return;</span>
+        }
+
+<span class="pc bpc" id="L273" title="2 of 12 branches missed.">        switch (field.type()) {</span>
             case BINARY:
-            case MAP:
-<span class="fc" id="L264">                writer.formatln(&quot;.addByteArrayField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L265">                break;</span>
+<span class="fc" id="L275">                writer.formatln(&quot;.addByteArrayField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="fc" id="L276">                break;</span>
             case BYTE:
-<span class="fc" id="L267">                writer.formatln(&quot;.addByteField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L268">                break;</span>
+<span class="fc" id="L278">                writer.formatln(&quot;.addByteField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="fc" id="L279">                break;</span>
             case BOOL:
-<span class="fc" id="L270">                writer.formatln(&quot;.addBooleanField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L271">                break;</span>
+<span class="fc" id="L281">                writer.formatln(&quot;.addBooleanField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="fc" id="L282">                break;</span>
             case DOUBLE:
-<span class="fc" id="L273">                writer.formatln(&quot;.addDoubleField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L274">                break;</span>
+<span class="fc" id="L284">                writer.formatln(&quot;.addDoubleField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="fc" id="L285">                break;</span>
             case ENUM:
             case I32:
-<span class="fc" id="L277">                writer.formatln(&quot;.addIntField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L278">                break;</span>
+<span class="fc" id="L288">                writer.formatln(&quot;.addIntField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="fc" id="L289">                break;</span>
             case I16:
-<span class="fc" id="L280">                writer.formatln(&quot;.addShortField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L281">                break;</span>
+<span class="fc" id="L291">                writer.formatln(&quot;.addShortField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="fc" id="L292">                break;</span>
             case I64:
-<span class="fc" id="L283">                writer.formatln(&quot;.addLongField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L284">                break;</span>
-            case STRING:
-<span class="fc" id="L286">                writer.formatln(&quot;.addUTFField(\&quot;%s\&quot;)&quot;, field.name());</span>
-<span class="fc" id="L287">                break;</span>
-            case LIST:
-<span class="pc bpc" id="L289" title="1 of 2 branches missed.">                if ( field.isUnion() ) {</span>
-<span class="nc" id="L290">                    writer.formatln(&quot;.addByteArrayField(\&quot;%s\&quot;)&quot;, field.name());</span>
-                } else {
-<span class="fc" id="L292">                    final PList pList = field.toPList();</span>
-<span class="fc" id="L293">                    appendCollectionTypeField(field, pList.itemDescriptor());</span>
-                }
+<span class="fc" id="L294">                writer.formatln(&quot;.addLongField(\&quot;%s\&quot;)&quot;, field.name());</span>
 <span class="fc" id="L295">                break;</span>
+            case STRING:
+<span class="fc" id="L297">                writer.formatln(&quot;.addUTFField(\&quot;%s\&quot;)&quot;, field.name());</span>
+<span class="fc" id="L298">                break;</span>
+            case LIST:
+<span class="fc" id="L300">                final PList pList = field.toPList();</span>
+<span class="fc" id="L301">                appendCollectionTypeField(field, pList.itemDescriptor());</span>
+<span class="fc" id="L302">                break;</span>
             case SET:
-<span class="nc bnc" id="L297" title="All 2 branches missed.">                if ( field.isUnion() ) {</span>
-<span class="nc" id="L298">                    writer.formatln(&quot;.addByteArrayField(\&quot;%s\&quot;)&quot;, field.name());</span>
-                } else {
-<span class="nc" id="L300">                    final PSet pSet = field.toPSet();</span>
-<span class="nc" id="L301">                    appendCollectionTypeField(field, pSet.itemDescriptor());</span>
-                }
-<span class="nc" id="L303">                break;</span>
+<span class="nc" id="L304">                final PSet pSet = field.toPSet();</span>
+<span class="nc" id="L305">                appendCollectionTypeField(field, pSet.itemDescriptor());</span>
+<span class="nc" id="L306">                break;</span>
             case MESSAGE:
-<span class="pc bpc" id="L305" title="1 of 2 branches missed.">                if ( field.isUnion() ) {</span>
-<span class="nc" id="L306">                    writer.formatln(&quot;.addByteArrayField(\&quot;%s\&quot;)&quot;, field.name());</span>
-                } else {
-<span class="fc" id="L308">                    writer.formatln(&quot;.addPortableField(\&quot;%s\&quot;, %s())&quot;,</span>
-<span class="fc" id="L309">                                    field.name(),</span>
-<span class="fc" id="L310">                                    camelCase(&quot;get&quot;,</span>
-<span class="fc" id="L311">                                              field.field()</span>
-<span class="fc" id="L312">                                                   .getDescriptor()</span>
-<span class="fc" id="L313">                                                   .getName() + &quot;Definition&quot;));</span>
-                }
+<span class="fc" id="L308">                writer.formatln(&quot;.addPortableField(\&quot;%s\&quot;, %s(%s))&quot;,</span>
+<span class="fc" id="L309">                                field.name(),</span>
+<span class="fc" id="L310">                                camelCase(&quot;get&quot;,</span>
+<span class="fc" id="L311">                                          field.field()</span>
+<span class="fc" id="L312">                                               .getDescriptor()</span>
+<span class="fc" id="L313">                                               .getName() + &quot;Definition&quot;),</span>
+                                PORTABLE_VERSION);
 <span class="fc" id="L315">                break;</span>
             default:
 <span class="nc" id="L317">                throw new GeneratorException(&quot;Not implemented appendTypeField for type: &quot; + field.type() + &quot; in &quot; +</span>
@@ -356,17 +356,18 @@ public class HazelcastPortableProgramFormatter implements BaseProgramFormatter {
 <span class="fc" id="L356">                writer.formatln(&quot;.addUTFArrayField(\&quot;%s\&quot;)&quot;, field.name());</span>
 <span class="fc" id="L357">                break;</span>
             case MESSAGE:
-<span class="fc" id="L359">                writer.formatln(&quot;.addPortableArrayField(\&quot;%s\&quot;, %s())&quot;,</span>
+<span class="fc" id="L359">                writer.formatln(&quot;.addPortableArrayField(\&quot;%s\&quot;, %s(%s))&quot;,</span>
 <span class="fc" id="L360">                                field.name(),</span>
-<span class="fc" id="L361">                                camelCase(&quot;get&quot;, descriptor.getName() + &quot;Definition&quot;));</span>
-<span class="fc" id="L362">                break;</span>
+<span class="fc" id="L361">                                camelCase(&quot;get&quot;, descriptor.getName() + &quot;Definition&quot;),</span>
+                                PORTABLE_VERSION);
+<span class="fc" id="L363">                break;</span>
             default:
-<span class="nc" id="L364">                throw new GeneratorException(</span>
-<span class="nc" id="L365">                        &quot;Not implemented appendCollectionTypeField for list with type: &quot; + descriptor.getType() + &quot; in &quot; +</span>
-<span class="nc" id="L366">                        this.getClass()</span>
-<span class="nc" id="L367">                            .getSimpleName());</span>
+<span class="nc" id="L365">                throw new GeneratorException(</span>
+<span class="nc" id="L366">                        &quot;Not implemented appendCollectionTypeField for list with type: &quot; + descriptor.getType() + &quot; in &quot; +</span>
+<span class="nc" id="L367">                        this.getClass()</span>
+<span class="nc" id="L368">                            .getSimpleName());</span>
         }
-<span class="fc" id="L369">    }</span>
+<span class="fc" id="L370">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
