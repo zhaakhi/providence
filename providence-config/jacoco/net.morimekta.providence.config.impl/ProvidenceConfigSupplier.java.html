@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.time.Clock;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,8 +45,8 @@ import java.util.Set;
  * config.
  */
 public class ProvidenceConfigSupplier&lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
-        extends ConfigSupplier&lt;Message, Field&gt; {
-<span class="fc" id="L48">    private static final Logger LOGGER = LoggerFactory.getLogger(ProvidenceConfigSupplier.class);</span>
+        extends UpdatingConfigSupplier&lt;Message, Field&gt; {
+<span class="fc" id="L49">    private static final Logger LOGGER = LoggerFactory.getLogger(ProvidenceConfigSupplier.class);</span>
 
     private final File                           configFile;
     private final ProvidenceConfigParser         configParser;
@@ -55,76 +56,102 @@ public class ProvidenceConfigSupplier&lt;Message extends PMessage&lt;Message, Fi
     private final FileWatcher.Watcher            fileListener;
     private final ConfigSupplier&lt;Message, Field&gt; parentSupplier;
 
-    public ProvidenceConfigSupplier(File configFile,
-                                    ConfigSupplier&lt;Message, Field&gt; parentSupplier,
-                                    FileWatcher fileWatcher,
-                                    ProvidenceConfigParser configParser)
+    public ProvidenceConfigSupplier(@Nonnull File configFile,
+                                    @Nullable ConfigSupplier&lt;Message, Field&gt; parentSupplier,
+                                    @Nullable FileWatcher fileWatcher,
+                                    @Nonnull ProvidenceConfigParser configParser)
             throws ProvidenceConfigException {
-<span class="fc" id="L63">        super();</span>
-<span class="fc" id="L64">        this.configFile = configFile;</span>
-<span class="fc" id="L65">        this.configParser = configParser;</span>
-<span class="fc" id="L66">        this.parentSupplier = parentSupplier;</span>
-<span class="fc" id="L67">        this.includedFiles = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L68">        this.fileWatcher = fileWatcher;</span>
+<span class="fc" id="L64">        this(configFile, parentSupplier, fileWatcher, configParser, Clock.systemUTC());</span>
+<span class="fc" id="L65">    }</span>
 
-<span class="fc" id="L70">        synchronized (this) {</span>
-<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (fileWatcher != null) {</span>
-<span class="fc" id="L72">                fileWatcher.startWatching(configFile);</span>
+    public ProvidenceConfigSupplier(@Nonnull File configFile,
+                                    @Nullable ConfigSupplier&lt;Message, Field&gt; parentSupplier,
+                                    @Nullable FileWatcher fileWatcher,
+                                    @Nonnull ProvidenceConfigParser configParser,
+                                    @Nonnull Clock clock)
+            throws ProvidenceConfigException {
+<span class="fc" id="L73">        super(clock);</span>
+<span class="fc" id="L74">        this.configFile = configFile;</span>
+<span class="fc" id="L75">        this.configParser = configParser;</span>
+<span class="fc" id="L76">        this.parentSupplier = parentSupplier;</span>
+<span class="fc" id="L77">        this.includedFiles = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L78">        this.fileWatcher = fileWatcher;</span>
+
+<span class="fc" id="L80">        synchronized (this) {</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (fileWatcher != null) {</span>
+<span class="fc" id="L82">                fileWatcher.startWatching(configFile);</span>
                 // TODO: Make the file watcher hold weak references.
                 // This may cause long term memory leaks.
-<span class="fc" id="L75">                fileListener = file -&gt; {</span>
-<span class="pc bpc" id="L76" title="1 of 2 branches missed.">                    if (includedFiles.contains(file.toString())) {</span>
-<span class="fc" id="L77">                        reload();</span>
+<span class="fc" id="L85">                fileListener = file -&gt; {</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">                    if (includedFiles.contains(file.toString())) {</span>
+<span class="fc" id="L87">                        reload();</span>
                     }
-<span class="fc" id="L79">                };</span>
-<span class="fc" id="L80">                fileWatcher.addWatcher(fileListener);</span>
+<span class="fc" id="L89">                };</span>
+<span class="fc" id="L90">                fileWatcher.addWatcher(fileListener);</span>
             } else {
-<span class="fc" id="L82">                fileListener = null;</span>
+<span class="fc" id="L92">                fileListener = null;</span>
             }
 
-<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (parentSupplier != null) {</span>
-<span class="pc" id="L86">                this.configListener = config -&gt; this.reload();</span>
-<span class="fc" id="L87">                this.parentSupplier.addListener(configListener);</span>
-<span class="fc" id="L88">                set(loadConfig(parentSupplier.get()));</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (parentSupplier != null) {</span>
+<span class="pc" id="L96">                this.configListener = config -&gt; this.reload();</span>
+<span class="fc" id="L97">                this.parentSupplier.addListener(configListener);</span>
+<span class="fc" id="L98">                set(loadConfig(parentSupplier.get()));</span>
             } else {
-<span class="fc" id="L90">                this.configListener = null;</span>
-<span class="fc" id="L91">                set(loadConfig(null));</span>
+<span class="fc" id="L100">                this.configListener = null;</span>
+<span class="fc" id="L101">                set(loadConfig(null));</span>
             }
-<span class="pc" id="L93">        }</span>
-<span class="fc" id="L94">    }</span>
+<span class="pc" id="L103">        }</span>
+<span class="fc" id="L104">    }</span>
+
+    @Override
+    public String toString() {
+<span class="fc" id="L108">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc" id="L109">        builder.append(&quot;ProvidenceConfig{&quot; + configFile.getName());</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (parentSupplier != null) {</span>
+<span class="fc" id="L111">            builder.append(&quot;, parent=&quot;);</span>
+<span class="fc" id="L112">            builder.append(parentSupplier.getName());</span>
+        }
+<span class="fc" id="L114">        builder.append(&quot;}&quot;);</span>
+<span class="fc" id="L115">        return builder.toString();</span>
+    }
+
+    @Override
+    public String getName() {
+<span class="fc" id="L120">        return &quot;ProvidenceConfig{&quot; + configFile.getName() + &quot;}&quot;;</span>
+    }
 
     /**
      * Trigger reloading of the config file.
      */
     private void reload() {
         try {
-<span class="fc" id="L101">            LOGGER.trace(&quot;Config reload triggered for &quot; + configFile);</span>
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">            if (parentSupplier != null) {</span>
-<span class="nc" id="L103">                set(loadConfig(parentSupplier.get()));</span>
+<span class="fc" id="L128">            LOGGER.trace(&quot;Config reload triggered for &quot; + configFile);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">            if (parentSupplier != null) {</span>
+<span class="nc" id="L130">                set(loadConfig(parentSupplier.get()));</span>
             } else {
-<span class="fc" id="L105">                set(loadConfig(null));</span>
+<span class="fc" id="L132">                set(loadConfig(null));</span>
             }
-<span class="fc" id="L107">        } catch (ProvidenceConfigException e) {</span>
-<span class="fc" id="L108">            LOGGER.error(&quot;Exception when reloading &quot; + configFile, e);</span>
-<span class="fc" id="L109">        }</span>
-<span class="fc" id="L110">    }</span>
+<span class="fc" id="L134">        } catch (ProvidenceConfigException e) {</span>
+<span class="fc" id="L135">            LOGGER.error(&quot;Exception when reloading &quot; + configFile, e);</span>
+<span class="fc" id="L136">        }</span>
+<span class="fc" id="L137">    }</span>
 
     @Nonnull
     private Message loadConfig(@Nullable Message parent) throws ProvidenceConfigException {
-<span class="fc" id="L114">        Pair&lt;Message, Set&lt;String&gt;&gt; tmp = configParser.parseConfig(configFile, parent);</span>
-<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (fileWatcher != null) {</span>
-<span class="fc" id="L116">            fileWatcher.startWatching(configFile);</span>
-<span class="fc" id="L117">            synchronized (this) {</span>
-<span class="fc bfc" id="L118" title="All 2 branches covered.">                if (!tmp.second.equals(includedFiles)) {</span>
-<span class="fc" id="L119">                    includedFiles.clear();</span>
-<span class="fc" id="L120">                    includedFiles.addAll(tmp.second);</span>
-<span class="fc bfc" id="L121" title="All 2 branches covered.">                    for (String included : includedFiles) {</span>
-<span class="fc" id="L122">                        fileWatcher.startWatching(new File(included));</span>
-<span class="fc" id="L123">                    }</span>
+<span class="fc" id="L141">        Pair&lt;Message, Set&lt;String&gt;&gt; tmp = configParser.parseConfig(configFile, parent);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (fileWatcher != null) {</span>
+<span class="fc" id="L143">            fileWatcher.startWatching(configFile);</span>
+<span class="fc" id="L144">            synchronized (this) {</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                if (!tmp.second.equals(includedFiles)) {</span>
+<span class="fc" id="L146">                    includedFiles.clear();</span>
+<span class="fc" id="L147">                    includedFiles.addAll(tmp.second);</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                    for (String included : includedFiles) {</span>
+<span class="fc" id="L149">                        fileWatcher.startWatching(new File(included));</span>
+<span class="fc" id="L150">                    }</span>
                 }
-<span class="pc" id="L125">            }</span>
+<span class="pc" id="L152">            }</span>
         }
-<span class="fc" id="L127">        return tmp.first;</span>
+<span class="fc" id="L154">        return tmp.first;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

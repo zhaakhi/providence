@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestConfigSupplier.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config.util</a> &gt; <span class="el_source">TestConfigSupplier.java</span></div><h1>TestConfigSupplier.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.config.util;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.config.impl.UpdatingConfigSupplier;
+import net.morimekta.providence.descriptor.PField;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import javax.annotation.Nonnull;
+import java.time.Clock;
+
+/**
+ * Config supplier meant for testing only. It is an updating config supplier, but that
+ * exposes the config update method itself.
+ *
+ * @param &lt;M&gt; The message type.
+ * @param &lt;F&gt; The message field type.
+ */
+@VisibleForTesting
+public class TestConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PField&gt; extends UpdatingConfigSupplier&lt;M,F&gt; {
+    /**
+     * Start with no initial config. This is usually now allowed for &quot;normal&quot;
+     * config suppliers.
+     */
+<span class="nc" id="L25">    public TestConfigSupplier() {</span>
+<span class="nc" id="L26">    }</span>
+
+    /**
+     * Start with no initial config. This is usually now allowed for &quot;normal&quot;
+     * config suppliers.
+     *
+     * @param clock The clock to use for timing.
+     */
+    public TestConfigSupplier(@Nonnull Clock clock) {
+<span class="fc" id="L35">        super(clock);</span>
+<span class="fc" id="L36">    }</span>
+
+    /**
+     * Start with an initial config value.
+     *
+     * @param clock The clock to use for timing.
+     * @param initialConfig The initial config value.
+     */
+    public TestConfigSupplier(@Nonnull Clock clock, @Nonnull M initialConfig) {
+<span class="nc" id="L45">        super(clock);</span>
+<span class="nc" id="L46">        set(initialConfig);</span>
+<span class="nc" id="L47">    }</span>
+
+    /**
+     * Start with an initial config value.
+     *
+     * @param initialConfig The initial config value.
+     */
+<span class="fc" id="L54">    public TestConfigSupplier(@Nonnull M initialConfig) {</span>
+<span class="fc" id="L55">        set(initialConfig);</span>
+<span class="fc" id="L56">    }</span>
+
+    /**
+     * Update the current config and trigger updates.
+     *
+     * @param newInstance The new config instance.
+     */
+    public void testUpdate(@Nonnull M newInstance) {
+<span class="fc" id="L64">        set(newInstance);</span>
+<span class="fc" id="L65">    }</span>
+
+    @Override
+    public String toString() {
+<span class="nc" id="L69">        return getName() + &quot;{}&quot;;</span>
+    }
+
+    @Override
+    public String getName() {
+<span class="nc" id="L74">        return &quot;TestConfig&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
