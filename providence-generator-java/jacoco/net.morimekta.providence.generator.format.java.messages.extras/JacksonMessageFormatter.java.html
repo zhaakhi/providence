@@ -20,7 +20,6 @@
  */
 package net.morimekta.providence.generator.format.java.messages.extras;
 
-import net.morimekta.providence.PType;
 import net.morimekta.providence.descriptor.PContainer;
 import net.morimekta.providence.descriptor.PDescriptor;
 import net.morimekta.providence.descriptor.PMap;
@@ -29,8 +28,6 @@ import net.morimekta.providence.generator.format.java.shared.MessageMemberFormat
 import net.morimekta.providence.generator.format.java.utils.JField;
 import net.morimekta.providence.generator.format.java.utils.JHelper;
 import net.morimekta.providence.generator.format.java.utils.JMessage;
-import net.morimekta.util.Binary;
-import net.morimekta.util.Strings;
 import net.morimekta.util.io.IndentedPrintWriter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -52,8 +49,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static net.morimekta.providence.generator.format.java.messages.CoreOverridesFormatter.UNION_FIELD;
 
@@ -65,383 +60,333 @@ public class JacksonMessageFormatter implements MessageMemberFormatter {
     private final IndentedPrintWriter writer;
     private final JHelper             helper;
 
-<span class="fc" id="L68">    public JacksonMessageFormatter(IndentedPrintWriter writer, JHelper helper) {</span>
-<span class="fc" id="L69">        this.writer = writer;</span>
-<span class="fc" id="L70">        this.helper = helper;</span>
-<span class="fc" id="L71">    }</span>
+<span class="fc" id="L63">    public JacksonMessageFormatter(IndentedPrintWriter writer, JHelper helper) {</span>
+<span class="fc" id="L64">        this.writer = writer;</span>
+<span class="fc" id="L65">        this.helper = helper;</span>
+<span class="fc" id="L66">    }</span>
 
     public void appendClassAnnotations(JMessage&lt;?&gt; message) {
-<span class="fc" id="L74">        writer.formatln(&quot;@%s(&quot;, JsonSerialize.class.getName())</span>
-<span class="fc" id="L75">              .formatln(&quot;        using = %s._Serializer.class)&quot;, message.instanceType());</span>
-<span class="fc" id="L76">        writer.formatln(&quot;@%s(&quot;, JsonDeserialize.class.getName())</span>
-<span class="fc" id="L77">              .formatln(&quot;        using = %s._Deserializer.class)&quot;, message.instanceType());</span>
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L69">        writer.formatln(&quot;@%s(&quot;, JsonSerialize.class.getName())</span>
+<span class="fc" id="L70">              .formatln(&quot;        using = %s._Serializer.class)&quot;, message.instanceType());</span>
+<span class="fc" id="L71">        writer.formatln(&quot;@%s(&quot;, JsonDeserialize.class.getName())</span>
+<span class="fc" id="L72">              .formatln(&quot;        using = %s._Deserializer.class)&quot;, message.instanceType());</span>
+<span class="fc" id="L73">    }</span>
 
     @Override
     public void appendExtraProperties(JMessage&lt;?&gt; message) throws GeneratorException {
-<span class="fc" id="L82">        appendJacksonDeserializer(message);</span>
-<span class="fc" id="L83">        appendJacksonSerializer(message);</span>
-<span class="fc" id="L84">    }</span>
+<span class="fc" id="L77">        appendJacksonDeserializer(message);</span>
+<span class="fc" id="L78">        appendJacksonSerializer(message);</span>
+<span class="fc" id="L79">    }</span>
 
     private void appendReadValue(JField field) throws GeneratorException {
-<span class="pc bfc" id="L87" title="All 5 branches covered.">        switch (field.type()) {</span>
+<span class="pc bfc" id="L82" title="All 4 branches covered.">        switch (field.type()) {</span>
             case MAP: {
-<span class="fc" id="L89">                PMap mType = (PMap) field.field()</span>
-<span class="fc" id="L90">                                         .getDescriptor();</span>
-<span class="fc" id="L91">                PDescriptor kType = mType.keyDescriptor();</span>
-<span class="fc" id="L92">                String keyGeneric = helper.getFieldType(kType);</span>
-<span class="fc" id="L93">                String mkKey = &quot;k&quot;;</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">                if (kType.getType() == PType.BINARY) {</span>
-<span class="fc" id="L95">                    writer.formatln(&quot;%s kType = ctxt.getTypeFactory().constructSimpleType(String.class, null);&quot;,</span>
-<span class="fc" id="L96">                                    JavaType.class.getName());</span>
-<span class="fc" id="L97">                    keyGeneric = &quot;String&quot;;</span>
-<span class="fc" id="L98">                    mkKey = String.format(&quot;%s.fromBase64(k)&quot;, Binary.class.getName());</span>
-                } else {
-<span class="fc" id="L100">                    writer.formatln(&quot;%s kType = ctxt.getTypeFactory().constructSimpleType(%s.class, null);&quot;,</span>
-<span class="fc" id="L101">                                    JavaType.class.getName(),</span>
-<span class="fc" id="L102">                                    helper.getFieldType(kType));</span>
-                }
+<span class="fc" id="L84">                PMap mType = (PMap) field.field()</span>
+<span class="fc" id="L85">                                         .getDescriptor();</span>
+<span class="fc" id="L86">                PDescriptor kType = mType.keyDescriptor();</span>
+<span class="fc" id="L87">                writer.formatln(&quot;%s kType = ctxt.getTypeFactory().constructSimpleType(%s.class, null);&quot;,</span>
+<span class="fc" id="L88">                                JavaType.class.getName(),</span>
+<span class="fc" id="L89">                                helper.getFieldType(kType));</span>
 
-<span class="fc" id="L105">                PDescriptor iType = mType.itemDescriptor();</span>
-<span class="fc" id="L106">                String valueGeneric = helper.getFieldType(iType);</span>
-<span class="fc" id="L107">                String mkValue = &quot;v&quot;;</span>
-<span class="pc bpc" id="L108" title="1 of 2 branches missed.">                if (iType instanceof PMap) {</span>
-<span class="nc" id="L109">                    PMap imType = (PMap) iType;</span>
-<span class="nc" id="L110">                    PDescriptor ikType = imType.keyDescriptor();</span>
-<span class="nc" id="L111">                    PDescriptor iiType = imType.itemDescriptor();</span>
-<span class="nc bnc" id="L112" title="All 2 branches missed.">                    if (iiType instanceof PContainer) {</span>
-<span class="nc" id="L113">                        throw new GeneratorException(&quot;Too many levels of containers: &quot; + field.toString());</span>
+<span class="fc" id="L91">                PDescriptor iType = mType.itemDescriptor();</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">                if (iType instanceof PMap) {</span>
+<span class="nc" id="L93">                    PMap imType = (PMap) iType;</span>
+<span class="nc" id="L94">                    PDescriptor ikType = imType.keyDescriptor();</span>
+<span class="nc" id="L95">                    PDescriptor iiType = imType.itemDescriptor();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                    if (iiType instanceof PContainer) {</span>
+<span class="nc" id="L97">                        throw new GeneratorException(&quot;Too many levels of containers: &quot; + field.toString());</span>
                     }
 
                     // double level of container...
-<span class="nc" id="L117">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructMapType(%s.class, %s.class, %s.class);&quot;,</span>
-<span class="nc" id="L118">                                    MapType.class.getName(),</span>
-<span class="nc" id="L119">                                    HashMap.class.getName(),</span>
-<span class="nc" id="L120">                                    helper.getFieldType(ikType),</span>
-<span class="nc" id="L121">                                    helper.getFieldType(iiType));</span>
-<span class="pc bfc" id="L122" title="All 2 branches covered.">                } else if (iType instanceof PContainer) {</span>
-<span class="fc" id="L123">                    PContainer icType = (PContainer) iType;</span>
-<span class="fc" id="L124">                    PDescriptor iiType = icType.itemDescriptor();</span>
-<span class="pc bpc" id="L125" title="1 of 2 branches missed.">                    if (iiType instanceof PContainer) {</span>
-<span class="nc" id="L126">                        throw new GeneratorException(&quot;Too many levels of containers: &quot; + field.toString());</span>
+<span class="nc" id="L101">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructMapType(%s.class, %s.class, %s.class);&quot;,</span>
+<span class="nc" id="L102">                                    MapType.class.getName(),</span>
+<span class="nc" id="L103">                                    HashMap.class.getName(),</span>
+<span class="nc" id="L104">                                    helper.getFieldType(ikType),</span>
+<span class="nc" id="L105">                                    helper.getFieldType(iiType));</span>
+<span class="pc bfc" id="L106" title="All 2 branches covered.">                } else if (iType instanceof PContainer) {</span>
+<span class="fc" id="L107">                    PContainer icType = (PContainer) iType;</span>
+<span class="fc" id="L108">                    PDescriptor iiType = icType.itemDescriptor();</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">                    if (iiType instanceof PContainer) {</span>
+<span class="nc" id="L110">                        throw new GeneratorException(&quot;Too many levels of containers: &quot; + field.toString());</span>
                     }
 
                     // double level of container...
-<span class="fc" id="L130">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructArrayType(%s.class);&quot;,</span>
-<span class="fc" id="L131">                                    MapType.class.getName(),</span>
-<span class="fc" id="L132">                                    helper.getFieldType(iiType));</span>
-<span class="fc bfc" id="L133" title="All 2 branches covered.">                } else if (iType.getType() == PType.BINARY) {</span>
-<span class="fc" id="L134">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructSimpleType(String.class, null);&quot;,</span>
-<span class="fc" id="L135">                                    JavaType.class.getName());</span>
-<span class="fc" id="L136">                    valueGeneric = &quot;String&quot;;</span>
-<span class="fc" id="L137">                    mkValue = String.format(&quot;%s.fromBase64(v)&quot;, Binary.class.getName());</span>
-                } else {
-<span class="fc" id="L139">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructSimpleType(%s.class, null);&quot;,</span>
-<span class="fc" id="L140">                                    JavaType.class.getName(),</span>
-<span class="fc" id="L141">                                    helper.getFieldType(iType));</span>
+<span class="fc" id="L114">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructArrayType(%s.class);&quot;,</span>
+<span class="fc" id="L115">                                    MapType.class.getName(),</span>
+<span class="fc" id="L116">                                    helper.getFieldType(iiType));</span>
+<span class="fc" id="L117">                } else {</span>
+<span class="fc" id="L118">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructSimpleType(%s.class, null);&quot;,</span>
+<span class="fc" id="L119">                                    JavaType.class.getName(),</span>
+<span class="fc" id="L120">                                    helper.getFieldType(iType));</span>
                 }
-<span class="fc" id="L143">                writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructMapType(%s.class, kType, iType);&quot;,</span>
-<span class="fc" id="L144">                                MapType.class.getName(),</span>
-<span class="fc" id="L145">                                HashMap.class.getName());</span>
-<span class="fc" id="L146">                writer.formatln(&quot;builder.%s();&quot;, Strings.camelCase(&quot;mutable&quot;, field.name()));</span>
-<span class="fc" id="L147">                writer.formatln(&quot;((%s&lt;%s,%s&gt;) ctxt.readValue(jp, type))&quot;,</span>
-<span class="fc" id="L148">                                Map.class.getName(),</span>
-                                keyGeneric, valueGeneric,
-<span class="fc" id="L150">                                field.setter());</span>
-<span class="fc" id="L151">                writer.appendln(&quot;        .forEach((k, v) -&gt; {&quot;);</span>
-<span class="fc" id="L152">                writer.formatln(&quot;            builder.%s(%s, %s);&quot;, field.adder(), mkKey, mkValue);</span>
-<span class="fc" id="L153">                writer.appendln(&quot;        });&quot;);</span>
-<span class="fc" id="L154">                break;</span>
+<span class="fc" id="L122">                writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructMapType(%s.class, kType, iType);&quot;,</span>
+<span class="fc" id="L123">                                MapType.class.getName(),</span>
+<span class="fc" id="L124">                                HashMap.class.getName());</span>
+<span class="fc" id="L125">                writer.formatln(&quot;builder.%s(ctxt.readValue(jp, type));&quot;, field.setter());</span>
+<span class="fc" id="L126">                break;</span>
             }
             case SET:
             case LIST: {
-<span class="fc" id="L158">                PContainer cType = (PContainer) field.field()</span>
-<span class="fc" id="L159">                                                     .getDescriptor();</span>
-<span class="fc" id="L160">                PDescriptor iType = cType.itemDescriptor();</span>
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">                if (iType instanceof PMap) {</span>
-<span class="nc" id="L162">                    PMap imType = (PMap) iType;</span>
-<span class="nc" id="L163">                    PDescriptor ikType = imType.keyDescriptor();</span>
-<span class="nc" id="L164">                    PDescriptor iiType = imType.itemDescriptor();</span>
+<span class="fc" id="L130">                PContainer cType = (PContainer) field.field()</span>
+<span class="fc" id="L131">                                                     .getDescriptor();</span>
+<span class="fc" id="L132">                PDescriptor iType = cType.itemDescriptor();</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">                if (iType instanceof PMap) {</span>
+<span class="nc" id="L134">                    PMap imType = (PMap) iType;</span>
+<span class="nc" id="L135">                    PDescriptor ikType = imType.keyDescriptor();</span>
+<span class="nc" id="L136">                    PDescriptor iiType = imType.itemDescriptor();</span>
                     // double level of container...
-<span class="nc" id="L166">                    writer.formatln(</span>
+<span class="nc" id="L138">                    writer.formatln(</span>
                             &quot;%s itype = ctxt.getTypeFactory().constructMapType(%s.class, %s.class, %s.class);&quot;,
-<span class="nc" id="L168">                            MapType.class.getName(),</span>
-<span class="nc" id="L169">                            LinkedHashMap.class.getName(),</span>
-<span class="nc" id="L170">                            helper.getFieldType(ikType),</span>
-<span class="nc" id="L171">                            helper.getFieldType(iiType));</span>
-<span class="nc" id="L172">                    writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructArrayType(itype);&quot;,</span>
-<span class="nc" id="L173">                                    ArrayType.class.getName(),</span>
-<span class="nc" id="L174">                                    helper.getFieldType(iType));</span>
-<span class="nc" id="L175">                    writer.formatln(&quot;builder.%s(%s.asList(ctxt.readValue(jp, type)));&quot;, field.setter(), Arrays.class.getName());</span>
-<span class="pc bfc" id="L176" title="All 2 branches covered.">                } else if (iType instanceof PContainer) {</span>
-<span class="fc" id="L177">                    PContainer icType = (PContainer) iType;</span>
-<span class="fc" id="L178">                    PDescriptor iiType = icType.itemDescriptor();</span>
+<span class="nc" id="L140">                            MapType.class.getName(),</span>
+<span class="nc" id="L141">                            LinkedHashMap.class.getName(),</span>
+<span class="nc" id="L142">                            helper.getFieldType(ikType),</span>
+<span class="nc" id="L143">                            helper.getFieldType(iiType));</span>
+<span class="nc" id="L144">                    writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructArrayType(itype);&quot;,</span>
+<span class="nc" id="L145">                                    ArrayType.class.getName(),</span>
+<span class="nc" id="L146">                                    helper.getFieldType(iType));</span>
+<span class="nc" id="L147">                    writer.formatln(&quot;builder.%s(%s.asList(ctxt.readValue(jp, type)));&quot;, field.setter(), Arrays.class.getName());</span>
+<span class="pc bfc" id="L148" title="All 2 branches covered.">                } else if (iType instanceof PContainer) {</span>
+<span class="fc" id="L149">                    PContainer icType = (PContainer) iType;</span>
+<span class="fc" id="L150">                    PDescriptor iiType = icType.itemDescriptor();</span>
                     // double level of container...
-<span class="fc" id="L180">                    writer.formatln(&quot;%s itype = ctxt.getTypeFactory().constructArrayType(%s.class);&quot;,</span>
-<span class="fc" id="L181">                                    ArrayType.class.getName(),</span>
-<span class="fc" id="L182">                                    helper.getFieldType(iiType));</span>
-<span class="fc" id="L183">                    writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructArrayType(itype);&quot;,</span>
-<span class="fc" id="L184">                                    ArrayType.class.getName(),</span>
-<span class="fc" id="L185">                                    helper.getFieldType(iType));</span>
-<span class="fc" id="L186">                    writer.formatln(&quot;builder.%s(%s.asList(ctxt.readValue(jp, type)));&quot;, field.setter(), Arrays.class.getName());</span>
-<span class="fc bfc" id="L187" title="All 2 branches covered.">                } else if (iType.getType() == PType.BINARY) {</span>
-<span class="fc" id="L188">                    writer.formatln(&quot;%s iType = ctxt.getTypeFactory().constructArrayType(String.class);&quot;,</span>
-<span class="fc" id="L189">                                    JavaType.class.getName(),</span>
-<span class="fc" id="L190">                                    helper.getFieldType(iType));</span>
-<span class="fc" id="L191">                    String setterSpaces = Strings.times(&quot; &quot;, field.setter().length());</span>
-<span class="fc" id="L192">                    String arraysSpaces = Strings.times(&quot; &quot;, Arrays.class.getName().length());</span>
-<span class="fc" id="L193">                    writer.formatln(&quot;builder.%s(%s.asList(ctxt.readValue(jp, iType))&quot;, field.setter(), Arrays.class.getName());</span>
-<span class="fc" id="L194">                    writer.formatln(&quot;        %s %s.stream()&quot;, setterSpaces, arraysSpaces);</span>
-<span class="fc" id="L195">                    writer.formatln(&quot;        %s %s.map(Object::toString)&quot;, setterSpaces, arraysSpaces);</span>
-<span class="fc" id="L196">                    writer.formatln(&quot;        %s %s.map(%s::fromBase64)&quot;, setterSpaces, arraysSpaces, Binary.class.getName());</span>
-<span class="fc" id="L197">                    writer.formatln(&quot;        %s %s.collect(%s.toList()));&quot;, setterSpaces, arraysSpaces, Collectors.class.getName());</span>
-<span class="fc" id="L198">                } else {</span>
-<span class="fc" id="L199">                    writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructArrayType(%s.class);&quot;,</span>
-<span class="fc" id="L200">                                    ArrayType.class.getName(),</span>
-<span class="fc" id="L201">                                    helper.getFieldType(iType));</span>
-<span class="fc" id="L202">                    writer.formatln(&quot;builder.%s(%s.asList(ctxt.readValue(jp, type)));&quot;, field.setter(), Arrays.class.getName());</span>
+<span class="fc" id="L152">                    writer.formatln(&quot;%s itype = ctxt.getTypeFactory().constructArrayType(%s.class);&quot;,</span>
+<span class="fc" id="L153">                                    ArrayType.class.getName(),</span>
+<span class="fc" id="L154">                                    helper.getFieldType(iiType));</span>
+<span class="fc" id="L155">                    writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructArrayType(itype);&quot;,</span>
+<span class="fc" id="L156">                                    ArrayType.class.getName(),</span>
+<span class="fc" id="L157">                                    helper.getFieldType(iType));</span>
+<span class="fc" id="L158">                    writer.formatln(&quot;builder.%s(%s.asList(ctxt.readValue(jp, type)));&quot;, field.setter(), Arrays.class.getName());</span>
+<span class="fc" id="L159">                } else {</span>
+<span class="fc" id="L160">                    writer.formatln(&quot;%s type = ctxt.getTypeFactory().constructArrayType(%s.class);&quot;,</span>
+<span class="fc" id="L161">                                    ArrayType.class.getName(),</span>
+<span class="fc" id="L162">                                    helper.getFieldType(iType));</span>
+<span class="fc" id="L163">                    writer.formatln(&quot;builder.%s(%s.asList(ctxt.readValue(jp, type)));&quot;, field.setter(), Arrays.class.getName());</span>
                 }
-<span class="fc" id="L204">                break;</span>
+<span class="fc" id="L165">                break;</span>
             }
             case BINARY:
-<span class="fc" id="L207">                writer.formatln(&quot;builder.%s(%s.fromBase64(ctxt.readValue(jp, String.class)));&quot;,</span>
-<span class="fc" id="L208">                                field.setter(),</span>
-<span class="fc" id="L209">                                Binary.class.getName());</span>
-<span class="fc" id="L210">                break;</span>
             case STRING:
             case MESSAGE:
             case ENUM:
-<span class="fc" id="L214">                writer.formatln(&quot;builder.%s(ctxt.readValue(jp, %s.class));&quot;,</span>
-<span class="fc" id="L215">                                field.setter(),</span>
-<span class="fc" id="L216">                                field.instanceType());</span>
-<span class="fc" id="L217">                break;</span>
+<span class="fc" id="L171">                writer.formatln(&quot;builder.%s(ctxt.readValue(jp, %s.class));&quot;,</span>
+<span class="fc" id="L172">                                field.setter(),</span>
+<span class="fc" id="L173">                                field.instanceType());</span>
+<span class="fc" id="L174">                break;</span>
             default:
-<span class="fc" id="L219">                writer.formatln(&quot;builder.%s(ctxt.readValue(jp, %s.TYPE));&quot;,</span>
-<span class="fc" id="L220">                                field.setter(),</span>
-<span class="fc" id="L221">                                field.instanceType());</span>
+<span class="fc" id="L176">                writer.formatln(&quot;builder.%s(ctxt.readValue(jp, %s.TYPE));&quot;,</span>
+<span class="fc" id="L177">                                field.setter(),</span>
+<span class="fc" id="L178">                                field.instanceType());</span>
                 break;
         }
 
-<span class="fc" id="L225">    }</span>
+<span class="fc" id="L182">    }</span>
 
     private void appendWriteValue(JField field) {
-<span class="fc bfc" id="L228" title="All 3 branches covered.">        switch (field.type()) {</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        switch (field.type()) {</span>
             case VOID:
-<span class="fc" id="L230">                writer.formatln(&quot;provider.defaultSerializeField(\&quot;%s\&quot;, true, generator);&quot;,</span>
-<span class="fc" id="L231">                                field.name());</span>
-<span class="fc" id="L232">                break;</span>
-            case BINARY:
-<span class="fc" id="L234">                writer.formatln(&quot;provider.defaultSerializeField(\&quot;%s\&quot;, instance.%s.toBase64(), generator);&quot;,</span>
-<span class="fc" id="L235">                                field.name(), field.member());</span>
-<span class="fc" id="L236">                break;</span>
+<span class="fc" id="L187">                writer.formatln(&quot;provider.defaultSerializeField(\&quot;%s\&quot;, true, generator);&quot;,</span>
+<span class="fc" id="L188">                                field.name());</span>
+<span class="fc" id="L189">                break;</span>
             default:
-<span class="fc" id="L238">                writer.formatln(&quot;provider.defaultSerializeField(\&quot;%s\&quot;, instance.%s, generator);&quot;,</span>
-<span class="fc" id="L239">                                field.name(), field.member());</span>
+<span class="fc" id="L191">                writer.formatln(&quot;provider.defaultSerializeField(\&quot;%s\&quot;, instance.%s, generator);&quot;,</span>
+<span class="fc" id="L192">                                field.name(), field.member());</span>
                 break;
         }
-<span class="fc" id="L242">    }</span>
+<span class="fc" id="L195">    }</span>
 
     private void appendJacksonDeserializer(JMessage&lt;?&gt; message) throws GeneratorException {
-<span class="fc" id="L245">        writer.formatln(&quot;public static class _Deserializer extends %s&lt;%s&gt; {&quot;,</span>
-<span class="fc" id="L246">                        JsonDeserializer.class.getName(),</span>
-<span class="fc" id="L247">                        message.instanceType())</span>
-<span class="fc" id="L248">              .begin();</span>
+<span class="fc" id="L198">        writer.formatln(&quot;public static class _Deserializer extends %s&lt;%s&gt; {&quot;,</span>
+<span class="fc" id="L199">                        JsonDeserializer.class.getName(),</span>
+<span class="fc" id="L200">                        message.instanceType())</span>
+<span class="fc" id="L201">              .begin();</span>
 
-<span class="fc" id="L250">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L251">              .formatln(&quot;public %s deserialize(%s jp,&quot;,</span>
-<span class="fc" id="L252">                        message.instanceType(),</span>
-<span class="fc" id="L253">                        JsonParser.class.getName())</span>
-<span class="fc" id="L254">              .formatln(&quot;       %s             %s ctxt)&quot;,</span>
-<span class="fc" id="L255">                        message.instanceType().replaceAll(&quot;[\\S]&quot;, &quot; &quot;),</span>
-<span class="fc" id="L256">                        DeserializationContext.class.getName())</span>
-<span class="fc" id="L257">              .formatln(&quot;         throws %s,&quot;,</span>
-<span class="fc" id="L258">                        IOException.class.getName())</span>
-<span class="fc" id="L259">              .formatln(&quot;                %s {&quot;,</span>
-<span class="fc" id="L260">                        JsonProcessingException.class.getName())</span>
-<span class="fc" id="L261">              .begin();</span>
+<span class="fc" id="L203">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L204">              .formatln(&quot;public %s deserialize(%s jp,&quot;,</span>
+<span class="fc" id="L205">                        message.instanceType(),</span>
+<span class="fc" id="L206">                        JsonParser.class.getName())</span>
+<span class="fc" id="L207">              .formatln(&quot;       %s             %s ctxt)&quot;,</span>
+<span class="fc" id="L208">                        message.instanceType().replaceAll(&quot;[\\S]&quot;, &quot; &quot;),</span>
+<span class="fc" id="L209">                        DeserializationContext.class.getName())</span>
+<span class="fc" id="L210">              .formatln(&quot;         throws %s,&quot;,</span>
+<span class="fc" id="L211">                        IOException.class.getName())</span>
+<span class="fc" id="L212">              .formatln(&quot;                %s {&quot;,</span>
+<span class="fc" id="L213">                        JsonProcessingException.class.getName())</span>
+<span class="fc" id="L214">              .begin();</span>
 
-<span class="fc" id="L263">        writer.appendln(&quot;_Builder builder = builder();&quot;)</span>
-<span class="fc" id="L264">              .newline();</span>
+<span class="fc" id="L216">        writer.appendln(&quot;_Builder builder = builder();&quot;)</span>
+<span class="fc" id="L217">              .newline();</span>
 
-<span class="fc" id="L266">        writer.formatln(&quot;if (jp.isExpectedStartObjectToken()) {&quot;)</span>
-<span class="fc" id="L267">              .begin()</span>
-<span class="fc" id="L268">              .formatln(&quot;while (jp.nextToken() != %s.END_OBJECT) {&quot;, JsonToken.class.getName())</span>
-<span class="fc" id="L269">              .begin()</span>
-<span class="fc" id="L270">              .formatln(&quot;if (jp.getCurrentToken() != %s.FIELD_NAME) {&quot;, JsonToken.class.getName())</span>
-<span class="fc" id="L271">              .formatln(&quot;    throw new %s(jp, \&quot;Invalid field name token \&quot; + jp.getText());&quot;,</span>
-<span class="fc" id="L272">                        JsonParseException.class.getName())</span>
-<span class="fc" id="L273">              .appendln('}')</span>
-<span class="fc" id="L274">              .newline()</span>
-<span class="fc" id="L275">              .appendln(&quot;String field = jp.getCurrentName();&quot;)</span>
-<span class="fc" id="L276">              .appendln(&quot;jp.nextToken();&quot;)</span>
-<span class="fc" id="L277">              .appendln(&quot;switch (field) {&quot;)</span>
-<span class="fc" id="L278">              .begin();</span>
+<span class="fc" id="L219">        writer.formatln(&quot;if (jp.isExpectedStartObjectToken()) {&quot;)</span>
+<span class="fc" id="L220">              .begin()</span>
+<span class="fc" id="L221">              .formatln(&quot;while (jp.nextToken() != %s.END_OBJECT) {&quot;, JsonToken.class.getName())</span>
+<span class="fc" id="L222">              .begin()</span>
+<span class="fc" id="L223">              .formatln(&quot;if (jp.getCurrentToken() != %s.FIELD_NAME) {&quot;, JsonToken.class.getName())</span>
+<span class="fc" id="L224">              .formatln(&quot;    throw new %s(jp, \&quot;Invalid field name token \&quot; + jp.getText());&quot;,</span>
+<span class="fc" id="L225">                        JsonParseException.class.getName())</span>
+<span class="fc" id="L226">              .appendln('}')</span>
+<span class="fc" id="L227">              .newline()</span>
+<span class="fc" id="L228">              .appendln(&quot;String field = jp.getCurrentName();&quot;)</span>
+<span class="fc" id="L229">              .appendln(&quot;jp.nextToken();&quot;)</span>
+<span class="fc" id="L230">              .appendln(&quot;switch (field) {&quot;)</span>
+<span class="fc" id="L231">              .begin();</span>
 
-<span class="fc bfc" id="L280" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc" id="L281">            writer.formatln(&quot;case \&quot;%d\&quot;:&quot;, field.id())</span>
-<span class="fc" id="L282">                  .formatln(&quot;case \&quot;%s\&quot;: {&quot;, field.name())</span>
-<span class="fc" id="L283">                  .begin();</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L234">            writer.formatln(&quot;case \&quot;%d\&quot;:&quot;, field.id())</span>
+<span class="fc" id="L235">                  .formatln(&quot;case \&quot;%s\&quot;: {&quot;, field.name())</span>
+<span class="fc" id="L236">                  .begin();</span>
 
-<span class="fc" id="L285">            appendReadValue(field);</span>
+<span class="fc" id="L238">            appendReadValue(field);</span>
 
-<span class="fc" id="L287">            writer.appendln(&quot;break;&quot;)</span>
-<span class="fc" id="L288">                  .end()</span>
-<span class="fc" id="L289">                  .appendln('}');</span>
-<span class="fc" id="L290">        }</span>
+<span class="fc" id="L240">            writer.appendln(&quot;break;&quot;)</span>
+<span class="fc" id="L241">                  .end()</span>
+<span class="fc" id="L242">                  .appendln('}');</span>
+<span class="fc" id="L243">        }</span>
 
-<span class="fc" id="L292">        writer.end()</span>
-<span class="fc" id="L293">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L294">              .end()</span>
-<span class="fc" id="L295">              .appendln(&quot;}&quot;);</span>
+<span class="fc" id="L245">        writer.end()</span>
+<span class="fc" id="L246">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L247">              .end()</span>
+<span class="fc" id="L248">              .appendln(&quot;}&quot;);</span>
 
-<span class="fc bfc" id="L297" title="All 2 branches covered.">        if (message.jsonCompactible()) {</span>
-<span class="fc" id="L298">            writer.end()</span>
-<span class="fc" id="L299">                  .appendln(&quot;} else if (jp.isExpectedStartArrayToken()) {&quot;)</span>
-<span class="fc" id="L300">                  .begin();</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        if (message.jsonCompactible()) {</span>
+<span class="fc" id="L251">            writer.end()</span>
+<span class="fc" id="L252">                  .appendln(&quot;} else if (jp.isExpectedStartArrayToken()) {&quot;)</span>
+<span class="fc" id="L253">                  .begin();</span>
 
-<span class="fc" id="L302">            writer.appendln(&quot;int idx = 0;&quot;)</span>
-<span class="fc" id="L303">                  .formatln(&quot;while (jp.nextToken() != %s.END_ARRAY) {&quot;, JsonToken.class.getName())</span>
-<span class="fc" id="L304">                  .begin()</span>
-<span class="fc" id="L305">                  .appendln(&quot;switch (idx++) {&quot;)</span>
-<span class="fc" id="L306">                  .begin();</span>
+<span class="fc" id="L255">            writer.appendln(&quot;int idx = 0;&quot;)</span>
+<span class="fc" id="L256">                  .formatln(&quot;while (jp.nextToken() != %s.END_ARRAY) {&quot;, JsonToken.class.getName())</span>
+<span class="fc" id="L257">                  .begin()</span>
+<span class="fc" id="L258">                  .appendln(&quot;switch (idx++) {&quot;)</span>
+<span class="fc" id="L259">                  .begin();</span>
 
-<span class="fc bfc" id="L308" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc" id="L309">                writer.formatln(&quot;case %d: {&quot;, field.index())</span>
-<span class="fc" id="L310">                      .begin();</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L262">                writer.formatln(&quot;case %d: {&quot;, field.index())</span>
+<span class="fc" id="L263">                      .begin();</span>
 
-<span class="fc" id="L312">                appendReadValue(field);</span>
+<span class="fc" id="L265">                appendReadValue(field);</span>
 
-<span class="fc" id="L314">                writer.appendln(&quot;break;&quot;)</span>
-<span class="fc" id="L315">                      .end()</span>
-<span class="fc" id="L316">                      .appendln('}');</span>
-<span class="fc" id="L317">            }</span>
+<span class="fc" id="L267">                writer.appendln(&quot;break;&quot;)</span>
+<span class="fc" id="L268">                      .end()</span>
+<span class="fc" id="L269">                      .appendln('}');</span>
+<span class="fc" id="L270">            }</span>
 
-<span class="fc" id="L319">            writer.appendln(&quot;default:&quot;)</span>
-<span class="fc" id="L320">                  .formatln(&quot;    throw new %s(jp, \&quot;Unexpected value: \&quot; + jp.getText());&quot;,</span>
-<span class="fc" id="L321">                            JsonParseException.class.getName())</span>
-<span class="fc" id="L322">                  .end()</span>
-<span class="fc" id="L323">                  .appendln('}')</span>
-<span class="fc" id="L324">                  .end()</span>
-<span class="fc" id="L325">                  .appendln('}');</span>
+<span class="fc" id="L272">            writer.appendln(&quot;default:&quot;)</span>
+<span class="fc" id="L273">                  .formatln(&quot;    throw new %s(jp, \&quot;Unexpected value: \&quot; + jp.getText());&quot;,</span>
+<span class="fc" id="L274">                            JsonParseException.class.getName())</span>
+<span class="fc" id="L275">                  .end()</span>
+<span class="fc" id="L276">                  .appendln('}')</span>
+<span class="fc" id="L277">                  .end()</span>
+<span class="fc" id="L278">                  .appendln('}');</span>
         }
 
-<span class="fc" id="L328">        writer.end()</span>
-<span class="fc" id="L329">              .appendln(&quot;} else {&quot;)</span>
-<span class="fc" id="L330">              .formatln(&quot;    throw new %s(jp, \&quot;Invalid token for object deserialization \&quot; + jp.getText());&quot;,</span>
-<span class="fc" id="L331">                        JsonParseException.class.getName())</span>
-<span class="fc" id="L332">              .appendln('}')</span>
-<span class="fc" id="L333">              .newline()</span>
-<span class="fc" id="L334">              .appendln(&quot;return builder.build();&quot;);</span>
+<span class="fc" id="L281">        writer.end()</span>
+<span class="fc" id="L282">              .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L283">              .formatln(&quot;    throw new %s(jp, \&quot;Invalid token for object deserialization \&quot; + jp.getText());&quot;,</span>
+<span class="fc" id="L284">                        JsonParseException.class.getName())</span>
+<span class="fc" id="L285">              .appendln('}')</span>
+<span class="fc" id="L286">              .newline()</span>
+<span class="fc" id="L287">              .appendln(&quot;return builder.build();&quot;);</span>
 
-<span class="fc" id="L336">        writer.end()</span>
-<span class="fc" id="L337">              .formatln(&quot;}&quot;)</span>
-<span class="fc" id="L338">              .end()</span>
-<span class="fc" id="L339">              .formatln(&quot;}&quot;)</span>
-<span class="fc" id="L340">              .newline();</span>
-<span class="fc" id="L341">    }</span>
+<span class="fc" id="L289">        writer.end()</span>
+<span class="fc" id="L290">              .formatln(&quot;}&quot;)</span>
+<span class="fc" id="L291">              .end()</span>
+<span class="fc" id="L292">              .formatln(&quot;}&quot;)</span>
+<span class="fc" id="L293">              .newline();</span>
+<span class="fc" id="L294">    }</span>
 
     private void appendJacksonSerializer(JMessage&lt;?&gt; message) throws GeneratorException {
-<span class="fc" id="L344">        writer.formatln(&quot;public static class _Serializer extends %s&lt;%s&gt; {&quot;,</span>
-<span class="fc" id="L345">                        JsonSerializer.class.getName(),</span>
-<span class="fc" id="L346">                        message.instanceType())</span>
-<span class="fc" id="L347">              .begin()</span>
-<span class="fc" id="L348">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L349">              .formatln(&quot;public void serialize(%s instance, %s generator, %s provider)&quot;,</span>
-<span class="fc" id="L350">                        message.instanceType(),</span>
-<span class="fc" id="L351">                        JsonGenerator.class.getName(),</span>
-<span class="fc" id="L352">                        SerializerProvider.class.getName())</span>
-<span class="fc" id="L353">              .formatln(&quot;        throws %s, %s {&quot;,</span>
-<span class="fc" id="L354">                        IOException.class.getName(), JsonProcessingException.class.getName())</span>
-<span class="fc" id="L355">              .begin();</span>
+<span class="fc" id="L297">        writer.formatln(&quot;public static class _Serializer extends %s&lt;%s&gt; {&quot;,</span>
+<span class="fc" id="L298">                        JsonSerializer.class.getName(),</span>
+<span class="fc" id="L299">                        message.instanceType())</span>
+<span class="fc" id="L300">              .begin()</span>
+<span class="fc" id="L301">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L302">              .formatln(&quot;public void serialize(%s instance, %s generator, %s provider)&quot;,</span>
+<span class="fc" id="L303">                        message.instanceType(),</span>
+<span class="fc" id="L304">                        JsonGenerator.class.getName(),</span>
+<span class="fc" id="L305">                        SerializerProvider.class.getName())</span>
+<span class="fc" id="L306">              .formatln(&quot;        throws %s, %s {&quot;,</span>
+<span class="fc" id="L307">                        IOException.class.getName(), JsonProcessingException.class.getName())</span>
+<span class="fc" id="L308">              .begin();</span>
 
-<span class="fc bfc" id="L357" title="All 2 branches covered.">        if (message.isUnion()) {</span>
-<span class="fc" id="L358">            writer.appendln(&quot;generator.writeStartObject();&quot;)</span>
-<span class="fc" id="L359">                  .formatln(&quot;switch (instance.%s) {&quot;, UNION_FIELD)</span>
-<span class="fc" id="L360">                  .begin();</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">        if (message.isUnion()) {</span>
+<span class="fc" id="L311">            writer.appendln(&quot;generator.writeStartObject();&quot;)</span>
+<span class="fc" id="L312">                  .formatln(&quot;switch (instance.%s) {&quot;, UNION_FIELD)</span>
+<span class="fc" id="L313">                  .begin();</span>
 
-<span class="fc bfc" id="L362" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc" id="L363">                writer.formatln(&quot;case %s: {&quot;, field.fieldEnum())</span>
-<span class="fc" id="L364">                      .begin();</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">            for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L316">                writer.formatln(&quot;case %s: {&quot;, field.fieldEnum())</span>
+<span class="fc" id="L317">                      .begin();</span>
 
-<span class="fc" id="L366">                appendWriteValue(field);</span>
+<span class="fc" id="L319">                appendWriteValue(field);</span>
 
-<span class="fc" id="L368">                writer.appendln(&quot;break;&quot;)</span>
-<span class="fc" id="L369">                      .end()</span>
-<span class="fc" id="L370">                      .appendln('}');</span>
-<span class="fc" id="L371">            }</span>
+<span class="fc" id="L321">                writer.appendln(&quot;break;&quot;)</span>
+<span class="fc" id="L322">                      .end()</span>
+<span class="fc" id="L323">                      .appendln('}');</span>
+<span class="fc" id="L324">            }</span>
 
-<span class="fc" id="L373">            writer.end()</span>
-<span class="fc" id="L374">                  .appendln('}')</span>
-<span class="fc" id="L375">                  .appendln(&quot;generator.writeEndObject();&quot;);</span>
+<span class="fc" id="L326">            writer.end()</span>
+<span class="fc" id="L327">                  .appendln('}')</span>
+<span class="fc" id="L328">                  .appendln(&quot;generator.writeEndObject();&quot;);</span>
         } else {
-<span class="fc bfc" id="L377" title="All 2 branches covered.">            if (message.jsonCompactible()) {</span>
-<span class="fc" id="L378">                writer.formatln(&quot;if (instance.jsonCompact()) {&quot;)</span>
-<span class="fc" id="L379">                      .begin()</span>
-<span class="fc" id="L380">                      .formatln(&quot;generator.writeStartArray();&quot;);</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">            if (message.jsonCompactible()) {</span>
+<span class="fc" id="L331">                writer.formatln(&quot;if (instance.jsonCompact()) {&quot;)</span>
+<span class="fc" id="L332">                      .begin()</span>
+<span class="fc" id="L333">                      .formatln(&quot;generator.writeStartArray();&quot;);</span>
 
-<span class="fc" id="L382">                int ifStack = 0;</span>
+<span class="fc" id="L335">                int ifStack = 0;</span>
 
-<span class="fc bfc" id="L384" title="All 2 branches covered.">                for (JField field : message.numericalOrderFields()) {</span>
-<span class="pc bpc" id="L385" title="3 of 4 branches missed.">                    if (!(field.alwaysPresent() || field.isRequired())) {</span>
-<span class="nc" id="L386">                        writer.formatln(&quot;if (instance.%s != null) {&quot;, field.member())</span>
-<span class="nc" id="L387">                              .begin();</span>
-<span class="nc" id="L388">                        ++ifStack;</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">                for (JField field : message.numericalOrderFields()) {</span>
+<span class="pc bpc" id="L338" title="3 of 4 branches missed.">                    if (!(field.alwaysPresent() || field.isRequired())) {</span>
+<span class="nc" id="L339">                        writer.formatln(&quot;if (instance.%s != null) {&quot;, field.member())</span>
+<span class="nc" id="L340">                              .begin();</span>
+<span class="nc" id="L341">                        ++ifStack;</span>
                     }
 
-<span class="pc bpc" id="L391" title="1 of 2 branches missed.">                    switch (field.type()) {</span>
-                        case BINARY:
-<span class="nc" id="L393">                            writer.formatln(&quot;provider.defaultSerializeValue(instance.%s.toBase64(), generator);&quot;,</span>
-<span class="nc" id="L394">                                            field.member());</span>
-<span class="nc" id="L395">                            break;</span>
-                        default:
-<span class="fc" id="L397">                            writer.formatln(&quot;provider.defaultSerializeValue(instance.%s, generator);&quot;,</span>
-<span class="fc" id="L398">                                            field.member());</span>
-                            break;
-                    }
-<span class="fc" id="L401">                }</span>
+<span class="fc" id="L344">                    writer.formatln(&quot;provider.defaultSerializeValue(instance.%s, generator);&quot;,</span>
+<span class="fc" id="L345">                                    field.member());</span>
+<span class="fc" id="L346">                }</span>
 
-<span class="pc bpc" id="L403" title="1 of 2 branches missed.">                while (ifStack-- &gt; 0) {</span>
-<span class="nc" id="L404">                    writer.end()</span>
-<span class="nc" id="L405">                          .appendln('}');</span>
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">                while (ifStack-- &gt; 0) {</span>
+<span class="nc" id="L349">                    writer.end()</span>
+<span class="nc" id="L350">                          .appendln('}');</span>
                 }
 
-<span class="fc" id="L408">                writer.formatln(&quot;generator.writeEndArray();&quot;);</span>
+<span class="fc" id="L353">                writer.formatln(&quot;generator.writeEndArray();&quot;);</span>
 
-<span class="fc" id="L410">                writer.end()</span>
-<span class="fc" id="L411">                      .appendln(&quot;} else {&quot;)</span>
-<span class="fc" id="L412">                      .begin();</span>
+<span class="fc" id="L355">                writer.end()</span>
+<span class="fc" id="L356">                      .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L357">                      .begin();</span>
             }
 
-<span class="fc" id="L415">            writer.formatln(&quot;generator.writeStartObject();&quot;);</span>
+<span class="fc" id="L360">            writer.formatln(&quot;generator.writeStartObject();&quot;);</span>
 
-<span class="fc bfc" id="L417" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
-<span class="fc bfc" id="L418" title="All 4 branches covered.">                if (!(field.alwaysPresent() || field.isRequired())) {</span>
-<span class="fc" id="L419">                    writer.formatln(&quot;if (instance.%s != null) {&quot;, field.member())</span>
-<span class="fc" id="L420">                          .begin();</span>
+<span class="fc bfc" id="L362" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc bfc" id="L363" title="All 4 branches covered.">                if (!(field.alwaysPresent() || field.isRequired())) {</span>
+<span class="fc" id="L364">                    writer.formatln(&quot;if (instance.%s != null) {&quot;, field.member())</span>
+<span class="fc" id="L365">                          .begin();</span>
                 }
 
-<span class="fc" id="L423">                appendWriteValue(field);</span>
+<span class="fc" id="L368">                appendWriteValue(field);</span>
 
-<span class="fc bfc" id="L425" title="All 4 branches covered.">                if (!(field.alwaysPresent() || field.isRequired())) {</span>
-<span class="fc" id="L426">                    writer.end()</span>
-<span class="fc" id="L427">                          .appendln('}');</span>
+<span class="fc bfc" id="L370" title="All 4 branches covered.">                if (!(field.alwaysPresent() || field.isRequired())) {</span>
+<span class="fc" id="L371">                    writer.end()</span>
+<span class="fc" id="L372">                          .appendln('}');</span>
                 }
-<span class="fc" id="L429">            }</span>
+<span class="fc" id="L374">            }</span>
 
-<span class="fc" id="L431">            writer.appendln(&quot;generator.writeEndObject();&quot;);</span>
+<span class="fc" id="L376">            writer.appendln(&quot;generator.writeEndObject();&quot;);</span>
 
-<span class="fc bfc" id="L433" title="All 2 branches covered.">            if (message.jsonCompactible()) {</span>
-<span class="fc" id="L434">                writer.end()</span>
-<span class="fc" id="L435">                      .appendln('}');</span>
+<span class="fc bfc" id="L378" title="All 2 branches covered.">            if (message.jsonCompactible()) {</span>
+<span class="fc" id="L379">                writer.end()</span>
+<span class="fc" id="L380">                      .appendln('}');</span>
             }
         }
 
-<span class="fc" id="L439">        writer.end()</span>
-<span class="fc" id="L440">              .formatln(&quot;}&quot;)  // end serialize()</span>
-<span class="fc" id="L441">              .end()</span>
-<span class="fc" id="L442">              .formatln(&quot;}&quot;)  // end _Serializer</span>
-<span class="fc" id="L443">              .newline();</span>
-<span class="fc" id="L444">    }</span>
+<span class="fc" id="L384">        writer.end()</span>
+<span class="fc" id="L385">              .formatln(&quot;}&quot;)  // end serialize()</span>
+<span class="fc" id="L386">              .end()</span>
+<span class="fc" id="L387">              .formatln(&quot;}&quot;)  // end _Serializer</span>
+<span class="fc" id="L388">              .newline();</span>
+<span class="fc" id="L389">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

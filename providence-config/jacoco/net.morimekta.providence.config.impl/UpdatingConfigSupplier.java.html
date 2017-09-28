@@ -35,44 +35,46 @@ public abstract class UpdatingConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F
 
     /**
      * Initialize supplier with empty config.
+     *
+     * @param clock The clock to use in timing config loads.
      */
-<span class="fc" id="L39">    protected UpdatingConfigSupplier(Clock clock) {</span>
-<span class="fc" id="L40">        this.instance = new AtomicReference&lt;&gt;();</span>
-<span class="fc" id="L41">        this.listeners = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L42">        this.clock = clock;</span>
-<span class="fc" id="L43">        this.lastUpdateTimestamp = new AtomicLong(0L);</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L41">    protected UpdatingConfigSupplier(Clock clock) {</span>
+<span class="fc" id="L42">        this.instance = new AtomicReference&lt;&gt;();</span>
+<span class="fc" id="L43">        this.listeners = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L44">        this.clock = clock;</span>
+<span class="fc" id="L45">        this.lastUpdateTimestamp = new AtomicLong(0L);</span>
+<span class="fc" id="L46">    }</span>
 
     @Nonnull
     @Override
     public final M get() {
-<span class="fc" id="L49">        synchronized (this) {</span>
-<span class="fc" id="L50">            M config = instance.get();</span>
-<span class="pc bpc" id="L51" title="1 of 2 branches missed.">            if (config == null) {</span>
-<span class="nc" id="L52">                throw new IllegalStateException(&quot;No config instance&quot;);</span>
+<span class="fc" id="L51">        synchronized (this) {</span>
+<span class="fc" id="L52">            M config = instance.get();</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">            if (config == null) {</span>
+<span class="nc" id="L54">                throw new IllegalStateException(&quot;No config instance&quot;);</span>
             }
-<span class="fc" id="L54">            return config;</span>
-<span class="nc" id="L55">        }</span>
+<span class="fc" id="L56">            return config;</span>
+<span class="nc" id="L57">        }</span>
     }
 
     @Override
     public void addListener(ConfigListener&lt;M, F&gt; listener) {
-<span class="fc" id="L60">        synchronized (this) {</span>
-<span class="pc bpc" id="L61" title="2 of 4 branches missed.">            listeners.removeIf(ref -&gt; ref.get() == listener || ref.get() == null);</span>
-<span class="fc" id="L62">            listeners.add(new WeakReference&lt;&gt;(listener));</span>
-<span class="pc" id="L63">        }</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L62">        synchronized (this) {</span>
+<span class="pc bpc" id="L63" title="2 of 4 branches missed.">            listeners.removeIf(ref -&gt; ref.get() == listener || ref.get() == null);</span>
+<span class="fc" id="L64">            listeners.add(new WeakReference&lt;&gt;(listener));</span>
+<span class="pc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
 
     @Override
     public void removeListener(ConfigListener&lt;M,F&gt; listener) {
-<span class="nc" id="L68">        synchronized (this) {</span>
-<span class="nc bnc" id="L69" title="All 4 branches missed.">            listeners.removeIf(ref -&gt; ref.get() == null || ref.get() == listener);</span>
-<span class="nc" id="L70">        }</span>
-<span class="nc" id="L71">    }</span>
+<span class="nc" id="L70">        synchronized (this) {</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">            listeners.removeIf(ref -&gt; ref.get() == null || ref.get() == listener);</span>
+<span class="nc" id="L72">        }</span>
+<span class="nc" id="L73">    }</span>
 
     @Override
     public long configTimestamp() {
-<span class="fc" id="L75">        return lastUpdateTimestamp.get();</span>
+<span class="fc" id="L77">        return lastUpdateTimestamp.get();</span>
     }
 
     /**
@@ -84,22 +86,22 @@ public abstract class UpdatingConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F
      */
     protected final void set(M config) {
         LinkedList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; iterateOver;
-<span class="fc" id="L87">        synchronized (this) {</span>
-<span class="fc" id="L88">            instance.set(config);</span>
-<span class="fc" id="L89">            lastUpdateTimestamp.set(clock.millis());</span>
-<span class="fc" id="L90">            listeners.removeIf(Objects::isNull);</span>
-<span class="fc" id="L91">            iterateOver = new LinkedList&lt;&gt;(listeners);</span>
-<span class="pc" id="L92">        }</span>
-<span class="fc" id="L93">        iterateOver.forEach(ref -&gt; {</span>
-<span class="fc" id="L94">            ConfigListener&lt;M,F&gt; listener = ref.get();</span>
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            if (listener != null) {</span>
+<span class="fc" id="L89">        synchronized (this) {</span>
+<span class="fc" id="L90">            instance.set(config);</span>
+<span class="fc" id="L91">            lastUpdateTimestamp.set(clock.millis());</span>
+<span class="fc" id="L92">            listeners.removeIf(Objects::isNull);</span>
+<span class="fc" id="L93">            iterateOver = new LinkedList&lt;&gt;(listeners);</span>
+<span class="pc" id="L94">        }</span>
+<span class="fc" id="L95">        iterateOver.forEach(ref -&gt; {</span>
+<span class="fc" id="L96">            ConfigListener&lt;M,F&gt; listener = ref.get();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">            if (listener != null) {</span>
                 try {
-<span class="fc" id="L97">                    listener.onConfigChange(config);</span>
-<span class="nc" id="L98">                } catch (Exception ignore) {</span>
+<span class="fc" id="L99">                    listener.onConfigChange(config);</span>
+<span class="nc" id="L100">                } catch (Exception ignore) {</span>
                     // Ignored... TODO: At least log?
-<span class="fc" id="L100">                }</span>
+<span class="fc" id="L102">                }</span>
             }
-<span class="fc" id="L102">        });</span>
-<span class="fc" id="L103">    }</span>
+<span class="fc" id="L104">        });</span>
+<span class="fc" id="L105">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

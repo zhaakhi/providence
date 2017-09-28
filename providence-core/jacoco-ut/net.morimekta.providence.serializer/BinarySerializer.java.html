@@ -176,43 +176,52 @@ public class BinarySerializer extends Serializer {
                 }
 
 <span class="fc bfc" id="L178" title="All 2 branches covered.">                if (methodNameLen &gt; MAX_METHOD_NAME_LEN) {</span>
-<span class="fc" id="L179">                    throw new SerializerException(&quot;Exceptionally long method name of %s bytes&quot;, methodNameLen)</span>
-<span class="fc" id="L180">                            .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR);</span>
-                }
-<span class="fc" id="L182">                methodName = new String(in.expectBytes(methodNameLen), UTF_8);</span>
-<span class="fc" id="L183">                typeKey = in.expectByte();</span>
-            }
-<span class="fc" id="L185">            sequence = in.expectInt();</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">                    if (methodNameLen &gt;&gt;&gt; 24 == '&lt;') {</span>
+<span class="nc" id="L180">                        throw new SerializerException(&quot;Received HTML in service call&quot;)</span>
+<span class="nc" id="L181">                                .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR);</span>
+                    }
+<span class="pc bpc" id="L183" title="2 of 4 branches missed.">                    if (methodNameLen &gt;&gt;&gt; 24 == '{' || methodNameLen &gt;&gt;&gt; 24 == '[') {</span>
+<span class="nc" id="L184">                        throw new SerializerException(&quot;Received JSON in service call&quot;)</span>
+<span class="nc" id="L185">                                .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR);</span>
+                    }
 
-<span class="fc" id="L187">            type = PServiceCallType.findById(typeKey);</span>
-<span class="fc" id="L188">            PServiceMethod method = service.getMethod(methodName);</span>
-<span class="fc bfc" id="L189" title="All 2 branches covered.">            if (type == null) {</span>
-<span class="fc" id="L190">                throw new SerializerException(&quot;Invalid call type &quot; + typeKey)</span>
-<span class="fc" id="L191">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
-<span class="fc bfc" id="L192" title="All 2 branches covered.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
-<span class="fc" id="L193">                PApplicationException ex = readMessage(in, PApplicationException.kDescriptor, strict);</span>
-<span class="fc" id="L194">                return (PServiceCall&lt;Message, Field&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
-<span class="fc bfc" id="L195" title="All 2 branches covered.">            } else if (method == null) {</span>
-<span class="fc" id="L196">                throw new SerializerException(&quot;No such method &quot; + methodName + &quot; on &quot; + service.getQualifiedName())</span>
-<span class="fc" id="L197">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
+<span class="fc" id="L188">                    throw new SerializerException(&quot;Exceptionally long method name of %s bytes&quot;, methodNameLen)</span>
+<span class="fc" id="L189">                            .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR);</span>
+                }
+<span class="fc" id="L191">                methodName = new String(in.expectBytes(methodNameLen), UTF_8);</span>
+<span class="fc" id="L192">                typeKey = in.expectByte();</span>
+            }
+<span class="fc" id="L194">            sequence = in.expectInt();</span>
+
+<span class="fc" id="L196">            type = PServiceCallType.findById(typeKey);</span>
+<span class="fc" id="L197">            PServiceMethod method = service.getMethod(methodName);</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">            if (type == null) {</span>
+<span class="fc" id="L199">                throw new SerializerException(&quot;Invalid call type &quot; + typeKey)</span>
+<span class="fc" id="L200">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
+<span class="fc" id="L202">                PApplicationException ex = readMessage(in, PApplicationException.kDescriptor, strict);</span>
+<span class="fc" id="L203">                return (PServiceCall&lt;Message, Field&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">            } else if (method == null) {</span>
+<span class="fc" id="L205">                throw new SerializerException(&quot;No such method &quot; + methodName + &quot; on &quot; + service.getQualifiedName())</span>
+<span class="fc" id="L206">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
 
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc bfc" id="L201" title="All 2 branches covered.">            PMessageDescriptor&lt;Message, Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">            PMessageDescriptor&lt;Message, Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
 
-<span class="fc" id="L203">            Message message = readMessage(in, descriptor, strict);</span>
+<span class="fc" id="L212">            Message message = readMessage(in, descriptor, strict);</span>
 
-<span class="fc" id="L205">            return new PServiceCall&lt;&gt;(methodName, type, sequence, message);</span>
-<span class="fc" id="L206">        } catch (SerializerException se) {</span>
-<span class="fc" id="L207">            throw new SerializerException(se)</span>
-<span class="fc" id="L208">                    .setMethodName(methodName)</span>
-<span class="fc" id="L209">                    .setCallType(type)</span>
-<span class="fc" id="L210">                    .setSequenceNo(sequence);</span>
-<span class="fc" id="L211">        } catch (IOException e) {</span>
-<span class="fc" id="L212">            throw new SerializerException(e, e.getMessage())</span>
-<span class="fc" id="L213">                    .setMethodName(methodName)</span>
-<span class="fc" id="L214">                    .setCallType(type)</span>
-<span class="fc" id="L215">                    .setSequenceNo(sequence);</span>
+<span class="fc" id="L214">            return new PServiceCall&lt;&gt;(methodName, type, sequence, message);</span>
+<span class="fc" id="L215">        } catch (SerializerException se) {</span>
+<span class="fc" id="L216">            throw new SerializerException(se)</span>
+<span class="fc" id="L217">                    .setMethodName(methodName)</span>
+<span class="fc" id="L218">                    .setCallType(type)</span>
+<span class="fc" id="L219">                    .setSequenceNo(sequence);</span>
+<span class="fc" id="L220">        } catch (IOException e) {</span>
+<span class="fc" id="L221">            throw new SerializerException(e, e.getMessage())</span>
+<span class="fc" id="L222">                    .setMethodName(methodName)</span>
+<span class="fc" id="L223">                    .setCallType(type)</span>
+<span class="fc" id="L224">                    .setSequenceNo(sequence);</span>
         }
     }
 }
