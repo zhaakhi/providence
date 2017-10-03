@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ServiceCallInstrumentation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.util</a> &gt; <span class="el_source">ServiceCallInstrumentation.java</span></div><h1>ServiceCallInstrumentation.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.util;
+
+import net.morimekta.providence.PServiceCall;
+
+import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Interface handling the instrumentation of service calls.
+ */
+@FunctionalInterface
+public interface ServiceCallInstrumentation {
+    /**
+     * After each service call this method is called with the duration, call and
+     * response objects. Exceptions from the call is ignored, and will not affect
+     * the response in any way.
+     * &lt;p&gt;
+     * Note that the timing may not include the whole stack time since receiving
+     * the first packet, that is dependent on the specific implementation and the
+     * limitations there. E.g. it does not include the time receiving the first
+     * HTTP packet with the headers, or waiting for free worker threads when using
+     * &lt;code&gt;ProvidenceServlet&lt;/code&gt;.
+     *
+     * @param duration The duration of handling the service call in milliseconds,
+     *                 including receiving and sending it.
+     * @param call     The call triggered.
+     * @param reply    The reply returned.
+     */
+    void onComplete(double duration,
+                    @Nullable PServiceCall call,
+                    @Nullable PServiceCall reply);
+
+    /**
+     * Called when the service call failed in the transport layer itself with something
+     * not related to the actual service call. E.g. in server side when the read
+     * message failed, write back failed etc. {@link #onComplete(double, PServiceCall, PServiceCall)}
+     * will NOT be called after the exception call, but will be chained if this method
+     * has no override.
+     *
+     * @param e        The exception thrown.
+     * @param duration The duration of handling the service call in milliseconds,
+     *                 including receiving and sending it.
+     * @param call     The service call.
+     * @param reply    The service reply.
+     */
+    default void onTransportException(Exception e,
+                                      double duration,
+                                      @Nullable PServiceCall call,
+                                      @Nullable PServiceCall reply) {
+<span class="nc" id="L50">        onComplete(duration, call, reply);</span>
+<span class="nc" id="L51">    }</span>
+
+    /**
+     * Handy constant for calculating MS duration.
+     */
+<span class="nc" id="L56">    long NS_IN_MILLIS = TimeUnit.MILLISECONDS.toNanos(1);</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -56,7 +56,7 @@ public class ProgramRegistry implements TypeRegistry {
      * @return The contained document, or null if not found.
      */
     public boolean containsProgramPath(String path) {
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        return registryForPath(path).getProgram() != null;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        return registryForPath(path).getProgram() != null;</span>
     }
 
     public void putProgram(String path, CProgram program) {
@@ -67,53 +67,63 @@ public class ProgramRegistry implements TypeRegistry {
     @Override
     public &lt;T extends PDeclaredDescriptor&lt;T&gt;&gt; T getDeclaredType(@Nonnull String typeName,
                                                                 @Nonnull String programContext) {
-<span class="nc" id="L70">        return handle(typeName, programContext,</span>
-<span class="nc" id="L71">                      p -&gt; p.getDeclaredType(typeName, programContext));</span>
+<span class="fc" id="L70">        return handle(typeName, programContext, false,</span>
+<span class="fc" id="L71">                      p -&gt; p.getDeclaredType(typeName, programContext));</span>
     }
 
     @Nonnull
     @Override
     public PService getService(String serviceName, String programContext) {
-<span class="nc" id="L77">        return handle(serviceName, programContext,</span>
-<span class="nc" id="L78">                      r -&gt; r.getService(serviceName, programContext));</span>
+<span class="fc" id="L77">        return handle(serviceName, programContext,true,</span>
+<span class="fc" id="L78">                      r -&gt; r.getService(serviceName, programContext));</span>
     }
 
+    @Nonnull
     @Override
     public PDescriptorProvider getProvider(String typeName, String programContext, Map&lt;String, String&gt; annotations) {
-<span class="nc" id="L83">        return handle(typeName, programContext,</span>
-<span class="nc" id="L84">                      r -&gt; r.getProvider(typeName, programContext, annotations));</span>
+<span class="fc" id="L84">        return handle(typeName, programContext, false,</span>
+<span class="fc" id="L85">                      r -&gt; r.getProvider(typeName, programContext, annotations));</span>
     }
 
+    @Nonnull
     @Override
     public PServiceProvider getServiceProvider(String serviceName, String programContext) {
-<span class="nc" id="L89">        return handle(serviceName, programContext,</span>
-<span class="nc" id="L90">                      r -&gt; r.getServiceProvider(serviceName, programContext));</span>
+<span class="fc" id="L91">        return handle(serviceName, programContext, true,</span>
+<span class="fc" id="L92">                      r -&gt; r.getServiceProvider(serviceName, programContext));</span>
     }
 
-    private &lt;T&gt; T handle(String typeName, String programContext, Function&lt;ProgramTypeRegistry, T&gt; f) {
-<span class="nc" id="L94">        Exception e = null;</span>
-<span class="nc" id="L95">        String context = getProgramContext(typeName, programContext);</span>
+    private &lt;T&gt; T handle(String typeName, String programContext, boolean isService, Function&lt;ProgramTypeRegistry, T&gt; f) {
+<span class="fc" id="L96">        Exception e = null;</span>
+<span class="fc" id="L97">        String context = getProgramContext(typeName, programContext);</span>
 
-<span class="nc bnc" id="L97" title="All 2 branches missed.">        for (ProgramTypeRegistry registry : registryMap.values()) {</span>
-<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (registry.getLocalProgramContext().equals(context)) {</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (ProgramTypeRegistry registry : registryMap.values()) {</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            if (registry.getLocalProgramContext().equals(context)) {</span>
                 try {
-<span class="nc" id="L100">                    return f.apply(registry);</span>
-<span class="nc" id="L101">                } catch (Exception ignored) {</span>
-<span class="nc" id="L102">                    e = ignored;</span>
+<span class="fc" id="L102">                    return f.apply(registry);</span>
+<span class="fc" id="L103">                } catch (Exception ignored) {</span>
+<span class="fc" id="L104">                    e = ignored;</span>
                 }
             }
-<span class="nc" id="L105">        }</span>
-<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (e != null) {</span>
-<span class="nc" id="L107">            throw new IllegalArgumentException(e.getMessage(), e);</span>
+<span class="fc" id="L107">        }</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (e != null) {</span>
+<span class="fc" id="L109">            throw new IllegalArgumentException(e.getMessage(), e);</span>
         }
-<span class="nc" id="L109">        throw new IllegalArgumentException(&quot;No program \&quot;&quot; + context + &quot;\&quot; found for type \&quot;&quot; + typeName + &quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (isService) {</span>
+<span class="fc" id="L112">            throw new IllegalArgumentException(&quot;No such program \&quot;&quot; + context + &quot;\&quot; known for service \&quot;&quot; + typeName + &quot;\&quot;&quot;);</span>
+        }
+<span class="fc" id="L114">        throw new IllegalArgumentException(&quot;No such program \&quot;&quot; + context + &quot;\&quot; known for type \&quot;&quot; + typeName + &quot;\&quot;&quot;);</span>
     }
 
     private String getProgramContext(String typeName, String programContext) {
-<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (typeName.contains(&quot;.&quot;)) {</span>
-<span class="nc" id="L114">            return typeName.substring(0, typeName.indexOf(&quot;.&quot;));</span>
+<span class="fc" id="L118">        String[] tmp = typeName.split(&quot;[&lt;]&quot;, 2);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (tmp.length &gt; 1) {</span>
+            // if this is a list, set or map.
+<span class="fc" id="L121">            return programContext;</span>
         }
-<span class="nc" id="L116">        return programContext;</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (typeName.contains(&quot;.&quot;)) {</span>
+<span class="fc" id="L124">            return typeName.substring(0, typeName.indexOf(&quot;.&quot;));</span>
+        }
+<span class="fc" id="L126">        return programContext;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

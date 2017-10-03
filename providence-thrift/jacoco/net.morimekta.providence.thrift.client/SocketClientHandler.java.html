@@ -29,6 +29,7 @@ import net.morimekta.providence.PServiceCallType;
 import net.morimekta.providence.descriptor.PField;
 import net.morimekta.providence.descriptor.PService;
 import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.util.ServiceCallInstrumentation;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -38,35 +39,58 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
 
+import static net.morimekta.providence.util.ServiceCallInstrumentation.NS_IN_MILLIS;
+
 /**
  * Client handler for thrift RPC using the TSimpleServer that does &lt;b&gt;not&lt;/b&gt;
- * use the TFramedTransport message wrapper.
+ * use the TFramedTransport message wrapper. It will create a local socket
+ * and connect for each call.
  */
 public class SocketClientHandler implements PServiceCallHandler {
-    private final Serializer    serializer;
-    private final SocketAddress address;
-    private final int connect_timeout;
-    private final int read_timeout;
+    private final Serializer                 serializer;
+    private final SocketAddress              address;
+    private final int                        connect_timeout;
+    private final int                        read_timeout;
+    private final ServiceCallInstrumentation instrumentation;
 
-    public SocketClientHandler(Serializer serializer, SocketAddress address) {
-<span class="fc" id="L52">        this(serializer, address, 10000, 10000);</span>
-<span class="fc" id="L53">    }</span>
+    public SocketClientHandler(Serializer serializer,
+                               SocketAddress address) {
+<span class="fc" id="L58">        this(serializer, address, 10000, 10000);</span>
+<span class="fc" id="L59">    }</span>
 
-<span class="fc" id="L55">    public SocketClientHandler(Serializer serializer, SocketAddress address, int connect_timeout, int read_timeout) {</span>
-<span class="fc" id="L56">        this.serializer = serializer;</span>
-<span class="fc" id="L57">        this.address = address;</span>
-<span class="fc" id="L58">        this.connect_timeout = connect_timeout;</span>
-<span class="fc" id="L59">        this.read_timeout = read_timeout;</span>
-<span class="fc" id="L60">    }</span>
+    public SocketClientHandler(Serializer serializer,
+                               SocketAddress address,
+                               ServiceCallInstrumentation instrumentation) {
+<span class="nc" id="L64">        this(serializer, address, instrumentation, 10000, 10000);</span>
+<span class="nc" id="L65">    }</span>
+
+    public SocketClientHandler(Serializer serializer,
+                               SocketAddress address,
+                               int connect_timeout,
+                               int read_timeout) {
+<span class="fc" id="L71">        this(serializer, address, (d, c, r) -&gt; {}, connect_timeout, read_timeout);</span>
+<span class="fc" id="L72">    }</span>
+
+    public SocketClientHandler(Serializer serializer,
+                               SocketAddress address,
+                               ServiceCallInstrumentation instrumentation,
+                               int connect_timeout,
+<span class="fc" id="L78">                               int read_timeout) {</span>
+<span class="fc" id="L79">        this.serializer = serializer;</span>
+<span class="fc" id="L80">        this.address = address;</span>
+<span class="fc" id="L81">        this.instrumentation = instrumentation;</span>
+<span class="fc" id="L82">        this.connect_timeout = connect_timeout;</span>
+<span class="fc" id="L83">        this.read_timeout = read_timeout;</span>
+<span class="fc" id="L84">    }</span>
 
     private synchronized Socket connect() throws IOException {
-<span class="fc" id="L63">        Socket socket = new Socket();</span>
-<span class="fc" id="L64">        socket.setSoLinger(false, 0);</span>
-<span class="fc" id="L65">        socket.setTcpNoDelay(true);</span>
-<span class="fc" id="L66">        socket.setKeepAlive(true);</span>
-<span class="fc" id="L67">        socket.setSoTimeout(read_timeout);</span>
-<span class="fc" id="L68">        socket.connect(address, connect_timeout);</span>
-<span class="fc" id="L69">        return socket;</span>
+<span class="fc" id="L87">        Socket socket = new Socket();</span>
+<span class="fc" id="L88">        socket.setSoLinger(false, 0);</span>
+<span class="fc" id="L89">        socket.setTcpNoDelay(true);</span>
+<span class="fc" id="L90">        socket.setKeepAlive(true);</span>
+<span class="fc" id="L91">        socket.setSoTimeout(read_timeout);</span>
+<span class="fc" id="L92">        socket.connect(address, connect_timeout);</span>
+<span class="fc" id="L93">        return socket;</span>
     }
 
     @Override
@@ -76,32 +100,51 @@ public class SocketClientHandler implements PServiceCallHandler {
             ResponseField extends PField&gt;
     PServiceCall&lt;Response, ResponseField&gt; handleCall(PServiceCall&lt;Request, RequestField&gt; call, PService service)
             throws IOException {
-<span class="pc bpc" id="L79" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
-<span class="nc" id="L80">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
+<span class="pc bpc" id="L103" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
+<span class="nc" id="L104">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
                                             PApplicationExceptionType.INVALID_MESSAGE_TYPE);
         }
 
-<span class="pc" id="L84">        try (Socket socket = connect()) {</span>
-<span class="fc" id="L85">            OutputStream out = new BufferedOutputStream(socket.getOutputStream());</span>
-<span class="fc" id="L86">            serializer.serialize(out, call);</span>
-<span class="fc" id="L87">            out.flush();</span>
+<span class="fc" id="L108">        long startTime = System.nanoTime();</span>
 
-<span class="fc" id="L89">            PServiceCall&lt;Response, ResponseField&gt; reply = null;</span>
-<span class="pc bpc" id="L90" title="1 of 2 branches missed.">            if (call.getType() == PServiceCallType.CALL) {</span>
-<span class="fc" id="L91">                InputStream in = new BufferedInputStream(socket.getInputStream());</span>
-<span class="fc" id="L92">                reply = serializer.deserialize(in, service);</span>
+<span class="fc" id="L110">        PServiceCall&lt;Response, ResponseField&gt; reply = null;</span>
+<span class="pc" id="L111">        try (Socket socket = connect()) {</span>
+<span class="fc" id="L112">            OutputStream out = new BufferedOutputStream(socket.getOutputStream());</span>
+<span class="fc" id="L113">            serializer.serialize(out, call);</span>
+<span class="fc" id="L114">            out.flush();</span>
 
-<span class="pc bpc" id="L94" title="2 of 4 branches missed.">                if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
-<span class="nc" id="L95">                    throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (call.getType() == PServiceCallType.CALL) {</span>
+<span class="fc" id="L117">                InputStream in = new BufferedInputStream(socket.getInputStream());</span>
+<span class="fc" id="L118">                reply = serializer.deserialize(in, service);</span>
+
+<span class="pc bpc" id="L120" title="2 of 4 branches missed.">                if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
+<span class="nc" id="L121">                    throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
                                                     PApplicationExceptionType.INVALID_MESSAGE_TYPE);
                 }
-<span class="pc bpc" id="L98" title="1 of 2 branches missed.">                if (reply.getSequence() != call.getSequence()) {</span>
-<span class="nc" id="L99">                    throw new PApplicationException(&quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                if (reply.getSequence() != call.getSequence()) {</span>
+<span class="nc" id="L125">                    throw new PApplicationException(&quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
                                                     PApplicationExceptionType.BAD_SEQUENCE_ID);
                 }
             }
-<span class="fc" id="L103">            return reply;</span>
-<span class="pc bpc" id="L104" title="6 of 8 branches missed.">        }</span>
+
+<span class="fc" id="L130">            long endTime = System.nanoTime();</span>
+<span class="fc" id="L131">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+            try {
+<span class="fc" id="L133">                instrumentation.onComplete(duration, call, reply);</span>
+<span class="pc" id="L134">            } catch (Exception ignore) {}</span>
+
+<span class="fc" id="L136">            return reply;</span>
+<span class="pc bpc" id="L137" title="6 of 8 branches missed.">        } catch (Exception e) {</span>
+<span class="fc" id="L138">            long endTime = System.nanoTime();</span>
+<span class="fc" id="L139">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+            try {
+<span class="fc" id="L141">                instrumentation.onTransportException(e, duration, call, reply);</span>
+<span class="nc" id="L142">            } catch (Exception ie) {</span>
+<span class="nc" id="L143">                e.addSuppressed(ie);</span>
+<span class="fc" id="L144">            }</span>
+
+<span class="fc" id="L146">            throw e;</span>
+        }
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

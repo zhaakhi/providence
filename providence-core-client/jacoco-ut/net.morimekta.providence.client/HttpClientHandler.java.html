@@ -28,14 +28,17 @@ import net.morimekta.providence.PServiceCallHandler;
 import net.morimekta.providence.PServiceCallType;
 import net.morimekta.providence.descriptor.PField;
 import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.serializer.DefaultSerializerProvider;
 import net.morimekta.providence.serializer.Serializer;
 import net.morimekta.providence.serializer.SerializerProvider;
+import net.morimekta.providence.util.ServiceCallInstrumentation;
 
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.common.net.MediaType;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.HttpHostConnectException;
@@ -46,21 +49,69 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.util.function.Supplier;
 
+import static net.morimekta.providence.util.ServiceCallInstrumentation.NS_IN_MILLIS;
+
 /**
  * HTTP client handler using the google HTTP client interface.
  */
 public class HttpClientHandler implements PServiceCallHandler {
-    private final HttpRequestFactory   factory;
-    private final SerializerProvider   serializerProvider;
-    private final Serializer           requestSerializer;
-    private final Supplier&lt;GenericUrl&gt; urlSupplier;
+    private final HttpRequestFactory factory;
+    private final SerializerProvider         serializerProvider;
+    private final Serializer                 requestSerializer;
+    private final Supplier&lt;GenericUrl&gt;       urlSupplier;
+    private final ServiceCallInstrumentation instrumentation;
 
-<span class="fc" id="L58">    public HttpClientHandler(Supplier&lt;GenericUrl&gt; urlSupplier, HttpRequestFactory factory, SerializerProvider serializerProvider) {</span>
-<span class="fc" id="L59">        this.urlSupplier = urlSupplier;</span>
-<span class="fc" id="L60">        this.factory = factory;</span>
-<span class="fc" id="L61">        this.serializerProvider = serializerProvider;</span>
-<span class="fc" id="L62">        this.requestSerializer = serializerProvider.getDefault();</span>
-<span class="fc" id="L63">    }</span>
+    /**
+     * Create a HTTP client with default transport, serialization and no instrumentation.
+     *
+     * @param urlSupplier The HTTP url supplier.
+     */
+    public HttpClientHandler(@Nonnull Supplier&lt;GenericUrl&gt; urlSupplier) {
+<span class="nc" id="L70">        this(urlSupplier, new NetHttpTransport().createRequestFactory(), new DefaultSerializerProvider());</span>
+<span class="nc" id="L71">    }</span>
+
+    /**
+     * Create a HTTP client with default serialization and no instrumentation.
+     *
+     * @param urlSupplier The HTTP url supplier.
+     * @param factory The HTTP request factory.
+     */
+    public HttpClientHandler(@Nonnull Supplier&lt;GenericUrl&gt; urlSupplier,
+                             @Nonnull HttpRequestFactory factory) {
+<span class="nc" id="L81">        this(urlSupplier, factory, new DefaultSerializerProvider());</span>
+<span class="nc" id="L82">    }</span>
+
+    /**
+     * Create a HTTP client with no instrumentation.
+     *
+     * @param urlSupplier The HTTP url supplier.
+     * @param factory The HTTP request factory.
+     * @param serializerProvider The serializer provider.
+     */
+    public HttpClientHandler(@Nonnull Supplier&lt;GenericUrl&gt; urlSupplier,
+                             @Nonnull HttpRequestFactory factory,
+                             @Nonnull SerializerProvider serializerProvider) {
+<span class="fc" id="L94">        this(urlSupplier, factory, serializerProvider, (d, c, r) -&gt; {});</span>
+<span class="fc" id="L95">    }</span>
+
+    /**
+     * Create a HTTP client.
+     *
+     * @param urlSupplier The HTTP url supplier.
+     * @param factory The HTTP request factory.
+     * @param serializerProvider The serializer provider.
+     * @param instrumentation The service call instrumentation.
+     */
+    public HttpClientHandler(@Nonnull Supplier&lt;GenericUrl&gt; urlSupplier,
+                             @Nonnull HttpRequestFactory factory,
+                             @Nonnull SerializerProvider serializerProvider,
+<span class="fc" id="L108">                             @Nonnull ServiceCallInstrumentation instrumentation) {</span>
+<span class="fc" id="L109">        this.urlSupplier = urlSupplier;</span>
+<span class="fc" id="L110">        this.factory = factory;</span>
+<span class="fc" id="L111">        this.serializerProvider = serializerProvider;</span>
+<span class="fc" id="L112">        this.requestSerializer = serializerProvider.getDefault();</span>
+<span class="fc" id="L113">        this.instrumentation = instrumentation;</span>
+<span class="fc" id="L114">    }</span>
 
     @Override
     public &lt;Request extends PMessage&lt;Request, RequestField&gt;,
@@ -69,64 +120,85 @@ public class HttpClientHandler implements PServiceCallHandler {
             ResponseField extends PField&gt;
     PServiceCall&lt;Response, ResponseField&gt; handleCall(PServiceCall&lt;Request, RequestField&gt; call,
                                                      PService service) throws IOException {
-<span class="pc bpc" id="L72" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
-<span class="nc" id="L73">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
+<span class="pc bpc" id="L123" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
+<span class="nc" id="L124">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
                                             PApplicationExceptionType.INVALID_MESSAGE_TYPE);
         }
 
-<span class="fc" id="L77">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="fc" id="L78">        requestSerializer.serialize(baos, call);</span>
-
-<span class="fc" id="L80">        ByteArrayContent content = new ByteArrayContent(requestSerializer.mediaType(), baos.toByteArray());</span>
-
-        @Nonnull
-<span class="fc" id="L83">        GenericUrl url = urlSupplier.get();</span>
+<span class="fc" id="L128">        long startTime = System.nanoTime();</span>
+<span class="fc" id="L129">        PServiceCall&lt;Response, ResponseField&gt; reply = null;</span>
         try {
-<span class="fc" id="L85">            HttpRequest request = factory.buildPostRequest(url, content);</span>
-<span class="fc" id="L86">            request.getHeaders()</span>
-<span class="fc" id="L87">                   .setAccept(requestSerializer.mediaType());</span>
-<span class="fc" id="L88">            HttpResponse response = request.execute();</span>
+<span class="fc" id="L131">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L132">            requestSerializer.serialize(baos, call);</span>
+
+<span class="fc" id="L134">            ByteArrayContent content = new ByteArrayContent(requestSerializer.mediaType(), baos.toByteArray());</span>
+
+            @Nonnull
+<span class="fc" id="L137">            GenericUrl url = urlSupplier.get();</span>
             try {
-<span class="fc" id="L90">                Serializer responseSerializer = requestSerializer;</span>
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">                if (response.getContentType() != null) {</span>
+<span class="fc" id="L139">                HttpRequest request = factory.buildPostRequest(url, content);</span>
+<span class="fc" id="L140">                request.getHeaders()</span>
+<span class="fc" id="L141">                       .setAccept(requestSerializer.mediaType());</span>
+<span class="fc" id="L142">                HttpResponse response = request.execute();</span>
+                try {
+<span class="fc" id="L144">                    Serializer responseSerializer = requestSerializer;</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                    if (response.getContentType() != null) {</span>
+                        try {
+<span class="fc" id="L147">                            MediaType mediaType = MediaType.parse(response.getContentType());</span>
+<span class="fc" id="L148">                            responseSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
+<span class="fc" id="L149">                                                                                           .toString());</span>
+<span class="nc" id="L150">                        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L151">                            throw new PApplicationException(&quot;Unknown content-type in response: &quot; + response.getContentType(),</span>
+<span class="nc" id="L152">                                                            PApplicationExceptionType.INVALID_PROTOCOL).initCause(e);</span>
+<span class="fc" id="L153">                        }</span>
+                    }
+
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">                    if (call.getType() == PServiceCallType.CALL) {</span>
+                        // non 200 responses should have triggered a HttpResponseException,
+                        // so this is safe.
+<span class="fc" id="L159">                        reply = responseSerializer.deserialize(response.getContent(), service);</span>
+
+<span class="pc bpc" id="L161" title="2 of 4 branches missed.">                        if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
+<span class="nc" id="L162">                            throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
+                                                            PApplicationExceptionType.INVALID_MESSAGE_TYPE);
+                        }
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">                        if (reply.getSequence() != call.getSequence()) {</span>
+<span class="nc" id="L166">                            throw new PApplicationException(</span>
+<span class="nc" id="L167">                                    &quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
+                                    PApplicationExceptionType.BAD_SEQUENCE_ID);
+                        }
+                    }
+
+<span class="fc" id="L172">                    long endTime = System.nanoTime();</span>
+<span class="fc" id="L173">                    double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
                     try {
-<span class="fc" id="L93">                        MediaType mediaType = MediaType.parse(response.getContentType());</span>
-<span class="fc" id="L94">                        responseSerializer = serializerProvider.getSerializer(mediaType.withoutParameters().toString());</span>
-<span class="nc" id="L95">                    } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L96">                        throw new PApplicationException(&quot;Unknown content-type in response: &quot; + response.getContentType(),</span>
-<span class="nc" id="L97">                                                        PApplicationExceptionType.INVALID_PROTOCOL).initCause(e);</span>
-<span class="fc" id="L98">                    }</span>
+<span class="fc" id="L175">                        instrumentation.onComplete(duration, call, reply);</span>
+<span class="nc" id="L176">                    } catch (Exception ignore) {</span>
+<span class="fc" id="L177">                    }</span>
+
+<span class="fc" id="L179">                    return reply;</span>
+                } finally {
+                    // Ignore whatever is left of the response when returning, in
+                    // case we did'nt read the whole response.
+<span class="pc" id="L183">                    response.ignore();</span>
                 }
-
-<span class="fc" id="L101">                PServiceCall&lt;Response, ResponseField&gt; reply = null;</span>
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">                if (call.getType() == PServiceCallType.CALL) {</span>
-                    // non 200 responses should have triggered a HttpResponseException,
-                    // so this is safe.
-<span class="fc" id="L105">                    reply = responseSerializer.deserialize(response.getContent(), service);</span>
-
-<span class="pc bpc" id="L107" title="2 of 4 branches missed.">                    if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
-<span class="nc" id="L108">                        throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
-                                                        PApplicationExceptionType.INVALID_MESSAGE_TYPE);
-                    }
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                    if (reply.getSequence() != call.getSequence()) {</span>
-<span class="nc" id="L112">                        throw new PApplicationException(</span>
-<span class="nc" id="L113">                                &quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
-                                PApplicationExceptionType.BAD_SEQUENCE_ID);
-                    }
-                }
-
-<span class="fc" id="L118">                return reply;</span>
-            } finally {
-                // Ignore whatever is left of the response when returning, in
-                // case we did'nt read the whole response.
-<span class="pc" id="L122">                response.ignore();</span>
+<span class="nc" id="L185">            } catch (HttpHostConnectException e) {</span>
+<span class="nc" id="L186">                throw e;</span>
+<span class="fc" id="L187">            } catch (ConnectException e) {</span>
+                // Normalize connection refused exceptions to HttpHostConnectException.
+                // The native exception is not helpful (for when using NetHttpTransport).
+<span class="fc" id="L190">                throw new HttpHostConnectException(e, new HttpHost(url.getHost(), url.getPort(), url.getScheme()));</span>
             }
-<span class="nc" id="L124">        } catch (HttpHostConnectException e) {</span>
-<span class="nc" id="L125">            throw e;</span>
-<span class="fc" id="L126">        } catch (ConnectException e) {</span>
-            // Normalize connection refused exceptions to HttpHostConnectException.
-            // The native exception is not helpful (for when using NetHttpTransport).
-<span class="fc" id="L129">            throw new HttpHostConnectException(e, new HttpHost(url.getHost(), url.getPort(), url.getScheme()));</span>
+<span class="fc" id="L192">        } catch (Exception e) {</span>
+<span class="fc" id="L193">            long endTime = System.nanoTime();</span>
+<span class="fc" id="L194">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+            try {
+<span class="fc" id="L196">                instrumentation.onTransportException(e, duration, call, reply);</span>
+<span class="nc" id="L197">            } catch (Throwable ie) {</span>
+<span class="nc" id="L198">                e.addSuppressed(ie);</span>
+<span class="fc" id="L199">            }</span>
+
+<span class="fc" id="L201">            throw e;</span>
         }
     }
 }

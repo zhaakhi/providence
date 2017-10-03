@@ -87,21 +87,25 @@ public abstract class UpdatingConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F
     protected final void set(M config) {
         LinkedList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; iterateOver;
 <span class="fc" id="L89">        synchronized (this) {</span>
-<span class="fc" id="L90">            instance.set(config);</span>
-<span class="fc" id="L91">            lastUpdateTimestamp.set(clock.millis());</span>
-<span class="fc" id="L92">            listeners.removeIf(Objects::isNull);</span>
-<span class="fc" id="L93">            iterateOver = new LinkedList&lt;&gt;(listeners);</span>
-<span class="pc" id="L94">        }</span>
-<span class="fc" id="L95">        iterateOver.forEach(ref -&gt; {</span>
-<span class="fc" id="L96">            ConfigListener&lt;M,F&gt; listener = ref.get();</span>
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">            if (listener != null) {</span>
-                try {
-<span class="fc" id="L99">                    listener.onConfigChange(config);</span>
-<span class="nc" id="L100">                } catch (Exception ignore) {</span>
-                    // Ignored... TODO: At least log?
-<span class="fc" id="L102">                }</span>
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">            if (instance.get() != null &amp;&amp; instance.get().equals(config)) {</span>
+<span class="nc" id="L91">                return;</span>
             }
-<span class="fc" id="L104">        });</span>
-<span class="fc" id="L105">    }</span>
+
+<span class="fc" id="L94">            instance.set(config);</span>
+<span class="fc" id="L95">            lastUpdateTimestamp.set(clock.millis());</span>
+<span class="fc" id="L96">            listeners.removeIf(Objects::isNull);</span>
+<span class="fc" id="L97">            iterateOver = new LinkedList&lt;&gt;(listeners);</span>
+<span class="pc" id="L98">        }</span>
+<span class="fc" id="L99">        iterateOver.forEach(ref -&gt; {</span>
+<span class="fc" id="L100">            ConfigListener&lt;M,F&gt; listener = ref.get();</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            if (listener != null) {</span>
+                try {
+<span class="fc" id="L103">                    listener.onConfigChange(config);</span>
+<span class="nc" id="L104">                } catch (Exception ignore) {</span>
+                    // Ignored... TODO: At least log?
+<span class="fc" id="L106">                }</span>
+            }
+<span class="fc" id="L108">        });</span>
+<span class="fc" id="L109">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

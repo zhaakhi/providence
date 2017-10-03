@@ -21,33 +21,41 @@
 package net.morimekta.providence.server;
 
 import net.morimekta.providence.PProcessor;
+import net.morimekta.providence.PServiceCall;
 import net.morimekta.providence.mio.IOMessageReader;
 import net.morimekta.providence.mio.IOMessageWriter;
 import net.morimekta.providence.mio.MessageReader;
 import net.morimekta.providence.mio.MessageWriter;
 import net.morimekta.providence.serializer.Serializer;
 import net.morimekta.providence.serializer.SerializerProvider;
+import net.morimekta.providence.util.ServiceCallInstrumentation;
 
 import com.google.common.net.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static net.morimekta.providence.util.ServiceCallInstrumentation.NS_IN_MILLIS;
 
 /**
  * A javax.servlet implementation for providence. Transfers data like the
  * Thrift's &lt;code&gt;org.apache.thrift.server.TServlet&lt;/code&gt; server.
  */
 public class ProvidenceServlet extends HttpServlet {
-<span class="fc" id="L47">    private final static Logger LOGGER = LoggerFactory.getLogger(ProvidenceServlet.class);</span>
+<span class="fc" id="L54">    private final static Logger LOGGER = LoggerFactory.getLogger(ProvidenceServlet.class);</span>
 
-    private final ProcessorProvider  processorProvider;
-    private final SerializerProvider serializerProvider;
+    private final ProcessorProvider          processorProvider;
+    private final SerializerProvider         serializerProvider;
+    private final ServiceCallInstrumentation instrumentation;
 
     /**
      * Creates a providence servlet that uses the same processor every time.
@@ -55,10 +63,25 @@ public class ProvidenceServlet extends HttpServlet {
      * @param processor The providence service processor.
      * @param serializerProvider The serializer provider.
      */
-    public ProvidenceServlet(PProcessor processor, SerializerProvider serializerProvider) {
+    public ProvidenceServlet(@Nonnull PProcessor processor,
+                             @Nonnull SerializerProvider serializerProvider) {
         // Default is to always use the same processor.
-<span class="fc" id="L60">        this(r -&gt; processor, serializerProvider);</span>
-<span class="fc" id="L61">    }</span>
+<span class="nc" id="L69">        this(r -&gt; processor, serializerProvider);</span>
+<span class="nc" id="L70">    }</span>
+
+    /**
+     * Creates a providence servlet that uses the same processor every time.
+     *
+     * @param processor The providence service processor.
+     * @param serializerProvider The serializer provider.
+     * @param instrumentation Instrumentation instance.
+     */
+    public ProvidenceServlet(@Nonnull PProcessor processor,
+                             @Nonnull SerializerProvider serializerProvider,
+                             @Nonnull ServiceCallInstrumentation instrumentation) {
+        // Default is to always use the same processor.
+<span class="fc" id="L83">        this(r -&gt; processor, serializerProvider, instrumentation);</span>
+<span class="fc" id="L84">    }</span>
 
     /**
      * Creates a providence servlet that uses a per request processor.
@@ -66,67 +89,135 @@ public class ProvidenceServlet extends HttpServlet {
      * @param processorProvider The processor supplier.
      * @param serializerProvider The serializer provider.
      */
-<span class="fc" id="L69">    public ProvidenceServlet(ProcessorProvider processorProvider, SerializerProvider serializerProvider) {</span>
-<span class="fc" id="L70">        this.processorProvider = processorProvider;</span>
-<span class="fc" id="L71">        this.serializerProvider = serializerProvider;</span>
-<span class="fc" id="L72">    }</span>
+    public ProvidenceServlet(@Nonnull ProcessorProvider processorProvider,
+                             @Nonnull SerializerProvider serializerProvider) {
+<span class="nc" id="L94">        this(processorProvider, serializerProvider, (time, call, response) -&gt; {});</span>
+<span class="nc" id="L95">    }</span>
+
+    /**
+     * Creates a providence servlet that uses a per request processor.
+     *
+     * @param processorProvider The processor supplier.
+     * @param serializerProvider The serializer provider.
+     * @param instrumentation Instrumentation instance.
+     */
+    public ProvidenceServlet(@Nonnull ProcessorProvider processorProvider,
+                             @Nonnull SerializerProvider serializerProvider,
+<span class="fc" id="L106">                             @Nonnull ServiceCallInstrumentation instrumentation) {</span>
+<span class="fc" id="L107">        this.processorProvider = processorProvider;</span>
+<span class="fc" id="L108">        this.serializerProvider = serializerProvider;</span>
+<span class="fc" id="L109">        this.instrumentation = instrumentation;</span>
+<span class="fc" id="L110">    }</span>
+
+    /**
+     * Override if you want to do fancy stuff with the processor.
+     *
+     * @param processor The processor to handle the service call.
+     * @return The processor handler to be used.
+     */
+    protected ProcessorHandler getHandler(PProcessor processor) {
+        // Create a new processor handler instance for each request, as
+        // they may be request context dependent. E.g. depends on
+        // information in header, servlet context etc.
+<span class="fc" id="L122">        return new DefaultProcessorHandler(processor);</span>
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-<span class="fc" id="L76">        PProcessor processor = processorProvider.processorForRequest(req);</span>
+<span class="fc" id="L127">        long startTime = System.nanoTime();</span>
+
+<span class="fc" id="L129">        AtomicReference&lt;PServiceCall&gt; callRef = new AtomicReference&lt;&gt;();</span>
+<span class="fc" id="L130">        AtomicReference&lt;PServiceCall&gt; responseRef = new AtomicReference&lt;&gt;();</span>
+<span class="fc" id="L131">        PProcessor processor = new WrappedProcessor(processorProvider.processorForRequest(req), (c, r) -&gt; {</span>
+<span class="fc" id="L132">            callRef.set(c);</span>
+<span class="fc" id="L133">            responseRef.set(r.handleCall(c));</span>
+<span class="fc" id="L134">            return responseRef.get();</span>
+        });
+
         try {
-<span class="fc" id="L78">            Serializer requestSerializer = serializerProvider.getDefault();</span>
-<span class="pc bpc" id="L79" title="1 of 2 branches missed.">            if (req.getContentType() != null) {</span>
+<span class="fc" id="L138">            Serializer requestSerializer = serializerProvider.getDefault();</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            if (req.getContentType() != null) {</span>
                 try {
-<span class="fc" id="L81">                    MediaType mediaType = MediaType.parse(req.getContentType());</span>
-<span class="fc" id="L82">                    requestSerializer = serializerProvider.getSerializer(mediaType.withoutParameters().toString());</span>
-<span class="nc" id="L83">                } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L84">                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, &quot;Unknown content-type: &quot; + req.getContentType());</span>
-<span class="nc" id="L85">                    LOGGER.warn(&quot;Unknown content type in request&quot;, e);</span>
-<span class="nc" id="L86">                    return;</span>
-<span class="fc" id="L87">                }</span>
+<span class="fc" id="L141">                    MediaType mediaType = MediaType.parse(req.getContentType());</span>
+<span class="fc" id="L142">                    requestSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
+<span class="fc" id="L143">                                                                                  .toString());</span>
+<span class="nc" id="L144">                } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L145">                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, &quot;Unknown content-type: &quot; + req.getContentType());</span>
+<span class="nc" id="L146">                    LOGGER.warn(&quot;Unknown content type in request&quot;, e);</span>
+<span class="nc" id="L147">                    return;</span>
+<span class="fc" id="L148">                }</span>
             } else {
-<span class="nc" id="L89">                LOGGER.debug(&quot;Request is missing content type.&quot;);</span>
+<span class="nc" id="L150">                LOGGER.debug(&quot;Request is missing content type.&quot;);</span>
             }
 
-<span class="fc" id="L92">            Serializer responseSerializer = requestSerializer;</span>
-<span class="fc" id="L93">            String acceptHeader = resp.getHeader(&quot;Accept&quot;);</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">            if (acceptHeader != null) {</span>
-<span class="nc" id="L95">                String[] entries = acceptHeader.split(&quot;[,]&quot;);</span>
-<span class="nc bnc" id="L96" title="All 2 branches missed.">                for (String entry : entries) {</span>
-<span class="nc" id="L97">                    entry = entry.trim();</span>
-<span class="nc bnc" id="L98" title="All 2 branches missed.">                    if (entry.isEmpty()) {</span>
-<span class="nc" id="L99">                        continue;</span>
+<span class="fc" id="L153">            Serializer responseSerializer = requestSerializer;</span>
+<span class="fc" id="L154">            String acceptHeader = resp.getHeader(&quot;Accept&quot;);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">            if (acceptHeader != null) {</span>
+<span class="nc" id="L156">                String[] entries = acceptHeader.split(&quot;[,]&quot;);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                for (String entry : entries) {</span>
+<span class="nc" id="L158">                    entry = entry.trim();</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">                    if (entry.isEmpty()) {</span>
+<span class="nc" id="L160">                        continue;</span>
                     }
 
                     try {
-<span class="nc" id="L103">                        MediaType mediaType = MediaType.parse(entry);</span>
-<span class="nc" id="L104">                        responseSerializer = serializerProvider.getSerializer(mediaType.type() + &quot;/&quot; + mediaType.subtype());</span>
-<span class="nc" id="L105">                        break;</span>
-<span class="nc" id="L106">                    } catch (IllegalArgumentException ignore) {</span>
+<span class="nc" id="L164">                        MediaType mediaType = MediaType.parse(entry);</span>
+<span class="nc" id="L165">                        responseSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
+<span class="nc" id="L166">                                                                                       .toString());</span>
+<span class="nc" id="L167">                        break;</span>
+<span class="nc" id="L168">                    } catch (IllegalArgumentException ignore) {</span>
                         // Ignore. Bad header input is pretty common.
                     }
                 }
             }
 
-<span class="fc" id="L112">            MessageReader reader = new IOMessageReader(req.getInputStream(), requestSerializer);</span>
+<span class="fc" id="L174">            MessageReader reader = new IOMessageReader(req.getInputStream(), requestSerializer);</span>
 
-<span class="fc" id="L114">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="fc" id="L115">            MessageWriter writer = new IOMessageWriter(baos, responseSerializer);</span>
+<span class="fc" id="L176">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L177">            MessageWriter writer = new IOMessageWriter(baos, responseSerializer);</span>
 
-            // Create a new processor handler instance for each request, as
-            // they may be request context dependent. E.g. depends on
-            // information in header, servlet context etc.
-<span class="fc" id="L120">            new DefaultProcessorHandler(processor).process(reader, writer);</span>
+<span class="fc" id="L179">            getHandler(processor).process(reader, writer);</span>
+<span class="fc" id="L180">            resp.setStatus(HttpServletResponse.SC_OK);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            if (baos.size() &gt; 0) {</span>
+<span class="fc" id="L182">                resp.setContentType(responseSerializer.mediaType());</span>
+<span class="fc" id="L183">                resp.setContentLength(baos.size());</span>
+<span class="fc" id="L184">                resp.getOutputStream().write(baos.toByteArray());</span>
+<span class="fc" id="L185">                resp.getOutputStream().flush();</span>
+            }
 
-<span class="fc" id="L122">            resp.setStatus(HttpServletResponse.SC_OK);</span>
-<span class="fc" id="L123">            resp.setContentType(responseSerializer.mediaType());</span>
-<span class="fc" id="L124">            resp.setContentLength(baos.size());</span>
-<span class="fc" id="L125">            resp.getOutputStream().write(baos.toByteArray());</span>
-<span class="nc" id="L126">        } catch (Exception e) {</span>
-<span class="nc" id="L127">            LOGGER.error(&quot;Exception in service call for &quot; + processor.getDescriptor().getQualifiedName(), e);</span>
-<span class="nc" id="L128">            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Internal error: &quot; + e.getMessage());</span>
-<span class="fc" id="L129">        }</span>
-<span class="fc" id="L130">    }</span>
+<span class="fc" id="L188">            long endTime = System.nanoTime();</span>
+<span class="fc" id="L189">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+            try {
+<span class="fc" id="L191">                instrumentation.onComplete(duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L192">            } catch (Throwable th) {</span>
+<span class="nc" id="L193">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="fc" id="L194">            }</span>
+<span class="nc" id="L195">        } catch (EOFException e) {</span>
+            // output stream closed before write is complete.
+            // So we cannot even try to respond.
+
+<span class="nc" id="L199">            long endTime = System.nanoTime();</span>
+<span class="nc" id="L200">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+            try {
+<span class="nc" id="L202">                instrumentation.onTransportException(e, duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L203">            } catch (Throwable th) {</span>
+<span class="nc" id="L204">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="nc" id="L205">            }</span>
+<span class="nc" id="L206">        } catch (Exception e) {</span>
+            try {
+<span class="nc" id="L208">                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Internal server error: &quot; + e.getMessage());</span>
+<span class="nc" id="L209">            } catch (IOException ioEx) {</span>
+<span class="nc" id="L210">                e.addSuppressed(ioEx);</span>
+<span class="nc" id="L211">            }</span>
+
+<span class="nc" id="L213">            long endTime = System.nanoTime();</span>
+<span class="nc" id="L214">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+            try {
+<span class="nc" id="L216">                instrumentation.onTransportException(e, duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L217">            } catch (Throwable th) {</span>
+<span class="nc" id="L218">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="nc" id="L219">            }</span>
+<span class="pc" id="L220">        }</span>
+<span class="fc" id="L221">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

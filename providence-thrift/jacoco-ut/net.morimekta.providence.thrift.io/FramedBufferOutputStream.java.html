@@ -22,6 +22,7 @@ package net.morimekta.providence.thrift.io;
 
 import org.apache.thrift.transport.TFramedTransport;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -29,7 +30,8 @@ import java.nio.channels.WritableByteChannel;
 
 /**
  * Wrap an output stream in a framed buffer writer similar to the thrift
- * TFramedTransport.
+ * TFramedTransport. The output stream will write everything in one single
+ * block when it is closed.
  */
 public class FramedBufferOutputStream extends OutputStream {
     private static final int MAX_BUFFER_SIZE = 16384000;  // 16M.
@@ -38,51 +40,68 @@ public class FramedBufferOutputStream extends OutputStream {
     private final ByteBuffer          buffer;
     private final WritableByteChannel out;
 
-<span class="fc" id="L41">    public FramedBufferOutputStream(WritableByteChannel out) {</span>
-<span class="fc" id="L42">        this.out = out;</span>
-<span class="fc" id="L43">        this.frameSizeBuffer = new byte[4];</span>
-<span class="fc" id="L44">        this.buffer = ByteBuffer.allocateDirect(MAX_BUFFER_SIZE);</span>
-<span class="fc" id="L45">        this.buffer.limit(MAX_BUFFER_SIZE);</span>
-<span class="fc" id="L46">    }</span>
+    public FramedBufferOutputStream(WritableByteChannel out) {
+<span class="fc" id="L44">        this(out, MAX_BUFFER_SIZE);</span>
+<span class="fc" id="L45">    }</span>
+
+<span class="fc" id="L47">    public FramedBufferOutputStream(WritableByteChannel out, int maxBufferSize) {</span>
+<span class="fc" id="L48">        this.out = out;</span>
+<span class="fc" id="L49">        this.frameSizeBuffer = new byte[4];</span>
+<span class="fc" id="L50">        this.buffer = ByteBuffer.allocateDirect(maxBufferSize);</span>
+<span class="fc" id="L51">        this.buffer.limit(maxBufferSize);</span>
+<span class="fc" id="L52">    }</span>
 
     @Override
     public void write(int val) throws IOException {
-<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (!buffer.hasRemaining()) {</span>
-<span class="nc" id="L51">            flush();</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (!buffer.hasRemaining()) {</span>
+<span class="nc" id="L57">            throw new IOException(String.format(&quot;Frame size exceeded: 1 needed, 0 remaining, %d total&quot;,</span>
+<span class="nc" id="L58">                                                buffer.capacity()));</span>
         }
-<span class="fc" id="L53">        buffer.put((byte) val);</span>
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L60">        buffer.put((byte) val);</span>
+<span class="fc" id="L61">    }</span>
 
     @Override
-    public void write(byte[] bytes) throws IOException {
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (buffer.remaining() &lt; bytes.length) {</span>
-<span class="nc" id="L59">            flush();</span>
+    public void write(@Nonnull byte[] bytes) throws IOException {
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (buffer.remaining() &lt; bytes.length) {</span>
+<span class="nc" id="L66">            throw new IOException(String.format(&quot;Frame size exceeded: %d needed, %d remaining, %d total&quot;,</span>
+<span class="nc" id="L67">                                                bytes.length, buffer.remaining(), buffer.capacity()));</span>
         }
-<span class="fc" id="L61">        buffer.put(bytes);</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L69">        buffer.put(bytes);</span>
+<span class="fc" id="L70">    }</span>
 
     @Override
-    public void write(byte[] var1, int off, int len) throws IOException {
-<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (buffer.remaining() &lt; len) {</span>
-<span class="nc" id="L67">            flush();</span>
+    public void write(@Nonnull byte[] var1, int off, int len) throws IOException {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (buffer.remaining() &lt; len) {</span>
+<span class="nc" id="L75">            throw new IOException(String.format(&quot;Frame size exceeded: %d needed, %d remaining, %d total&quot;,</span>
+<span class="nc" id="L76">                                                len, buffer.remaining(), buffer.capacity()));</span>
         }
-<span class="nc" id="L69">        buffer.put(var1, off, off);</span>
-<span class="nc" id="L70">    }</span>
+<span class="nc" id="L78">        buffer.put(var1, off, off);</span>
+<span class="nc" id="L79">    }</span>
 
-    @Override
-    public void flush() throws IOException {
-<span class="fc" id="L74">        int frameSize = buffer.position();</span>
-<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (frameSize &gt; 0) {</span>
-<span class="fc" id="L76">            TFramedTransport.encodeFrameSize(frameSize, frameSizeBuffer);</span>
-<span class="fc" id="L77">            out.write(ByteBuffer.wrap(frameSizeBuffer));</span>
+    /**
+     * Write the frame at the current state, and reset the buffer to be able to
+     * generate a new frame.
+     *
+     * @throws IOException On failed write.
+     */
+    public void completeFrame() throws IOException {
+<span class="fc" id="L88">        int frameSize = buffer.position();</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (frameSize &gt; 0) {</span>
+<span class="fc" id="L90">            TFramedTransport.encodeFrameSize(frameSize, frameSizeBuffer);</span>
+<span class="fc" id="L91">            out.write(ByteBuffer.wrap(frameSizeBuffer));</span>
 
-<span class="fc" id="L79">            buffer.flip();</span>
-<span class="fc bfc" id="L80" title="All 2 branches covered.">            while (buffer.hasRemaining()) {</span>
-<span class="fc" id="L81">                out.write(buffer);</span>
+<span class="fc" id="L93">            buffer.flip();</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            while (buffer.hasRemaining()) {</span>
+<span class="fc" id="L95">                out.write(buffer);</span>
             }
-<span class="fc" id="L83">            buffer.rewind();</span>
-<span class="fc" id="L84">            buffer.limit(MAX_BUFFER_SIZE);</span>
+<span class="fc" id="L97">            buffer.rewind();</span>
+<span class="fc" id="L98">            buffer.limit(buffer.capacity());</span>
         }
-<span class="fc" id="L86">    }</span>
+<span class="fc" id="L100">    }</span>
+
+    @Override
+    public void close() throws IOException {
+<span class="nc" id="L104">        completeFrame();</span>
+<span class="nc" id="L105">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -106,7 +106,7 @@ public class ProgramConverter {
         }
 
 <span class="fc bfc" id="L108" title="All 2 branches covered.">        for (Declaration decl : program.getDecl()) {</span>
-<span class="pc bpc" id="L109" title="2 of 6 branches missed.">            switch (decl.unionField()) {</span>
+<span class="pc bpc" id="L109" title="1 of 6 branches missed.">            switch (decl.unionField()) {</span>
                 case DECL_ENUM: {
 <span class="fc" id="L111">                    EnumType enumType = decl.getDeclEnum();</span>
 
@@ -167,9 +167,9 @@ public class ProgramConverter {
 <span class="fc" id="L167">                    break;</span>
                 }
                 case DECL_CONST: {
-<span class="nc" id="L170">                    ConstType constant = decl.getDeclConst();</span>
-<span class="nc" id="L171">                    constants.add(makeConst(registry, program.getProgramName(), constant));</span>
-<span class="nc" id="L172">                    break;</span>
+<span class="fc" id="L170">                    ConstType constant = decl.getDeclConst();</span>
+<span class="fc" id="L171">                    constants.add(makeConst(registry, program.getProgramName(), constant));</span>
+<span class="fc" id="L172">                    break;</span>
                 }
                 case DECL_TYPEDEF: {
 <span class="fc" id="L175">                    typedefs.put(decl.getDeclTypedef()</span>
@@ -202,7 +202,7 @@ public class ProgramConverter {
                                                                               null);
 
 <span class="fc" id="L204">                            CUnionDescriptor response = null;</span>
-<span class="pc bpc" id="L205" title="1 of 2 branches missed.">                            if (!sm.isOneWay()) {</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                            if (!sm.isOneWay()) {</span>
 <span class="fc" id="L206">                                List&lt;CField&gt; rsFields = new LinkedList&lt;&gt;();</span>
                                 CField success;
 <span class="fc bfc" id="L208" title="All 2 branches covered.">                                if (sm.getReturnType() != null) {</span>
@@ -291,24 +291,24 @@ public class ProgramConverter {
     }
 
     private CConst makeConst(TypeRegistry registry, String pkg, ConstType field) {
-<span class="nc" id="L294">        PDescriptorProvider type = registry.getProvider(field.getType(), pkg, field.getAnnotations());</span>
-<span class="nc bnc" id="L295" title="All 2 branches missed.">        if (!field.hasValue()) {</span>
+<span class="fc" id="L294">        PDescriptorProvider type = registry.getProvider(field.getType(), pkg, field.getAnnotations());</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">        if (!field.hasValue()) {</span>
 <span class="nc" id="L296">            throw new IllegalArgumentException(&quot;Const &quot; + pkg + &quot;.&quot; + field.getName() + &quot; does not have a value.&quot;);</span>
         }
-<span class="nc" id="L298">        ConstProvider defaultValue = new ConstProvider(registry,</span>
-<span class="nc" id="L299">                                                       field.getType(),</span>
+<span class="fc" id="L298">        ConstProvider defaultValue = new ConstProvider(registry,</span>
+<span class="fc" id="L299">                                                       field.getType(),</span>
                                                        pkg,
-<span class="nc" id="L301">                                                       field.getValue(),</span>
-<span class="nc" id="L302">                                                       field.getStartLineNo(),</span>
-<span class="nc" id="L303">                                                       field.getStartLinePos());</span>
+<span class="fc" id="L301">                                                       field.getValue(),</span>
+<span class="fc" id="L302">                                                       field.getStartLineNo(),</span>
+<span class="fc" id="L303">                                                       field.getStartLinePos());</span>
 
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L306">        CConst made = new CConst(field.getDocumentation(),</span>
-<span class="nc" id="L307">                                 field.getName(),</span>
+<span class="fc" id="L306">        CConst made = new CConst(field.getDocumentation(),</span>
+<span class="fc" id="L307">                                 field.getName(),</span>
                                  type,
                                  defaultValue,
-<span class="nc" id="L310">                                 field.getAnnotations());</span>
-<span class="nc" id="L311">        return made;</span>
+<span class="fc" id="L310">                                 field.getAnnotations());</span>
+<span class="fc" id="L311">        return made;</span>
     }
 
     private CField makeField(TypeRegistry registry, String pkg, FieldType field, MessageVariant variant) {

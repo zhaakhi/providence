@@ -72,17 +72,17 @@ public class SimpleTypeRegistry extends BaseTypeRegistry {
     @Override
     public PService getService(String serviceName, String programContext) {
 <span class="fc" id="L74">        String finalName = qualifiedNameFromIdAndContext(serviceName, programContext);</span>
-<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (services.containsKey(finalName)) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (services.containsKey(finalName)) {</span>
 <span class="fc" id="L76">            return services.get(finalName);</span>
         }
 
-<span class="nc" id="L79">        String program = finalName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
-<span class="nc" id="L80">        String name = finalName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
+<span class="fc" id="L79">        String program = finalName.replaceAll(&quot;\\..*&quot;, &quot;&quot;);</span>
+<span class="fc" id="L80">        String name = finalName.replaceAll(&quot;.*\\.&quot;, &quot;&quot;);</span>
 
-<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (knownPrograms.contains(program)) {</span>
-<span class="nc" id="L83">            throw new IllegalArgumentException(&quot;No such service \&quot;&quot; + name + &quot;\&quot; in program \&quot;&quot; + program + &quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (knownPrograms.contains(program)) {</span>
+<span class="fc" id="L83">            throw new IllegalArgumentException(&quot;No such service \&quot;&quot; + name + &quot;\&quot; in program \&quot;&quot; + program + &quot;\&quot;&quot;);</span>
         } else {
-<span class="nc" id="L85">            throw new IllegalArgumentException(&quot;No such program \&quot;&quot; + program + &quot;\&quot; exists for service \&quot;&quot; + serviceName + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L85">            throw new IllegalArgumentException(&quot;No such program \&quot;&quot; + program + &quot;\&quot; known for service \&quot;&quot; + serviceName + &quot;\&quot;&quot;);</span>
         }
     }
 
@@ -93,12 +93,12 @@ public class SimpleTypeRegistry extends BaseTypeRegistry {
         // qualified or final name.
 <span class="fc" id="L94">        String declaredTypeName = service.getQualifiedName();</span>
 
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (!services.containsKey(declaredTypeName)) {</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        if (!services.containsKey(declaredTypeName)) {</span>
 <span class="fc" id="L97">            services.put(declaredTypeName, service);</span>
 <span class="fc" id="L98">            knownPrograms.add(service.getProgramName());</span>
 <span class="fc" id="L99">            return true;</span>
         }
-<span class="fc" id="L101">        return false;</span>
+<span class="nc" id="L101">        return false;</span>
     }
 
     @Override

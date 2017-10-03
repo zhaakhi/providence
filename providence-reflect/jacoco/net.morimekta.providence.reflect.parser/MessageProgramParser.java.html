@@ -36,16 +36,17 @@ import java.util.Collection;
 public class MessageProgramParser implements ProgramParser {
     private final Serializer mSerializer;
 
-<span class="nc" id="L39">    public MessageProgramParser(Serializer serializer) {</span>
-<span class="nc" id="L40">        mSerializer = serializer;</span>
-<span class="nc" id="L41">    }</span>
+<span class="fc" id="L39">    public MessageProgramParser(Serializer serializer) {</span>
+<span class="fc" id="L40">        mSerializer = serializer;</span>
+<span class="fc" id="L41">    }</span>
 
     @Override
     public ProgramType parse(InputStream in, File file, Collection&lt;File&gt; includeDirs) throws IOException, ParseException {
         try {
-<span class="nc" id="L46">            return mSerializer.deserialize(in, ProgramType.kDescriptor);</span>
-<span class="nc" id="L47">        } catch (SerializerException tse) {</span>
-<span class="nc" id="L48">            throw new ParseException(&quot;Failed to deserialize definition file.&quot;, tse);</span>
+<span class="fc" id="L46">            return mSerializer.deserialize(in, ProgramType.kDescriptor);</span>
+<span class="fc" id="L47">        } catch (SerializerException tse) {</span>
+<span class="fc" id="L48">            throw new ParseException(tse, &quot;Failed to deserialize definition file %s&quot;, file.getName())</span>
+<span class="fc" id="L49">                    .setFile(file.getName());</span>
         }
     }
 }

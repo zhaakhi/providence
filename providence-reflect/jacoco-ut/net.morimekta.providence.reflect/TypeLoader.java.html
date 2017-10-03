@@ -61,8 +61,8 @@ public class TypeLoader {
      *                 search these in order.
      */
     public TypeLoader(Collection&lt;File&gt; includes) {
-<span class="nc" id="L64">        this(includes, new ThriftProgramParser());</span>
-<span class="nc" id="L65">    }</span>
+<span class="fc" id="L64">        this(includes, new ThriftProgramParser());</span>
+<span class="fc" id="L65">    }</span>
 
     /**
      * Construct a type loader for file types matches with the given parser.
@@ -108,7 +108,7 @@ public class TypeLoader {
      * @return Set of loaded documents.
      */
     public Collection&lt;ProgramType&gt; loadedPrograms() {
-<span class="nc" id="L111">        return loadedDocuments.values();</span>
+<span class="fc" id="L111">        return loadedDocuments.values();</span>
     }
 
     /**
@@ -123,16 +123,16 @@ public class TypeLoader {
 <span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (!file.exists()) {</span>
 <span class="nc" id="L124">            throw new IllegalArgumentException(&quot;No such file &quot; + file.getCanonicalPath());</span>
         }
-<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (!file.isFile()) {</span>
-<span class="nc" id="L127">            throw new IllegalArgumentException(</span>
-<span class="nc" id="L128">                    &quot;Unable to load thrift program: &quot; + file.getCanonicalPath() + &quot; is not a file.&quot;);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (!file.isFile()) {</span>
+<span class="fc" id="L127">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L128">                    &quot;Unable to load thrift program: &quot; + file.getCanonicalPath() + &quot; is not a file.&quot;);</span>
         }
 <span class="fc" id="L130">        file = file.getAbsoluteFile();</span>
 <span class="fc" id="L131">        String path = file.getPath();</span>
 
 <span class="fc" id="L133">        ProgramTypeRegistry registry = this.programRegistry.registryForPath(path);</span>
-<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (programRegistry.containsProgramPath(path)) {</span>
-<span class="nc" id="L135">            return registry;</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (programRegistry.containsProgramPath(path)) {</span>
+<span class="fc" id="L135">            return registry;</span>
         }
 
 <span class="fc" id="L138">        InputStream in = new BufferedInputStream(new FileInputStream(file));</span>

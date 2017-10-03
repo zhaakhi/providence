@@ -29,106 +29,236 @@ import net.morimekta.providence.PServiceCallType;
 import net.morimekta.providence.descriptor.PField;
 import net.morimekta.providence.descriptor.PService;
 import net.morimekta.providence.serializer.Serializer;
-import net.morimekta.providence.thrift.io.FramedBufferInputSteram;
+import net.morimekta.providence.thrift.io.FramedBufferInputStream;
 import net.morimekta.providence.thrift.io.FramedBufferOutputStream;
+import net.morimekta.providence.util.ServiceCallInstrumentation;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static net.morimekta.providence.util.ServiceCallInstrumentation.NS_IN_MILLIS;
 
 /**
  * Client handler for thrift RPC using the TNonblockingServer, or similar that
- * uses the TFramedTransport message wrapper.
+ * uses the TFramedTransport message wrapper. It is able to handle a true
+ * async-like message and response order, so even if the server sends responses
+ * out of order this client will match to the correct caller.
+ *
+ * The client handler is dependent on that there is a single client with unique
+ * sequence IDs on incoming service calls, otherwise there will be trouble with
+ * matching responses to the requesting thread.
  *
  * When using this client handler make sure to close it when no longer in use.
  * Otherwise it will keep the socket channel open almost indefinitely.
  */
 public class NonblockingSocketClientHandler implements PServiceCallHandler, Closeable {
+<span class="fc" id="L71">    private static final Logger LOGGER = LoggerFactory.getLogger(NonblockingSocketClientHandler.class);</span>
+
     private final Serializer    serializer;
     private final SocketAddress address;
     private final int           connect_timeout;
     private final int           read_timeout;
+    private final int           response_timeout;
 
-    private SocketChannel channel;
+    private final Map&lt;Integer, CompletableFuture&lt;PServiceCall&gt;&gt; responseFutures;
+    private final ExecutorService                               responseExecutor;
+    private final ServiceCallInstrumentation                    instrumentation;
+
+    private volatile SocketChannel channel;
+    private volatile FramedBufferOutputStream out;
 
     public NonblockingSocketClientHandler(Serializer serializer, SocketAddress address) {
-<span class="fc" id="L60">        this(serializer, address, 10000, 10000);</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L87">        this(serializer, address, (d, c, r) -&gt; {}, 10000, 10000);</span>
+<span class="fc" id="L88">    }</span>
 
-<span class="fc" id="L63">    public NonblockingSocketClientHandler(Serializer serializer, SocketAddress address, int connect_timeout, int read_timeout) {</span>
-<span class="fc" id="L64">        this.serializer = serializer;</span>
-<span class="fc" id="L65">        this.address = address;</span>
-<span class="fc" id="L66">        this.connect_timeout = connect_timeout;</span>
-<span class="fc" id="L67">        this.read_timeout = read_timeout;</span>
-<span class="fc" id="L68">    }</span>
+    public NonblockingSocketClientHandler(Serializer serializer, SocketAddress address, ServiceCallInstrumentation instrumentation) {
+<span class="nc" id="L91">        this(serializer, address, instrumentation, 10000, 10000);</span>
+<span class="nc" id="L92">    }</span>
+
+    public NonblockingSocketClientHandler(Serializer serializer,
+                                          SocketAddress address,
+                                          int connect_timeout,
+                                          int read_timeout ) {
+<span class="nc" id="L98">        this(serializer, address, (d, c, r) -&gt; {}, connect_timeout, read_timeout);</span>
+<span class="nc" id="L99">    }</span>
+
+    public NonblockingSocketClientHandler(Serializer serializer,
+                                          SocketAddress address,
+                                          ServiceCallInstrumentation instrumentation,
+                                          int connect_timeout,
+<span class="fc" id="L105">                                          int read_timeout) {</span>
+<span class="fc" id="L106">        this.serializer = serializer;</span>
+<span class="fc" id="L107">        this.address = address;</span>
+<span class="fc" id="L108">        this.instrumentation = instrumentation;</span>
+<span class="fc" id="L109">        this.connect_timeout = connect_timeout;</span>
+<span class="fc" id="L110">        this.read_timeout = read_timeout;</span>
+        // TODO: Set up response timeout.
+<span class="fc" id="L112">        this.response_timeout = connect_timeout + read_timeout * 2;</span>
+<span class="fc" id="L113">        this.responseFutures = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L114">        this.responseExecutor = Executors.newSingleThreadExecutor();</span>
+<span class="fc" id="L115">    }</span>
 
     @Nonnull
-    private SocketChannel connect() throws IOException {
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (channel == null) {</span>
-<span class="fc" id="L73">            channel = SocketChannel.open();</span>
-<span class="fc" id="L74">            Socket socket = channel.socket();</span>
-<span class="fc" id="L75">            socket.setSoLinger(false, 0);</span>
-<span class="fc" id="L76">            socket.setTcpNoDelay(true);</span>
-<span class="fc" id="L77">            socket.setKeepAlive(true);</span>
-<span class="fc" id="L78">            socket.setSoTimeout(read_timeout);</span>
+    private void ensureConnected(PService service) throws IOException {
+<span class="pc bpc" id="L119" title="1 of 4 branches missed.">        if (channel == null || !channel.isConnected()) {</span>
+<span class="fc" id="L120">            close();</span>
+
+<span class="fc" id="L122">            channel = SocketChannel.open();</span>
+<span class="fc" id="L123">            Socket socket = channel.socket();</span>
+<span class="fc" id="L124">            socket.setSoLinger(false, 0);</span>
+<span class="fc" id="L125">            socket.setTcpNoDelay(true);</span>
+<span class="fc" id="L126">            socket.setKeepAlive(true);</span>
+<span class="fc" id="L127">            socket.setSoTimeout(read_timeout);</span>
 
             // The channel is always in blocking mode.
-<span class="fc" id="L81">            channel.configureBlocking(true);</span>
-<span class="fc" id="L82">            channel.socket().connect(address, connect_timeout);</span>
+<span class="fc" id="L130">            channel.configureBlocking(true);</span>
+<span class="fc" id="L131">            channel.socket().connect(address, connect_timeout);</span>
+
+<span class="fc" id="L133">            out = new FramedBufferOutputStream(channel);</span>
+<span class="pc" id="L134">            responseExecutor.submit(() -&gt; this.handleReadResponses(channel, service));</span>
         }
-<span class="fc" id="L84">        return channel;</span>
-    }
+<span class="fc" id="L136">    }</span>
 
     @Override
-    public void close() throws IOException {
-<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (channel != null) {</span>
+    public synchronized void close() throws IOException {
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (channel != null) {</span>
+<span class="nc" id="L141">            SocketChannel ch = channel;</span>
+<span class="nc" id="L142">            OutputStream o = out;</span>
+
+<span class="nc" id="L144">            channel = null;</span>
+<span class="nc" id="L145">            out = null;</span>
+
             try {
-<span class="nc" id="L91">                channel.close();</span>
+<span class="nc" id="L148">                o.close();</span>
             } finally {
-<span class="nc" id="L93">                channel = null;</span>
-<span class="nc" id="L94">            }</span>
+<span class="nc" id="L150">                ch.close();</span>
+<span class="nc" id="L151">            }</span>
         }
-<span class="nc" id="L96">    }</span>
+<span class="fc" id="L153">    }</span>
 
     @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
     public &lt;Request extends PMessage&lt;Request, RequestField&gt;,
             Response extends PMessage&lt;Response, ResponseField&gt;,
             RequestField extends PField,
             ResponseField extends PField&gt;
     PServiceCall&lt;Response, ResponseField&gt; handleCall(PServiceCall&lt;Request, RequestField&gt; call, PService service)
             throws IOException {
-<span class="pc bpc" id="L105" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
-<span class="nc" id="L106">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
+<span class="pc bpc" id="L163" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
+<span class="nc" id="L164">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
                                             PApplicationExceptionType.INVALID_MESSAGE_TYPE);
         }
 
-<span class="fc" id="L110">        SocketChannel channel = connect();</span>
-
-<span class="fc" id="L112">        OutputStream out = new FramedBufferOutputStream(channel);</span>
-<span class="fc" id="L113">        serializer.serialize(out, call);</span>
-<span class="fc" id="L114">        out.flush();</span>
-
-<span class="fc" id="L116">        PServiceCall&lt;Response, ResponseField&gt; reply = null;</span>
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if (call.getType() == PServiceCallType.CALL) {</span>
-<span class="fc" id="L118">            InputStream in = new FramedBufferInputSteram(channel);</span>
-<span class="fc" id="L119">            reply = serializer.deserialize(in, service);</span>
-
-<span class="pc bpc" id="L121" title="2 of 4 branches missed.">            if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
-<span class="nc" id="L122">                throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
-                                                PApplicationExceptionType.INVALID_MESSAGE_TYPE);
-            }
-<span class="pc bpc" id="L125" title="1 of 2 branches missed.">            if (reply.getSequence() != call.getSequence()) {</span>
-<span class="nc" id="L126">                throw new PApplicationException(&quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
-                                                PApplicationExceptionType.BAD_SEQUENCE_ID);
-            }
+<span class="fc" id="L168">        long startTime = System.nanoTime();</span>
+<span class="fc" id="L169">        PServiceCall&lt;Response, ResponseField&gt; response = null;</span>
+<span class="fc" id="L170">        CompletableFuture&lt;PServiceCall&gt; responseFuture = null;</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        if (call.getType() == PServiceCallType.CALL) {</span>
+<span class="fc" id="L172">            responseFuture = new CompletableFuture&lt;&gt;();</span>
+            // Each sequence No must be unique for the client, otherwise this will be messed up.
+<span class="fc" id="L174">            responseFutures.put(call.getSequence(), responseFuture);</span>
         }
 
-<span class="fc" id="L131">        return reply;</span>
+        try {
+<span class="fc" id="L178">            synchronized (this) {</span>
+                try {
+<span class="fc" id="L180">                    ensureConnected(service);</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">                    if (out == null) {</span>
+<span class="nc" id="L182">                        throw new IOException(&quot;Closed channel&quot;);</span>
+                    }
+<span class="fc" id="L184">                    serializer.serialize(out, call);</span>
+<span class="fc" id="L185">                    out.flush();</span>
+                } finally {
+<span class="pc bpc" id="L187" title="2 of 4 branches missed.">                    if (out != null) {</span>
+<span class="pc" id="L188">                        out.completeFrame();</span>
+                    }
+                }
+<span class="fc" id="L191">            }</span>
+
+<span class="fc bfc" id="L193" title="All 2 branches covered.">            if (responseFuture != null) {</span>
+                try {
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">                    if (response_timeout &gt; 0) {</span>
+<span class="fc" id="L196">                        response = (PServiceCall&lt;Response, ResponseField&gt;) responseFuture.get(response_timeout, TimeUnit.MILLISECONDS);</span>
+                    } else {
+<span class="nc" id="L198">                        response = (PServiceCall&lt;Response, ResponseField&gt;) responseFuture.get();</span>
+                    }
+
+<span class="fc" id="L201">                    long endTime = System.nanoTime();</span>
+<span class="fc" id="L202">                    double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+                    try {
+<span class="fc" id="L204">                        instrumentation.onComplete(duration, call, response);</span>
+<span class="pc" id="L205">                    } catch (Exception ignore) {}</span>
+
+<span class="fc" id="L207">                    return response;</span>
+<span class="nc" id="L208">                } catch (TimeoutException | InterruptedException e) {</span>
+<span class="nc" id="L209">                    responseFuture.completeExceptionally(e);</span>
+<span class="nc" id="L210">                    throw new IOException(e.getMessage(), e);</span>
+<span class="nc" id="L211">                } catch (ExecutionException e) {</span>
+<span class="nc" id="L212">                    throw new IOException(e.getMessage(), e);</span>
+                } finally {
+<span class="pc" id="L214">                    responseFutures.remove(call.getSequence());</span>
+                }
+            }
+<span class="fc" id="L217">        } catch (Exception e) {</span>
+<span class="fc" id="L218">            long endTime = System.nanoTime();</span>
+<span class="fc" id="L219">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+            try {
+<span class="fc" id="L221">                instrumentation.onTransportException(e, duration, call, response);</span>
+<span class="nc" id="L222">            } catch (Exception ie) {</span>
+<span class="nc" id="L223">                e.addSuppressed(ie);</span>
+<span class="fc" id="L224">            }</span>
+
+<span class="fc" id="L226">            throw e;</span>
+<span class="fc" id="L227">        }</span>
+
+<span class="fc" id="L229">        return null;</span>
     }
+
+    private void handleReadResponses(SocketChannel channel, PService service) {
+<span class="pc bpc" id="L233" title="2 of 4 branches missed.">        while (this.channel == channel &amp;&amp; channel.isConnected()) {</span>
+<span class="fc" id="L234">            FramedBufferInputStream in = new FramedBufferInputStream(channel);</span>
+            try {
+<span class="fc" id="L236">                in.nextFrame();</span>
+<span class="fc" id="L237">                PServiceCall reply = serializer.deserialize(in, service);</span>
+
+<span class="pc bpc" id="L239" title="2 of 4 branches missed.">                if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
+<span class="nc" id="L240">                    throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
+                                                    PApplicationExceptionType.INVALID_MESSAGE_TYPE);
+                }
+
+<span class="fc" id="L244">                CompletableFuture&lt;PServiceCall&gt; future = responseFutures.get(reply.getSequence());</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">                if (future == null) {</span>
+<span class="nc" id="L246">                    LOGGER.error(&quot;No future for sequence ID &quot; + reply.getSequence());</span>
+<span class="nc" id="L247">                    continue;</span>
+                }
+
+<span class="fc" id="L250">                responseFutures.remove(reply.getSequence());</span>
+<span class="fc" id="L251">                future.complete(reply);</span>
+<span class="fc" id="L252">            } catch (Exception e) {</span>
+<span class="fc" id="L253">                LOGGER.error(&quot;Exception in channel response reading&quot;, e);</span>
+<span class="fc" id="L254">            }</span>
+<span class="fc" id="L255">        }</span>
+
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        if (responseFutures.size() &gt; 0) {</span>
+<span class="nc" id="L258">            LOGGER.warn(&quot;Channel closed with {} unfinished calls&quot;, responseFutures.size());</span>
+<span class="nc" id="L259">            responseFutures.forEach((s, f) -&gt; f.completeExceptionally(new IOException(&quot;Channel closed&quot;)));</span>
+<span class="nc" id="L260">            responseFutures.clear();</span>
+        }
+<span class="nc" id="L262">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SocketServer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Thrift Bridge</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.thrift.server</a> &gt; <span class="el_source">SocketServer.java</span></div><h1>SocketServer.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.thrift.server;
+
+import net.morimekta.providence.PProcessor;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.mio.IOMessageReader;
+import net.morimekta.providence.mio.IOMessageWriter;
+import net.morimekta.providence.serializer.BinarySerializer;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.server.DefaultProcessorHandler;
+import net.morimekta.providence.server.WrappedProcessor;
+import net.morimekta.providence.util.ServiceCallInstrumentation;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static net.morimekta.providence.util.ServiceCallInstrumentation.NS_IN_MILLIS;
+
+/**
+ * Based heavily on {@link org.apache.thrift.transport.TServerTransport},
+ * and meant to be a providence replacement for it.
+ */
+public class SocketServer implements AutoCloseable {
+    public static class Builder {
+        private final PProcessor                 processor;
+        private       ServiceCallInstrumentation instrumentation;
+        private       InetSocketAddress          bindAddress;
+
+<span class="fc" id="L62">        private int clientTimeout       = 60000;  // 60 seconds</span>
+<span class="fc" id="L63">        private int backlog             = 50;</span>
+<span class="fc" id="L64">        private int workerThreads       = 10;</span>
+        private ThreadFactory workerThreadFactory;
+        private Serializer serializer;
+
+<span class="fc" id="L68">        public Builder(@Nonnull PProcessor processor) {</span>
+<span class="fc" id="L69">            this.processor = processor;</span>
+<span class="fc" id="L70">            this.bindAddress = new InetSocketAddress(0);</span>
+<span class="fc" id="L71">            this.workerThreadFactory = new ThreadFactoryBuilder()</span>
+<span class="fc" id="L72">                    .setNameFormat(&quot;providence-server-%d&quot;)</span>
+<span class="fc" id="L73">                    .setDaemon(false)</span>
+<span class="fc" id="L74">                    .build();</span>
+<span class="fc" id="L75">            this.serializer = new BinarySerializer();</span>
+<span class="fc" id="L76">        }</span>
+
+        public Builder withPort(int port) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (port &lt; 0) {</span>
+<span class="nc" id="L80">                throw new IllegalArgumentException();</span>
+            }
+<span class="nc" id="L82">            this.bindAddress = new InetSocketAddress(port);</span>
+<span class="nc" id="L83">            return this;</span>
+        }
+
+        public Builder withBindAddress(@Nonnull InetSocketAddress bindAddress) {
+<span class="nc" id="L87">            this.bindAddress = bindAddress;</span>
+<span class="nc" id="L88">            return this;</span>
+        }
+
+        public Builder withMaxBacklog(int maxBacklog) {
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">            if (maxBacklog &lt; 0) {</span>
+<span class="nc" id="L93">                throw new IllegalArgumentException();</span>
+            }
+<span class="fc" id="L95">            this.backlog = maxBacklog;</span>
+<span class="fc" id="L96">            return this;</span>
+        }
+
+        public Builder withInstrumentation(@Nonnull ServiceCallInstrumentation instrumentation) {
+<span class="fc" id="L100">            this.instrumentation = instrumentation;</span>
+<span class="fc" id="L101">            return this;</span>
+        }
+
+        public Builder withClientTimeout(int timeoutInMs) {
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">            if (timeoutInMs &lt; 1) {</span>
+<span class="nc" id="L106">                throw new IllegalArgumentException();</span>
+            }
+<span class="fc" id="L108">            this.clientTimeout = timeoutInMs;</span>
+<span class="fc" id="L109">            return this;</span>
+        }
+
+        public Builder withWorkerThreads(int numThreads) {
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (numThreads &lt; 1) {</span>
+<span class="nc" id="L114">                throw new IllegalArgumentException();</span>
+            }
+
+<span class="fc" id="L117">            this.workerThreads = numThreads;</span>
+<span class="fc" id="L118">            return this;</span>
+        }
+
+        public Builder withThreadFactory(ThreadFactory factory) {
+<span class="fc" id="L122">            this.workerThreadFactory = factory;</span>
+<span class="fc" id="L123">            return this;</span>
+        }
+
+        public Builder withSerializer(Serializer serializer) {
+<span class="fc" id="L127">            this.serializer = serializer;</span>
+<span class="fc" id="L128">            return this;</span>
+        }
+
+        public SocketServer start() {
+<span class="fc" id="L132">            return new SocketServer(this);</span>
+        }
+
+    }
+
+    public static Builder builder(@Nonnull PProcessor processor) {
+<span class="fc" id="L138">        return new Builder(processor);</span>
+    }
+
+    public int getPort() {
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (workerExecutor.isShutdown()) return -1;</span>
+<span class="fc" id="L143">        return serverSocket.getLocalPort();</span>
+    }
+
+    @Override
+    public void close() {
+<span class="fc" id="L148">        workerExecutor.shutdown();</span>
+        try {
+            // this should trigger exception in the accept task.
+<span class="fc" id="L151">            serverSocket.close();</span>
+<span class="nc" id="L152">        } catch (IOException e) {</span>
+<span class="nc" id="L153">            e.printStackTrace();</span>
+        } finally {
+<span class="nc" id="L155">            try {</span>
+<span class="pc" id="L156">                workerExecutor.awaitTermination(10, TimeUnit.MILLISECONDS);</span>
+<span class="nc" id="L157">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L158">                e.printStackTrace();</span>
+<span class="pc" id="L159">            }</span>
+            // really really try to kill it now.
+<span class="pc" id="L161">            workerExecutor.shutdownNow();</span>
+<span class="pc" id="L162">        }</span>
+<span class="fc" id="L163">    }</span>
+
+<span class="fc" id="L165">    private final static Logger LOGGER = LoggerFactory.getLogger(SocketServer.class);</span>
+
+    private final int                        clientTimeout;
+    private final PProcessor                 processor;
+    private final ServiceCallInstrumentation instrumentation;
+    private final ServerSocket               serverSocket;
+    private final ExecutorService            workerExecutor;
+    private final Serializer                 serializer;
+
+<span class="fc" id="L174">    private SocketServer(Builder builder) {</span>
+        try {
+<span class="fc" id="L176">            clientTimeout = builder.clientTimeout;</span>
+<span class="fc" id="L177">            processor = builder.processor;</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">            instrumentation = builder.instrumentation != null</span>
+<span class="pc" id="L179">                              ? builder.instrumentation</span>
+<span class="nc" id="L180">                              : (duration, call, response) -&gt; {};</span>
+<span class="fc" id="L181">            serializer = builder.serializer;</span>
+
+            // Make server socket.
+<span class="fc" id="L184">            serverSocket = new ServerSocket();</span>
+            // Prevent 2MSL delay problem on server restarts
+<span class="fc" id="L186">            serverSocket.setReuseAddress(true);</span>
+            // Bind to listening port
+<span class="fc" id="L188">            serverSocket.bind(builder.bindAddress, builder.backlog);</span>
+<span class="fc" id="L189">            serverSocket.setSoTimeout(0);</span>
+
+<span class="fc" id="L191">            workerExecutor = Executors.newFixedThreadPool(builder.workerThreads,</span>
+<span class="fc" id="L192">                                                          builder.workerThreadFactory);</span>
+<span class="fc" id="L193">            workerExecutor.submit(this::accept);</span>
+<span class="nc" id="L194">        } catch (IOException e) {</span>
+<span class="nc" id="L195">            throw new UncheckedIOException(e);</span>
+<span class="fc" id="L196">        }</span>
+<span class="fc" id="L197">    }</span>
+
+    private void accept() {
+        try {
+<span class="fc" id="L201">            Socket socket = serverSocket.accept();</span>
+<span class="fc" id="L202">            socket.setSoTimeout(clientTimeout);</span>
+<span class="fc" id="L203">            long startTime = System.nanoTime();</span>
+<span class="fc" id="L204">            workerExecutor.submit(() -&gt; process(startTime, socket));</span>
+<span class="nc" id="L205">        } catch (SocketTimeoutException e) {</span>
+            // ignore.
+<span class="fc" id="L207">        } catch (IOException e) {</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">            if (workerExecutor.isShutdown()) {</span>
+<span class="fc" id="L209">                return;</span>
+            }
+<span class="nc" id="L211">            throw new UncheckedIOException(e);</span>
+<span class="nc" id="L212">        } catch (Exception e) {</span>
+<span class="nc" id="L213">            e.printStackTrace();</span>
+<span class="nc" id="L214">            throw new IllegalStateException(e);</span>
+<span class="pc" id="L215">        }</span>
+<span class="fc" id="L216">        workerExecutor.submit(this::accept);</span>
+<span class="fc" id="L217">    }</span>
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void process(long startTime, Socket socket) {
+<span class="pc" id="L221">        try (Socket ignore = socket;</span>
+<span class="fc" id="L222">             BufferedInputStream in = new BufferedInputStream(socket.getInputStream());</span>
+<span class="fc" id="L223">             BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());</span>
+<span class="fc" id="L224">             IOMessageReader reader = new IOMessageReader(in, serializer);</span>
+<span class="fc" id="L225">             IOMessageWriter writer = new IOMessageWriter(out, serializer)) {</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">            while (socket.isConnected()) {</span>
+<span class="fc" id="L227">                AtomicReference&lt;PServiceCall&gt; callRef = new AtomicReference&lt;&gt;();</span>
+<span class="fc" id="L228">                AtomicReference&lt;PServiceCall&gt; responseRef = new AtomicReference&lt;&gt;();</span>
+                try {
+<span class="fc" id="L230">                    DefaultProcessorHandler handler = new DefaultProcessorHandler(new WrappedProcessor(processor, (c, p) -&gt; {</span>
+<span class="fc" id="L231">                        callRef.set(c);</span>
+<span class="fc" id="L232">                        responseRef.set(p.handleCall(c));</span>
+<span class="fc" id="L233">                        return responseRef.get();</span>
+                    }));
+
+<span class="fc" id="L236">                    handler.process(reader, writer);</span>
+<span class="fc" id="L237">                    out.flush();</span>
+
+<span class="fc" id="L239">                    long endTime = System.nanoTime();</span>
+<span class="fc" id="L240">                    double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+                    try {
+<span class="fc" id="L242">                        instrumentation.onComplete(duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L243">                    } catch (Throwable th) {</span>
+<span class="nc" id="L244">                        LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="fc" id="L245">                    }</span>
+<span class="nc" id="L246">                } catch (IOException e) {</span>
+<span class="nc" id="L247">                    long endTime = System.nanoTime();</span>
+<span class="nc" id="L248">                    double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+                    try {
+<span class="nc" id="L250">                        instrumentation.onTransportException(e, duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L251">                    } catch (Throwable th) {</span>
+<span class="nc" id="L252">                        LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="nc" id="L253">                    }</span>
+
+<span class="nc" id="L255">                    throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L256">                }</span>
+
+<span class="fc" id="L258">                in.mark(1);</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">                if (in.read() &lt; 0) {</span>
+<span class="fc" id="L260">                    return;</span>
+                }
+<span class="fc" id="L262">                in.reset();</span>
+
+<span class="fc" id="L264">                startTime = System.nanoTime();</span>
+<span class="fc" id="L265">            }</span>
+<span class="pc bpc" id="L266" title="50 of 60 branches missed.">        } catch (IOException e) {</span>
+<span class="nc" id="L267">            throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="nc" id="L268">        }</span>
+<span class="nc" id="L269">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

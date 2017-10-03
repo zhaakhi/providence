@@ -174,7 +174,7 @@ public class ConstParser {
 
     private Object parseTypedValue(Token token, ThriftTokenizer tokenizer, PDescriptor valueType, boolean allowNull)
             throws IOException {
-<span class="pc bpc" id="L177" title="3 of 14 branches missed.">        switch (valueType.getType()) {</span>
+<span class="pc bpc" id="L177" title="1 of 14 branches missed.">        switch (valueType.getType()) {</span>
             case BOOL:
 <span class="fc bfc" id="L179" title="All 2 branches covered.">                if (token.isIdentifier()) {</span>
 <span class="fc" id="L180">                    return Boolean.parseBoolean(token.asString());</span>
@@ -289,93 +289,93 @@ public class ConstParser {
 <span class="fc" id="L289">                return list;</span>
             }
             case SET: {
-<span class="nc" id="L292">                PDescriptor itemType = ((PSet&lt;?&gt;) valueType).itemDescriptor();</span>
-<span class="nc" id="L293">                HashSet&lt;Object&gt; set = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L292">                PDescriptor itemType = ((PSet&lt;?&gt;) valueType).itemDescriptor();</span>
+<span class="fc" id="L293">                HashSet&lt;Object&gt; set = new HashSet&lt;&gt;();</span>
 
-<span class="nc bnc" id="L295" title="All 2 branches missed.">                if (!token.isSymbol(Token.kListStart)) {</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kListStart)) {</span>
 <span class="nc" id="L296">                    throw tokenizer.failure(token, &quot;Expected list start, found &quot; + token.asString());</span>
                 }
 
-<span class="nc" id="L299">                if (tokenizer.peek(&quot;checking for empty list&quot;)</span>
-<span class="nc bnc" id="L300" title="All 2 branches missed.">                             .isSymbol(Token.kListEnd)) {</span>
-<span class="nc" id="L301">                    tokenizer.next();</span>
-<span class="nc" id="L302">                    return set;</span>
+<span class="fc" id="L299">                if (tokenizer.peek(&quot;checking for empty list&quot;)</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">                             .isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L301">                    tokenizer.next();</span>
+<span class="fc" id="L302">                    return set;</span>
                 }
 
                 while (true) {
-<span class="nc" id="L306">                    token = tokenizer.expect(&quot;set item value&quot;);</span>
-<span class="nc bnc" id="L307" title="All 2 branches missed.">                    if (token.strEquals(ThriftTokenizer.kLineCommentStart)) {</span>
+<span class="fc" id="L306">                    token = tokenizer.expect(&quot;set item value&quot;);</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">                    if (token.strEquals(ThriftTokenizer.kLineCommentStart)) {</span>
 <span class="nc" id="L308">                        skipUntil(tokenizer, (byte) '\n');</span>
 <span class="nc" id="L309">                        continue;</span>
-<span class="nc bnc" id="L310" title="All 2 branches missed.">                    } else if (token.strEquals(ThriftTokenizer.kBlockCommentStart)) {</span>
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">                    } else if (token.strEquals(ThriftTokenizer.kBlockCommentStart)) {</span>
 <span class="nc" id="L311">                        skipUntil(tokenizer, ThriftTokenizer.kBlockCommentEnd.getBytes(UTF_8));</span>
 <span class="nc" id="L312">                        continue;</span>
                     }
-<span class="nc" id="L314">                    set.add(parseTypedValue(token, tokenizer, itemType, false));</span>
+<span class="fc" id="L314">                    set.add(parseTypedValue(token, tokenizer, itemType, false));</span>
 
-<span class="nc" id="L316">                    Token sep = tokenizer.peek(&quot;optional item sep&quot;);</span>
-<span class="nc bnc" id="L317" title="All 4 branches missed.">                    if (sep.isSymbol(Token.kLineSep1) || sep.isSymbol(Token.kLineSep2)) {</span>
-<span class="nc" id="L318">                        tokenizer.next();</span>
-<span class="nc" id="L319">                        sep = tokenizer.peek(&quot;check for set end&quot;);</span>
+<span class="fc" id="L316">                    Token sep = tokenizer.peek(&quot;optional item sep&quot;);</span>
+<span class="pc bpc" id="L317" title="1 of 4 branches missed.">                    if (sep.isSymbol(Token.kLineSep1) || sep.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L318">                        tokenizer.next();</span>
+<span class="fc" id="L319">                        sep = tokenizer.peek(&quot;check for set end&quot;);</span>
                     }
-<span class="nc bnc" id="L321" title="All 2 branches missed.">                    if (sep.isSymbol(Token.kListEnd)) {</span>
-<span class="nc" id="L322">                        tokenizer.next();</span>
-<span class="nc" id="L323">                        break;</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">                    if (sep.isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L322">                        tokenizer.next();</span>
+<span class="fc" id="L323">                        break;</span>
                     }
-<span class="nc" id="L325">                }</span>
-<span class="nc" id="L326">                return set;</span>
+<span class="fc" id="L325">                }</span>
+<span class="fc" id="L326">                return set;</span>
             }
             case MAP: {
-<span class="nc" id="L329">                PDescriptor itemType = ((PMap&lt;?, ?&gt;) valueType).itemDescriptor();</span>
-<span class="nc" id="L330">                PDescriptor keyType = ((PMap&lt;?, ?&gt;) valueType).keyDescriptor();</span>
+<span class="fc" id="L329">                PDescriptor itemType = ((PMap&lt;?, ?&gt;) valueType).itemDescriptor();</span>
+<span class="fc" id="L330">                PDescriptor keyType = ((PMap&lt;?, ?&gt;) valueType).keyDescriptor();</span>
 
-<span class="nc" id="L332">                HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L332">                HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span>
 
-<span class="nc bnc" id="L334" title="All 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="pc bpc" id="L334" title="1 of 2 branches missed.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
 <span class="nc" id="L335">                    throw tokenizer.failure(token, &quot;Expected map start, found &quot; + token.asString());</span>
                 }
 
-<span class="nc" id="L338">                if (tokenizer.peek(&quot;checking for empty map&quot;)</span>
-<span class="nc bnc" id="L339" title="All 2 branches missed.">                             .isSymbol(Token.kMessageEnd)) {</span>
-<span class="nc" id="L340">                    tokenizer.next();</span>
-<span class="nc" id="L341">                    return map;</span>
+<span class="fc" id="L338">                if (tokenizer.peek(&quot;checking for empty map&quot;)</span>
+<span class="fc bfc" id="L339" title="All 2 branches covered.">                             .isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L340">                    tokenizer.next();</span>
+<span class="fc" id="L341">                    return map;</span>
                 }
 
                 while (true) {
-<span class="nc" id="L345">                    token = tokenizer.expect(&quot;map key&quot;);</span>
-<span class="nc bnc" id="L346" title="All 2 branches missed.">                    if (token.strEquals(ThriftTokenizer.kLineCommentStart)) {</span>
+<span class="fc" id="L345">                    token = tokenizer.expect(&quot;map key&quot;);</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">                    if (token.strEquals(ThriftTokenizer.kLineCommentStart)) {</span>
 <span class="nc" id="L347">                        skipUntil(tokenizer, (byte) '\n');</span>
 <span class="nc" id="L348">                        continue;</span>
-<span class="nc bnc" id="L349" title="All 2 branches missed.">                    } else if (token.strEquals(ThriftTokenizer.kBlockCommentStart)) {</span>
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">                    } else if (token.strEquals(ThriftTokenizer.kBlockCommentStart)) {</span>
 <span class="nc" id="L350">                        skipUntil(tokenizer, ThriftTokenizer.kBlockCommentEnd.getBytes(UTF_8));</span>
 <span class="nc" id="L351">                        continue;</span>
                     }
 
                     Object key;
-<span class="nc bnc" id="L355" title="All 2 branches missed.">                    if (token.isStringLiteral()) {</span>
+<span class="pc bpc" id="L355" title="1 of 2 branches missed.">                    if (token.isStringLiteral()) {</span>
 <span class="nc" id="L356">                        key = parsePrimitiveKey(token.decodeLiteral(true), token, tokenizer, keyType);</span>
                     } else {
-<span class="nc bnc" id="L358" title="All 2 branches missed.">                        if (keyType.getType().equals(PType.STRING) ||</span>
-<span class="nc bnc" id="L359" title="All 2 branches missed.">                            keyType.getType().equals(PType.BINARY)) {</span>
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">                        if (keyType.getType().equals(PType.STRING) ||</span>
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">                            keyType.getType().equals(PType.BINARY)) {</span>
 <span class="nc" id="L360">                            throw tokenizer.failure(token, &quot;Expected string literal for string key&quot;);</span>
                         }
-<span class="nc" id="L362">                        key = parsePrimitiveKey(token.asString(), token, tokenizer, keyType);</span>
+<span class="fc" id="L362">                        key = parsePrimitiveKey(token.asString(), token, tokenizer, keyType);</span>
                     }
-<span class="nc" id="L364">                    tokenizer.expectSymbol(&quot;map KV separator&quot;, Token.kKeyValueSep);</span>
-<span class="nc" id="L365">                    map.put(key, parseTypedValue(tokenizer.expect(&quot;map value&quot;), tokenizer, itemType, false));</span>
+<span class="fc" id="L364">                    tokenizer.expectSymbol(&quot;map KV separator&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L365">                    map.put(key, parseTypedValue(tokenizer.expect(&quot;map value&quot;), tokenizer, itemType, false));</span>
 
-<span class="nc" id="L367">                    Token sep = tokenizer.peek(&quot;optional item sep&quot;);</span>
-<span class="nc bnc" id="L368" title="All 4 branches missed.">                    if (sep.isSymbol(Token.kLineSep1) || sep.isSymbol(Token.kLineSep2)) {</span>
-<span class="nc" id="L369">                        tokenizer.next();</span>
-<span class="nc" id="L370">                        sep = tokenizer.peek(&quot;check for map end&quot;);</span>
+<span class="fc" id="L367">                    Token sep = tokenizer.peek(&quot;optional item sep&quot;);</span>
+<span class="pc bpc" id="L368" title="1 of 4 branches missed.">                    if (sep.isSymbol(Token.kLineSep1) || sep.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L369">                        tokenizer.next();</span>
+<span class="fc" id="L370">                        sep = tokenizer.peek(&quot;check for map end&quot;);</span>
                     }
-<span class="nc bnc" id="L372" title="All 2 branches missed.">                    if (sep.isSymbol(Token.kMessageEnd)) {</span>
-<span class="nc" id="L373">                        tokenizer.next();</span>
-<span class="nc" id="L374">                        break;</span>
+<span class="fc bfc" id="L372" title="All 2 branches covered.">                    if (sep.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L373">                        tokenizer.next();</span>
+<span class="fc" id="L374">                        break;</span>
                     }
-<span class="nc" id="L376">                }</span>
+<span class="fc" id="L376">                }</span>
 
-<span class="nc" id="L378">                return map;</span>
+<span class="fc" id="L378">                return map;</span>
             }
             default:
 <span class="nc" id="L381">                throw new IllegalArgumentException(&quot;Unhandled item type &quot; + valueType.getQualifiedName());</span>
@@ -384,25 +384,25 @@ public class ConstParser {
 
     private Object parsePrimitiveKey(String key, Token token, ThriftTokenizer tokenizer, PDescriptor keyType)
             throws IOException {
-<span class="nc bnc" id="L387" title="All 10 branches missed.">        switch (keyType.getType()) {</span>
+<span class="pc bpc" id="L387" title="8 of 10 branches missed.">        switch (keyType.getType()) {</span>
             case ENUM:
-<span class="nc" id="L389">                PEnumBuilder&lt;?&gt; eb = ((PEnumDescriptor&lt;?&gt;) keyType).builder();</span>
-<span class="nc bnc" id="L390" title="All 2 branches missed.">                if (Strings.isInteger(key)) {</span>
-<span class="nc" id="L391">                    return eb.setById(Integer.parseInt(key))</span>
-<span class="nc" id="L392">                             .build();</span>
+<span class="fc" id="L389">                PEnumBuilder&lt;?&gt; eb = ((PEnumDescriptor&lt;?&gt;) keyType).builder();</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">                if (Strings.isInteger(key)) {</span>
+<span class="fc" id="L391">                    return eb.setById(Integer.parseInt(key))</span>
+<span class="fc" id="L392">                             .build();</span>
                 } else {
-<span class="nc bnc" id="L394" title="All 2 branches missed.">                    if (key.startsWith(keyType.getProgramName() + &quot;.&quot; + keyType.getName() + &quot;.&quot;)) {</span>
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">                    if (key.startsWith(keyType.getProgramName() + &quot;.&quot; + keyType.getName() + &quot;.&quot;)) {</span>
                         // Check for qualified type prefixed identifier ( e.g. program.EnumName.VALUE ).
 <span class="nc" id="L396">                        key = key.substring(keyType.getProgramName().length() + keyType.getName().length() + 2);</span>
-<span class="nc bnc" id="L397" title="All 2 branches missed.">                    } else if (key.startsWith(keyType.getName() + &quot;.&quot;)) {</span>
+<span class="pc bpc" id="L397" title="1 of 2 branches missed.">                    } else if (key.startsWith(keyType.getName() + &quot;.&quot;)) {</span>
                         // Check for type prefixed identifier ( e.g. EnumName.VALUE ).
-<span class="nc" id="L399">                        key = key.substring(keyType.getName().length() + 1);</span>
+<span class="fc" id="L399">                        key = key.substring(keyType.getName().length() + 1);</span>
                     }
-<span class="nc" id="L401">                    return eb.setByName(key)</span>
-<span class="nc" id="L402">                             .build();</span>
+<span class="fc" id="L401">                    return eb.setByName(key)</span>
+<span class="fc" id="L402">                             .build();</span>
                 }
             case BOOL:
-<span class="nc" id="L405">                return Boolean.parseBoolean(key);</span>
+<span class="fc" id="L405">                return Boolean.parseBoolean(key);</span>
             case BYTE:
 <span class="nc bnc" id="L407" title="All 2 branches missed.">                if (Strings.isInteger(key)) {</span>
 <span class="nc" id="L408">                    return Byte.parseByte(key);</span>
