@@ -97,21 +97,21 @@ public class ReferenceConfigSupplier&lt;
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
-    private &lt;
-            RefMessage extends PMessage&lt;RefMessage, RefField&gt;, RefField extends PField,
-            ParentMessage extends PMessage&lt;ParentMessage, ParentField&gt;, ParentField extends PField&gt;
-    RefMessage getReference(ParentMessage parent) throws ProvidenceConfigException {
-<span class="fc" id="L104">        PMessage current = parent;</span>
-<span class="fc" id="L105">        String[] fieldNames = referencePath.split(&quot;[.]&quot;);</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">        for (String name : fieldNames) {</span>
-<span class="fc" id="L107">            PField field = current.descriptor().findFieldByName(name);</span>
-<span class="pc bpc" id="L108" title="1 of 2 branches missed.">            if (field == null) {</span>
-<span class="nc" id="L109">                throw new ProvidenceConfigException(&quot;No such field &quot; + name + &quot; in &quot; + current.descriptor().getQualifiedName() + &quot; from &quot; + referencePath);</span>
+    private RefMessage getReference(ParentMessage parent) throws ProvidenceConfigException {
+<span class="fc" id="L101">        PMessage&lt;?,?&gt; current = parent;</span>
+<span class="fc" id="L102">        String[] fieldNames = referencePath.split(&quot;[.]&quot;);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        for (String name : fieldNames) {</span>
+<span class="fc" id="L104">            PField field = current.descriptor().findFieldByName(name);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">            if (field == null) {</span>
+<span class="nc" id="L106">                throw new ProvidenceConfigException(&quot;No such field &quot; + name + &quot; in &quot; + current.descriptor().getQualifiedName() + &quot; from &quot; + referencePath);</span>
             }
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">            if (field.getType() != PType.MESSAGE) {</span>
-<span class="nc" id="L112">                throw new ProvidenceConfigException(&quot;Field &quot; + name + &quot; in &quot; + current.descriptor().getQualifiedName() + &quot; is not a message, from &quot; + referencePath);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">            if (field.getType() != PType.MESSAGE) {</span>
+<span class="nc" id="L109">                throw new ProvidenceConfigException(&quot;Field &quot; + name + &quot; in &quot; + current.descriptor().getQualifiedName() + &quot; is not a message, from &quot; + referencePath);</span>
             }
-<span class="fc" id="L114">            current = (PMessage) current.get(field);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">            if (!current.has(field.getId())) {</span>
+<span class="nc" id="L112">                throw new ProvidenceConfigException(&quot;Field &quot; + name + &quot; in &quot; + current.descriptor().getQualifiedName() + &quot; is missing, from &quot; + referencePath);</span>
+            }
+<span class="fc" id="L114">            current = current.get(field.getId());</span>
         }
 <span class="fc" id="L116">        return (RefMessage) current;</span>
     }

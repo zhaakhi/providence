@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RollingFileMessageWriter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio</a> &gt; <span class="el_source">RollingFileMessageWriter.java</span></div><h1>RollingFileMessageWriter.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015-2016 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.mio;
+
+import net.morimekta.providence.PMessage;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.serializer.Serializer;
+
+import com.google.common.annotations.Beta;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * A simple rolling file message writer in the same manner that logging
+ * often does, e.g. the 'RollingFileAppender' from lockback.
+ * &lt;p&gt;
+ * the message writer MUST be assigned a rolling policy, and MAY be
+ * assigned a cleanup policy. Note that the cleanup policy will only be
+ * triggered when the rolling policy triggers a file update.
+ * &lt;p&gt;
+ * Also note that the RollingFileMessageWriter is NOT thread safe. So
+ * if you need to write to the message writer from multiple threads, you
+ * will either have to synchronize the calls yourself, or use the
+ * {@link QueuedMessageWriter}.
+ */
+public class RollingFileMessageWriter implements MessageWriter {
+    /**
+     * Create a rolling file message writer without a cleanup policy.
+     *
+     * @param directory The directory to place the message files into.
+     * @param serializer The message serializer to use.
+     * @param currentName The name of the current file symbolic link.
+     * @param rollingPolicy The rolling policy.
+     */
+    public RollingFileMessageWriter(@Nonnull File directory,
+                                    @Nonnull Serializer serializer,
+                                    @Nonnull String currentName,
+                                    @Nonnull RollingPolicy rollingPolicy) {
+<span class="fc" id="L68">        this(directory, serializer, currentName, rollingPolicy, null);</span>
+<span class="fc" id="L69">    }</span>
+
+    /**
+     * Create a rolling file message writer.
+     *
+     * @param directory The directory to place the message files into.
+     * @param serializer The message serializer to use.
+     * @param currentName The name of the current file symbolic link.
+     * @param rollingPolicy The rolling policy.
+     * @param cleanupPolicy Optional cleanup policy.
+     */
+    public RollingFileMessageWriter(@Nonnull File directory,
+                                    @Nonnull Serializer serializer,
+                                    @Nonnull String currentName,
+                                    @Nonnull RollingPolicy rollingPolicy,
+<span class="fc" id="L84">                                    @Nullable CleanupPolicy cleanupPolicy) {</span>
+        try {
+<span class="fc" id="L86">            this.directory = directory.getCanonicalFile().getAbsoluteFile();</span>
+<span class="fc" id="L87">            this.serializer = serializer;</span>
+<span class="fc" id="L88">            this.currentName = currentName;</span>
+<span class="fc" id="L89">            this.rollingPolicy = rollingPolicy;</span>
+<span class="fc" id="L90">            this.cleanupPolicy = cleanupPolicy;</span>
+
+<span class="fc" id="L92">            Files.createDirectories(directory.toPath());</span>
+<span class="nc" id="L93">        } catch (IOException e) {</span>
+<span class="nc" id="L94">            throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L95">        }</span>
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * Interface for rolling policy implementations.
+     */
+    @FunctionalInterface
+    public interface RollingPolicy {
+        /**
+         * Maybe call the current file updater.
+         * @param onRollFile The current file updater to call if the current file
+         *                   should roll over.
+         * @param initialCall If this is the initial call, and the current
+         *                    file updater should be called regardless.
+         * @throws IOException If the file roll or update check failed.
+         */
+        void maybeUpdateCurrentFile(@Nonnull CurrentFileUpdater onRollFile,
+                                    boolean initialCall) throws IOException;
+    }
+
+    /**
+     * Interface for calling back to the rolling file message writen when a file roll
+     * is supposed to happen.
+     */
+    @FunctionalInterface
+    public interface CurrentFileUpdater {
+        void updateCurrentFile(@Nonnull String newFileName) throws IOException;
+    }
+
+    /**
+     * Interface for cleanup policy implementations.
+     */
+    @FunctionalInterface
+    public interface CleanupPolicy {
+        /**
+         * Get a list of files that needs to be deleted because of the cleanup policy.
+         *
+         * @param candidateFiles List of the files that can be cleaned up. This does NOT
+         *                       include the currently written files (current file and
+         *                       symlink).
+         * @param currentFileName The current file name.
+         * @return List of files that needs to be deleted.
+         */
+        @Nonnull List&lt;String&gt; getFilesToDelete(@Nonnull List&lt;String&gt; candidateFiles,
+                                               @Nonnull String currentFileName);
+    }
+
+    @Override
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt; int write(Message message)
+            throws IOException {
+<span class="fc" id="L145">        FileMessageWriter writer = getWriter();</span>
+<span class="fc" id="L146">        int i = writer.write(message);</span>
+<span class="fc" id="L147">        i += writer.separator();</span>
+<span class="fc" id="L148">        return i;</span>
+    }
+
+    @Override
+    public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt; int write(PServiceCall&lt;Message, Field&gt; call)
+            throws IOException {
+<span class="fc" id="L154">        FileMessageWriter writer = getWriter();</span>
+<span class="fc" id="L155">        int i = writer.write(call);</span>
+<span class="fc" id="L156">        i += writer.separator();</span>
+<span class="fc" id="L157">        return i;</span>
+    }
+
+    @Override
+    public int separator() throws IOException {
+<span class="fc" id="L162">        return 0;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (currentWriter != null) {</span>
+            try {
+<span class="fc" id="L169">                currentWriter.close();</span>
+            } finally {
+<span class="pc" id="L171">                currentWriter = null;</span>
+<span class="fc" id="L172">            }</span>
+        }
+<span class="fc" id="L174">    }</span>
+
+    private final Serializer        serializer;
+    private final File              directory;
+    private final String            currentName;
+    private final RollingPolicy     rollingPolicy;
+    private final CleanupPolicy     cleanupPolicy;
+    private       File              currentFile;
+    private       FileMessageWriter currentWriter;
+    private       boolean           shouldDoCleanup;
+
+    private void updateWriter(String rollToFile) throws IOException {
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (rollToFile.contains(File.separator)) {</span>
+<span class="nc" id="L187">            throw new IllegalArgumentException(&quot;rolling file path &quot; + rollToFile + &quot; is not contained in output directory.&quot;);</span>
+        }
+
+<span class="fc" id="L190">        close();  // close the old writer, it it was opened.</span>
+
+<span class="fc" id="L192">        currentFile = new File(directory, rollToFile);</span>
+<span class="fc" id="L193">        Path link = new File(directory, currentName).toPath();</span>
+
+<span class="fc" id="L195">        currentWriter = new FileMessageWriter(currentFile, serializer, true);</span>
+<span class="fc" id="L196">        currentWriter.getOutputStream();  // triggers creation of the file.</span>
+
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">        if (!rollToFile.equals(currentName)) {</span>
+            // This should result in an atomic switch from old to new &quot;current&quot; logfile.
+<span class="fc" id="L200">            Path tmp = Files.createTempFile(directory.toPath(), &quot;.pvd.&quot;, &quot;.link&quot;);</span>
+<span class="fc" id="L201">            Files.deleteIfExists(tmp);</span>
+<span class="fc" id="L202">            Files.createSymbolicLink(tmp, currentFile.toPath());</span>
+<span class="fc" id="L203">            Files.move(tmp, link, StandardCopyOption.REPLACE_EXISTING);</span>
+        }
+
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        if (cleanupPolicy != null) {</span>
+<span class="fc" id="L207">            shouldDoCleanup = true;</span>
+        }
+<span class="fc" id="L209">    }</span>
+
+    private FileMessageWriter getWriter() throws IOException {
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        rollingPolicy.maybeUpdateCurrentFile(this::updateWriter, currentWriter == null);</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (currentWriter == null) {</span>
+<span class="nc" id="L214">            updateWriter(currentName);</span>
+        }
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        if (shouldDoCleanup) {</span>
+<span class="fc" id="L217">            shouldDoCleanup = false;</span>
+
+<span class="fc" id="L219">            String[] files = directory.list();</span>
+<span class="pc bpc" id="L220" title="1 of 4 branches missed.">            if (files != null &amp;&amp; files.length &gt; 2) {</span>
+                // More than the currentFile and the symlink.
+<span class="fc" id="L222">                List&lt;String&gt; toDelete = cleanupPolicy.getFilesToDelete(</span>
+<span class="fc" id="L223">                        Arrays.stream(files)</span>
+<span class="fc bfc" id="L224" title="All 4 branches covered.">                              .filter(f -&gt; !f.equals(currentName) &amp;&amp; !f.equals(currentFile.getName()))</span>
+<span class="fc" id="L225">                              .collect(Collectors.toList()),</span>
+<span class="fc" id="L226">                        currentFile.getName());</span>
+<span class="fc" id="L227">                toDelete.forEach(del -&gt; {</span>
+                    try {
+                        // Delete if exists, just in case the file was deleted by someone else
+                        // while we figured out.
+<span class="fc" id="L231">                        Files.deleteIfExists(new File(directory, del).toPath());</span>
+<span class="nc" id="L232">                    } catch (IOException e) {</span>
+<span class="nc" id="L233">                        throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L234">                    }</span>
+<span class="fc" id="L235">                });</span>
+            }
+        }
+<span class="fc" id="L238">        return currentWriter;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

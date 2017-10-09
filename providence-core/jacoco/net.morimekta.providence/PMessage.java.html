@@ -50,16 +50,18 @@ public interface PMessage&lt;Message extends PMessage&lt;Message, Field&gt;, Fie
 
     /**
      * @param key The key of the field.
+     * @param &lt;T&gt; The return type.
      * @return The value of the field.
      */
-    Object get(int key);
+    &lt;T&gt; T get(int key);
 
     /**
      * @param field The field.
+     * @param &lt;T&gt; The return type.
      * @return Whether the field is present.
      */
-    default Object get(@Nonnull Field field) {
-<span class="fc" id="L62">        return get(field.getId());</span>
+    default &lt;T&gt; T get(@Nonnull Field field) {
+<span class="fc" id="L64">        return get(field.getId());</span>
     }
 
     /**
@@ -78,7 +80,7 @@ public interface PMessage&lt;Message extends PMessage&lt;Message, Field&gt;, Fie
      */
     @Nonnull
     default Message mergeWith(Message other) {
-<span class="fc" id="L81">        return mutate().merge(other).build();</span>
+<span class="fc" id="L83">        return mutate().merge(other).build();</span>
     }
 
     /**

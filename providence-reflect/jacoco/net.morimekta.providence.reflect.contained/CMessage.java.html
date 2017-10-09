@@ -21,11 +21,8 @@
 package net.morimekta.providence.reflect.contained;
 
 import net.morimekta.providence.PMessage;
-import net.morimekta.providence.descriptor.PPrimitive;
-import net.morimekta.providence.descriptor.PRequirement;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -43,38 +40,31 @@ public interface CMessage&lt;Message extends PMessage&lt;Message, CField&gt;&gt;
 
     @Override
     default boolean has(int key) {
-<span class="fc" id="L46">        CField field = descriptor().findFieldById(key);</span>
-<span class="fc bfc" id="L47" title="All 4 branches covered.">        return field != null &amp;&amp; values().containsKey(key);</span>
+<span class="fc" id="L43">        CField field = descriptor().findFieldById(key);</span>
+<span class="fc bfc" id="L44" title="All 4 branches covered.">        return field != null &amp;&amp; values().containsKey(key);</span>
     }
 
     @Override
-    default Object get(int key) {
-<span class="fc" id="L52">        CField field = descriptor().findFieldById(key);</span>
-<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (field != null) {</span>
-<span class="fc" id="L54">            Object value = values().get(key);</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">            if (value != null) {</span>
-<span class="fc" id="L56">                return value;</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">            } else if (field.hasDefaultValue()) {</span>
-<span class="fc" id="L58">                return field.getDefaultValue();</span>
-<span class="pc bpc" id="L59" title="1 of 4 branches missed.">            } else if ((field.getDescriptor() instanceof PPrimitive &amp;&amp; ((PPrimitive) field.getDescriptor()).isNativePrimitive()) ||</span>
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">                       (field.getRequirement() != PRequirement.OPTIONAL)) {</span>
-<span class="fc" id="L61">                return field.getDescriptor().getDefaultValue();</span>
-            }
+    @SuppressWarnings(&quot;unchecked&quot;)
+    default &lt;T&gt; T get(int key) {
+<span class="fc" id="L50">        CField field = descriptor().findFieldById(key);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (field != null) {</span>
+<span class="fc" id="L52">            return (T) values().get(key);</span>
         }
-<span class="fc" id="L64">        return null;</span>
+<span class="fc" id="L54">        return null;</span>
     }
 
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     default int compareTo(@Nonnull Message other) {
-<span class="fc" id="L70">        return CStruct.compareMessages((Message) this, other);</span>
+<span class="fc" id="L60">        return CStruct.compareMessages((Message) this, other);</span>
     }
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     default String asString() {
-<span class="fc" id="L77">        return CStruct.asString((PMessage) this);</span>
+<span class="fc" id="L67">        return CStruct.asString((PMessage) this);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

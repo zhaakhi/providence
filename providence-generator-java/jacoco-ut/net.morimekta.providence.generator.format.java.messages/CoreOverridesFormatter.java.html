@@ -152,324 +152,343 @@ public class CoreOverridesFormatter implements MessageMemberFormatter {
 <span class="fc" id="L152">        String typeClass = message.getDescriptorClass();</span>
 <span class="fc" id="L153">        String providerClass = message.getProviderClass();</span>
 
-<span class="fc" id="L155">        writer.formatln(&quot;public static %s&lt;%s,_Field&gt; provider() {&quot;, providerClass, message.instanceType())</span>
-<span class="fc" id="L156">              .begin()</span>
-<span class="fc" id="L157">              .formatln(&quot;return new _Provider();&quot;)</span>
-<span class="fc" id="L158">              .end()</span>
-<span class="fc" id="L159">              .appendln('}')</span>
-<span class="fc" id="L160">              .newline();</span>
+<span class="fc" id="L155">        writer.appendln(&quot;@&quot; + Nonnull.class.getName())</span>
+<span class="fc" id="L156">              .formatln(&quot;public static %s&lt;%s,_Field&gt; provider() {&quot;, providerClass, message.instanceType())</span>
+<span class="fc" id="L157">              .begin()</span>
+<span class="fc" id="L158">              .formatln(&quot;return new _Provider();&quot;)</span>
+<span class="fc" id="L159">              .end()</span>
+<span class="fc" id="L160">              .appendln('}')</span>
+<span class="fc" id="L161">              .newline();</span>
 
-<span class="fc" id="L162">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L163">              .formatln(&quot;public %s&lt;%s,_Field&gt; descriptor() {&quot;, typeClass, message.instanceType())</span>
-<span class="fc" id="L164">              .begin()</span>
-<span class="fc" id="L165">              .appendln(&quot;return kDescriptor;&quot;)</span>
-<span class="fc" id="L166">              .end()</span>
-<span class="fc" id="L167">              .appendln('}')</span>
-<span class="fc" id="L168">              .newline();</span>
+<span class="fc" id="L163">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L164">              .appendln(&quot;@&quot; + Nonnull.class.getName())</span>
+<span class="fc" id="L165">              .formatln(&quot;public %s&lt;%s,_Field&gt; descriptor() {&quot;, typeClass, message.instanceType())</span>
+<span class="fc" id="L166">              .begin()</span>
+<span class="fc" id="L167">              .appendln(&quot;return kDescriptor;&quot;)</span>
+<span class="fc" id="L168">              .end()</span>
+<span class="fc" id="L169">              .appendln('}')</span>
+<span class="fc" id="L170">              .newline();</span>
 
-<span class="fc" id="L170">        writer.formatln(&quot;public static final %s&lt;%s,_Field&gt; kDescriptor;&quot;, typeClass, message.instanceType())</span>
-<span class="fc" id="L171">              .newline();</span>
+<span class="fc" id="L172">        writer.formatln(&quot;public static final %s&lt;%s,_Field&gt; kDescriptor;&quot;, typeClass, message.instanceType())</span>
+<span class="fc" id="L173">              .newline();</span>
 
-<span class="fc" id="L173">        String jsonCompactibleDescriptor = &quot;&quot;;</span>
-<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (message.jsonCompactible()) {</span>
-<span class="fc" id="L175">            jsonCompactibleDescriptor = &quot; implements &quot; + JsonCompactibleDescriptor.class.getName();</span>
+<span class="fc" id="L175">        String jsonCompactibleDescriptor = &quot;&quot;;</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        if (message.jsonCompactible()) {</span>
+<span class="fc" id="L177">            jsonCompactibleDescriptor = &quot; implements &quot; + JsonCompactibleDescriptor.class.getName();</span>
         }
 
-<span class="fc" id="L178">        writer.formatln(&quot;private static class _Descriptor&quot;)</span>
-<span class="fc" id="L179">              .formatln(&quot;        extends %s&lt;%s,_Field&gt;%s {&quot;, typeClass, message.instanceType(), jsonCompactibleDescriptor)</span>
-<span class="fc" id="L180">              .begin()</span>
-<span class="fc" id="L181">              .appendln(&quot;public _Descriptor() {&quot;)</span>
-<span class="fc" id="L182">              .begin();</span>
-<span class="fc" id="L183">        writer.formatln(&quot;super(\&quot;%s\&quot;, \&quot;%s\&quot;, _Builder::new, %b);&quot;,</span>
-<span class="fc" id="L184">                        message.descriptor().getProgramName(),</span>
-<span class="fc" id="L185">                        message.descriptor().getName(),</span>
-<span class="fc" id="L186">                        message.descriptor().isSimple());</span>
+<span class="fc" id="L180">        writer.formatln(&quot;private static class _Descriptor&quot;)</span>
+<span class="fc" id="L181">              .formatln(&quot;        extends %s&lt;%s,_Field&gt;%s {&quot;, typeClass, message.instanceType(), jsonCompactibleDescriptor)</span>
+<span class="fc" id="L182">              .begin()</span>
+<span class="fc" id="L183">              .appendln(&quot;public _Descriptor() {&quot;)</span>
+<span class="fc" id="L184">              .begin();</span>
+<span class="fc" id="L185">        writer.formatln(&quot;super(\&quot;%s\&quot;, \&quot;%s\&quot;, _Builder::new, %b);&quot;,</span>
+<span class="fc" id="L186">                        message.descriptor().getProgramName(),</span>
+<span class="fc" id="L187">                        message.descriptor().getName(),</span>
+<span class="fc" id="L188">                        message.descriptor().isSimple());</span>
 
-<span class="fc" id="L188">        writer.end()</span>
-<span class="fc" id="L189">              .appendln('}')</span>
-<span class="fc" id="L190">              .newline()</span>
-<span class="fc" id="L191">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L192">              .appendln(JAnnotation.NON_NULL)</span>
-<span class="fc" id="L193">              .appendln(&quot;public _Field[] getFields() {&quot;)</span>
-<span class="fc" id="L194">              .begin()</span>
-<span class="fc" id="L195">              .appendln(&quot;return _Field.values();&quot;)</span>
-<span class="fc" id="L196">              .end()</span>
-<span class="fc" id="L197">              .appendln('}')</span>
-<span class="fc" id="L198">              .newline()</span>
-<span class="fc" id="L199">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L200">              .appendln(JAnnotation.NULLABLE)</span>
-<span class="fc" id="L201">              .appendln(&quot;public _Field findFieldByName(String name) {&quot;)</span>
-<span class="fc" id="L202">              .begin()</span>
-<span class="fc" id="L203">              .appendln(&quot;return _Field.findByName(name);&quot;)</span>
-<span class="fc" id="L204">              .end()</span>
-<span class="fc" id="L205">              .appendln('}')</span>
-<span class="fc" id="L206">              .newline()</span>
-<span class="fc" id="L207">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L208">              .appendln(JAnnotation.NULLABLE)</span>
-<span class="fc" id="L209">              .appendln(&quot;public _Field findFieldById(int id) {&quot;)</span>
-<span class="fc" id="L210">              .begin()</span>
-<span class="fc" id="L211">              .appendln(&quot;return _Field.findById(id);&quot;)</span>
-<span class="fc" id="L212">              .end()</span>
-<span class="fc" id="L213">              .appendln('}')</span>
+<span class="fc" id="L190">        writer.end()</span>
+<span class="fc" id="L191">              .appendln('}')</span>
+<span class="fc" id="L192">              .newline()</span>
+<span class="fc" id="L193">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L194">              .appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L195">              .appendln(&quot;public _Field[] getFields() {&quot;)</span>
+<span class="fc" id="L196">              .begin()</span>
+<span class="fc" id="L197">              .appendln(&quot;return _Field.values();&quot;)</span>
+<span class="fc" id="L198">              .end()</span>
+<span class="fc" id="L199">              .appendln('}')</span>
+<span class="fc" id="L200">              .newline()</span>
+<span class="fc" id="L201">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L202">              .appendln(JAnnotation.NULLABLE)</span>
+<span class="fc" id="L203">              .appendln(&quot;public _Field findFieldByName(String name) {&quot;)</span>
+<span class="fc" id="L204">              .begin()</span>
+<span class="fc" id="L205">              .appendln(&quot;return _Field.findByName(name);&quot;)</span>
+<span class="fc" id="L206">              .end()</span>
+<span class="fc" id="L207">              .appendln('}')</span>
+<span class="fc" id="L208">              .newline()</span>
+<span class="fc" id="L209">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L210">              .appendln(JAnnotation.NULLABLE)</span>
+<span class="fc" id="L211">              .appendln(&quot;public _Field findFieldById(int id) {&quot;)</span>
+<span class="fc" id="L212">              .begin()</span>
+<span class="fc" id="L213">              .appendln(&quot;return _Field.findById(id);&quot;)</span>
 <span class="fc" id="L214">              .end()</span>
 <span class="fc" id="L215">              .appendln('}')</span>
-<span class="fc" id="L216">              .newline();</span>
+<span class="fc" id="L216">              .end()</span>
+<span class="fc" id="L217">              .appendln('}')</span>
+<span class="fc" id="L218">              .newline();</span>
 
-<span class="fc" id="L218">        writer.formatln(&quot;static {&quot;, typeClass, message.instanceType())</span>
-<span class="fc" id="L219">              .begin()</span>
-<span class="fc" id="L220">              .appendln(&quot;kDescriptor = new _Descriptor();&quot;)</span>
-<span class="fc" id="L221">              .end()</span>
-<span class="fc" id="L222">              .appendln('}')</span>
-<span class="fc" id="L223">              .newline();</span>
+<span class="fc" id="L220">        writer.formatln(&quot;static {&quot;, typeClass, message.instanceType())</span>
+<span class="fc" id="L221">              .begin()</span>
+<span class="fc" id="L222">              .appendln(&quot;kDescriptor = new _Descriptor();&quot;)</span>
+<span class="fc" id="L223">              .end()</span>
+<span class="fc" id="L224">              .appendln('}')</span>
+<span class="fc" id="L225">              .newline();</span>
 
-<span class="fc" id="L225">        writer.formatln(&quot;private final static class _Provider extends %s&lt;%s,_Field&gt; {&quot;,</span>
+<span class="fc" id="L227">        writer.formatln(&quot;private final static class _Provider extends %s&lt;%s,_Field&gt; {&quot;,</span>
                         providerClass,
-<span class="fc" id="L227">                        message.instanceType())</span>
-<span class="fc" id="L228">              .begin()</span>
-<span class="fc" id="L229">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L230">              .formatln(&quot;public %s&lt;%s,_Field&gt; descriptor() {&quot;, typeClass, message.instanceType())</span>
-<span class="fc" id="L231">              .begin()</span>
-<span class="fc" id="L232">              .appendln(&quot;return kDescriptor;&quot;)</span>
-<span class="fc" id="L233">              .end()</span>
-<span class="fc" id="L234">              .appendln('}')</span>
+<span class="fc" id="L229">                        message.instanceType())</span>
+<span class="fc" id="L230">              .begin()</span>
+<span class="fc" id="L231">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L232">              .formatln(&quot;public %s&lt;%s,_Field&gt; descriptor() {&quot;, typeClass, message.instanceType())</span>
+<span class="fc" id="L233">              .begin()</span>
+<span class="fc" id="L234">              .appendln(&quot;return kDescriptor;&quot;)</span>
 <span class="fc" id="L235">              .end()</span>
-<span class="fc" id="L236">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L237">              .newline();</span>
-<span class="fc" id="L238">    }</span>
+<span class="fc" id="L236">              .appendln('}')</span>
+<span class="fc" id="L237">              .end()</span>
+<span class="fc" id="L238">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L239">              .newline();</span>
+<span class="fc" id="L240">    }</span>
 
 
     private void appendFieldEnum( JMessage&lt;?&gt; message) throws GeneratorException {
-<span class="fc" id="L242">        writer.formatln(&quot;public enum _Field implements %s {&quot;, PField.class.getName())</span>
-<span class="fc" id="L243">              .begin();</span>
+<span class="fc" id="L244">        writer.formatln(&quot;public enum _Field implements %s {&quot;, PField.class.getName())</span>
+<span class="fc" id="L245">              .begin();</span>
 
-<span class="fc bfc" id="L245" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
-<span class="fc" id="L246">            String provider = field.getProvider();</span>
-<span class="fc" id="L247">            String defValue = &quot;null&quot;;</span>
-<span class="fc" id="L248">            if (field.field()</span>
-<span class="fc bfc" id="L249" title="All 2 branches covered.">                     .hasDefaultValue()) {</span>
-<span class="fc" id="L250">                defValue = String.format(&quot;new %s&lt;&gt;(%s)&quot;,</span>
-<span class="fc" id="L251">                                         PDefaultValueProvider.class.getName(),</span>
-<span class="fc" id="L252">                                         field.kDefault());</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L248">            String provider = field.getProvider();</span>
+<span class="fc" id="L249">            String defValue = &quot;null&quot;;</span>
+<span class="fc" id="L250">            if (field.field()</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">                     .hasDefaultValue()) {</span>
+<span class="fc" id="L252">                defValue = String.format(&quot;new %s&lt;&gt;(%s)&quot;,</span>
+<span class="fc" id="L253">                                         PDefaultValueProvider.class.getName(),</span>
+<span class="fc" id="L254">                                         field.kDefault());</span>
             }
 
-<span class="fc" id="L255">            writer.formatln(&quot;%s(%d, %s.%s, \&quot;%s\&quot;, %s, %s),&quot;,</span>
-<span class="fc" id="L256">                            field.fieldEnum(),</span>
-<span class="fc" id="L257">                            field.id(),</span>
-<span class="fc" id="L258">                            PRequirement.class.getName(),</span>
-<span class="fc" id="L259">                            field.field()</span>
-<span class="fc" id="L260">                                 .getRequirement()</span>
-<span class="fc" id="L261">                                 .name(),</span>
-<span class="fc" id="L262">                            field.name(),</span>
+<span class="fc" id="L257">            writer.formatln(&quot;%s(%d, %s.%s, \&quot;%s\&quot;, %s, %s),&quot;,</span>
+<span class="fc" id="L258">                            field.fieldEnum(),</span>
+<span class="fc" id="L259">                            field.id(),</span>
+<span class="fc" id="L260">                            PRequirement.class.getName(),</span>
+<span class="fc" id="L261">                            field.field()</span>
+<span class="fc" id="L262">                                 .getRequirement()</span>
+<span class="fc" id="L263">                                 .name(),</span>
+<span class="fc" id="L264">                            field.name(),</span>
                             provider,
                             defValue);
-<span class="fc" id="L265">        }</span>
-<span class="fc" id="L266">        writer.appendln(';')</span>
-<span class="fc" id="L267">              .newline();</span>
+<span class="fc" id="L267">        }</span>
+<span class="fc" id="L268">        writer.appendln(';')</span>
+<span class="fc" id="L269">              .newline();</span>
 
-<span class="fc" id="L269">        writer.appendln(&quot;private final int mId;&quot;)</span>
-<span class="fc" id="L270">              .formatln(&quot;private final %s mRequired;&quot;, PRequirement.class.getName())</span>
-<span class="fc" id="L271">              .appendln(&quot;private final String mName;&quot;)</span>
-<span class="fc" id="L272">              .formatln(&quot;private final %s mTypeProvider;&quot;, PDescriptorProvider.class.getName())</span>
-<span class="fc" id="L273">              .formatln(&quot;private final %s&lt;?&gt; mDefaultValue;&quot;, PValueProvider.class.getName())</span>
-<span class="fc" id="L274">              .newline()</span>
-<span class="fc" id="L275">              .formatln(&quot;_Field(int id, %s required, String name, %s typeProvider, %s&lt;?&gt; defaultValue) {&quot;,</span>
-<span class="fc" id="L276">                        PRequirement.class.getName(),</span>
-<span class="fc" id="L277">                        PDescriptorProvider.class.getName(),</span>
-<span class="fc" id="L278">                        PValueProvider.class.getName())</span>
-<span class="fc" id="L279">              .begin()</span>
-<span class="fc" id="L280">              .appendln(&quot;mId = id;&quot;)</span>
-<span class="fc" id="L281">              .appendln(&quot;mRequired = required;&quot;)</span>
-<span class="fc" id="L282">              .appendln(&quot;mName = name;&quot;)</span>
-<span class="fc" id="L283">              .appendln(&quot;mTypeProvider = typeProvider;&quot;)</span>
-<span class="fc" id="L284">              .appendln(&quot;mDefaultValue = defaultValue;&quot;)</span>
-<span class="fc" id="L285">              .end()</span>
-<span class="fc" id="L286">              .appendln('}')</span>
-<span class="fc" id="L287">              .newline();</span>
-<span class="fc" id="L288">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L289">              .appendln(&quot;public int getId() { return mId; }&quot;)</span>
-<span class="fc" id="L290">              .newline();</span>
-<span class="fc" id="L291">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L292">              .formatln(&quot;public %s getRequirement() { return mRequired; }&quot;,</span>
-<span class="fc" id="L293">                        PRequirement.class.getName())</span>
-<span class="fc" id="L294">              .newline();</span>
-<span class="fc" id="L295">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L296">              .formatln(&quot;public %s getDescriptor() { return mTypeProvider.descriptor(); }&quot;,</span>
-<span class="fc" id="L297">                        PDescriptor.class.getName())</span>
-<span class="fc" id="L298">              .newline();</span>
-<span class="fc" id="L299">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L300">              .appendln(&quot;public String getName() { return mName; }&quot;)</span>
-<span class="fc" id="L301">              .newline();</span>
-<span class="fc" id="L302">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L303">              .appendln(&quot;public boolean hasDefaultValue() { return mDefaultValue != null; }&quot;)</span>
-<span class="fc" id="L304">              .newline();</span>
-<span class="fc" id="L305">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L306">              .appendln(&quot;public Object getDefaultValue() {&quot;)</span>
-<span class="fc" id="L307">              .appendln(&quot;    return hasDefaultValue() ? mDefaultValue.get() : null;&quot;)</span>
-<span class="fc" id="L308">              .appendln('}')</span>
-<span class="fc" id="L309">              .newline();</span>
+<span class="fc" id="L271">        writer.appendln(&quot;private final int mId;&quot;)</span>
+<span class="fc" id="L272">              .formatln(&quot;private final %s mRequired;&quot;, PRequirement.class.getName())</span>
+<span class="fc" id="L273">              .appendln(&quot;private final String mName;&quot;)</span>
+<span class="fc" id="L274">              .formatln(&quot;private final %s mTypeProvider;&quot;, PDescriptorProvider.class.getName())</span>
+<span class="fc" id="L275">              .formatln(&quot;private final %s&lt;?&gt; mDefaultValue;&quot;, PValueProvider.class.getName())</span>
+<span class="fc" id="L276">              .newline()</span>
+<span class="fc" id="L277">              .formatln(&quot;_Field(int id, %s required, String name, %s typeProvider, %s&lt;?&gt; defaultValue) {&quot;,</span>
+<span class="fc" id="L278">                        PRequirement.class.getName(),</span>
+<span class="fc" id="L279">                        PDescriptorProvider.class.getName(),</span>
+<span class="fc" id="L280">                        PValueProvider.class.getName())</span>
+<span class="fc" id="L281">              .begin()</span>
+<span class="fc" id="L282">              .appendln(&quot;mId = id;&quot;)</span>
+<span class="fc" id="L283">              .appendln(&quot;mRequired = required;&quot;)</span>
+<span class="fc" id="L284">              .appendln(&quot;mName = name;&quot;)</span>
+<span class="fc" id="L285">              .appendln(&quot;mTypeProvider = typeProvider;&quot;)</span>
+<span class="fc" id="L286">              .appendln(&quot;mDefaultValue = defaultValue;&quot;)</span>
+<span class="fc" id="L287">              .end()</span>
+<span class="fc" id="L288">              .appendln('}')</span>
+<span class="fc" id="L289">              .newline();</span>
+<span class="fc" id="L290">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L291">              .appendln(&quot;public int getId() { return mId; }&quot;)</span>
+<span class="fc" id="L292">              .newline();</span>
+<span class="fc" id="L293">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L294">              .formatln(&quot;public %s getRequirement() { return mRequired; }&quot;,</span>
+<span class="fc" id="L295">                        PRequirement.class.getName())</span>
+<span class="fc" id="L296">              .newline();</span>
+<span class="fc" id="L297">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L298">              .formatln(&quot;public %s getDescriptor() { return mTypeProvider.descriptor(); }&quot;,</span>
+<span class="fc" id="L299">                        PDescriptor.class.getName())</span>
+<span class="fc" id="L300">              .newline();</span>
+<span class="fc" id="L301">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L302">              .appendln(&quot;public String getName() { return mName; }&quot;)</span>
+<span class="fc" id="L303">              .newline();</span>
+<span class="fc" id="L304">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L305">              .appendln(&quot;public boolean hasDefaultValue() { return mDefaultValue != null; }&quot;)</span>
+<span class="fc" id="L306">              .newline();</span>
+<span class="fc" id="L307">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L308">              .appendln(&quot;public Object getDefaultValue() {&quot;)</span>
+<span class="fc" id="L309">              .appendln(&quot;    return hasDefaultValue() ? mDefaultValue.get() : null;&quot;)</span>
+<span class="fc" id="L310">              .appendln('}')</span>
+<span class="fc" id="L311">              .newline();</span>
 
-<span class="fc" id="L311">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L312">              .appendln(&quot;public String toString() {&quot;)</span>
-<span class="fc" id="L313">              .formatln(&quot;    return %s.asString(this);&quot;, PField.class.getName())</span>
-<span class="fc" id="L314">              .appendln('}')</span>
-<span class="fc" id="L315">              .newline();</span>
+<span class="fc" id="L313">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L314">              .appendln(&quot;public String toString() {&quot;)</span>
+<span class="fc" id="L315">              .formatln(&quot;    return %s.asString(this);&quot;, PField.class.getName())</span>
+<span class="fc" id="L316">              .appendln('}')</span>
+<span class="fc" id="L317">              .newline();</span>
 
-<span class="fc" id="L317">        new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L318">                .param_(&quot;id&quot;, &quot;Field name&quot;)</span>
-<span class="fc" id="L319">                .return_(&quot;The identified field or null&quot;)</span>
-<span class="fc" id="L320">                .finish();</span>
-<span class="fc" id="L321">        writer.appendln(&quot;public static _Field findById(int id) {&quot;)</span>
-<span class="fc" id="L322">              .begin()</span>
-<span class="fc" id="L323">              .appendln(&quot;switch (id) {&quot;)</span>
-<span class="fc" id="L324">              .begin();</span>
-<span class="fc bfc" id="L325" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc" id="L326">            writer.formatln(&quot;case %d: return _Field.%s;&quot;, field.id(), field.fieldEnum());</span>
-<span class="fc" id="L327">        }</span>
-<span class="fc" id="L328">        writer.end()</span>
-<span class="fc" id="L329">              .appendln('}')</span>
-<span class="fc" id="L330">              .appendln(&quot;return null;&quot;)</span>
-<span class="fc" id="L331">              .end()</span>
-<span class="fc" id="L332">              .appendln('}')</span>
-<span class="fc" id="L333">              .newline();</span>
+<span class="fc" id="L319">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L320">                .param_(&quot;id&quot;, &quot;Field name&quot;)</span>
+<span class="fc" id="L321">                .return_(&quot;The identified field or null&quot;)</span>
+<span class="fc" id="L322">                .finish();</span>
+<span class="fc" id="L323">        writer.appendln(&quot;public static _Field findById(int id) {&quot;)</span>
+<span class="fc" id="L324">              .begin()</span>
+<span class="fc" id="L325">              .appendln(&quot;switch (id) {&quot;)</span>
+<span class="fc" id="L326">              .begin();</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L328">            writer.formatln(&quot;case %d: return _Field.%s;&quot;, field.id(), field.fieldEnum());</span>
+<span class="fc" id="L329">        }</span>
+<span class="fc" id="L330">        writer.end()</span>
+<span class="fc" id="L331">              .appendln('}')</span>
+<span class="fc" id="L332">              .appendln(&quot;return null;&quot;)</span>
+<span class="fc" id="L333">              .end()</span>
+<span class="fc" id="L334">              .appendln('}')</span>
+<span class="fc" id="L335">              .newline();</span>
 
-<span class="fc" id="L335">        new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L336">                .param_(&quot;name&quot;, &quot;Field name&quot;)</span>
-<span class="fc" id="L337">                .return_(&quot;The named field or null&quot;)</span>
-<span class="fc" id="L338">                .finish();</span>
-<span class="fc" id="L339">        writer.appendln(&quot;public static _Field findByName(String name) {&quot;)</span>
-<span class="fc" id="L340">              .begin()</span>
-<span class="fc" id="L341">              .appendln(&quot;switch (name) {&quot;)</span>
-<span class="fc" id="L342">              .begin();</span>
-<span class="fc bfc" id="L343" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc" id="L344">            writer.formatln(&quot;case \&quot;%s\&quot;: return _Field.%s;&quot;, field.name(), field.fieldEnum());</span>
-<span class="fc" id="L345">        }</span>
-<span class="fc" id="L346">        writer.end()</span>
-<span class="fc" id="L347">              .appendln('}')</span>
-<span class="fc" id="L348">              .appendln(&quot;return null;&quot;)</span>
-<span class="fc" id="L349">              .end()</span>
-<span class="fc" id="L350">              .appendln('}');</span>
+<span class="fc" id="L337">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L338">                .param_(&quot;name&quot;, &quot;Field name&quot;)</span>
+<span class="fc" id="L339">                .return_(&quot;The named field or null&quot;)</span>
+<span class="fc" id="L340">                .finish();</span>
+<span class="fc" id="L341">        writer.appendln(&quot;public static _Field findByName(String name) {&quot;)</span>
+<span class="fc" id="L342">              .begin()</span>
+<span class="fc" id="L343">              .appendln(&quot;switch (name) {&quot;)</span>
+<span class="fc" id="L344">              .begin();</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L346">            writer.formatln(&quot;case \&quot;%s\&quot;: return _Field.%s;&quot;, field.name(), field.fieldEnum());</span>
+<span class="fc" id="L347">        }</span>
+<span class="fc" id="L348">        writer.end()</span>
+<span class="fc" id="L349">              .appendln('}')</span>
+<span class="fc" id="L350">              .appendln(&quot;return null;&quot;)</span>
+<span class="fc" id="L351">              .end()</span>
+<span class="fc" id="L352">              .appendln('}');</span>
 
-<span class="fc" id="L352">        new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L353">                .param_(&quot;id&quot;, &quot;Field name&quot;)</span>
-<span class="fc" id="L354">                .return_(&quot;The identified field&quot;)</span>
-<span class="fc" id="L355">                .throws_(&quot;IllegalArgumentException&quot;, &quot;If no such field&quot;)</span>
-<span class="fc" id="L356">                .finish();</span>
-<span class="fc" id="L357">        writer.appendln(&quot;public static _Field fieldForId(int id) {&quot;)</span>
-<span class="fc" id="L358">              .begin()</span>
-<span class="fc" id="L359">              .appendln(&quot;_Field field = findById(id);&quot;)</span>
-<span class="fc" id="L360">              .appendln(&quot;if (field == null) {&quot;)</span>
-<span class="fc" id="L361">              .formatln(&quot;    throw new IllegalArgumentException(\&quot;No such field id \&quot; + id + \&quot; in %s\&quot;);&quot;,</span>
-<span class="fc" id="L362">                        message.descriptor().getQualifiedName())</span>
-<span class="fc" id="L363">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L364">              .appendln(&quot;return field;&quot;)</span>
-<span class="fc" id="L365">              .end()</span>
-<span class="fc" id="L366">              .appendln('}')</span>
-<span class="fc" id="L367">              .newline();</span>
+<span class="fc" id="L354">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L355">                .param_(&quot;id&quot;, &quot;Field name&quot;)</span>
+<span class="fc" id="L356">                .return_(&quot;The identified field&quot;)</span>
+<span class="fc" id="L357">                .throws_(&quot;IllegalArgumentException&quot;, &quot;If no such field&quot;)</span>
+<span class="fc" id="L358">                .finish();</span>
+<span class="fc" id="L359">        writer.appendln(&quot;public static _Field fieldForId(int id) {&quot;)</span>
+<span class="fc" id="L360">              .begin()</span>
+<span class="fc" id="L361">              .appendln(&quot;_Field field = findById(id);&quot;)</span>
+<span class="fc" id="L362">              .appendln(&quot;if (field == null) {&quot;)</span>
+<span class="fc" id="L363">              .formatln(&quot;    throw new IllegalArgumentException(\&quot;No such field id \&quot; + id + \&quot; in %s\&quot;);&quot;,</span>
+<span class="fc" id="L364">                        message.descriptor().getQualifiedName())</span>
+<span class="fc" id="L365">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L366">              .appendln(&quot;return field;&quot;)</span>
+<span class="fc" id="L367">              .end()</span>
+<span class="fc" id="L368">              .appendln('}')</span>
+<span class="fc" id="L369">              .newline();</span>
 
-<span class="fc" id="L369">        new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L370">                .param_(&quot;name&quot;, &quot;Field name&quot;)</span>
-<span class="fc" id="L371">                .return_(&quot;The named field&quot;)</span>
-<span class="fc" id="L372">                .throws_(&quot;IllegalArgumentException&quot;, &quot;If no such field&quot;)</span>
-<span class="fc" id="L373">                .finish();</span>
-<span class="fc" id="L374">        writer.appendln(&quot;public static _Field fieldForName(String name) {&quot;)</span>
-<span class="fc" id="L375">              .begin()</span>
-<span class="fc" id="L376">              .appendln(&quot;_Field field = findByName(name);&quot;)</span>
-<span class="fc" id="L377">              .appendln(&quot;if (field == null) {&quot;)</span>
-<span class="fc" id="L378">              .formatln(&quot;    throw new IllegalArgumentException(\&quot;No such field \\\&quot;\&quot; + name + \&quot;\\\&quot; in %s\&quot;);&quot;,</span>
-<span class="fc" id="L379">                        message.descriptor().getQualifiedName())</span>
-<span class="fc" id="L380">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L381">              .appendln(&quot;return field;&quot;)</span>
-<span class="fc" id="L382">              .end()</span>
-<span class="fc" id="L383">              .appendln('}')</span>
-<span class="fc" id="L384">              .newline();</span>
+<span class="fc" id="L371">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L372">                .param_(&quot;name&quot;, &quot;Field name&quot;)</span>
+<span class="fc" id="L373">                .return_(&quot;The named field&quot;)</span>
+<span class="fc" id="L374">                .throws_(&quot;IllegalArgumentException&quot;, &quot;If no such field&quot;)</span>
+<span class="fc" id="L375">                .finish();</span>
+<span class="fc" id="L376">        writer.appendln(&quot;public static _Field fieldForName(String name) {&quot;)</span>
+<span class="fc" id="L377">              .begin()</span>
+<span class="fc" id="L378">              .appendln(&quot;_Field field = findByName(name);&quot;)</span>
+<span class="fc" id="L379">              .appendln(&quot;if (field == null) {&quot;)</span>
+<span class="fc" id="L380">              .formatln(&quot;    throw new IllegalArgumentException(\&quot;No such field \\\&quot;\&quot; + name + \&quot;\\\&quot; in %s\&quot;);&quot;,</span>
+<span class="fc" id="L381">                        message.descriptor().getQualifiedName())</span>
+<span class="fc" id="L382">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L383">              .appendln(&quot;return field;&quot;)</span>
+<span class="fc" id="L384">              .end()</span>
+<span class="fc" id="L385">              .appendln('}')</span>
+<span class="fc" id="L386">              .newline();</span>
 
 
-<span class="fc" id="L387">        writer.end()</span>
-<span class="fc" id="L388">              .appendln('}')</span>
-<span class="fc" id="L389">              .newline();</span>
-<span class="fc" id="L390">    }</span>
+<span class="fc" id="L389">        writer.end()</span>
+<span class="fc" id="L390">              .appendln('}')</span>
+<span class="fc" id="L391">              .newline();</span>
+<span class="fc" id="L392">    }</span>
 
     private void appendJsonCompact(JMessage&lt;?&gt; message) {
-<span class="fc bfc" id="L393" title="All 2 branches covered.">        if (!message.jsonCompactible()) {</span>
-<span class="fc" id="L394">            return;</span>
+<span class="fc bfc" id="L395" title="All 2 branches covered.">        if (!message.jsonCompactible()) {</span>
+<span class="fc" id="L396">            return;</span>
         }
 
-<span class="fc" id="L397">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L398">              .appendln(&quot;public boolean jsonCompact() {&quot;)</span>
-<span class="fc" id="L399">              .begin();</span>
+<span class="fc" id="L399">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L400">              .appendln(&quot;public boolean jsonCompact() {&quot;)</span>
+<span class="fc" id="L401">              .begin();</span>
 
-<span class="fc" id="L401">        boolean hasCheck = false;</span>
-<span class="fc" id="L402">        boolean hasMissingVar = false;</span>
-<span class="fc bfc" id="L403" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
-<span class="pc bpc" id="L404" title="1 of 2 branches missed.">            if (!field.alwaysPresent()) {</span>
-<span class="nc bnc" id="L405" title="All 2 branches missed.">                if (!hasMissingVar) {</span>
-<span class="nc" id="L406">                    writer.appendln(&quot;boolean missing = false;&quot;);</span>
+<span class="fc" id="L403">        boolean hasCheck = false;</span>
+<span class="fc" id="L404">        boolean hasMissingVar = false;</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">            if (!field.alwaysPresent()) {</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">                if (!hasMissingVar) {</span>
+<span class="nc" id="L408">                    writer.appendln(&quot;boolean missing = false;&quot;);</span>
                 }
-<span class="nc" id="L408">                hasMissingVar = true;</span>
-<span class="nc" id="L409">                hasCheck = true;</span>
-<span class="nc" id="L410">                writer.formatln(&quot;if (%s()) {&quot;, field.presence())</span>
-<span class="nc" id="L411">                      .appendln(&quot;    if (missing) return false;&quot;)</span>
-<span class="nc" id="L412">                      .appendln(&quot;} else {&quot;)</span>
-<span class="nc" id="L413">                      .appendln(&quot;    missing = true;&quot;)</span>
-<span class="nc" id="L414">                      .appendln('}');</span>
-<span class="pc bpc" id="L415" title="1 of 2 branches missed.">            } else if (hasCheck) {</span>
-<span class="nc" id="L416">                writer.appendln(&quot;if (missing) return false;&quot;);</span>
-<span class="nc" id="L417">                hasCheck = false;</span>
+<span class="nc" id="L410">                hasMissingVar = true;</span>
+<span class="nc" id="L411">                hasCheck = true;</span>
+<span class="nc" id="L412">                writer.formatln(&quot;if (%s()) {&quot;, field.presence())</span>
+<span class="nc" id="L413">                      .appendln(&quot;    if (missing) return false;&quot;)</span>
+<span class="nc" id="L414">                      .appendln(&quot;} else {&quot;)</span>
+<span class="nc" id="L415">                      .appendln(&quot;    missing = true;&quot;)</span>
+<span class="nc" id="L416">                      .appendln('}');</span>
+<span class="pc bpc" id="L417" title="1 of 2 branches missed.">            } else if (hasCheck) {</span>
+<span class="nc" id="L418">                writer.appendln(&quot;if (missing) return false;&quot;);</span>
+<span class="nc" id="L419">                hasCheck = false;</span>
             }
-<span class="fc" id="L419">        }</span>
+<span class="fc" id="L421">        }</span>
 
-<span class="fc" id="L421">        writer.appendln(&quot;return true;&quot;)</span>
-<span class="fc" id="L422">              .end()</span>
-<span class="fc" id="L423">              .appendln('}')</span>
-<span class="fc" id="L424">              .newline();</span>
-<span class="fc" id="L425">    }</span>
+<span class="fc" id="L423">        writer.appendln(&quot;return true;&quot;)</span>
+<span class="fc" id="L424">              .end()</span>
+<span class="fc" id="L425">              .appendln('}')</span>
+<span class="fc" id="L426">              .newline();</span>
+<span class="fc" id="L427">    }</span>
 
     private void appendGetter(JMessage&lt;?&gt; message) {
-<span class="fc" id="L428">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L429">              .appendln(&quot;public Object get(int key) {&quot;)</span>
-<span class="fc" id="L430">              .begin()</span>
-<span class="fc" id="L431">              .appendln(&quot;switch(key) {&quot;)</span>
-<span class="fc" id="L432">              .begin();</span>
+<span class="fc" id="L430">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L431">              .appendln(&quot;@SuppressWarnings(\&quot;unchecked\&quot;)&quot;)</span>
+<span class="fc" id="L432">              .appendln(&quot;public &lt;T&gt; T get(int key) {&quot;)</span>
+<span class="fc" id="L433">              .begin()</span>
+<span class="fc" id="L434">              .appendln(&quot;switch(key) {&quot;)</span>
+<span class="fc" id="L435">              .begin();</span>
 
-<span class="fc bfc" id="L434" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
-<span class="fc bfc" id="L435" title="All 2 branches covered.">            if (field.isVoid()) {</span>
+<span class="fc bfc" id="L437" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc bfc" id="L438" title="All 2 branches covered.">            if (field.isVoid()) {</span>
                 // Void fields have no value.
-<span class="fc" id="L437">                writer.formatln(&quot;case %d: return %s() ? Boolean.FALSE : null;&quot;,</span>
-<span class="fc" id="L438">                                field.id(), field.presence());</span>
+<span class="fc" id="L440">                writer.formatln(&quot;case %d: return %s() ? (T) Boolean.TRUE : null;&quot;,</span>
+<span class="fc" id="L441">                                field.id(), field.presence());</span>
+<span class="fc bfc" id="L442" title="All 2 branches covered.">            } else if (field.isPrimitiveJavaValue()) {</span>
+<span class="fc bfc" id="L443" title="All 2 branches covered.">                if (field.alwaysPresent()) {</span>
+<span class="fc" id="L444">                    writer.formatln(&quot;case %d: return (T) (%s) %s;&quot;,</span>
+<span class="fc" id="L445">                                    field.id(), field.instanceType(), field.member());</span>
+                } else {
+<span class="fc" id="L447">                    writer.formatln(&quot;case %d: return (T) %s;&quot;,</span>
+<span class="fc" id="L448">                                    field.id(), field.member());</span>
+                }
             } else {
-<span class="fc" id="L440">                writer.formatln(&quot;case %d: return %s();&quot;, field.id(), field.getter());</span>
+<span class="fc" id="L451">                writer.formatln(&quot;case %d: return (T) %s;&quot;,</span>
+<span class="fc" id="L452">                                field.id(), field.member());</span>
             }
-<span class="fc" id="L442">        }</span>
+<span class="fc" id="L454">        }</span>
 
-<span class="fc" id="L444">        writer.appendln(&quot;default: return null;&quot;)</span>
-<span class="fc" id="L445">              .end()</span>
-<span class="fc" id="L446">              .appendln('}')</span>
-<span class="fc" id="L447">              .end()</span>
-<span class="fc" id="L448">              .appendln('}')</span>
-<span class="fc" id="L449">              .newline();</span>
-<span class="fc" id="L450">    }</span>
+<span class="fc" id="L456">        writer.appendln(&quot;default: return null;&quot;)</span>
+<span class="fc" id="L457">              .end()</span>
+<span class="fc" id="L458">              .appendln('}')</span>
+<span class="fc" id="L459">              .end()</span>
+<span class="fc" id="L460">              .appendln('}')</span>
+<span class="fc" id="L461">              .newline();</span>
+<span class="fc" id="L462">    }</span>
 
     private void appendPresence(JMessage&lt;?&gt; message) {
-<span class="fc" id="L453">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L454">              .appendln(&quot;public boolean has(int key) {&quot;)</span>
-<span class="fc" id="L455">              .begin()</span>
-<span class="fc" id="L456">              .appendln(&quot;switch(key) {&quot;)</span>
-<span class="fc" id="L457">              .begin();</span>
+<span class="fc" id="L465">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L466">              .appendln(&quot;public boolean has(int key) {&quot;)</span>
+<span class="fc" id="L467">              .begin()</span>
+<span class="fc" id="L468">              .appendln(&quot;switch(key) {&quot;)</span>
+<span class="fc" id="L469">              .begin();</span>
 
-<span class="fc bfc" id="L459" title="All 2 branches covered.">        for (JField field : message.numericalOrderFields()) {</span>
-<span class="pc bpc" id="L460" title="1 of 4 branches missed.">            if (field.alwaysPresent() &amp;&amp; !message.isUnion()) {</span>
-<span class="fc" id="L461">                writer.formatln(&quot;case %d: return true;&quot;, field.id());</span>
-            } else {
-<span class="fc" id="L463">                writer.formatln(&quot;case %d: return %s();&quot;, field.id(), field.presence());</span>
-            }
-<span class="fc" id="L465">        }</span>
+<span class="fc bfc" id="L471" title="All 2 branches covered.">        if (message.isUnion()) {</span>
+<span class="fc bfc" id="L472" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc" id="L473">                writer.formatln(&quot;case %s: return %s == _Field.%s;&quot;,</span>
+<span class="fc" id="L474">                                field.id(), UNION_FIELD, field.fieldEnum());</span>
+<span class="fc" id="L475">            }</span>
+        } else {
+<span class="fc bfc" id="L477" title="All 2 branches covered.">            for (JField field : message.numericalOrderFields()) {</span>
+<span class="fc bfc" id="L478" title="All 2 branches covered.">                if (field.alwaysPresent()) {</span>
+<span class="fc" id="L479">                    writer.formatln(&quot;case %d: return true;&quot;, field.id());</span>
+                } else {
+<span class="fc" id="L481">                    writer.formatln(&quot;case %d: return %s != null;&quot;, field.id(), field.member());</span>
+                }
+<span class="fc" id="L483">            }</span>
+        }
 
-<span class="fc" id="L467">        writer.appendln(&quot;default: return false;&quot;)</span>
-<span class="fc" id="L468">              .end()</span>
-<span class="fc" id="L469">              .appendln('}')</span>
-<span class="fc" id="L470">              .end()</span>
-<span class="fc" id="L471">              .appendln('}')</span>
-<span class="fc" id="L472">              .newline();</span>
-<span class="fc" id="L473">    }</span>
+<span class="fc" id="L486">        writer.appendln(&quot;default: return false;&quot;)</span>
+<span class="fc" id="L487">              .end()</span>
+<span class="fc" id="L488">              .appendln('}')</span>
+<span class="fc" id="L489">              .end()</span>
+<span class="fc" id="L490">              .appendln('}')</span>
+<span class="fc" id="L491">              .newline();</span>
+<span class="fc" id="L492">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

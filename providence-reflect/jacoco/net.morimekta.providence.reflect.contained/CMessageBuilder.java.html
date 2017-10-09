@@ -316,22 +316,24 @@ public abstract class CMessageBuilder&lt;Builder extends CMessageBuilder&lt;Buil
 <span class="fc" id="L316">                        break;</span>
                 }
 <span class="fc bfc" id="L318" title="All 2 branches covered.">            } else if (field.getRequirement() != PRequirement.OPTIONAL) {</span>
-<span class="pc bpc" id="L319" title="1 of 2 branches missed.">                if (field.hasDefaultValue()) {</span>
-<span class="nc" id="L320">                    out.put(key, field.getDefaultValue());</span>
-<span class="fc bfc" id="L321" title="All 2 branches covered.">                } else if (field.getDescriptor().getDefaultValue() != null) {</span>
-<span class="fc" id="L322">                    out.put(key, field.getDescriptor().getDefaultValue());</span>
+                // Should always be set. Meaning has() always has a value,
+                // if one can be obtained.
+<span class="pc bpc" id="L321" title="1 of 2 branches missed.">                if (field.hasDefaultValue()) {</span>
+<span class="nc" id="L322">                    out.put(key, field.getDefaultValue());</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">                } else if (field.getDescriptor().getDefaultValue() != null) {</span>
+<span class="fc" id="L324">                    out.put(key, field.getDescriptor().getDefaultValue());</span>
                 }
             }
         }
-<span class="fc" id="L326">        return out.build();</span>
+<span class="fc" id="L328">        return out.build();</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L331">        return MoreObjects.toStringHelper(descriptor().getQualifiedName() + &quot;._Builder&quot;)</span>
-<span class="fc" id="L332">                          .add(&quot;values&quot;, values)</span>
-<span class="fc" id="L333">                          .add(&quot;modified&quot;, modified)</span>
-<span class="fc" id="L334">                          .toString();</span>
+<span class="fc" id="L333">        return MoreObjects.toStringHelper(descriptor().getQualifiedName() + &quot;._Builder&quot;)</span>
+<span class="fc" id="L334">                          .add(&quot;values&quot;, values)</span>
+<span class="fc" id="L335">                          .add(&quot;modified&quot;, modified)</span>
+<span class="fc" id="L336">                          .toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
