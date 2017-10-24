@@ -53,7 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -115,7 +115,7 @@ public class ProgramConverter {
 <span class="fc" id="L115">                                                               program.getProgramName(),</span>
 <span class="fc" id="L116">                                                               enumType.getName(),</span>
 <span class="fc" id="L117">                                                               enumType.getAnnotations());</span>
-<span class="fc" id="L118">                    List&lt;CEnumValue&gt; values = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L118">                    List&lt;CEnumValue&gt; values = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L119" title="All 2 branches covered.">                    for (EnumValue value : enumType.getValues()) {</span>
 <span class="pc bpc" id="L120" title="1 of 2 branches missed.">                        int v = value.hasId() ? value.getId() : nextValue;</span>
 <span class="fc" id="L121">                        nextValue = v + 1;</span>
@@ -129,7 +129,7 @@ public class ProgramConverter {
                 case DECL_STRUCT: {
 <span class="fc" id="L130">                    MessageType messageType = decl.getDeclStruct();</span>
 
-<span class="fc" id="L132">                    List&lt;CField&gt; fields = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L132">                    List&lt;CField&gt; fields = new ArrayList&lt;&gt;();</span>
 <span class="pc bpc" id="L133" title="1 of 2 branches missed.">                    if (messageType.hasFields()) {</span>
 <span class="fc" id="L134">                        fields.addAll(messageType.getFields()</span>
 <span class="fc" id="L135">                                                .stream()</span>
@@ -188,7 +188,7 @@ public class ProgramConverter {
 <span class="fc" id="L188">                    ImmutableList.Builder&lt;CServiceMethod&gt; methodBuilder = ImmutableList.builder();</span>
 <span class="pc bpc" id="L189" title="1 of 2 branches missed.">                    if (serviceType.hasMethods()) {</span>
 <span class="fc bfc" id="L190" title="All 2 branches covered.">                        for (FunctionType sm : serviceType.getMethods()) {</span>
-<span class="fc" id="L191">                            List&lt;CField&gt; rqFields = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L191">                            List&lt;CField&gt; rqFields = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L192" title="All 2 branches covered.">                            if (sm.numParams() &gt; 0) {</span>
 <span class="fc bfc" id="L193" title="All 2 branches covered.">                                for (FieldType field : sm.getParams()) {</span>
 <span class="fc" id="L194">                                    rqFields.add(makeField(registry, program.getProgramName(), field, MessageVariant.STRUCT));</span>
@@ -203,7 +203,7 @@ public class ProgramConverter {
 
 <span class="fc" id="L204">                            CUnionDescriptor response = null;</span>
 <span class="fc bfc" id="L205" title="All 2 branches covered.">                            if (!sm.isOneWay()) {</span>
-<span class="fc" id="L206">                                List&lt;CField&gt; rsFields = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L206">                                List&lt;CField&gt; rsFields = new ArrayList&lt;&gt;();</span>
                                 CField success;
 <span class="fc bfc" id="L208" title="All 2 branches covered.">                                if (sm.getReturnType() != null) {</span>
 <span class="fc" id="L209">                                    PDescriptorProvider type = registry.getProvider(sm.getReturnType(),</span>

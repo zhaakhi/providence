@@ -8,7 +8,7 @@ import net.morimekta.providence.descriptor.PField;
 import javax.annotation.Nonnull;
 import java.lang.ref.WeakReference;
 import java.time.Clock;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class UpdatingConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PField&gt; implements ConfigSupplier&lt;M,F&gt; {
     private final AtomicReference&lt;M&gt;       instance;
-    private final LinkedList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; listeners;
+    private final ArrayList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; listeners;
     private final Clock clock;
     private final AtomicLong lastUpdateTimestamp;
 
@@ -40,7 +40,7 @@ public abstract class UpdatingConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F
      */
 <span class="fc" id="L41">    protected UpdatingConfigSupplier(Clock clock) {</span>
 <span class="fc" id="L42">        this.instance = new AtomicReference&lt;&gt;();</span>
-<span class="fc" id="L43">        this.listeners = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L43">        this.listeners = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L44">        this.clock = clock;</span>
 <span class="fc" id="L45">        this.lastUpdateTimestamp = new AtomicLong(0L);</span>
 <span class="fc" id="L46">    }</span>
@@ -85,7 +85,7 @@ public abstract class UpdatingConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F
      * @param config The new config instance.
      */
     protected final void set(M config) {
-        LinkedList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; iterateOver;
+        ArrayList&lt;WeakReference&lt;ConfigListener&lt;M,F&gt;&gt;&gt; iterateOver;
 <span class="fc" id="L89">        synchronized (this) {</span>
 <span class="pc bpc" id="L90" title="1 of 4 branches missed.">            if (instance.get() != null &amp;&amp; instance.get().equals(config)) {</span>
 <span class="nc" id="L91">                return;</span>
@@ -94,7 +94,7 @@ public abstract class UpdatingConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F
 <span class="fc" id="L94">            instance.set(config);</span>
 <span class="fc" id="L95">            lastUpdateTimestamp.set(clock.millis());</span>
 <span class="fc" id="L96">            listeners.removeIf(Objects::isNull);</span>
-<span class="fc" id="L97">            iterateOver = new LinkedList&lt;&gt;(listeners);</span>
+<span class="fc" id="L97">            iterateOver = new ArrayList&lt;&gt;(listeners);</span>
 <span class="pc" id="L98">        }</span>
 <span class="fc" id="L99">        iterateOver.forEach(ref -&gt; {</span>
 <span class="fc" id="L100">            ConfigListener&lt;M,F&gt; listener = ref.get();</span>

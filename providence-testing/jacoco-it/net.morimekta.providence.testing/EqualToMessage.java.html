@@ -32,9 +32,9 @@ import junit.framework.AssertionFailedError;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,10 +78,10 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
 <span class="nc bnc" id="L78" title="All 2 branches missed.">        } else if (actual == null) {</span>
 <span class="nc" id="L79">            mismatchDescription.appendText(&quot;got null&quot;);</span>
         } else {
-<span class="nc" id="L81">            LinkedList&lt;String&gt; mismatches = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L81">            ArrayList&lt;String&gt; mismatches = new ArrayList&lt;&gt;();</span>
 <span class="nc" id="L82">            collectMismatches(&quot;&quot;, (PMessage) expected, (PMessage) actual, mismatches);</span>
 <span class="nc bnc" id="L83" title="All 2 branches missed.">            if (mismatches.size() == 1) {</span>
-<span class="nc" id="L84">                mismatchDescription.appendText(mismatches.getFirst());</span>
+<span class="nc" id="L84">                mismatchDescription.appendText(mismatches.get(0));</span>
             } else {
 <span class="nc" id="L86">                boolean first = true;</span>
 <span class="nc" id="L87">                mismatchDescription.appendText(&quot;[&quot;);</span>
@@ -107,7 +107,7 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
 <span class="nc" id="L107">    }</span>
 
     private static &lt;T extends PMessage&lt;T, F&gt;, F extends PField&gt;
-    void collectMismatches(String xPath, T expected, T actual, LinkedList&lt;String&gt; mismatches) {
+    void collectMismatches(String xPath, T expected, T actual, ArrayList&lt;String&gt; mismatches) {
         // This is pretty heavy calculation, but since it's only done on
         // mismatch / test failure, it should be fine.
 <span class="nc" id="L113">        if (expected.descriptor()</span>
@@ -177,7 +177,7 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
     private static &lt;K, V&gt; void collectMapMismatches(String xPath,
                                                     Map&lt;K, V&gt; expected,
                                                     Map&lt;K, V&gt; actual,
-                                                    LinkedList&lt;String&gt; mismatches) {
+                                                    ArrayList&lt;String&gt; mismatches) {
 <span class="nc" id="L181">        mismatches.addAll(actual.keySet()</span>
 <span class="nc" id="L182">                                .stream()</span>
 <span class="nc" id="L183">                                .filter(key -&gt; !expected.keySet()</span>
@@ -222,7 +222,7 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
     private static &lt;T&gt; void collectSetMismatches(String xPath,
                                                  Set&lt;T&gt; expected,
                                                  Set&lt;T&gt; actual,
-                                                 LinkedList&lt;String&gt; mismatches) {
+                                                 ArrayList&lt;String&gt; mismatches) {
         // order does NOT matter regardless of type. The only
         // errors are missing and unexpected values. Partial
         // matches are not checked.
@@ -243,11 +243,11 @@ public class EqualToMessage&lt;Message extends PMessage&lt;Message, Field&gt;, F
     private static &lt;T&gt; void collectListMismatches(String xPath,
                                                   List&lt;T&gt; expected,
                                                   List&lt;T&gt; actual,
-                                                  LinkedList&lt;String&gt; mismatches) {
+                                                  ArrayList&lt;String&gt; mismatches) {
 <span class="nc" id="L247">        Set&lt;T&gt; handledItems = new HashSet&lt;&gt;();</span>
 
 <span class="nc" id="L249">        boolean hasReorder = false;</span>
-<span class="nc" id="L250">        LinkedList&lt;String&gt; reordering = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L250">        ArrayList&lt;String&gt; reordering = new ArrayList&lt;&gt;();</span>
 <span class="nc bnc" id="L251" title="All 2 branches missed.">        for (int expectedIndex = 0; expectedIndex &lt; expected.size(); ++expectedIndex) {</span>
 <span class="nc" id="L252">            String indexedXPath = String.format(&quot;%s[%d]&quot;, xPath, expectedIndex);</span>
 <span class="nc" id="L253">            T expectedItem = expected.get(expectedIndex);</span>

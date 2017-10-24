@@ -29,18 +29,24 @@ import net.morimekta.providence.reflect.util.ProgramConverter;
 import net.morimekta.providence.reflect.util.ProgramRegistry;
 import net.morimekta.providence.reflect.util.ProgramTypeRegistry;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import static net.morimekta.providence.reflect.util.ReflectionUtils.longestCommonPrefixPath;
 import static net.morimekta.providence.reflect.util.ReflectionUtils.programNameFromPath;
+import static net.morimekta.providence.reflect.util.ReflectionUtils.stripCommonPrefix;
 
 /**
  * @author Stein Eldar Johnsen
@@ -61,8 +67,8 @@ public class TypeLoader {
      *                 search these in order.
      */
     public TypeLoader(Collection&lt;File&gt; includes) {
-<span class="fc" id="L64">        this(includes, new ThriftProgramParser());</span>
-<span class="fc" id="L65">    }</span>
+<span class="fc" id="L70">        this(includes, new ThriftProgramParser());</span>
+<span class="fc" id="L71">    }</span>
 
     /**
      * Construct a type loader for file types matches with the given parser.
@@ -72,8 +78,8 @@ public class TypeLoader {
      * @param parser   The thrift file parser.
      */
     public TypeLoader(Collection&lt;File&gt; includes, ProgramParser parser) {
-<span class="fc" id="L75">        this(includes, parser, new ProgramRegistry());</span>
-<span class="fc" id="L76">    }</span>
+<span class="fc" id="L81">        this(includes, parser, new ProgramRegistry());</span>
+<span class="fc" id="L82">    }</span>
 
     /**
      * Intermediate constructor.
@@ -84,8 +90,8 @@ public class TypeLoader {
      * @param registry Type registry to keep parsed types in.
      */
     private TypeLoader(Collection&lt;File&gt; includes, ProgramParser parser, ProgramRegistry registry) {
-<span class="fc" id="L87">        this(includes, parser, registry, new ProgramConverter(registry));</span>
-<span class="fc" id="L88">    }</span>
+<span class="fc" id="L93">        this(includes, parser, registry, new ProgramConverter(registry));</span>
+<span class="fc" id="L94">    }</span>
 
     /**
      * Constructor with injected functionality.
@@ -96,20 +102,21 @@ public class TypeLoader {
      * @param registry  The type registry.
      * @param converter The document converter
      */
-<span class="fc" id="L99">    protected TypeLoader(Collection&lt;File&gt; includes, ProgramParser parser, ProgramRegistry registry, ProgramConverter converter) {</span>
-<span class="fc" id="L100">        this.includes = includes;</span>
-<span class="fc" id="L101">        this.parser = parser;</span>
-<span class="fc" id="L102">        this.programRegistry = registry;</span>
-<span class="fc" id="L103">        this.converter = converter;</span>
-<span class="fc" id="L104">        this.loadedDocuments = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L105">    }</span>
+<span class="fc" id="L105">    protected TypeLoader(Collection&lt;File&gt; includes, ProgramParser parser, ProgramRegistry registry, ProgramConverter converter) {</span>
+<span class="fc" id="L106">        this.includes = includes;</span>
+<span class="fc" id="L107">        this.parser = parser;</span>
+<span class="fc" id="L108">        this.programRegistry = registry;</span>
+<span class="fc" id="L109">        this.converter = converter;</span>
+<span class="fc" id="L110">        this.loadedDocuments = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L111">    }</span>
 
     /**
      * @return Set of loaded documents.
      */
     public Collection&lt;ProgramType&gt; loadedPrograms() {
-<span class="fc" id="L111">        return loadedDocuments.values();</span>
+<span class="fc" id="L117">        return loadedDocuments.values();</span>
     }
+
 
     /**
      * Load a thrift definition from file including all it's dependencies.
@@ -119,69 +126,96 @@ public class TypeLoader {
      * @throws IOException If the file could not be read or parsed.
      */
     public ProgramTypeRegistry load(File file) throws IOException {
-<span class="fc" id="L122">        file = file.getCanonicalFile();</span>
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (!file.exists()) {</span>
-<span class="nc" id="L124">            throw new IllegalArgumentException(&quot;No such file &quot; + file.getCanonicalPath());</span>
-        }
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (!file.isFile()) {</span>
-<span class="fc" id="L127">            throw new IllegalArgumentException(</span>
-<span class="fc" id="L128">                    &quot;Unable to load thrift program: &quot; + file.getCanonicalPath() + &quot; is not a file.&quot;);</span>
-        }
-<span class="fc" id="L130">        file = file.getAbsoluteFile();</span>
-<span class="fc" id="L131">        String path = file.getPath();</span>
+<span class="fc" id="L129">        return loadInternal(file, new ArrayList&lt;&gt;());</span>
+    }
 
-<span class="fc" id="L133">        ProgramTypeRegistry registry = this.programRegistry.registryForPath(path);</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (programRegistry.containsProgramPath(path)) {</span>
-<span class="fc" id="L135">            return registry;</span>
+    private ProgramTypeRegistry loadInternal(File file, List&lt;String&gt; loadStack) throws IOException {
+<span class="fc" id="L133">        loadStack = new ArrayList&lt;&gt;(loadStack);</span>
+
+<span class="fc" id="L135">        file = file.getCanonicalFile();</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        if (!file.exists()) {</span>
+<span class="nc" id="L137">            throw new IllegalArgumentException(&quot;No such file &quot; + file);</span>
+        }
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (!file.isFile()) {</span>
+<span class="fc" id="L140">            throw new IllegalArgumentException(</span>
+                    &quot;Unable to load thrift program: &quot; + file + &quot; is not a file.&quot;);
+        }
+<span class="fc" id="L143">        file = file.getAbsoluteFile();</span>
+<span class="fc" id="L144">        String path = file.getPath();</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (loadStack.contains(path)) {</span>
+            // circular includes.
+
+            // Only show the circular includes, not the path to get there.
+<span class="nc bnc" id="L149" title="All 2 branches missed.">            while (!loadStack.get(0).equals(path)) {</span>
+<span class="nc" id="L150">                loadStack.remove(0);</span>
+            }
+<span class="nc" id="L152">            loadStack.add(path);</span>
+
+<span class="nc" id="L154">            String prefix = longestCommonPrefixPath(loadStack);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (prefix.length() &gt; 0) {</span>
+<span class="nc" id="L156">                loadStack = stripCommonPrefix(loadStack);</span>
+
+<span class="nc" id="L158">                throw new IllegalArgumentException(</span>
+<span class="nc" id="L159">                        &quot;Circular includes detected: &quot; + prefix + &quot;... &quot; + String.join(&quot; -&gt; &quot;, loadStack));</span>
+            }
+<span class="nc" id="L161">            throw new IllegalArgumentException(</span>
+<span class="nc" id="L162">                    &quot;Circular includes detected: &quot; + String.join(&quot; -&gt; &quot;, loadStack));</span>
+        }
+<span class="fc" id="L164">        loadStack.add(path);</span>
+
+<span class="fc" id="L166">        ProgramTypeRegistry registry = this.programRegistry.registryForPath(path);</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (programRegistry.containsProgramPath(path)) {</span>
+<span class="fc" id="L168">            return registry;</span>
         }
 
-<span class="fc" id="L138">        InputStream in = new BufferedInputStream(new FileInputStream(file));</span>
-<span class="fc" id="L139">        ProgramType doc = parser.parse(in, file, includes);</span>
+<span class="fc" id="L171">        InputStream in = new BufferedInputStream(new FileInputStream(file));</span>
+<span class="fc" id="L172">        ProgramType doc = parser.parse(in, file, includes);</span>
 
-<span class="fc" id="L141">        LinkedList&lt;File&gt; queue = new LinkedList&lt;&gt;();</span>
-<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (doc.hasIncludes()) {</span>
-<span class="fc bfc" id="L143" title="All 2 branches covered.">            for (String include : doc.getIncludes()) {</span>
-<span class="fc" id="L144">                File location = new File(file.getParent(), include).getCanonicalFile();</span>
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                if (!location.exists()) {</span>
-<span class="nc bnc" id="L146" title="All 4 branches missed.">                    if (include.startsWith(&quot;.&quot;) || include.startsWith(File.separator)) {</span>
-<span class="nc" id="L147">                        throw new ParseException(&quot;No such file \&quot;&quot; + include + &quot;\&quot; to include from &quot; + file.getName());</span>
+<span class="fc" id="L174">        ArrayList&lt;File&gt; queue = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (doc.hasIncludes()) {</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">            for (String include : doc.getIncludes()) {</span>
+<span class="fc" id="L177">                File location = new File(file.getParent(), include).getCanonicalFile();</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">                if (!location.exists()) {</span>
+<span class="nc bnc" id="L179" title="All 4 branches missed.">                    if (include.startsWith(&quot;.&quot;) || include.startsWith(File.separator)) {</span>
+<span class="nc" id="L180">                        throw new ParseException(&quot;No such file \&quot;&quot; + include + &quot;\&quot; to include from &quot; + file.getName());</span>
                     }
 
-<span class="nc bnc" id="L150" title="All 2 branches missed.">                    for (File inc : includes) {</span>
-<span class="nc" id="L151">                        File i = new File(inc, include);</span>
-<span class="nc bnc" id="L152" title="All 2 branches missed.">                        if (i.exists()) {</span>
-<span class="nc" id="L153">                            location = i.getCanonicalFile();</span>
-<span class="nc" id="L154">                            break;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                    for (File inc : includes) {</span>
+<span class="nc" id="L184">                        File i = new File(inc, include);</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">                        if (i.exists()) {</span>
+<span class="nc" id="L186">                            location = i.getCanonicalFile();</span>
+<span class="nc" id="L187">                            break;</span>
                         }
-<span class="nc" id="L156">                    }</span>
+<span class="nc" id="L189">                    }</span>
                 }
 
-<span class="pc bpc" id="L159" title="2 of 4 branches missed.">                if (location.exists() &amp;&amp; !queue.contains(location)) {</span>
-<span class="fc" id="L160">                    queue.add(location.getAbsoluteFile());</span>
+<span class="pc bpc" id="L192" title="2 of 4 branches missed.">                if (location.exists() &amp;&amp; !queue.contains(location)) {</span>
+<span class="fc" id="L193">                    queue.add(location.getAbsoluteFile());</span>
                 }
-<span class="fc" id="L162">            }</span>
+<span class="fc" id="L195">            }</span>
         }
 
         // Load includes in reverse order, in case of serial dependencies.
-<span class="fc" id="L166">        Collections.reverse(queue);</span>
+<span class="fc" id="L199">        Collections.reverse(queue);</span>
 
-<span class="fc" id="L168">        loadedDocuments.put(path, doc);</span>
-<span class="fc bfc" id="L169" title="All 2 branches covered.">        for (File include : queue) {</span>
-<span class="fc" id="L170">            registry.registerInclude(programNameFromPath(include.getPath()), load(include));</span>
-<span class="fc" id="L171">        }</span>
+<span class="fc" id="L201">        loadedDocuments.put(path, doc);</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        for (File include : queue) {</span>
+<span class="fc" id="L203">            registry.registerInclude(programNameFromPath(include.getPath()),</span>
+<span class="fc" id="L204">                                     loadInternal(include, ImmutableList.copyOf(loadStack)));</span>
+<span class="fc" id="L205">        }</span>
 
         // Now everything it depends on is loaded.
 
-<span class="fc" id="L175">        CProgram program = converter.convert(path, doc);</span>
-<span class="fc" id="L176">        programRegistry.putProgram(path, program);</span>
-<span class="fc" id="L177">        return registry;</span>
+<span class="fc" id="L209">        CProgram program = converter.convert(path, doc);</span>
+<span class="fc" id="L210">        programRegistry.putProgram(path, program);</span>
+<span class="fc" id="L211">        return registry;</span>
     }
 
     /**
      * @return The local registry.
      */
     public ProgramRegistry getProgramRegistry() {
-<span class="nc" id="L184">        return programRegistry;</span>
+<span class="nc" id="L218">        return programRegistry;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -27,7 +27,7 @@ import net.morimekta.providence.reflect.contained.CServiceMethod;
 import net.morimekta.providence.util.ThriftAnnotation;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,11 +54,11 @@ public class JService {
     public JServiceMethod[] methods() {
 <span class="fc" id="L55">        CService top = service;</span>
 
-<span class="fc" id="L57">        List&lt;CServiceMethod&gt; methods = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L57">        List&lt;CServiceMethod&gt; methods = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L58" title="All 2 branches covered.">        while (top != null) {</span>
             // Always keep 'parent' methods on the top.
 <span class="fc" id="L60">            methods.addAll(0, top.getMethods());</span>
-<span class="fc" id="L61">            top = (CService) top.getExtendsService();</span>
+<span class="fc" id="L61">            top = top.getExtendsService();</span>
         }
 
 <span class="fc" id="L64">        CServiceMethod[] ma = methods.toArray(new CServiceMethod[methods.size()]);</span>
@@ -75,7 +75,7 @@ public class JService {
      * @return The method array.
      */
     public JServiceMethod[] declaredMethods() {
-<span class="fc" id="L78">        List&lt;CServiceMethod&gt; methods = new LinkedList&lt;&gt;(service.getMethods());</span>
+<span class="fc" id="L78">        List&lt;CServiceMethod&gt; methods = new ArrayList&lt;&gt;(service.getMethods());</span>
 
 <span class="fc" id="L80">        CServiceMethod[] ma = methods.toArray(new CServiceMethod[methods.size()]);</span>
 <span class="fc" id="L81">        JServiceMethod[] ret = new JServiceMethod[ma.length];</span>

@@ -24,7 +24,6 @@ import net.morimekta.providence.PMessage;
 import net.morimekta.providence.descriptor.PField;
 import net.morimekta.providence.descriptor.PMessageDescriptor;
 import net.morimekta.providence.serializer.Serializer;
-import net.morimekta.util.io.IOUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -51,8 +50,8 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
     public MessageSpliterator(@Nonnull InputStream in,
                               @Nonnull Serializer serializer,
                               @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor) {
-<span class="fc" id="L54">        this(in, serializer, descriptor, in);</span>
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L53">        this(in, serializer, descriptor, in);</span>
+<span class="fc" id="L54">    }</span>
 
     /**
      * Make a spliterator with specific closing function.
@@ -66,23 +65,23 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
     public MessageSpliterator(@Nonnull InputStream in,
                               @Nonnull Serializer serializer,
                               @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor,
-<span class="fc" id="L69">                              @Nullable Closeable closer) {</span>
-<span class="fc" id="L70">        this.in = in;</span>
-<span class="fc" id="L71">        this.serializer = serializer;</span>
-<span class="fc" id="L72">        this.descriptor = descriptor;</span>
+<span class="fc" id="L68">                              @Nullable Closeable closer) {</span>
+<span class="fc" id="L69">        this.in = in;</span>
+<span class="fc" id="L70">        this.serializer = serializer;</span>
+<span class="fc" id="L71">        this.descriptor = descriptor;</span>
 
-<span class="fc" id="L74">        this.closer = closer;</span>
-<span class="fc" id="L75">        this.num = 0;</span>
-<span class="fc" id="L76">    }</span>
+<span class="fc" id="L73">        this.closer = closer;</span>
+<span class="fc" id="L74">        this.num = 0;</span>
+<span class="fc" id="L75">    }</span>
 
     @Override
     public boolean tryAdvance(Consumer&lt;? super Message&gt; action) {
-<span class="fc" id="L80">        Message message = read();</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (message != null) {</span>
-<span class="fc" id="L82">            action.accept(message);</span>
-<span class="fc" id="L83">            return true;</span>
+<span class="fc" id="L79">        Message message = read();</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (message != null) {</span>
+<span class="fc" id="L81">            action.accept(message);</span>
+<span class="fc" id="L82">            return true;</span>
         }
-<span class="fc" id="L85">        return false;</span>
+<span class="fc" id="L84">        return false;</span>
     }
 
     /**
@@ -92,7 +91,7 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
      */
     @Override
     public Spliterator&lt;Message&gt; trySplit() {
-<span class="fc" id="L95">        return null;</span>
+<span class="fc" id="L94">        return null;</span>
     }
 
     /**
@@ -103,7 +102,7 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
      */
     @Override
     public long estimateSize() {
-<span class="fc" id="L106">        return Long.MAX_VALUE;</span>
+<span class="fc" id="L105">        return Long.MAX_VALUE;</span>
     }
 
     /**
@@ -114,7 +113,7 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
      */
     @Override
     public long getExactSizeIfKnown() {
-<span class="fc" id="L117">        return -1;</span>
+<span class="fc" id="L116">        return -1;</span>
     }
 
     /**
@@ -124,7 +123,7 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
      */
     @Override
     public int characteristics() {
-<span class="fc" id="L127">        return ORDERED | NONNULL | IMMUTABLE;</span>
+<span class="fc" id="L126">        return ORDERED | NONNULL | IMMUTABLE;</span>
     }
 
     /**
@@ -134,7 +133,7 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
      */
     @Override
     public Comparator&lt;? super Message&gt; getComparator() {
-<span class="fc" id="L137">        return Comparable::compareTo;</span>
+<span class="fc" id="L136">        return Comparable::compareTo;</span>
     }
 
     // --- PRIVATE ---
@@ -147,51 +146,43 @@ public class MessageSpliterator&lt;Message extends PMessage&lt;Message, Field&gt
 
     private Message read() {
         try {
-<span class="fc bfc" id="L150" title="All 2 branches covered.">            if (num &gt; 0) {</span>
-<span class="fc bfc" id="L151" title="All 2 branches covered.">                if (!serializer.binaryProtocol()) {</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">                    if (!IOUtils.skipUntil(in, MessageStreams.READABLE_ENTRY_SEP)) {</span>
-                        // no next entry found.
-<span class="fc" id="L154">                        return close(null);</span>
-                    }
-                }
-            }
             // Try to check if there is a byte available. Since the
             // available() method ony checks for available non-blocking
             // reads, we need to actually try to read a byte.
             //
             // Sadly this means it's only available when marks are
             // supported.
-<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (in.markSupported()) {</span>
-<span class="fc" id="L165">                in.mark(2);</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">                if (in.read() &lt; 0) {</span>
-<span class="fc" id="L167">                    return close(null);</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (in.markSupported()) {</span>
+<span class="fc" id="L156">                in.mark(2);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                if (in.read() &lt; 0) {</span>
+<span class="fc" id="L158">                    return close(null);</span>
                 }
-<span class="fc" id="L169">                in.reset();</span>
+<span class="fc" id="L160">                in.reset();</span>
             }
-<span class="fc" id="L171">            return serializer.deserialize(in, descriptor);</span>
-<span class="fc" id="L172">        } catch (IOException e) {</span>
-<span class="fc" id="L173">            close(e);</span>
-<span class="fc" id="L174">            throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L162">            return serializer.deserialize(in, descriptor);</span>
+<span class="fc" id="L163">        } catch (IOException e) {</span>
+<span class="fc" id="L164">            close(e);</span>
+<span class="fc" id="L165">            throw new UncheckedIOException(e.getMessage(), e);</span>
         } finally {
-<span class="fc" id="L176">            ++num;</span>
+<span class="fc" id="L167">            ++num;</span>
         }
     }
 
     private Message close(Exception cause) {
-<span class="pc bpc" id="L181" title="1 of 2 branches missed.">        if (closer != null) {</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        if (closer != null) {</span>
             try {
-<span class="fc" id="L183">                closer.close();</span>
-<span class="fc" id="L184">            } catch (IOException e) {</span>
-<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                if (cause == null) {</span>
-<span class="nc" id="L186">                    throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L174">                closer.close();</span>
+<span class="fc" id="L175">            } catch (IOException e) {</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">                if (cause == null) {</span>
+<span class="nc" id="L177">                    throw new UncheckedIOException(e.getMessage(), e);</span>
                 } else {
-<span class="fc" id="L188">                    cause.addSuppressed(e);</span>
+<span class="fc" id="L179">                    cause.addSuppressed(e);</span>
                 }
             } finally {
-<span class="pc" id="L191">                closer = null;</span>
-<span class="fc" id="L192">            }</span>
+<span class="pc" id="L182">                closer = null;</span>
+<span class="fc" id="L183">            }</span>
         }
-<span class="fc" id="L194">        return null;</span>
+<span class="fc" id="L185">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

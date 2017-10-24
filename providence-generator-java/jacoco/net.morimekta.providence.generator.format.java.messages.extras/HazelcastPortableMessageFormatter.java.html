@@ -39,7 +39,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -66,34 +65,34 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
 
     private Integer uniqueVariable;
 
-<span class="fc" id="L69">    public HazelcastPortableMessageFormatter(IndentedPrintWriter writer, JHelper helper) {</span>
-<span class="fc" id="L70">        this.writer = writer;</span>
-<span class="fc" id="L71">        this.helper = helper;</span>
-<span class="fc" id="L72">        this.uniqueVariable = 0;</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L68">    public HazelcastPortableMessageFormatter(IndentedPrintWriter writer, JHelper helper) {</span>
+<span class="fc" id="L69">        this.writer = writer;</span>
+<span class="fc" id="L70">        this.helper = helper;</span>
+<span class="fc" id="L71">        this.uniqueVariable = 0;</span>
+<span class="fc" id="L72">    }</span>
 
     private String tempVariable(String name) {
-<span class="nc" id="L76">        return &quot;tmp_&quot; + name + &quot;_&quot; + (++uniqueVariable);</span>
+<span class="nc" id="L75">        return &quot;tmp_&quot; + name + &quot;_&quot; + (++uniqueVariable);</span>
     }
 
     @Override
     public Collection&lt;String&gt; getExtraImplements(JMessage&lt;?&gt; message) throws GeneratorException {
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (message.hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID)) {</span>
-<span class="fc" id="L82">            return ImmutableList.of(Portable.class.getName());</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (message.hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID)) {</span>
+<span class="fc" id="L81">            return ImmutableList.of(Portable.class.getName());</span>
         } else {
-<span class="fc" id="L84">            return new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L83">            return new ArrayList&lt;&gt;();</span>
         }
     }
 
     @Override
     public void appendMethods(JMessage&lt;?&gt; message) throws GeneratorException {
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (message.hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID)) {</span>
-<span class="fc" id="L91">            appendFactoryId(message);</span>
-<span class="fc" id="L92">            appendClassId(message);</span>
-<span class="fc" id="L93">            appendPortableWriter(message);</span>
-<span class="fc" id="L94">            appendPortableReader(message);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (message.hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID)) {</span>
+<span class="fc" id="L90">            appendFactoryId(message);</span>
+<span class="fc" id="L91">            appendClassId(message);</span>
+<span class="fc" id="L92">            appendPortableWriter(message);</span>
+<span class="fc" id="L93">            appendPortableReader(message);</span>
         }
-<span class="fc" id="L96">    }</span>
+<span class="fc" id="L95">    }</span>
 
     /**
      * Method to append get factory id from hazelcast_portable.
@@ -108,19 +107,19 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void appendFactoryId(JMessage&lt;?&gt; message) {
-<span class="fc" id="L111">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L112">              .appendln(&quot;public int getFactoryId() {&quot;)</span>
-<span class="fc" id="L113">              .begin()</span>
+<span class="fc" id="L110">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L111">              .appendln(&quot;public int getFactoryId() {&quot;)</span>
+<span class="fc" id="L112">              .begin()</span>
               //TODO: The factory should be file unqiue. ID is struct unique so for id we want to define several constants.
               // so for content_cms we want the factory name ContentCmsFactory or ContentCmsPortableFactory.
               // as well as some way to count this up for each struct that has a hazelcast_portable tag in it.
-<span class="fc" id="L117">              .formatln(&quot;return %s.%s;&quot;,</span>
-<span class="fc" id="L118">                        getHazelcastFactory(message.descriptor()),</span>
+<span class="fc" id="L116">              .formatln(&quot;return %s.%s;&quot;,</span>
+<span class="fc" id="L117">                        getHazelcastFactory(message.descriptor()),</span>
                         HazelcastPortableProgramFormatter.FACTORY_ID)
-<span class="fc" id="L120">              .end()</span>
-<span class="fc" id="L121">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L122">              .newline();</span>
-<span class="fc" id="L123">    }</span>
+<span class="fc" id="L119">              .end()</span>
+<span class="fc" id="L120">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L121">              .newline();</span>
+<span class="fc" id="L122">    }</span>
 
     /**
      * Method to append get class id from hazelcast_portable.
@@ -135,17 +134,17 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void appendClassId(JMessage&lt;?&gt; message) {
-<span class="fc" id="L138">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L139">              .appendln(&quot;public int getClassId() {&quot;)</span>
-<span class="fc" id="L140">              .begin()</span>
+<span class="fc" id="L137">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L138">              .appendln(&quot;public int getClassId() {&quot;)</span>
+<span class="fc" id="L139">              .begin()</span>
               //TODO: Need to add method to create a constant for the description or struct here.
-<span class="fc" id="L142">              .formatln(&quot;return %s.%s;&quot;,</span>
-<span class="fc" id="L143">                        getHazelcastFactory(message.descriptor()),</span>
-<span class="fc" id="L144">                        getHazelcastClassId(message.descriptor()))</span>
-<span class="fc" id="L145">              .end()</span>
-<span class="fc" id="L146">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L147">              .newline();</span>
-<span class="fc" id="L148">    }</span>
+<span class="fc" id="L141">              .formatln(&quot;return %s.%s;&quot;,</span>
+<span class="fc" id="L142">                        getHazelcastFactory(message.descriptor()),</span>
+<span class="fc" id="L143">                        getHazelcastClassId(message.descriptor()))</span>
+<span class="fc" id="L144">              .end()</span>
+<span class="fc" id="L145">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L146">              .newline();</span>
+<span class="fc" id="L147">    }</span>
 
     /**
      * Method to append writePortable from hazelcast_portable.
@@ -161,36 +160,36 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void appendPortableWriter(JMessage&lt;?&gt; message) {
-<span class="fc" id="L164">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L165">              .formatln(&quot;public void writePortable(%s %s) throws %s {&quot;,</span>
-<span class="fc" id="L166">                        PortableWriter.class.getName(),</span>
+<span class="fc" id="L163">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L164">              .formatln(&quot;public void writePortable(%s %s) throws %s {&quot;,</span>
+<span class="fc" id="L165">                        PortableWriter.class.getName(),</span>
                         PORTABLE_WRITER,
-<span class="fc" id="L168">                        IOException.class.getName())</span>
-<span class="fc" id="L169">              .begin();</span>
+<span class="fc" id="L167">                        IOException.class.getName())</span>
+<span class="fc" id="L168">              .begin();</span>
         // TODO: This should be short[] instead, as field IDs are restricted to 16bit.
-<span class="fc" id="L171">        writer.appendln(&quot;int[] setFields = presentFields().stream()&quot;)</span>
-<span class="fc" id="L172">              .appendln(&quot;                                 .mapToInt(_Field::getId)&quot;)</span>
-<span class="fc" id="L173">              .appendln(&quot;                                 .toArray();&quot;)</span>
-<span class="fc" id="L174">              .appendln(&quot;portableWriter.writeIntArray(\&quot;__fields__\&quot;, setFields);&quot;);</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc bfc" id="L176" title="All 2 branches covered.">            if (!field.alwaysPresent()) {</span>
-<span class="fc" id="L177">                writer.formatln(&quot;if( %s() ) {&quot;, field.isSet())</span>
-<span class="fc" id="L178">                      .begin();</span>
+<span class="fc" id="L170">        writer.appendln(&quot;int[] setFields = presentFields().stream()&quot;)</span>
+<span class="fc" id="L171">              .appendln(&quot;                                 .mapToInt(_Field::getId)&quot;)</span>
+<span class="fc" id="L172">              .appendln(&quot;                                 .toArray();&quot;)</span>
+<span class="fc" id="L173">              .appendln(&quot;portableWriter.writeIntArray(\&quot;__fields__\&quot;, setFields);&quot;);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L176">                writer.formatln(&quot;if( %s() ) {&quot;, field.isSet())</span>
+<span class="fc" id="L177">                      .begin();</span>
             }
-<span class="fc" id="L180">            writePortableField(field);</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">            if (!field.alwaysPresent()) {</span>
-<span class="fc" id="L182">                writer.end()</span>
-<span class="fc" id="L183">                      .appendln(&quot;} else {&quot;)</span>
-<span class="fc" id="L184">                      .begin();</span>
-<span class="fc" id="L185">                writeDefaultPortableField(field);</span>
-<span class="fc" id="L186">                writer.end()</span>
-<span class="fc" id="L187">                      .appendln(&quot;}&quot;);</span>
+<span class="fc" id="L179">            writePortableField(field);</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">            if (!field.alwaysPresent()) {</span>
+<span class="fc" id="L181">                writer.end()</span>
+<span class="fc" id="L182">                      .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L183">                      .begin();</span>
+<span class="fc" id="L184">                writeDefaultPortableField(field);</span>
+<span class="fc" id="L185">                writer.end()</span>
+<span class="fc" id="L186">                      .appendln(&quot;}&quot;);</span>
             }
-<span class="fc" id="L189">        }</span>
-<span class="fc" id="L190">        writer.end()</span>
-<span class="fc" id="L191">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L192">              .newline();</span>
-<span class="fc" id="L193">    }</span>
+<span class="fc" id="L188">        }</span>
+<span class="fc" id="L189">        writer.end()</span>
+<span class="fc" id="L190">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L191">              .newline();</span>
+<span class="fc" id="L192">    }</span>
 
     /**
      * Method to append readPortable from hazelcast_portable.
@@ -206,35 +205,35 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void appendPortableReader(JMessage&lt;?&gt; message) {
-<span class="fc" id="L209">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L210">              .formatln(&quot;public void readPortable(%s %s) throws %s {&quot;,</span>
-<span class="fc" id="L211">                        PortableReader.class.getName(),</span>
+<span class="fc" id="L208">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L209">              .formatln(&quot;public void readPortable(%s %s) throws %s {&quot;,</span>
+<span class="fc" id="L210">                        PortableReader.class.getName(),</span>
                         PORTABLE_READER,
-<span class="fc" id="L213">                        IOException.class.getName())</span>
-<span class="fc" id="L214">              .begin();</span>
+<span class="fc" id="L212">                        IOException.class.getName())</span>
+<span class="fc" id="L213">              .begin();</span>
         // TODO: This should be short[] instead, as field IDs are restricted to 16bit.
-<span class="fc" id="L216">        writer.formatln(&quot;int[] field_ids = %s.readIntArray(\&quot;__fields__\&quot;);&quot;, PORTABLE_READER)</span>
-<span class="fc" id="L217">              .appendln()</span>
-<span class="fc" id="L218">              .appendln(&quot;for (int id : field_ids) {&quot;)</span>
-<span class="fc" id="L219">              .begin()</span>
-<span class="fc" id="L220">              .appendln(&quot;switch (id) {&quot;)</span>
-<span class="fc" id="L221">              .begin();</span>
-<span class="fc bfc" id="L222" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
-<span class="fc" id="L223">            writer.formatln(&quot;case %d: {&quot;, field.id())</span>
-<span class="fc" id="L224">                  .begin();</span>
-<span class="fc" id="L225">            readPortableField(field);</span>
-<span class="fc" id="L226">            writer.appendln(&quot;break;&quot;)</span>
-<span class="fc" id="L227">                  .end()</span>
-<span class="fc" id="L228">                  .appendln(&quot;}&quot;);</span>
-<span class="fc" id="L229">        }</span>
-<span class="fc" id="L230">        writer.end()</span>
-<span class="fc" id="L231">              .appendln(&quot;}&quot;) // switch</span>
-<span class="fc" id="L232">              .end()</span>
-<span class="fc" id="L233">              .appendln(&quot;}&quot;)  // for loop</span>
-<span class="fc" id="L234">              .end()</span>
-<span class="fc" id="L235">              .appendln(&quot;}&quot;) // readPortable</span>
-<span class="fc" id="L236">              .newline();</span>
-<span class="fc" id="L237">    }</span>
+<span class="fc" id="L215">        writer.formatln(&quot;int[] field_ids = %s.readIntArray(\&quot;__fields__\&quot;);&quot;, PORTABLE_READER)</span>
+<span class="fc" id="L216">              .appendln()</span>
+<span class="fc" id="L217">              .appendln(&quot;for (int id : field_ids) {&quot;)</span>
+<span class="fc" id="L218">              .begin()</span>
+<span class="fc" id="L219">              .appendln(&quot;switch (id) {&quot;)</span>
+<span class="fc" id="L220">              .begin();</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        for (JField field : message.declaredOrderFields()) {</span>
+<span class="fc" id="L222">            writer.formatln(&quot;case %d: {&quot;, field.id())</span>
+<span class="fc" id="L223">                  .begin();</span>
+<span class="fc" id="L224">            readPortableField(field);</span>
+<span class="fc" id="L225">            writer.appendln(&quot;break;&quot;)</span>
+<span class="fc" id="L226">                  .end()</span>
+<span class="fc" id="L227">                  .appendln(&quot;}&quot;);</span>
+<span class="fc" id="L228">        }</span>
+<span class="fc" id="L229">        writer.end()</span>
+<span class="fc" id="L230">              .appendln(&quot;}&quot;) // switch</span>
+<span class="fc" id="L231">              .end()</span>
+<span class="fc" id="L232">              .appendln(&quot;}&quot;)  // for loop</span>
+<span class="fc" id="L233">              .end()</span>
+<span class="fc" id="L234">              .appendln(&quot;}&quot;) // readPortable</span>
+<span class="fc" id="L235">              .newline();</span>
+<span class="fc" id="L236">    }</span>
 
     /**
      * Method to append writing of a field to hazelcast_portable.
@@ -253,91 +252,91 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void writePortableField(JField field) throws GeneratorException {
-<span class="pc bpc" id="L256" title="1 of 2 branches missed.">        if (field.portableRequiresBinarySerialization()) {</span>
-<span class="nc" id="L257">            String baosTemp = tempVariable(&quot;baos&quot;);</span>
-<span class="nc" id="L258">            String bebwTemp = tempVariable(&quot;bebw&quot;);</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">        if (field.portableRequiresBinarySerialization()) {</span>
+<span class="nc" id="L256">            String baosTemp = tempVariable(&quot;baos&quot;);</span>
+<span class="nc" id="L257">            String bebwTemp = tempVariable(&quot;bebw&quot;);</span>
 
-<span class="nc" id="L260">            writer.formatln(&quot;try (%s %s = new %s();&quot;,</span>
-<span class="nc" id="L261">                            ByteArrayOutputStream.class.getName(),</span>
+<span class="nc" id="L259">            writer.formatln(&quot;try (%s %s = new %s();&quot;,</span>
+<span class="nc" id="L260">                            ByteArrayOutputStream.class.getName(),</span>
                             baosTemp,
-<span class="nc" id="L263">                            ByteArrayOutputStream.class.getName())</span>
-<span class="nc" id="L264">                  .formatln(&quot;     %s %s = new %s(%s) ) {&quot;,</span>
-<span class="nc" id="L265">                            BigEndianBinaryWriter.class.getName(),</span>
+<span class="nc" id="L262">                            ByteArrayOutputStream.class.getName())</span>
+<span class="nc" id="L263">                  .formatln(&quot;     %s %s = new %s(%s) ) {&quot;,</span>
+<span class="nc" id="L264">                            BigEndianBinaryWriter.class.getName(),</span>
                             bebwTemp,
-<span class="nc" id="L267">                            BigEndianBinaryWriter.class.getName(),</span>
+<span class="nc" id="L266">                            BigEndianBinaryWriter.class.getName(),</span>
                             baosTemp)
-<span class="nc" id="L269">                  .begin();</span>
+<span class="nc" id="L268">                  .begin();</span>
 
-<span class="nc bnc" id="L271" title="All 2 branches missed.">            if (field.type() == PType.MESSAGE) {</span>
-<span class="nc" id="L272">                String tempVar = tempVariable(&quot;message&quot;);</span>
-<span class="nc" id="L273">                writer.formatln(&quot;%s %s = %s_builder != null ? %s_builder.build() : %s;&quot;,</span>
-<span class="nc" id="L274">                                field.fieldType(), tempVar, field.member(), field.member(), field.member());</span>
-<span class="nc" id="L275">                writePortableBinary(bebwTemp, tempVar, field.field().getDescriptor());</span>
-<span class="nc" id="L276">            } else {</span>
-<span class="nc" id="L277">                writePortableBinary(bebwTemp, field.member(), field.field().getDescriptor());</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">            if (field.type() == PType.MESSAGE) {</span>
+<span class="nc" id="L271">                String tempVar = tempVariable(&quot;message&quot;);</span>
+<span class="nc" id="L272">                writer.formatln(&quot;%s %s = %s_builder != null ? %s_builder.build() : %s;&quot;,</span>
+<span class="nc" id="L273">                                field.fieldType(), tempVar, field.member(), field.member(), field.member());</span>
+<span class="nc" id="L274">                writePortableBinary(bebwTemp, tempVar, field.field().getDescriptor());</span>
+<span class="nc" id="L275">            } else {</span>
+<span class="nc" id="L276">                writePortableBinary(bebwTemp, field.member(), field.field().getDescriptor());</span>
             }
 
-<span class="nc" id="L280">            writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toByteArray());&quot;, PORTABLE_WRITER, field.name(), baosTemp)</span>
-<span class="nc" id="L281">                  .end()</span>
-<span class="nc" id="L282">                  .println(&quot;}&quot;);</span>
+<span class="nc" id="L279">            writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toByteArray());&quot;, PORTABLE_WRITER, field.name(), baosTemp)</span>
+<span class="nc" id="L280">                  .end()</span>
+<span class="nc" id="L281">                  .println(&quot;}&quot;);</span>
 
-<span class="nc" id="L284">            return;</span>
+<span class="nc" id="L283">            return;</span>
         }
 
-<span class="pc bpc" id="L287" title="2 of 13 branches missed.">        switch (field.type()) {</span>
+<span class="pc bpc" id="L286" title="2 of 13 branches missed.">        switch (field.type()) {</span>
             case BINARY:
-<span class="fc" id="L289">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.get());&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L290">                break;</span>
+<span class="fc" id="L288">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.get());&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L289">                break;</span>
             case BOOL:
-<span class="fc" id="L292">                writer.formatln(&quot;%s.writeBoolean(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L293">                break;</span>
+<span class="fc" id="L291">                writer.formatln(&quot;%s.writeBoolean(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L292">                break;</span>
             case BYTE:
-<span class="fc" id="L295">                writer.formatln(&quot;%s.writeByte(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L296">                break;</span>
+<span class="fc" id="L294">                writer.formatln(&quot;%s.writeByte(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L295">                break;</span>
             case DOUBLE:
-<span class="fc" id="L298">                writer.formatln(&quot;%s.writeDouble(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L299">                break;</span>
+<span class="fc" id="L297">                writer.formatln(&quot;%s.writeDouble(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L298">                break;</span>
             case ENUM:
-<span class="fc" id="L301">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, %s.asInteger());&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L302">                break;</span>
+<span class="fc" id="L300">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, %s.asInteger());&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L301">                break;</span>
             case I16:
-<span class="fc" id="L304">                writer.formatln(&quot;%s.writeShort(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L305">                break;</span>
+<span class="fc" id="L303">                writer.formatln(&quot;%s.writeShort(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L304">                break;</span>
             case I32:
-<span class="fc" id="L307">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L308">                break;</span>
+<span class="fc" id="L306">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L307">                break;</span>
             case I64:
-<span class="fc" id="L310">                writer.formatln(&quot;%s.writeLong(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L311">                break;</span>
+<span class="fc" id="L309">                writer.formatln(&quot;%s.writeLong(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L310">                break;</span>
             case STRING:
-<span class="fc" id="L313">                writer.formatln(&quot;%s.writeUTF(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
-<span class="fc" id="L314">                break;</span>
+<span class="fc" id="L312">                writer.formatln(&quot;%s.writeUTF(\&quot;%s\&quot;, %s);&quot;, PORTABLE_WRITER, field.name(), field.member());</span>
+<span class="fc" id="L313">                break;</span>
             case LIST:
-<span class="fc" id="L316">                writePortableFieldList(field,</span>
-<span class="fc" id="L317">                                       field.toPList()</span>
-<span class="fc" id="L318">                                            .itemDescriptor());</span>
-<span class="fc" id="L319">                break;</span>
+<span class="fc" id="L315">                writePortableFieldList(field,</span>
+<span class="fc" id="L316">                                       field.toPList()</span>
+<span class="fc" id="L317">                                            .itemDescriptor());</span>
+<span class="fc" id="L318">                break;</span>
             case SET:
-<span class="nc" id="L321">                writePortableFieldList(field,</span>
-<span class="nc" id="L322">                                       field.toPSet()</span>
-<span class="nc" id="L323">                                            .itemDescriptor());</span>
-<span class="nc" id="L324">                break;</span>
+<span class="nc" id="L320">                writePortableFieldList(field,</span>
+<span class="nc" id="L321">                                       field.toPSet()</span>
+<span class="nc" id="L322">                                            .itemDescriptor());</span>
+<span class="nc" id="L323">                break;</span>
             case MESSAGE: {
-<span class="fc" id="L326">                writer.formatln(&quot;if (%s_builder != null) {&quot;, field.member())</span>
-<span class="fc" id="L327">                      .formatln(&quot;    %s.writePortable(\&quot;%s\&quot;, %s_builder);&quot;,</span>
-<span class="fc" id="L328">                                PORTABLE_WRITER, field.name(), field.member())</span>
-<span class="fc" id="L329">                      .appendln(&quot;} else {&quot;)</span>
-<span class="fc" id="L330">                      .formatln(&quot;    %s.writePortable(\&quot;%s\&quot;, %s.mutate());&quot;,</span>
-<span class="fc" id="L331">                                PORTABLE_WRITER, field.name(), field.member())</span>
-<span class="fc" id="L332">                      .appendln(&quot;}&quot;);</span>
-<span class="fc" id="L333">                break;</span>
+<span class="fc" id="L325">                writer.formatln(&quot;if (%s_builder != null) {&quot;, field.member())</span>
+<span class="fc" id="L326">                      .formatln(&quot;    %s.writePortable(\&quot;%s\&quot;, %s_builder);&quot;,</span>
+<span class="fc" id="L327">                                PORTABLE_WRITER, field.name(), field.member())</span>
+<span class="fc" id="L328">                      .appendln(&quot;} else {&quot;)</span>
+<span class="fc" id="L329">                      .formatln(&quot;    %s.writePortable(\&quot;%s\&quot;, %s.mutate());&quot;,</span>
+<span class="fc" id="L330">                                PORTABLE_WRITER, field.name(), field.member())</span>
+<span class="fc" id="L331">                      .appendln(&quot;}&quot;);</span>
+<span class="fc" id="L332">                break;</span>
             }
             default:
-<span class="nc" id="L336">                throw new GeneratorException(&quot;Not implemented writePortableField for type: &quot; + field.type() + &quot; in &quot; +</span>
-<span class="nc" id="L337">                                             this.getClass()</span>
-<span class="nc" id="L338">                                                 .getSimpleName());</span>
+<span class="nc" id="L335">                throw new GeneratorException(&quot;Not implemented writePortableField for type: &quot; + field.type() + &quot; in &quot; +</span>
+<span class="nc" id="L336">                                             this.getClass()</span>
+<span class="nc" id="L337">                                                 .getSimpleName());</span>
         }
-<span class="fc" id="L340">    }</span>
+<span class="fc" id="L339">    }</span>
 
     /**
      * Method to convert fields to a binary array.
@@ -347,218 +346,218 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * @param descriptor PDescriptor that is connected to the getter. Can be nested subtypes of the field.
      */
     private void writePortableBinary(String bebw, String getter, PDescriptor descriptor) {
-<span class="nc bnc" id="L350" title="All 14 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="nc bnc" id="L349" title="All 14 branches missed.">        switch (descriptor.getType()) {</span>
             case BINARY:
-<span class="nc" id="L352">                writer.formatln(&quot;%s.%s(%s.length());&quot;, bebw, &quot;writeInt&quot;, getter)</span>
-<span class="nc" id="L353">                      .formatln(&quot;%s.%s(%s.get());&quot;, bebw, &quot;write&quot;, getter);</span>
-<span class="nc" id="L354">                break;</span>
+<span class="nc" id="L351">                writer.formatln(&quot;%s.%s(%s.length());&quot;, bebw, &quot;writeInt&quot;, getter)</span>
+<span class="nc" id="L352">                      .formatln(&quot;%s.%s(%s.get());&quot;, bebw, &quot;write&quot;, getter);</span>
+<span class="nc" id="L353">                break;</span>
             case BOOL:
-<span class="nc" id="L356">                writer.formatln(&quot;%s.%s(%s ? (byte)1 : 0);&quot;, bebw, &quot;writeByte&quot;, getter);</span>
-<span class="nc" id="L357">                break;</span>
+<span class="nc" id="L355">                writer.formatln(&quot;%s.%s(%s ? (byte)1 : 0);&quot;, bebw, &quot;writeByte&quot;, getter);</span>
+<span class="nc" id="L356">                break;</span>
             case BYTE:
-<span class="nc" id="L359">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeByte&quot;, getter);</span>
-<span class="nc" id="L360">                break;</span>
+<span class="nc" id="L358">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeByte&quot;, getter);</span>
+<span class="nc" id="L359">                break;</span>
             case DOUBLE:
-<span class="nc" id="L362">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeDouble&quot;, getter);</span>
-<span class="nc" id="L363">                break;</span>
+<span class="nc" id="L361">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeDouble&quot;, getter);</span>
+<span class="nc" id="L362">                break;</span>
             case ENUM:
-<span class="nc" id="L365">                writer.formatln(&quot;%s.%s(%s.getValue());&quot;, bebw, &quot;writeInt&quot;, getter);</span>
-<span class="nc" id="L366">                break;</span>
+<span class="nc" id="L364">                writer.formatln(&quot;%s.%s(%s.getValue());&quot;, bebw, &quot;writeInt&quot;, getter);</span>
+<span class="nc" id="L365">                break;</span>
             case I16:
-<span class="nc" id="L368">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeShort&quot;, getter);</span>
-<span class="nc" id="L369">                break;</span>
+<span class="nc" id="L367">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeShort&quot;, getter);</span>
+<span class="nc" id="L368">                break;</span>
             case I32:
-<span class="nc" id="L371">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeInt&quot;, getter);</span>
-<span class="nc" id="L372">                break;</span>
+<span class="nc" id="L370">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeInt&quot;, getter);</span>
+<span class="nc" id="L371">                break;</span>
             case I64:
-<span class="nc" id="L374">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeLong&quot;, getter);</span>
-<span class="nc" id="L375">                break;</span>
+<span class="nc" id="L373">                writer.formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;writeLong&quot;, getter);</span>
+<span class="nc" id="L374">                break;</span>
             case STRING: {
-<span class="nc" id="L377">                final String tempBinary = tempVariable(&quot;bin&quot;);</span>
-<span class="nc" id="L378">                writer.formatln(&quot;%s[] %s = %s.getBytes(%s.UTF_8);&quot;,</span>
-<span class="nc" id="L379">                                byte.class.getName(),</span>
+<span class="nc" id="L376">                final String tempBinary = tempVariable(&quot;bin&quot;);</span>
+<span class="nc" id="L377">                writer.formatln(&quot;%s[] %s = %s.getBytes(%s.UTF_8);&quot;,</span>
+<span class="nc" id="L378">                                byte.class.getName(),</span>
                                 tempBinary,
                                 getter,
-<span class="nc" id="L382">                                StandardCharsets.class.getName())</span>
-<span class="nc" id="L383">                      .formatln(&quot;%s.%s(%s.length);&quot;, bebw, &quot;writeInt&quot;, tempBinary)</span>
-<span class="nc" id="L384">                      .formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;write&quot;, tempBinary);</span>
-<span class="nc" id="L385">                break;</span>
+<span class="nc" id="L381">                                StandardCharsets.class.getName())</span>
+<span class="nc" id="L382">                      .formatln(&quot;%s.%s(%s.length);&quot;, bebw, &quot;writeInt&quot;, tempBinary)</span>
+<span class="nc" id="L383">                      .formatln(&quot;%s.%s(%s);&quot;, bebw, &quot;write&quot;, tempBinary);</span>
+<span class="nc" id="L384">                break;</span>
             }
             case LIST: {
-<span class="nc" id="L388">                PDescriptor innerList = ((PList) descriptor).itemDescriptor();</span>
-<span class="nc" id="L389">                final String iteratorList = tempVariable(&quot;it&quot;);</span>
-<span class="nc" id="L390">                writer.formatln(&quot;%s.%s(%s.size());&quot;, bebw, &quot;writeInt&quot;, getter);</span>
-<span class="nc" id="L391">                writer.formatln(&quot;for( %s %s : %s ) {&quot;, helper.getFieldType(innerList), iteratorList, getter)</span>
-<span class="nc" id="L392">                      .begin();</span>
-<span class="nc" id="L393">                writePortableBinary(bebw, iteratorList, innerList);</span>
-<span class="nc" id="L394">                writer.end()</span>
-<span class="nc" id="L395">                      .println(&quot;}&quot;);</span>
-<span class="nc" id="L396">                break;</span>
+<span class="nc" id="L387">                PDescriptor innerList = ((PList) descriptor).itemDescriptor();</span>
+<span class="nc" id="L388">                final String iteratorList = tempVariable(&quot;it&quot;);</span>
+<span class="nc" id="L389">                writer.formatln(&quot;%s.%s(%s.size());&quot;, bebw, &quot;writeInt&quot;, getter);</span>
+<span class="nc" id="L390">                writer.formatln(&quot;for( %s %s : %s ) {&quot;, helper.getFieldType(innerList), iteratorList, getter)</span>
+<span class="nc" id="L391">                      .begin();</span>
+<span class="nc" id="L392">                writePortableBinary(bebw, iteratorList, innerList);</span>
+<span class="nc" id="L393">                writer.end()</span>
+<span class="nc" id="L394">                      .println(&quot;}&quot;);</span>
+<span class="nc" id="L395">                break;</span>
             }
             case SET: {
-<span class="nc" id="L399">                PDescriptor innerSet = ((PSet) descriptor).itemDescriptor();</span>
-<span class="nc" id="L400">                final String iteratorSet = tempVariable(&quot;it&quot;);</span>
-<span class="nc" id="L401">                writer.formatln(&quot;%s.%s(%s.size());&quot;, bebw, &quot;writeInt&quot;, getter);</span>
-<span class="nc" id="L402">                writer.formatln(&quot;for( %s %s : %s ) {&quot;, helper.getFieldType(innerSet), iteratorSet, getter)</span>
-<span class="nc" id="L403">                      .begin();</span>
-<span class="nc" id="L404">                writePortableBinary(bebw, iteratorSet, innerSet);</span>
-<span class="nc" id="L405">                writer.end()</span>
-<span class="nc" id="L406">                      .println(&quot;}&quot;);</span>
-<span class="nc" id="L407">                break;</span>
+<span class="nc" id="L398">                PDescriptor innerSet = ((PSet) descriptor).itemDescriptor();</span>
+<span class="nc" id="L399">                final String iteratorSet = tempVariable(&quot;it&quot;);</span>
+<span class="nc" id="L400">                writer.formatln(&quot;%s.%s(%s.size());&quot;, bebw, &quot;writeInt&quot;, getter);</span>
+<span class="nc" id="L401">                writer.formatln(&quot;for( %s %s : %s ) {&quot;, helper.getFieldType(innerSet), iteratorSet, getter)</span>
+<span class="nc" id="L402">                      .begin();</span>
+<span class="nc" id="L403">                writePortableBinary(bebw, iteratorSet, innerSet);</span>
+<span class="nc" id="L404">                writer.end()</span>
+<span class="nc" id="L405">                      .println(&quot;}&quot;);</span>
+<span class="nc" id="L406">                break;</span>
             }
             case MAP: {
-<span class="nc" id="L410">                PMap pMap = (PMap) descriptor;</span>
-<span class="nc" id="L411">                String iterator = &quot;entry&quot;;</span>
-<span class="nc" id="L412">                writer.formatln(&quot;%s.writeInt(%s.size());&quot;, bebw, getter)</span>
-<span class="nc" id="L413">                      .formatln(&quot;for( %s.Entry&lt;%s,%s&gt; %s : %s.entrySet() ) {&quot;,</span>
-<span class="nc" id="L414">                                Map.class.getName(),</span>
-<span class="nc" id="L415">                                helper.getFieldType(pMap.keyDescriptor()),</span>
-<span class="nc" id="L416">                                helper.getFieldType(pMap.itemDescriptor()),</span>
+<span class="nc" id="L409">                PMap pMap = (PMap) descriptor;</span>
+<span class="nc" id="L410">                String iterator = &quot;entry&quot;;</span>
+<span class="nc" id="L411">                writer.formatln(&quot;%s.writeInt(%s.size());&quot;, bebw, getter)</span>
+<span class="nc" id="L412">                      .formatln(&quot;for( %s.Entry&lt;%s,%s&gt; %s : %s.entrySet() ) {&quot;,</span>
+<span class="nc" id="L413">                                Map.class.getName(),</span>
+<span class="nc" id="L414">                                helper.getFieldType(pMap.keyDescriptor()),</span>
+<span class="nc" id="L415">                                helper.getFieldType(pMap.itemDescriptor()),</span>
                                 iterator,
                                 getter)
-<span class="nc" id="L419">                      .begin();</span>
-<span class="nc" id="L420">                writePortableBinary(bebw, iterator + &quot;.getKey()&quot;, pMap.keyDescriptor());</span>
-<span class="nc" id="L421">                writePortableBinary(bebw, iterator + &quot;.getValue()&quot;, pMap.itemDescriptor());</span>
-<span class="nc" id="L422">                writer.end()</span>
-<span class="nc" id="L423">                      .println(&quot;}&quot;);</span>
-<span class="nc" id="L424">                break;</span>
+<span class="nc" id="L418">                      .begin();</span>
+<span class="nc" id="L419">                writePortableBinary(bebw, iterator + &quot;.getKey()&quot;, pMap.keyDescriptor());</span>
+<span class="nc" id="L420">                writePortableBinary(bebw, iterator + &quot;.getValue()&quot;, pMap.itemDescriptor());</span>
+<span class="nc" id="L421">                writer.end()</span>
+<span class="nc" id="L422">                      .println(&quot;}&quot;);</span>
+<span class="nc" id="L423">                break;</span>
             }
             case MESSAGE:
-<span class="nc" id="L427">                writer.formatln(&quot;%s.writeBinary(%s);&quot;, getter, bebw);</span>
-<span class="nc" id="L428">                break;</span>
+<span class="nc" id="L426">                writer.formatln(&quot;%s.writeBinary(%s);&quot;, getter, bebw);</span>
+<span class="nc" id="L427">                break;</span>
             default:
-<span class="nc" id="L430">                throw new GeneratorException(</span>
-<span class="nc" id="L431">                        &quot;Not implemented writePortableBinary for type: &quot; + helper.getFieldType(descriptor) + &quot; in &quot; +</span>
-<span class="nc" id="L432">                        this.getClass()</span>
-<span class="nc" id="L433">                            .getSimpleName());</span>
+<span class="nc" id="L429">                throw new GeneratorException(</span>
+<span class="nc" id="L430">                        &quot;Not implemented writePortableBinary for type: &quot; + helper.getFieldType(descriptor) + &quot; in &quot; +</span>
+<span class="nc" id="L431">                        this.getClass()</span>
+<span class="nc" id="L432">                            .getSimpleName());</span>
         }
-<span class="nc" id="L435">    }</span>
+<span class="nc" id="L434">    }</span>
 
     private void readPortableBinary(String bebr, String variable, PDescriptor descriptor) {
-<span class="nc bnc" id="L438" title="All 14 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="nc bnc" id="L437" title="All 14 branches missed.">        switch (descriptor.getType()) {</span>
             case BINARY:
-<span class="nc" id="L440">                writer.formatln(&quot;%s = %s.%s(%s.%s());&quot;, variable, bebr, &quot;expectBinary&quot;, bebr, &quot;expectInt&quot;);</span>
-<span class="nc" id="L441">                break;</span>
+<span class="nc" id="L439">                writer.formatln(&quot;%s = %s.%s(%s.%s());&quot;, variable, bebr, &quot;expectBinary&quot;, bebr, &quot;expectInt&quot;);</span>
+<span class="nc" id="L440">                break;</span>
             case BOOL:
-<span class="nc" id="L443">                writer.formatln(&quot;%s = (%s.%s() &gt; 0 ? true : false);&quot;, variable, bebr, &quot;expectByte&quot;);</span>
-<span class="nc" id="L444">                break;</span>
+<span class="nc" id="L442">                writer.formatln(&quot;%s = (%s.%s() &gt; 0 ? true : false);&quot;, variable, bebr, &quot;expectByte&quot;);</span>
+<span class="nc" id="L443">                break;</span>
             case BYTE:
-<span class="nc" id="L446">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectByte&quot;);</span>
-<span class="nc" id="L447">                break;</span>
+<span class="nc" id="L445">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectByte&quot;);</span>
+<span class="nc" id="L446">                break;</span>
             case DOUBLE:
-<span class="nc" id="L449">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectDouble&quot;);</span>
-<span class="nc" id="L450">                break;</span>
+<span class="nc" id="L448">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectDouble&quot;);</span>
+<span class="nc" id="L449">                break;</span>
             case ENUM:
-<span class="nc" id="L452">                writer.formatln(&quot;%s = %s.findById(%s.%s());&quot;,</span>
+<span class="nc" id="L451">                writer.formatln(&quot;%s = %s.findById(%s.%s());&quot;,</span>
                                 variable,
-<span class="nc" id="L454">                                helper.getFieldType(descriptor),</span>
+<span class="nc" id="L453">                                helper.getFieldType(descriptor),</span>
                                 bebr,
                                 &quot;expectInt&quot;);
-<span class="nc" id="L457">                break;</span>
+<span class="nc" id="L456">                break;</span>
             case I16:
-<span class="nc" id="L459">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectShort&quot;);</span>
-<span class="nc" id="L460">                break;</span>
+<span class="nc" id="L458">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectShort&quot;);</span>
+<span class="nc" id="L459">                break;</span>
             case I32:
-<span class="nc" id="L462">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectInt&quot;);</span>
-<span class="nc" id="L463">                break;</span>
+<span class="nc" id="L461">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectInt&quot;);</span>
+<span class="nc" id="L462">                break;</span>
             case I64:
-<span class="nc" id="L465">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectLong&quot;);</span>
-<span class="nc" id="L466">                break;</span>
+<span class="nc" id="L464">                writer.formatln(&quot;%s = %s.%s();&quot;, variable, bebr, &quot;expectLong&quot;);</span>
+<span class="nc" id="L465">                break;</span>
             case STRING:
-<span class="nc" id="L468">                writer.formatln(&quot;%s = new %s(%s.%s(%s.%s()), %s.UTF_8);&quot;,</span>
+<span class="nc" id="L467">                writer.formatln(&quot;%s = new %s(%s.%s(%s.%s()), %s.UTF_8);&quot;,</span>
                                 variable,
-<span class="nc" id="L470">                                helper.getFieldType(descriptor),</span>
+<span class="nc" id="L469">                                helper.getFieldType(descriptor),</span>
                                 bebr,
                                 &quot;expectBytes&quot;,
                                 bebr,
                                 &quot;expectInt&quot;,
-<span class="nc" id="L475">                                StandardCharsets.class.getName());</span>
-<span class="nc" id="L476">                break;</span>
+<span class="nc" id="L474">                                StandardCharsets.class.getName());</span>
+<span class="nc" id="L475">                break;</span>
             case LIST: {
-<span class="nc" id="L478">                PDescriptor itemType = ((PList) descriptor).itemDescriptor();</span>
-<span class="nc" id="L479">                final String size = tempVariable(&quot;size&quot;);</span>
-<span class="nc" id="L480">                final String iterator = tempVariable(&quot;it&quot;);</span>
-<span class="nc" id="L481">                final String var = tempVariable(&quot;var&quot;);</span>
-<span class="nc" id="L482">                writer.formatln(&quot;int %s = %s.%s();&quot;, size, bebr, &quot;expectInt&quot;);</span>
-<span class="nc" id="L483">                writer.formatln(&quot;%s = new %s&lt;&gt;(%s);&quot;, variable, ArrayList.class.getName(), size);</span>
-<span class="nc" id="L484">                writer.formatln(&quot;%s %s;&quot;, helper.getFieldType(itemType), var);</span>
-<span class="nc" id="L485">                writer.formatln(&quot;for( int %s = 0; %s &lt; %s; %s++ ) {&quot;,</span>
+<span class="nc" id="L477">                PDescriptor itemType = ((PList) descriptor).itemDescriptor();</span>
+<span class="nc" id="L478">                final String size = tempVariable(&quot;size&quot;);</span>
+<span class="nc" id="L479">                final String iterator = tempVariable(&quot;it&quot;);</span>
+<span class="nc" id="L480">                final String var = tempVariable(&quot;var&quot;);</span>
+<span class="nc" id="L481">                writer.formatln(&quot;int %s = %s.%s();&quot;, size, bebr, &quot;expectInt&quot;);</span>
+<span class="nc" id="L482">                writer.formatln(&quot;%s = new %s&lt;&gt;(%s);&quot;, variable, ArrayList.class.getName(), size);</span>
+<span class="nc" id="L483">                writer.formatln(&quot;%s %s;&quot;, helper.getFieldType(itemType), var);</span>
+<span class="nc" id="L484">                writer.formatln(&quot;for( int %s = 0; %s &lt; %s; %s++ ) {&quot;,</span>
                                 iterator,
                                 iterator,
                                 size,
                                 iterator)
-<span class="nc" id="L490">                      .begin();</span>
-<span class="nc" id="L491">                readPortableBinary(bebr, var, itemType);</span>
-<span class="nc" id="L492">                writer.formatln(&quot;%s.add(%s);&quot;, variable, var);</span>
-<span class="nc" id="L493">                writer.end()</span>
-<span class="nc" id="L494">                      .println(&quot;}&quot;);</span>
-<span class="nc" id="L495">                break;</span>
+<span class="nc" id="L489">                      .begin();</span>
+<span class="nc" id="L490">                readPortableBinary(bebr, var, itemType);</span>
+<span class="nc" id="L491">                writer.formatln(&quot;%s.add(%s);&quot;, variable, var);</span>
+<span class="nc" id="L492">                writer.end()</span>
+<span class="nc" id="L493">                      .println(&quot;}&quot;);</span>
+<span class="nc" id="L494">                break;</span>
             }
             case SET: {
-<span class="nc" id="L498">                PDescriptor itemType = ((PSet) descriptor).itemDescriptor();</span>
-<span class="nc" id="L499">                final String size = tempVariable(&quot;size&quot;);</span>
-<span class="nc" id="L500">                final String iterator = tempVariable(&quot;it&quot;);</span>
-<span class="nc" id="L501">                final String tmpVar = tempVariable(&quot;var&quot;);</span>
-<span class="nc" id="L502">                writer.formatln(&quot;%s = new %s&lt;&gt;();&quot;, variable, LinkedHashSet.class.getName());</span>
-<span class="nc" id="L503">                writer.formatln(&quot;int %s = %s.%s();&quot;, size, bebr, &quot;expectInt&quot;);</span>
-<span class="nc" id="L504">                writer.formatln(&quot;%s %s;&quot;, helper.getFieldType(itemType), tmpVar);</span>
-<span class="nc" id="L505">                writer.formatln(&quot;for( int %s = 0; %s &lt; %s; %s++ ) {&quot;,</span>
+<span class="nc" id="L497">                PDescriptor itemType = ((PSet) descriptor).itemDescriptor();</span>
+<span class="nc" id="L498">                final String size = tempVariable(&quot;size&quot;);</span>
+<span class="nc" id="L499">                final String iterator = tempVariable(&quot;it&quot;);</span>
+<span class="nc" id="L500">                final String tmpVar = tempVariable(&quot;var&quot;);</span>
+<span class="nc" id="L501">                writer.formatln(&quot;%s = new %s&lt;&gt;();&quot;, variable, LinkedHashSet.class.getName());</span>
+<span class="nc" id="L502">                writer.formatln(&quot;int %s = %s.%s();&quot;, size, bebr, &quot;expectInt&quot;);</span>
+<span class="nc" id="L503">                writer.formatln(&quot;%s %s;&quot;, helper.getFieldType(itemType), tmpVar);</span>
+<span class="nc" id="L504">                writer.formatln(&quot;for( int %s = 0; %s &lt; %s; %s++ ) {&quot;,</span>
                                 iterator,
                                 iterator,
                                 size,
                                 iterator)
-<span class="nc" id="L510">                      .begin();</span>
-<span class="nc" id="L511">                readPortableBinary(bebr, tmpVar, itemType);</span>
-<span class="nc" id="L512">                writer.formatln(&quot;%s.add(%s);&quot;, variable, tmpVar);</span>
-<span class="nc" id="L513">                writer.end()</span>
-<span class="nc" id="L514">                      .println(&quot;}&quot;);</span>
-<span class="nc" id="L515">                break;</span>
+<span class="nc" id="L509">                      .begin();</span>
+<span class="nc" id="L510">                readPortableBinary(bebr, tmpVar, itemType);</span>
+<span class="nc" id="L511">                writer.formatln(&quot;%s.add(%s);&quot;, variable, tmpVar);</span>
+<span class="nc" id="L512">                writer.end()</span>
+<span class="nc" id="L513">                      .println(&quot;}&quot;);</span>
+<span class="nc" id="L514">                break;</span>
             }
             case MAP: {
-<span class="nc" id="L518">                PMap pMap = (PMap) descriptor;</span>
+<span class="nc" id="L517">                PMap pMap = (PMap) descriptor;</span>
 
-<span class="nc" id="L520">                String mapSize = tempVariable(&quot;size&quot;);</span>
-<span class="nc" id="L521">                String keyVariable = tempVariable(&quot;key&quot;);</span>
-<span class="nc" id="L522">                String valueVariable = tempVariable(&quot;value&quot;);</span>
-<span class="nc" id="L523">                String tempIterator = tempVariable(&quot;it&quot;);</span>
+<span class="nc" id="L519">                String mapSize = tempVariable(&quot;size&quot;);</span>
+<span class="nc" id="L520">                String keyVariable = tempVariable(&quot;key&quot;);</span>
+<span class="nc" id="L521">                String valueVariable = tempVariable(&quot;value&quot;);</span>
+<span class="nc" id="L522">                String tempIterator = tempVariable(&quot;it&quot;);</span>
 
-<span class="nc" id="L525">                writer.formatln(&quot;%s = new %s&lt;&gt;();&quot;,</span>
-<span class="nc" id="L526">                                variable, LinkedHashMap.class.getName())</span>
-<span class="nc" id="L527">                      .formatln(&quot;%s %s = %s.%s();&quot;, int.class.getName(), mapSize, bebr, &quot;expectInt&quot;)</span>
-<span class="nc" id="L528">                      .formatln(&quot;%s %s;&quot;, helper.getFieldType(pMap.keyDescriptor()), keyVariable)</span>
-<span class="nc" id="L529">                      .formatln(&quot;%s %s;&quot;, helper.getFieldType(pMap.itemDescriptor()), valueVariable)</span>
-<span class="nc" id="L530">                      .appendln()</span>
-<span class="nc" id="L531">                      .formatln(&quot;for( %s %s = 0; %s &lt; %s; %s++) {&quot;,</span>
-<span class="nc" id="L532">                                int.class.getName(),</span>
+<span class="nc" id="L524">                writer.formatln(&quot;%s = new %s&lt;&gt;();&quot;,</span>
+<span class="nc" id="L525">                                variable, LinkedHashMap.class.getName())</span>
+<span class="nc" id="L526">                      .formatln(&quot;%s %s = %s.%s();&quot;, int.class.getName(), mapSize, bebr, &quot;expectInt&quot;)</span>
+<span class="nc" id="L527">                      .formatln(&quot;%s %s;&quot;, helper.getFieldType(pMap.keyDescriptor()), keyVariable)</span>
+<span class="nc" id="L528">                      .formatln(&quot;%s %s;&quot;, helper.getFieldType(pMap.itemDescriptor()), valueVariable)</span>
+<span class="nc" id="L529">                      .appendln()</span>
+<span class="nc" id="L530">                      .formatln(&quot;for( %s %s = 0; %s &lt; %s; %s++) {&quot;,</span>
+<span class="nc" id="L531">                                int.class.getName(),</span>
                                 tempIterator,
                                 tempIterator,
                                 mapSize,
                                 tempIterator)
-<span class="nc" id="L537">                      .begin();</span>
-<span class="nc" id="L538">                readPortableBinary(bebr, keyVariable, pMap.keyDescriptor());</span>
-<span class="nc" id="L539">                readPortableBinary(bebr, valueVariable, pMap.itemDescriptor());</span>
+<span class="nc" id="L536">                      .begin();</span>
+<span class="nc" id="L537">                readPortableBinary(bebr, keyVariable, pMap.keyDescriptor());</span>
+<span class="nc" id="L538">                readPortableBinary(bebr, valueVariable, pMap.itemDescriptor());</span>
 
-<span class="nc" id="L541">                writer.formatln(&quot;%s.put(%s, %s);&quot;, variable, keyVariable, valueVariable)</span>
-<span class="nc" id="L542">                      .end()</span>
-<span class="nc" id="L543">                      .println(&quot;}&quot;);</span>
-<span class="nc" id="L544">                break;</span>
+<span class="nc" id="L540">                writer.formatln(&quot;%s.put(%s, %s);&quot;, variable, keyVariable, valueVariable)</span>
+<span class="nc" id="L541">                      .end()</span>
+<span class="nc" id="L542">                      .println(&quot;}&quot;);</span>
+<span class="nc" id="L543">                break;</span>
             }
             case MESSAGE:
-<span class="nc" id="L547">                final String tempMessage = tempVariable(&quot;message&quot;);</span>
-<span class="nc" id="L548">                writer.formatln(&quot;%s._Builder %s = %s.builder();&quot;,</span>
-<span class="nc" id="L549">                                helper.getFieldType(descriptor),</span>
+<span class="nc" id="L546">                final String tempMessage = tempVariable(&quot;message&quot;);</span>
+<span class="nc" id="L547">                writer.formatln(&quot;%s._Builder %s = %s.builder();&quot;,</span>
+<span class="nc" id="L548">                                helper.getFieldType(descriptor),</span>
                                 tempMessage,
-<span class="nc" id="L551">                                helper.getFieldType(descriptor))</span>
-<span class="nc" id="L552">                      .formatln(&quot;%s.readBinary(%s, false);&quot;, tempMessage, bebr)</span>
-<span class="nc" id="L553">                      .formatln(&quot;%s = %s.build();&quot;, variable, tempMessage);</span>
-<span class="nc" id="L554">                break;</span>
+<span class="nc" id="L550">                                helper.getFieldType(descriptor))</span>
+<span class="nc" id="L551">                      .formatln(&quot;%s.readBinary(%s, false);&quot;, tempMessage, bebr)</span>
+<span class="nc" id="L552">                      .formatln(&quot;%s = %s.build();&quot;, variable, tempMessage);</span>
+<span class="nc" id="L553">                break;</span>
             default:
-<span class="nc" id="L556">                throw new GeneratorException(</span>
-<span class="nc" id="L557">                        &quot;Not implemented readPortableBinary for type: &quot; + helper.getFieldType(descriptor) + &quot; in &quot; +</span>
-<span class="nc" id="L558">                        this.getClass()</span>
-<span class="nc" id="L559">                            .getSimpleName());</span>
+<span class="nc" id="L555">                throw new GeneratorException(</span>
+<span class="nc" id="L556">                        &quot;Not implemented readPortableBinary for type: &quot; + helper.getFieldType(descriptor) + &quot; in &quot; +</span>
+<span class="nc" id="L557">                        this.getClass()</span>
+<span class="nc" id="L558">                            .getSimpleName());</span>
         }
-<span class="nc" id="L561">    }</span>
+<span class="nc" id="L560">    }</span>
 
     /**
      * Method to append writing of a field to hazelcast_portable.
@@ -577,82 +576,82 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void writeDefaultPortableField(JField field) throws GeneratorException {
-<span class="pc bpc" id="L580" title="1 of 2 branches missed.">        if (field.portableRequiresBinarySerialization()) {</span>
-<span class="nc" id="L581">            writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new byte[0]);&quot;,</span>
+<span class="pc bpc" id="L579" title="1 of 2 branches missed.">        if (field.portableRequiresBinarySerialization()) {</span>
+<span class="nc" id="L580">            writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new byte[0]);&quot;,</span>
                             PORTABLE_WRITER,
-<span class="nc" id="L583">                            field.name());</span>
-<span class="nc" id="L584">            return;</span>
+<span class="nc" id="L582">                            field.name());</span>
+<span class="nc" id="L583">            return;</span>
         }
 
-<span class="pc bpc" id="L587" title="2 of 13 branches missed.">        switch (field.type()) {</span>
+<span class="pc bpc" id="L586" title="2 of 13 branches missed.">        switch (field.type()) {</span>
             case BINARY:
-<span class="fc" id="L589">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new byte[0]);&quot;,</span>
+<span class="fc" id="L588">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new byte[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L591">                                field.name());</span>
-<span class="fc" id="L592">                break;</span>
+<span class="fc" id="L590">                                field.name());</span>
+<span class="fc" id="L591">                break;</span>
             case BOOL:
-<span class="fc" id="L594">                writer.formatln(&quot;%s.writeBoolean(\&quot;%s\&quot;, false);&quot;,</span>
+<span class="fc" id="L593">                writer.formatln(&quot;%s.writeBoolean(\&quot;%s\&quot;, false);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L596">                                field.name());</span>
-<span class="fc" id="L597">                break;</span>
+<span class="fc" id="L595">                                field.name());</span>
+<span class="fc" id="L596">                break;</span>
             case BYTE:
-<span class="fc" id="L599">                writer.formatln(&quot;%s.writeByte(\&quot;%s\&quot;, (byte) 0);&quot;,</span>
+<span class="fc" id="L598">                writer.formatln(&quot;%s.writeByte(\&quot;%s\&quot;, (byte) 0);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L601">                                field.name());</span>
-<span class="fc" id="L602">                break;</span>
+<span class="fc" id="L600">                                field.name());</span>
+<span class="fc" id="L601">                break;</span>
             case DOUBLE:
-<span class="fc" id="L604">                writer.formatln(&quot;%s.writeDouble(\&quot;%s\&quot;, 0.0);&quot;,</span>
+<span class="fc" id="L603">                writer.formatln(&quot;%s.writeDouble(\&quot;%s\&quot;, 0.0);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L606">                                field.name());</span>
-<span class="fc" id="L607">                break;</span>
+<span class="fc" id="L605">                                field.name());</span>
+<span class="fc" id="L606">                break;</span>
             case ENUM:
-<span class="fc" id="L609">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, 0);&quot;, PORTABLE_WRITER, field.name());</span>
-<span class="fc" id="L610">                break;</span>
+<span class="fc" id="L608">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, 0);&quot;, PORTABLE_WRITER, field.name());</span>
+<span class="fc" id="L609">                break;</span>
             case I16:
-<span class="fc" id="L612">                writer.formatln(&quot;%s.writeShort(\&quot;%s\&quot;, (short) 0);&quot;,</span>
+<span class="fc" id="L611">                writer.formatln(&quot;%s.writeShort(\&quot;%s\&quot;, (short) 0);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L614">                                field.name());</span>
-<span class="fc" id="L615">                break;</span>
+<span class="fc" id="L613">                                field.name());</span>
+<span class="fc" id="L614">                break;</span>
             case I32:
-<span class="fc" id="L617">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, 0);&quot;,</span>
+<span class="fc" id="L616">                writer.formatln(&quot;%s.writeInt(\&quot;%s\&quot;, 0);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L619">                                field.name());</span>
-<span class="fc" id="L620">                break;</span>
+<span class="fc" id="L618">                                field.name());</span>
+<span class="fc" id="L619">                break;</span>
             case I64:
-<span class="fc" id="L622">                writer.formatln(&quot;%s.writeLong(\&quot;%s\&quot;, 0L);&quot;,</span>
+<span class="fc" id="L621">                writer.formatln(&quot;%s.writeLong(\&quot;%s\&quot;, 0L);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L624">                                field.name());</span>
-<span class="fc" id="L625">                break;</span>
+<span class="fc" id="L623">                                field.name());</span>
+<span class="fc" id="L624">                break;</span>
             case STRING:
-<span class="fc" id="L627">                writer.formatln(&quot;%s.writeUTF(\&quot;%s\&quot;, \&quot;\&quot;);&quot;,</span>
+<span class="fc" id="L626">                writer.formatln(&quot;%s.writeUTF(\&quot;%s\&quot;, \&quot;\&quot;);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L629">                                field.name());</span>
-<span class="fc" id="L630">                break;</span>
+<span class="fc" id="L628">                                field.name());</span>
+<span class="fc" id="L629">                break;</span>
             case LIST:
-<span class="fc" id="L632">                writeDefaultPortableFieldList(field,</span>
-<span class="fc" id="L633">                                              field.toPList()</span>
-<span class="fc" id="L634">                                                   .itemDescriptor());</span>
-<span class="fc" id="L635">                break;</span>
+<span class="fc" id="L631">                writeDefaultPortableFieldList(field,</span>
+<span class="fc" id="L632">                                              field.toPList()</span>
+<span class="fc" id="L633">                                                   .itemDescriptor());</span>
+<span class="fc" id="L634">                break;</span>
             case SET:
-<span class="nc" id="L637">                writeDefaultPortableFieldList(field,</span>
-<span class="nc" id="L638">                                              field.toPSet()</span>
-<span class="nc" id="L639">                                                   .itemDescriptor());</span>
-<span class="nc" id="L640">                break;</span>
+<span class="nc" id="L636">                writeDefaultPortableFieldList(field,</span>
+<span class="nc" id="L637">                                              field.toPSet()</span>
+<span class="nc" id="L638">                                                   .itemDescriptor());</span>
+<span class="nc" id="L639">                break;</span>
             case MESSAGE:
-<span class="fc" id="L642">                writer.formatln(&quot;%s.writeNullPortable(\&quot;%s\&quot;, %s.%s, %s.%s);&quot;,</span>
+<span class="fc" id="L641">                writer.formatln(&quot;%s.writeNullPortable(\&quot;%s\&quot;, %s.%s, %s.%s);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L644">                                field.name(),</span>
-<span class="fc" id="L645">                                getHazelcastFactory((PMessageDescriptor&lt;?, ?&gt;) field.field().getDescriptor()),</span>
+<span class="fc" id="L643">                                field.name(),</span>
+<span class="fc" id="L644">                                getHazelcastFactory((PMessageDescriptor&lt;?, ?&gt;) field.field().getDescriptor()),</span>
                                 HazelcastPortableProgramFormatter.FACTORY_ID,
-<span class="fc" id="L647">                                getHazelcastFactory((PMessageDescriptor&lt;?, ?&gt;) field.field().getDescriptor()),</span>
-<span class="fc" id="L648">                                getHazelcastClassId((PMessageDescriptor&lt;?, ?&gt;) field.field().getDescriptor()));</span>
-<span class="fc" id="L649">                break;</span>
+<span class="fc" id="L646">                                getHazelcastFactory((PMessageDescriptor&lt;?, ?&gt;) field.field().getDescriptor()),</span>
+<span class="fc" id="L647">                                getHazelcastClassId((PMessageDescriptor&lt;?, ?&gt;) field.field().getDescriptor()));</span>
+<span class="fc" id="L648">                break;</span>
             default:
-<span class="nc" id="L651">                throw new GeneratorException(</span>
-<span class="nc" id="L652">                        &quot;Not implemented writeDefaultPortableField for type: &quot; + field.type() + &quot; in &quot; + this.getClass()</span>
-<span class="nc" id="L653">                                                                                                             .getSimpleName());</span>
+<span class="nc" id="L650">                throw new GeneratorException(</span>
+<span class="nc" id="L651">                        &quot;Not implemented writeDefaultPortableField for type: &quot; + field.type() + &quot; in &quot; + this.getClass()</span>
+<span class="nc" id="L652">                                                                                                             .getSimpleName());</span>
         }
-<span class="fc" id="L655">    }</span>
+<span class="fc" id="L654">    }</span>
 
     /**
      * Method to append writing of a field to hazelcast_portable.
@@ -667,92 +666,92 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void writePortableFieldList(JField field, PDescriptor descriptor) throws GeneratorException {
-<span class="pc bpc" id="L670" title="3 of 11 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L669" title="3 of 11 branches missed.">        switch (descriptor.getType()) {</span>
             case BYTE:
-<span class="fc" id="L672">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
+<span class="fc" id="L671">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L674">                                field.name(),</span>
-<span class="fc" id="L675">                                Bytes.class.getName(),</span>
-<span class="fc" id="L676">                                field.member());</span>
-<span class="fc" id="L677">                break;</span>
+<span class="fc" id="L673">                                field.name(),</span>
+<span class="fc" id="L674">                                Bytes.class.getName(),</span>
+<span class="fc" id="L675">                                field.member());</span>
+<span class="fc" id="L676">                break;</span>
             case BINARY:
-<span class="nc" id="L679">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.%s(%s));&quot;,</span>
+<span class="nc" id="L678">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, %s.%s(%s));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="nc" id="L681">                                field.name(),</span>
-<span class="nc" id="L682">                                BinaryUtil.class.getName(),</span>
+<span class="nc" id="L680">                                field.name(),</span>
+<span class="nc" id="L681">                                BinaryUtil.class.getName(),</span>
                                 &quot;fromBinaryCollection&quot;,
-<span class="nc" id="L684">                                field.member());</span>
-<span class="nc" id="L685">                break;</span>
+<span class="nc" id="L683">                                field.member());</span>
+<span class="nc" id="L684">                break;</span>
             case BOOL:
-<span class="fc" id="L687">                writer.formatln(&quot;%s.writeBooleanArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
+<span class="fc" id="L686">                writer.formatln(&quot;%s.writeBooleanArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L689">                                field.name(),</span>
-<span class="fc" id="L690">                                Booleans.class.getName(),</span>
-<span class="fc" id="L691">                                field.member());</span>
-<span class="fc" id="L692">                break;</span>
+<span class="fc" id="L688">                                field.name(),</span>
+<span class="fc" id="L689">                                Booleans.class.getName(),</span>
+<span class="fc" id="L690">                                field.member());</span>
+<span class="fc" id="L691">                break;</span>
             case DOUBLE:
-<span class="fc" id="L694">                writer.formatln(&quot;%s.writeDoubleArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
+<span class="fc" id="L693">                writer.formatln(&quot;%s.writeDoubleArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L696">                                field.name(),</span>
-<span class="fc" id="L697">                                Doubles.class.getName(),</span>
-<span class="fc" id="L698">                                field.member());</span>
-<span class="fc" id="L699">                break;</span>
+<span class="fc" id="L695">                                field.name(),</span>
+<span class="fc" id="L696">                                Doubles.class.getName(),</span>
+<span class="fc" id="L697">                                field.member());</span>
+<span class="fc" id="L698">                break;</span>
             case ENUM:
-<span class="nc" id="L701">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.stream().mapToInt(t -&gt; t.getValue()).toArray());&quot;,</span>
+<span class="nc" id="L700">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.stream().mapToInt(t -&gt; t.getValue()).toArray());&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="nc" id="L703">                                field.name(),</span>
-<span class="nc" id="L704">                                field.member());</span>
-<span class="nc" id="L705">                break;</span>
+<span class="nc" id="L702">                                field.name(),</span>
+<span class="nc" id="L703">                                field.member());</span>
+<span class="nc" id="L704">                break;</span>
             case I16:
-<span class="fc" id="L707">                writer.formatln(&quot;%s.writeShortArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
+<span class="fc" id="L706">                writer.formatln(&quot;%s.writeShortArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L709">                                field.name(),</span>
-<span class="fc" id="L710">                                Shorts.class.getName(),</span>
-<span class="fc" id="L711">                                field.member());</span>
-<span class="fc" id="L712">                break;</span>
+<span class="fc" id="L708">                                field.name(),</span>
+<span class="fc" id="L709">                                Shorts.class.getName(),</span>
+<span class="fc" id="L710">                                field.member());</span>
+<span class="fc" id="L711">                break;</span>
             case I32:
-<span class="fc" id="L714">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
+<span class="fc" id="L713">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L716">                                field.name(),</span>
-<span class="fc" id="L717">                                Ints.class.getName(),</span>
-<span class="fc" id="L718">                                field.member());</span>
-<span class="fc" id="L719">                break;</span>
+<span class="fc" id="L715">                                field.name(),</span>
+<span class="fc" id="L716">                                Ints.class.getName(),</span>
+<span class="fc" id="L717">                                field.member());</span>
+<span class="fc" id="L718">                break;</span>
             case I64:
-<span class="fc" id="L721">                writer.formatln(&quot;%s.writeLongArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
+<span class="fc" id="L720">                writer.formatln(&quot;%s.writeLongArray(\&quot;%s\&quot;, %s.toArray(%s));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L723">                                field.name(),</span>
-<span class="fc" id="L724">                                Longs.class.getName(),</span>
-<span class="fc" id="L725">                                field.member());</span>
-<span class="fc" id="L726">                break;</span>
+<span class="fc" id="L722">                                field.name(),</span>
+<span class="fc" id="L723">                                Longs.class.getName(),</span>
+<span class="fc" id="L724">                                field.member());</span>
+<span class="fc" id="L725">                break;</span>
             case STRING:
-<span class="fc" id="L728">                writer.formatln(&quot;%s.writeUTFArray(\&quot;%s\&quot;, %s.toArray(new String[0]));&quot;,</span>
+<span class="fc" id="L727">                writer.formatln(&quot;%s.writeUTFArray(\&quot;%s\&quot;, %s.toArray(new String[0]));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L730">                                field.name(),</span>
-<span class="fc" id="L731">                                field.member());</span>
-<span class="fc" id="L732">                break;</span>
+<span class="fc" id="L729">                                field.name(),</span>
+<span class="fc" id="L730">                                field.member());</span>
+<span class="fc" id="L731">                break;</span>
             case MESSAGE:
-<span class="fc" id="L734">                writer.formatln(&quot;%s&lt;%s.%s&gt; %sList = %s.stream().map(i -&gt; i.mutate()).collect(%s.toList());&quot;,</span>
-<span class="fc" id="L735">                                List.class.getName(),</span>
-<span class="fc" id="L736">                                helper.getValueType(descriptor),</span>
+<span class="fc" id="L733">                writer.formatln(&quot;%s&lt;%s.%s&gt; %sList = %s.stream().map(i -&gt; i.mutate()).collect(%s.toList());&quot;,</span>
+<span class="fc" id="L734">                                List.class.getName(),</span>
+<span class="fc" id="L735">                                helper.getValueType(descriptor),</span>
                                 &quot;_Builder&quot;,
-<span class="fc" id="L738">                                camelCase(&quot;temp&quot;, field.name()),</span>
-<span class="fc" id="L739">                                field.member(),</span>
-<span class="fc" id="L740">                                Collectors.class.getName());</span>
-<span class="fc" id="L741">                writer.formatln(&quot;%s.writePortableArray(\&quot;%s\&quot;, %sList.toArray(new %s.%s[%sList.size()]));&quot;,</span>
+<span class="fc" id="L737">                                camelCase(&quot;temp&quot;, field.name()),</span>
+<span class="fc" id="L738">                                field.member(),</span>
+<span class="fc" id="L739">                                Collectors.class.getName());</span>
+<span class="fc" id="L740">                writer.formatln(&quot;%s.writePortableArray(\&quot;%s\&quot;, %sList.toArray(new %s.%s[%sList.size()]));&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L743">                                field.name(),</span>
-<span class="fc" id="L744">                                camelCase(&quot;temp&quot;, field.name()),</span>
-<span class="fc" id="L745">                                helper.getValueType(descriptor),</span>
+<span class="fc" id="L742">                                field.name(),</span>
+<span class="fc" id="L743">                                camelCase(&quot;temp&quot;, field.name()),</span>
+<span class="fc" id="L744">                                helper.getValueType(descriptor),</span>
                                 &quot;_Builder&quot;,
-<span class="fc" id="L747">                                camelCase(&quot;temp&quot;, field.name()));</span>
-<span class="fc" id="L748">                break;</span>
+<span class="fc" id="L746">                                camelCase(&quot;temp&quot;, field.name()));</span>
+<span class="fc" id="L747">                break;</span>
             default:
-<span class="nc" id="L750">                throw new GeneratorException(</span>
-<span class="nc" id="L751">                        &quot;Not implemented writePortableFieldList for list with type: &quot; + descriptor.getType() + &quot; in &quot; +</span>
-<span class="nc" id="L752">                        this.getClass()</span>
-<span class="nc" id="L753">                            .getSimpleName());</span>
+<span class="nc" id="L749">                throw new GeneratorException(</span>
+<span class="nc" id="L750">                        &quot;Not implemented writePortableFieldList for list with type: &quot; + descriptor.getType() + &quot; in &quot; +</span>
+<span class="nc" id="L751">                        this.getClass()</span>
+<span class="nc" id="L752">                            .getSimpleName());</span>
         }
-<span class="fc" id="L755">    }</span>
+<span class="fc" id="L754">    }</span>
 
     /**
      * Method to append writing of a field to hazelcast_portable.
@@ -767,77 +766,77 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void writeDefaultPortableFieldList(JField field, PDescriptor descriptor) throws GeneratorException {
-<span class="pc bpc" id="L770" title="3 of 11 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L769" title="3 of 11 branches missed.">        switch (descriptor.getType()) {</span>
             case BYTE:
 
-<span class="fc" id="L773">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="fc" id="L772">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L775">                                field.name(),</span>
-<span class="fc" id="L776">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L777">                break;</span>
+<span class="fc" id="L774">                                field.name(),</span>
+<span class="fc" id="L775">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L776">                break;</span>
             case BINARY:
-<span class="nc" id="L779">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="nc" id="L778">                writer.formatln(&quot;%s.writeByteArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="nc" id="L781">                                field.name(),</span>
+<span class="nc" id="L780">                                field.name(),</span>
                                 &quot;byte&quot;);
                 //TODO becomes binary otherwise, and doesn't fit with byte array.
-<span class="nc" id="L784">                break;</span>
+<span class="nc" id="L783">                break;</span>
             case BOOL:
-<span class="fc" id="L786">                writer.formatln(&quot;%s.writeBooleanArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="fc" id="L785">                writer.formatln(&quot;%s.writeBooleanArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L788">                                field.name(),</span>
-<span class="fc" id="L789">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L790">                break;</span>
+<span class="fc" id="L787">                                field.name(),</span>
+<span class="fc" id="L788">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L789">                break;</span>
             case DOUBLE:
-<span class="fc" id="L792">                writer.formatln(&quot;%s.writeDoubleArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="fc" id="L791">                writer.formatln(&quot;%s.writeDoubleArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L794">                                field.name(),</span>
-<span class="fc" id="L795">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L796">                break;</span>
+<span class="fc" id="L793">                                field.name(),</span>
+<span class="fc" id="L794">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L795">                break;</span>
             case ENUM:
-<span class="nc" id="L798">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="nc" id="L797">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="nc" id="L800">                                field.name(),</span>
-<span class="nc" id="L801">                                int.class.getName());</span>
+<span class="nc" id="L799">                                field.name(),</span>
+<span class="nc" id="L800">                                int.class.getName());</span>
                 // TODO need fixed as value isn't doable.
-<span class="nc" id="L803">                break;</span>
+<span class="nc" id="L802">                break;</span>
             case I16:
-<span class="fc" id="L805">                writer.formatln(&quot;%s.writeShortArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="fc" id="L804">                writer.formatln(&quot;%s.writeShortArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L807">                                field.name(),</span>
-<span class="fc" id="L808">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L809">                break;</span>
+<span class="fc" id="L806">                                field.name(),</span>
+<span class="fc" id="L807">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L808">                break;</span>
             case I32:
-<span class="fc" id="L811">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="fc" id="L810">                writer.formatln(&quot;%s.writeIntArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L813">                                field.name(),</span>
-<span class="fc" id="L814">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L815">                break;</span>
+<span class="fc" id="L812">                                field.name(),</span>
+<span class="fc" id="L813">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L814">                break;</span>
             case I64:
-<span class="fc" id="L817">                writer.formatln(&quot;%s.writeLongArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="fc" id="L816">                writer.formatln(&quot;%s.writeLongArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L819">                                field.name(),</span>
-<span class="fc" id="L820">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L821">                break;</span>
+<span class="fc" id="L818">                                field.name(),</span>
+<span class="fc" id="L819">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L820">                break;</span>
             case STRING:
-<span class="fc" id="L823">                writer.formatln(&quot;%s.writeUTFArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
+<span class="fc" id="L822">                writer.formatln(&quot;%s.writeUTFArray(\&quot;%s\&quot;, new %s[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L825">                                field.name(),</span>
-<span class="fc" id="L826">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L827">                break;</span>
+<span class="fc" id="L824">                                field.name(),</span>
+<span class="fc" id="L825">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L826">                break;</span>
             case MESSAGE:
-<span class="fc" id="L829">                writer.formatln(&quot;%s.writePortableArray(\&quot;%s\&quot;, new %s._Builder[0]);&quot;,</span>
+<span class="fc" id="L828">                writer.formatln(&quot;%s.writePortableArray(\&quot;%s\&quot;, new %s._Builder[0]);&quot;,</span>
                                 PORTABLE_WRITER,
-<span class="fc" id="L831">                                field.name(),</span>
-<span class="fc" id="L832">                                helper.getValueType(descriptor));</span>
-<span class="fc" id="L833">                break;</span>
+<span class="fc" id="L830">                                field.name(),</span>
+<span class="fc" id="L831">                                helper.getValueType(descriptor));</span>
+<span class="fc" id="L832">                break;</span>
             default:
-<span class="nc" id="L835">                throw new GeneratorException(</span>
-<span class="nc" id="L836">                        &quot;Not implemented writeDefaultPortableFieldList for list with type: &quot; + descriptor.getType() +</span>
-<span class="nc" id="L837">                        &quot; in &quot; + this.getClass()</span>
-<span class="nc" id="L838">                                     .getSimpleName());</span>
+<span class="nc" id="L834">                throw new GeneratorException(</span>
+<span class="nc" id="L835">                        &quot;Not implemented writeDefaultPortableFieldList for list with type: &quot; + descriptor.getType() +</span>
+<span class="nc" id="L836">                        &quot; in &quot; + this.getClass()</span>
+<span class="nc" id="L837">                                     .getSimpleName());</span>
         }
-<span class="fc" id="L840">    }</span>
+<span class="fc" id="L839">    }</span>
 
     /**
      * Method to append reading of a field to hazelcast_portable.
@@ -856,91 +855,91 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void readPortableField(JField field) {
-<span class="pc bpc" id="L859" title="1 of 2 branches missed.">        if (field.portableRequiresBinarySerialization()) {</span>
-<span class="nc" id="L860">            String baisTemp = tempVariable(&quot;bais&quot;);</span>
-<span class="nc" id="L861">            String bebrTemp = tempVariable(&quot;bebr&quot;);</span>
-<span class="nc" id="L862">            String valueVariable = tempVariable(&quot;val&quot;);</span>
+<span class="pc bpc" id="L858" title="1 of 2 branches missed.">        if (field.portableRequiresBinarySerialization()) {</span>
+<span class="nc" id="L859">            String baisTemp = tempVariable(&quot;bais&quot;);</span>
+<span class="nc" id="L860">            String bebrTemp = tempVariable(&quot;bebr&quot;);</span>
+<span class="nc" id="L861">            String valueVariable = tempVariable(&quot;val&quot;);</span>
 
-<span class="nc" id="L864">            writer.formatln(&quot;try ( %s %s = new %s(%s.readByteArray(\&quot;%s\&quot;));&quot;,</span>
-<span class="nc" id="L865">                            ByteArrayInputStream.class.getName(),</span>
+<span class="nc" id="L863">            writer.formatln(&quot;try ( %s %s = new %s(%s.readByteArray(\&quot;%s\&quot;));&quot;,</span>
+<span class="nc" id="L864">                            ByteArrayInputStream.class.getName(),</span>
                             baisTemp,
-<span class="nc" id="L867">                            ByteArrayInputStream.class.getName(),</span>
+<span class="nc" id="L866">                            ByteArrayInputStream.class.getName(),</span>
                             PORTABLE_READER,
-<span class="nc" id="L869">                            field.name())</span>
-<span class="nc" id="L870">                  .formatln(&quot;      %s %s = new %s(%s) ) {&quot;,</span>
-<span class="nc" id="L871">                            BigEndianBinaryReader.class.getName(),</span>
+<span class="nc" id="L868">                            field.name())</span>
+<span class="nc" id="L869">                  .formatln(&quot;      %s %s = new %s(%s) ) {&quot;,</span>
+<span class="nc" id="L870">                            BigEndianBinaryReader.class.getName(),</span>
                             bebrTemp,
-<span class="nc" id="L873">                            BigEndianBinaryReader.class.getName(),</span>
+<span class="nc" id="L872">                            BigEndianBinaryReader.class.getName(),</span>
                             baisTemp)
-<span class="nc" id="L875">                  .begin()</span>
-<span class="nc" id="L876">                  .formatln(&quot;%s %s;&quot;, helper.getFieldType(field.field().getDescriptor()), valueVariable);</span>
+<span class="nc" id="L874">                  .begin()</span>
+<span class="nc" id="L875">                  .formatln(&quot;%s %s;&quot;, helper.getFieldType(field.field().getDescriptor()), valueVariable);</span>
 
-<span class="nc" id="L878">            readPortableBinary(bebrTemp, valueVariable, field.field().getDescriptor());</span>
+<span class="nc" id="L877">            readPortableBinary(bebrTemp, valueVariable, field.field().getDescriptor());</span>
 
-<span class="nc" id="L880">            writer.formatln(&quot;%s(%s);&quot;, field.setter(), valueVariable)</span>
-<span class="nc" id="L881">                  .end()</span>
-<span class="nc" id="L882">                  .println(&quot;}&quot;);</span>
+<span class="nc" id="L879">            writer.formatln(&quot;%s(%s);&quot;, field.setter(), valueVariable)</span>
+<span class="nc" id="L880">                  .end()</span>
+<span class="nc" id="L881">                  .println(&quot;}&quot;);</span>
 
-<span class="nc" id="L884">            return;</span>
+<span class="nc" id="L883">            return;</span>
         }
 
-<span class="pc bpc" id="L887" title="2 of 13 branches missed.">        switch (field.type()) {</span>
+<span class="pc bpc" id="L886" title="2 of 13 branches missed.">        switch (field.type()) {</span>
             case BINARY:
-<span class="fc" id="L889">                writer.formatln(&quot;%s(new %s(%s.readByteArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L890">                                field.setter(),</span>
-<span class="fc" id="L891">                                Binary.class.getName(),</span>
+<span class="fc" id="L888">                writer.formatln(&quot;%s(new %s(%s.readByteArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L889">                                field.setter(),</span>
+<span class="fc" id="L890">                                Binary.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L893">                                field.name());</span>
-<span class="fc" id="L894">                break;</span>
+<span class="fc" id="L892">                                field.name());</span>
+<span class="fc" id="L893">                break;</span>
             case BOOL:
-<span class="fc" id="L896">                writer.formatln(&quot;%s(%s.readBoolean(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
-<span class="fc" id="L897">                break;</span>
+<span class="fc" id="L895">                writer.formatln(&quot;%s(%s.readBoolean(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
+<span class="fc" id="L896">                break;</span>
             case BYTE:
-<span class="fc" id="L899">                writer.formatln(&quot;%s(%s.readByte(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
-<span class="fc" id="L900">                break;</span>
+<span class="fc" id="L898">                writer.formatln(&quot;%s(%s.readByte(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
+<span class="fc" id="L899">                break;</span>
             case DOUBLE:
-<span class="fc" id="L902">                writer.formatln(&quot;%s(%s.readDouble(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
-<span class="fc" id="L903">                break;</span>
+<span class="fc" id="L901">                writer.formatln(&quot;%s(%s.readDouble(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
+<span class="fc" id="L902">                break;</span>
             case ENUM:
-<span class="fc" id="L905">                writer.formatln(&quot;%s(%s.findById(%s.readInt(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L906">                                field.setter(),</span>
-<span class="fc" id="L907">                                field.instanceType(),</span>
+<span class="fc" id="L904">                writer.formatln(&quot;%s(%s.findById(%s.readInt(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L905">                                field.setter(),</span>
+<span class="fc" id="L906">                                field.instanceType(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L909">                                field.name());</span>
-<span class="fc" id="L910">                break;</span>
+<span class="fc" id="L908">                                field.name());</span>
+<span class="fc" id="L909">                break;</span>
             case I16:
-<span class="fc" id="L912">                writer.formatln(&quot;%s(%s.readShort(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
-<span class="fc" id="L913">                break;</span>
+<span class="fc" id="L911">                writer.formatln(&quot;%s(%s.readShort(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
+<span class="fc" id="L912">                break;</span>
             case I32:
-<span class="fc" id="L915">                writer.formatln(&quot;%s(%s.readInt(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
-<span class="fc" id="L916">                break;</span>
+<span class="fc" id="L914">                writer.formatln(&quot;%s(%s.readInt(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
+<span class="fc" id="L915">                break;</span>
             case I64:
-<span class="fc" id="L918">                writer.formatln(&quot;%s(%s.readLong(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
-<span class="fc" id="L919">                break;</span>
+<span class="fc" id="L917">                writer.formatln(&quot;%s(%s.readLong(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
+<span class="fc" id="L918">                break;</span>
             case STRING:
-<span class="fc" id="L921">                writer.formatln(&quot;%s(%s.readUTF(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
-<span class="fc" id="L922">                break;</span>
+<span class="fc" id="L920">                writer.formatln(&quot;%s(%s.readUTF(\&quot;%s\&quot;));&quot;, field.setter(), PORTABLE_READER, field.name());</span>
+<span class="fc" id="L921">                break;</span>
             case LIST:
-<span class="fc" id="L924">                readPortableFieldList(field, field.toPList().itemDescriptor());</span>
-<span class="fc" id="L925">                break;</span>
+<span class="fc" id="L923">                readPortableFieldList(field, field.toPList().itemDescriptor());</span>
+<span class="fc" id="L924">                break;</span>
             case SET:
-<span class="nc" id="L927">                readPortableFieldList(field, field.toPSet().itemDescriptor());</span>
-<span class="nc" id="L928">                break;</span>
+<span class="nc" id="L926">                readPortableFieldList(field, field.toPSet().itemDescriptor());</span>
+<span class="nc" id="L927">                break;</span>
             case MESSAGE: // ((CompactFields._Builder)portableReader.readPortable(&quot;compactValue&quot;)).build()
-<span class="fc" id="L930">                writer.formatln(&quot;%s(((%s.%s)%s.readPortable(\&quot;%s\&quot;)).%s());&quot;,</span>
-<span class="fc" id="L931">                                field.setter(),</span>
-<span class="fc" id="L932">                                field.instanceType(),</span>
+<span class="fc" id="L929">                writer.formatln(&quot;%s(((%s.%s)%s.readPortable(\&quot;%s\&quot;)).%s());&quot;,</span>
+<span class="fc" id="L930">                                field.setter(),</span>
+<span class="fc" id="L931">                                field.instanceType(),</span>
                                 &quot;_Builder&quot;,
                                 PORTABLE_READER,
-<span class="fc" id="L935">                                field.name(),</span>
+<span class="fc" id="L934">                                field.name(),</span>
                                 &quot;build&quot;);
-<span class="fc" id="L937">                break;</span>
+<span class="fc" id="L936">                break;</span>
             default:
-<span class="nc" id="L939">                throw new GeneratorException(&quot;Not implemented readPortableField for '&quot; + field.name() +</span>
-<span class="nc" id="L940">                                             &quot;' type: &quot; + field.type() + &quot; in &quot; +</span>
-<span class="nc" id="L941">                                             this.getClass().getSimpleName());</span>
+<span class="nc" id="L938">                throw new GeneratorException(&quot;Not implemented readPortableField for '&quot; + field.name() +</span>
+<span class="nc" id="L939">                                             &quot;' type: &quot; + field.type() + &quot; in &quot; +</span>
+<span class="nc" id="L940">                                             this.getClass().getSimpleName());</span>
         }
-<span class="fc" id="L943">    }</span>
+<span class="fc" id="L942">    }</span>
 
     /**
      * Method to append reading of a field to hazelcast_portable.
@@ -955,95 +954,95 @@ public class HazelcastPortableMessageFormatter implements MessageMemberFormatter
      * &lt;/pre&gt;
      */
     private void readPortableFieldList(JField field, PDescriptor descriptor) throws GeneratorException {
-<span class="pc bpc" id="L958" title="3 of 11 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L957" title="3 of 11 branches missed.">        switch (descriptor.getType()) {</span>
             case BYTE:
-<span class="fc" id="L960">                writer.formatln(&quot;%s(%s.asList(%s.readByteArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L961">                                field.setter(),</span>
-<span class="fc" id="L962">                                Bytes.class.getName(),</span>
+<span class="fc" id="L959">                writer.formatln(&quot;%s(%s.asList(%s.readByteArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L960">                                field.setter(),</span>
+<span class="fc" id="L961">                                Bytes.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L964">                                field.name());</span>
-<span class="fc" id="L965">                break;</span>
+<span class="fc" id="L963">                                field.name());</span>
+<span class="fc" id="L964">                break;</span>
             case BINARY:
-<span class="nc" id="L967">                writer.formatln(&quot;%s(%s.%s(%s.readByteArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="nc" id="L968">                                field.setter(),</span>
-<span class="nc" id="L969">                                BinaryUtil.class.getName(),</span>
+<span class="nc" id="L966">                writer.formatln(&quot;%s(%s.%s(%s.readByteArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="nc" id="L967">                                field.setter(),</span>
+<span class="nc" id="L968">                                BinaryUtil.class.getName(),</span>
                                 &quot;toBinaryCollection&quot;,
                                 PORTABLE_READER,
-<span class="nc" id="L972">                                field.name());</span>
-<span class="nc" id="L973">                break;</span>
+<span class="nc" id="L971">                                field.name());</span>
+<span class="nc" id="L972">                break;</span>
             case BOOL:
-<span class="fc" id="L975">                writer.formatln(&quot;%s(%s.asList(%s.readBooleanArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L976">                                field.setter(),</span>
-<span class="fc" id="L977">                                Booleans.class.getName(),</span>
+<span class="fc" id="L974">                writer.formatln(&quot;%s(%s.asList(%s.readBooleanArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L975">                                field.setter(),</span>
+<span class="fc" id="L976">                                Booleans.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L979">                                field.name());</span>
-<span class="fc" id="L980">                break;</span>
+<span class="fc" id="L978">                                field.name());</span>
+<span class="fc" id="L979">                break;</span>
             case DOUBLE:
-<span class="fc" id="L982">                writer.formatln(&quot;%s(%s.asList(%s.readDoubleArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L983">                                field.setter(),</span>
-<span class="fc" id="L984">                                Doubles.class.getName(),</span>
+<span class="fc" id="L981">                writer.formatln(&quot;%s(%s.asList(%s.readDoubleArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L982">                                field.setter(),</span>
+<span class="fc" id="L983">                                Doubles.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L986">                                field.name());</span>
-<span class="fc" id="L987">                break;</span>
+<span class="fc" id="L985">                                field.name());</span>
+<span class="fc" id="L986">                break;</span>
             case ENUM:
-<span class="nc" id="L989">                writer.formatln(</span>
+<span class="nc" id="L988">                writer.formatln(</span>
                         &quot;%s(%s.asList(%s.readIntArray(\&quot;%s\&quot;)).stream().map(t -&gt; %s.%s(t.intValue())).collect(%s.toList()));&quot;,
-<span class="nc" id="L991">                        field.setter(),</span>
-<span class="nc" id="L992">                        Ints.class.getName(),</span>
+<span class="nc" id="L990">                        field.setter(),</span>
+<span class="nc" id="L991">                        Ints.class.getName(),</span>
                         PORTABLE_READER,
-<span class="nc" id="L994">                        field.name(),</span>
-<span class="nc" id="L995">                        descriptor.getName(),</span>
+<span class="nc" id="L993">                        field.name(),</span>
+<span class="nc" id="L994">                        descriptor.getName(),</span>
                         &quot;findById&quot;,
                         //TODO need to change this to another value.
-<span class="nc" id="L998">                        Collectors.class.getName());</span>
-<span class="nc" id="L999">                break;</span>
+<span class="nc" id="L997">                        Collectors.class.getName());</span>
+<span class="nc" id="L998">                break;</span>
             case I16:
-<span class="fc" id="L1001">                writer.formatln(&quot;%s(%s.asList(%s.readShortArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L1002">                                field.setter(),</span>
-<span class="fc" id="L1003">                                Shorts.class.getName(),</span>
+<span class="fc" id="L1000">                writer.formatln(&quot;%s(%s.asList(%s.readShortArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L1001">                                field.setter(),</span>
+<span class="fc" id="L1002">                                Shorts.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L1005">                                field.name());</span>
-<span class="fc" id="L1006">                break;</span>
+<span class="fc" id="L1004">                                field.name());</span>
+<span class="fc" id="L1005">                break;</span>
             case I32:
-<span class="fc" id="L1008">                writer.formatln(&quot;%s(%s.asList(%s.readIntArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L1009">                                field.setter(),</span>
-<span class="fc" id="L1010">                                Ints.class.getName(),</span>
+<span class="fc" id="L1007">                writer.formatln(&quot;%s(%s.asList(%s.readIntArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L1008">                                field.setter(),</span>
+<span class="fc" id="L1009">                                Ints.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L1012">                                field.name());</span>
-<span class="fc" id="L1013">                break;</span>
+<span class="fc" id="L1011">                                field.name());</span>
+<span class="fc" id="L1012">                break;</span>
             case I64:
-<span class="fc" id="L1015">                writer.formatln(&quot;%s(%s.asList(%s.readLongArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L1016">                                field.setter(),</span>
-<span class="fc" id="L1017">                                Longs.class.getName(),</span>
+<span class="fc" id="L1014">                writer.formatln(&quot;%s(%s.asList(%s.readLongArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L1015">                                field.setter(),</span>
+<span class="fc" id="L1016">                                Longs.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L1019">                                field.name());</span>
-<span class="fc" id="L1020">                break;</span>
+<span class="fc" id="L1018">                                field.name());</span>
+<span class="fc" id="L1019">                break;</span>
             case STRING:
-<span class="fc" id="L1022">                writer.formatln(&quot;%s(%s.asList(%s.readUTFArray(\&quot;%s\&quot;)));&quot;,</span>
-<span class="fc" id="L1023">                                field.setter(),</span>
-<span class="fc" id="L1024">                                Arrays.class.getName(),</span>
+<span class="fc" id="L1021">                writer.formatln(&quot;%s(%s.asList(%s.readUTFArray(\&quot;%s\&quot;)));&quot;,</span>
+<span class="fc" id="L1022">                                field.setter(),</span>
+<span class="fc" id="L1023">                                Arrays.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L1026">                                field.name());</span>
-<span class="fc" id="L1027">                break;</span>
+<span class="fc" id="L1025">                                field.name());</span>
+<span class="fc" id="L1026">                break;</span>
             case MESSAGE:
-<span class="fc" id="L1029">                writer.formatln(&quot;%s(%s.asList(%s.readPortableArray(\&quot;%s\&quot;)).stream()&quot; +</span>
+<span class="fc" id="L1028">                writer.formatln(&quot;%s(%s.asList(%s.readPortableArray(\&quot;%s\&quot;)).stream()&quot; +</span>
                                 &quot;.map(i -&gt; ((%s.%s)i).build()).collect(%s.toList()));&quot;,
-<span class="fc" id="L1031">                                field.setter(),</span>
-<span class="fc" id="L1032">                                Arrays.class.getName(),</span>
+<span class="fc" id="L1030">                                field.setter(),</span>
+<span class="fc" id="L1031">                                Arrays.class.getName(),</span>
                                 PORTABLE_READER,
-<span class="fc" id="L1034">                                field.name(),</span>
-<span class="fc" id="L1035">                                descriptor.getName(),</span>
+<span class="fc" id="L1033">                                field.name(),</span>
+<span class="fc" id="L1034">                                descriptor.getName(),</span>
                                 WRAPPER_CLASS_NAME,
-<span class="fc" id="L1037">                                Collectors.class.getName());</span>
+<span class="fc" id="L1036">                                Collectors.class.getName());</span>
 
-<span class="fc" id="L1039">                break;</span>
+<span class="fc" id="L1038">                break;</span>
             default:
-<span class="nc" id="L1041">                throw new GeneratorException(</span>
-<span class="nc" id="L1042">                        &quot;Not implemented readPortableField for list with type: &quot; + descriptor.getType() + &quot; in &quot; +</span>
-<span class="nc" id="L1043">                        this.getClass()</span>
-<span class="nc" id="L1044">                            .getSimpleName());</span>
+<span class="nc" id="L1040">                throw new GeneratorException(</span>
+<span class="nc" id="L1041">                        &quot;Not implemented readPortableField for list with type: &quot; + descriptor.getType() + &quot; in &quot; +</span>
+<span class="nc" id="L1042">                        this.getClass()</span>
+<span class="nc" id="L1043">                            .getSimpleName());</span>
         }
-<span class="fc" id="L1046">    }</span>
+<span class="fc" id="L1045">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

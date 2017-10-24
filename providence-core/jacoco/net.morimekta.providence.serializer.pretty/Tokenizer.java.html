@@ -20,7 +20,7 @@
  */
 package net.morimekta.providence.serializer.pretty;
 
-import net.morimekta.util.Slice;
+import net.morimekta.util.CharSlice;
 import net.morimekta.util.Strings;
 import net.morimekta.util.io.IOUtils;
 
@@ -28,108 +28,131 @@ import javax.annotation.Nonnull;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.UncheckedIOException;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Simple tokenizer for the pretty serializer that strips away comments based
  * on the &quot;#&quot; (shell) comment character. Each comment lasts until the next
  * newline.
  */
-public class Tokenizer extends InputStream {
+public class Tokenizer extends Reader {
+
     @FunctionalInterface
     public interface TokenValidator {
         boolean validate(Token token);
     }
 
-    private final byte[] buffer;
+    private final char[] buffer;
     protected     int    readOffset;
     protected     int    lineNo;
     protected     int    linePos;
+
     private       Token  nextToken;
 
-<span class="fc" id="L50">    public Tokenizer(InputStream in, boolean enclosedContent) throws IOException {</span>
-<span class="fc" id="L51">        ByteArrayOutputStream tmp = new ByteArrayOutputStream();</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (enclosedContent) {</span>
-<span class="fc" id="L53">            int stack = 0;</span>
-<span class="fc" id="L54">            char literal = '\0';</span>
-<span class="fc" id="L55">            boolean escaped = false;</span>
-<span class="fc" id="L56">            boolean comment = false;</span>
+<span class="fc" id="L55">    public Tokenizer(InputStream in, boolean enclosedContent) throws IOException {</span>
+<span class="fc" id="L56">        ByteArrayOutputStream tmp = new ByteArrayOutputStream();</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (enclosedContent) {</span>
+<span class="fc" id="L58">            int stack = 0;</span>
+<span class="fc" id="L59">            char literal = '\0';</span>
+<span class="fc" id="L60">            boolean escaped = false;</span>
+<span class="fc" id="L61">            boolean comment = false;</span>
 
             int r;
-<span class="fc bfc" id="L59" title="All 2 branches covered.">            while ((r = in.read()) &gt;= 0) {</span>
-<span class="fc" id="L60">                tmp.write(r);</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">                if (comment) {</span>
-<span class="fc bfc" id="L62" title="All 4 branches covered.">                    if (r == '\n' || r == '\r') {</span>
-<span class="fc" id="L63">                        comment = false;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            while ((r = in.read()) &gt;= 0) {</span>
+<span class="fc" id="L65">                tmp.write(r);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                if (comment) {</span>
+<span class="fc bfc" id="L67" title="All 4 branches covered.">                    if (r == '\n' || r == '\r') {</span>
+<span class="fc" id="L68">                        comment = false;</span>
                     }
                 } else {
-<span class="fc bfc" id="L66" title="All 2 branches covered.">                    if (literal != '\0') {</span>
-<span class="fc bfc" id="L67" title="All 2 branches covered.">                        if (escaped) {</span>
-<span class="fc" id="L68">                            escaped = false;</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">                        } else if (r == literal) {</span>
-<span class="fc" id="L70">                            literal = '\0';</span>
-<span class="fc" id="L71">                            escaped = false;</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">                        } else if (r == '\\') {</span>
-<span class="fc" id="L73">                            escaped = true;</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                    if (literal != '\0') {</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                        if (escaped) {</span>
+<span class="fc" id="L73">                            escaped = false;</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                        } else if (r == literal) {</span>
+<span class="fc" id="L75">                            literal = '\0';</span>
+<span class="fc" id="L76">                            escaped = false;</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                        } else if (r == '\\') {</span>
+<span class="fc" id="L78">                            escaped = true;</span>
                         }
-<span class="pc bpc" id="L75" title="1 of 8 branches missed.">                    } else if (r == ' ' || r == '\t' || r == '\r' || r == '\n') {</span>
+<span class="pc bpc" id="L80" title="1 of 8 branches missed.">                    } else if (r == ' ' || r == '\t' || r == '\r' || r == '\n') {</span>
                         // just continue.
-<span class="pc bpc" id="L77" title="1 of 4 branches missed.">                    } else if (r == '\&quot;' || r == '\'') {</span>
-<span class="fc" id="L78">                        literal = (char) r;</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">                    } else if (r == '#') {</span>
-<span class="fc" id="L80">                        comment = true;</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">                    } else if (r == '}') {</span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">                        if (--stack &lt;= 0) {</span>
-<span class="fc" id="L83">                            break;</span>
+<span class="pc bpc" id="L82" title="1 of 4 branches missed.">                    } else if (r == '\&quot;' || r == '\'') {</span>
+<span class="fc" id="L83">                        literal = (char) r;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                    } else if (r == '#') {</span>
+<span class="fc" id="L85">                        comment = true;</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                    } else if (r == '}') {</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">                        if (--stack &lt;= 0) {</span>
+<span class="fc" id="L88">                            break;</span>
                         }
-<span class="fc bfc" id="L85" title="All 2 branches covered.">                    } else if (r == '{') {</span>
-<span class="fc" id="L86">                        ++stack;</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">                    } else if (r == '{') {</span>
+<span class="fc" id="L91">                        ++stack;</span>
                     }
                 }
             }
-<span class="fc" id="L90">        } else {</span>
-<span class="fc" id="L91">            IOUtils.copy(in, tmp);</span>
+
+            // then read until end of the line.
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            while ((r = in.read()) &gt;= 0) {</span>
+<span class="fc" id="L98">                tmp.write(r);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                if (r == '\n') {</span>
+<span class="fc" id="L100">                    break;</span>
+                }
+            }
+<span class="fc" id="L103">        } else {</span>
+<span class="fc" id="L104">            IOUtils.copy(in, tmp);</span>
         }
 
-<span class="fc" id="L94">        this.buffer = tmp.toByteArray();</span>
-<span class="fc" id="L95">        this.readOffset = -1;</span>
+<span class="fc" id="L107">        this.buffer = new String(tmp.toByteArray(), UTF_8).toCharArray();</span>
+<span class="fc" id="L108">        this.readOffset = -1;</span>
 
-<span class="fc" id="L97">        this.lineNo = 1;</span>
-<span class="fc" id="L98">        this.linePos = 0;</span>
-<span class="fc" id="L99">    }</span>
+<span class="fc" id="L110">        this.lineNo = 1;</span>
+<span class="fc" id="L111">        this.linePos = 0;</span>
+<span class="fc" id="L112">    }</span>
 
     @Override
     public int read() {
-<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (++readOffset &gt;= buffer.length) {</span>
-<span class="fc" id="L104">            readOffset = buffer.length;</span>
-<span class="fc" id="L105">            return -1;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (++readOffset &gt;= buffer.length) {</span>
+<span class="fc" id="L117">            readOffset = buffer.length;</span>
+<span class="fc" id="L118">            return -1;</span>
         }
-<span class="fc" id="L107">        int ret = buffer[readOffset];</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (ret == '\n') {</span>
-<span class="fc" id="L109">            ++lineNo;</span>
-<span class="fc" id="L110">            linePos = 0;</span>
+<span class="fc" id="L120">        int ret = buffer[readOffset];</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (ret == '\n') {</span>
+<span class="fc" id="L122">            ++lineNo;</span>
+<span class="fc" id="L123">            linePos = 0;</span>
         } else {
-<span class="fc" id="L112">            ++linePos;</span>
+<span class="fc" id="L125">            ++linePos;</span>
         }
-<span class="fc bfc" id="L114" title="All 2 branches covered.">        return ret &gt; 0 ? ret : 0x100 + ret;</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        return ret &gt; 0 ? ret : 0x100 + ret;</span>
     }
+
+    @Override
+    public int read(char[] chars, int i, int i1) throws IOException {
+<span class="nc" id="L132">        return 0;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+        // ignore.
+<span class="nc" id="L138">    }</span>
 
     /**
      * &quot;Unread&quot; the last read byte. Note that line-pos is not usable
      * immediately after reading, until reading again.
      */
     private void unread() {
-<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (readOffset == buffer.length) {</span>
-<span class="nc" id="L123">            --readOffset;</span>
-<span class="nc" id="L124">            return;</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (readOffset == buffer.length) {</span>
+<span class="nc" id="L146">            --readOffset;</span>
+<span class="nc" id="L147">            return;</span>
         }
 
-<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (buffer[readOffset--] == '\n') {</span>
-<span class="fc" id="L128">            --lineNo;</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (buffer[readOffset--] == '\n') {</span>
+<span class="fc" id="L151">            --lineNo;</span>
         } else {
-<span class="fc" id="L130">            --linePos;</span>
+<span class="fc" id="L153">            --linePos;</span>
         }
-<span class="fc" id="L132">    }</span>
+<span class="fc" id="L155">    }</span>
 
     /**
      * Expect at a valid token containing anything.
@@ -139,135 +162,135 @@ public class Tokenizer extends InputStream {
      * @throws IOException If failed to read a token.
      */
     public Token expect(@Nonnull String expected) throws IOException {
-<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (!hasNext()) {</span>
-<span class="fc" id="L143">            throw failure(&quot;Expected %s, got end of file&quot;, expected);</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (!hasNext()) {</span>
+<span class="fc" id="L166">            throw failure(&quot;Expected %s, got end of file&quot;, expected);</span>
         }
-<span class="fc" id="L145">        Token next = nextToken;</span>
-<span class="fc" id="L146">        nextToken = null;</span>
-<span class="fc" id="L147">        return next;</span>
+<span class="fc" id="L168">        Token next = nextToken;</span>
+<span class="fc" id="L169">        nextToken = null;</span>
+<span class="fc" id="L170">        return next;</span>
     }
 
     public Token expect(@Nonnull String expected,
                         @Nonnull TokenValidator validator) throws IOException {
-<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (!hasNext()) {</span>
-<span class="fc" id="L153">            throw failure(&quot;Expected %s, got end of file&quot;, expected);</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        } else if (validator.validate(nextToken)) {</span>
-<span class="fc" id="L155">            Token next = nextToken;</span>
-<span class="fc" id="L156">            nextToken = null;</span>
-<span class="fc" id="L157">            return next;</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (!hasNext()) {</span>
+<span class="fc" id="L176">            throw failure(&quot;Expected %s, got end of file&quot;, expected);</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        } else if (validator.validate(nextToken)) {</span>
+<span class="fc" id="L178">            Token next = nextToken;</span>
+<span class="fc" id="L179">            nextToken = null;</span>
+<span class="fc" id="L180">            return next;</span>
         }
-<span class="fc" id="L159">        throw failure(nextToken,</span>
+<span class="fc" id="L182">        throw failure(nextToken,</span>
                       &quot;Expected %s, but got '%s'&quot;,
                       expected,
-<span class="fc" id="L162">                      Strings.escape(nextToken.asString()));</span>
+<span class="fc" id="L185">                      Strings.escape(nextToken.asString()));</span>
     }
 
     public Token peek(@Nonnull String expected) throws IOException {
-<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (!hasNext()) {</span>
-<span class="fc" id="L167">            throw failure(&quot;Expected %s, got end of file&quot;, expected);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (!hasNext()) {</span>
+<span class="fc" id="L190">            throw failure(&quot;Expected %s, got end of file&quot;, expected);</span>
         }
-<span class="nc" id="L169">        return nextToken;</span>
+<span class="nc" id="L192">        return nextToken;</span>
     }
 
     public Token peek() throws IOException {
-<span class="fc" id="L173">        hasNext();</span>
-<span class="fc" id="L174">        return nextToken;</span>
+<span class="fc" id="L196">        hasNext();</span>
+<span class="fc" id="L197">        return nextToken;</span>
     }
 
     public char expectSymbol(@Nonnull String expected, char... symbols) throws IOException {
-<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (!hasNext()) {</span>
-<span class="fc" id="L179">            throw failure(&quot;Expected %s, one of ['%s'], got end of file&quot;,</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (!hasNext()) {</span>
+<span class="fc" id="L202">            throw failure(&quot;Expected %s, one of ['%s'], got end of file&quot;,</span>
                                          expected,
-<span class="fc" id="L181">                                         Strings.joinP(&quot;', '&quot;, symbols));</span>
+<span class="fc" id="L204">                                         Strings.joinP(&quot;', '&quot;, symbols));</span>
         } else {
-<span class="fc bfc" id="L183" title="All 2 branches covered.">            for (char symbol : symbols) {</span>
-<span class="fc bfc" id="L184" title="All 2 branches covered.">                if (nextToken.isSymbol(symbol)) {</span>
-<span class="fc" id="L185">                    nextToken = null;</span>
-<span class="fc" id="L186">                    return symbol;</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">            for (char symbol : symbols) {</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">                if (nextToken.isSymbol(symbol)) {</span>
+<span class="fc" id="L208">                    nextToken = null;</span>
+<span class="fc" id="L209">                    return symbol;</span>
                 }
             }
 
-<span class="fc" id="L190">            throw failure(nextToken,</span>
+<span class="fc" id="L213">            throw failure(nextToken,</span>
                           &quot;Expected %s, one of ['%s'], but found '%s'&quot;,
                           expected,
-<span class="fc" id="L193">                          Strings.joinP(&quot;', '&quot;, symbols),</span>
-<span class="fc" id="L194">                          Strings.escape(nextToken.asString()));</span>
+<span class="fc" id="L216">                          Strings.joinP(&quot;', '&quot;, symbols),</span>
+<span class="fc" id="L217">                          Strings.escape(nextToken.asString()));</span>
         }
     }
 
     public Token expectIdentifier(@Nonnull String message) throws IOException {
-<span class="fc" id="L199">        return expect(message, Token::isIdentifier);</span>
+<span class="fc" id="L222">        return expect(message, Token::isIdentifier);</span>
     }
 
     @Nonnull
     public Token expectInteger(String message) throws IOException {
-<span class="nc" id="L204">        return expect(message, Token::isInteger);</span>
+<span class="nc" id="L227">        return expect(message, Token::isInteger);</span>
     }
 
     @Nonnull
     public Token expectLiteral(String message) throws IOException {
-<span class="nc" id="L209">        return expect(message, Token::isStringLiteral);</span>
+<span class="nc" id="L232">        return expect(message, Token::isStringLiteral);</span>
     }
 
     public boolean hasNext() throws IOException {
-<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (nextToken == null) {</span>
-<span class="fc" id="L214">            nextToken = nextInternal();</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        if (nextToken == null) {</span>
+<span class="fc" id="L237">            nextToken = nextInternal();</span>
         }
-<span class="fc bfc" id="L216" title="All 2 branches covered.">        return nextToken != null;</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        return nextToken != null;</span>
     }
 
     public Token next() throws IOException {
-<span class="fc bfc" id="L220" title="All 2 branches covered.">        if (nextToken != null) {</span>
-<span class="fc" id="L221">            Token tmp = nextToken;</span>
-<span class="fc" id="L222">            nextToken = null;</span>
-<span class="fc" id="L223">            return tmp;</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        if (nextToken != null) {</span>
+<span class="fc" id="L244">            Token tmp = nextToken;</span>
+<span class="fc" id="L245">            nextToken = null;</span>
+<span class="fc" id="L246">            return tmp;</span>
         }
 
-<span class="fc" id="L226">        return nextInternal();</span>
+<span class="fc" id="L249">        return nextInternal();</span>
     }
 
     private Token nextStringLiteral(int startQuote) throws TokenizerException {
-<span class="fc" id="L230">        int startOffset = readOffset;</span>
-<span class="fc" id="L231">        int startLinePos = linePos;</span>
-<span class="fc" id="L232">        int startLineNo = lineNo;</span>
-<span class="fc" id="L233">        boolean escaped = false;</span>
+<span class="fc" id="L253">        int startOffset = readOffset;</span>
+<span class="fc" id="L254">        int startLinePos = linePos;</span>
+<span class="fc" id="L255">        int startLineNo = lineNo;</span>
+<span class="fc" id="L256">        boolean escaped = false;</span>
         while (true) {
-<span class="fc" id="L235">            int r = read();</span>
-<span class="pc bpc" id="L236" title="1 of 4 branches missed.">            if (r &lt; 0x20 || r == 0x7F) {</span>
-<span class="fc" id="L237">                int length = readOffset - startOffset;</span>
-<span class="fc bfc" id="L238" title="All 2 branches covered.">                if (r == -1) {</span>
-<span class="fc" id="L239">                    throw failure(startLineNo, startLinePos, length,</span>
+<span class="fc" id="L258">            int r = read();</span>
+<span class="pc bpc" id="L259" title="1 of 4 branches missed.">            if (r &lt; 0x20 || r == 0x7F) {</span>
+<span class="fc" id="L260">                int length = readOffset - startOffset;</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">                if (r == -1) {</span>
+<span class="fc" id="L262">                    throw failure(startLineNo, startLinePos, length,</span>
                                   &quot;Unexpected end of stream in literal&quot;);
-<span class="pc bpc" id="L241" title="1 of 4 branches missed.">                } else if (r == '\n' || r == '\r') {</span>
-<span class="fc" id="L242">                    throw failure(startLineNo, startLinePos, length - 1,</span>
+<span class="pc bpc" id="L264" title="1 of 4 branches missed.">                } else if (r == '\n' || r == '\r') {</span>
+<span class="fc" id="L265">                    throw failure(startLineNo, startLinePos, length - 1,</span>
                                   &quot;Unexpected line break in literal&quot;);
                 } else {
-<span class="fc" id="L245">                    throw failure(startLineNo, startLinePos, length + 1,</span>
+<span class="fc" id="L268">                    throw failure(startLineNo, startLinePos, length + 1,</span>
                                   &quot;Unescaped non-printable char in literal: '%s'&quot;,
-<span class="fc" id="L247">                                  escapeChar(r));</span>
+<span class="fc" id="L270">                                  escapeChar(r));</span>
                 }
             }
 
-<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (escaped) {</span>
-<span class="fc" id="L252">                escaped = false;</span>
-<span class="fc bfc" id="L253" title="All 2 branches covered.">            } else if (r == Token.kLiteralEscape) {</span>
-<span class="fc" id="L254">                escaped = true;</span>
-<span class="fc bfc" id="L255" title="All 2 branches covered.">            } else if (startQuote == r) {</span>
-<span class="fc" id="L256">                break;</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            if (escaped) {</span>
+<span class="fc" id="L275">                escaped = false;</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">            } else if (r == Token.kLiteralEscape) {</span>
+<span class="fc" id="L277">                escaped = true;</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">            } else if (startQuote == r) {</span>
+<span class="fc" id="L279">                break;</span>
             }
             // else just include into string token.
-<span class="fc" id="L259">        }</span>
-<span class="fc" id="L260">        return token(startOffset, readOffset - startOffset + 1, startLinePos);</span>
+<span class="fc" id="L282">        }</span>
+<span class="fc" id="L283">        return token(startOffset, readOffset - startOffset + 1, startLinePos);</span>
     }
 
     private Token nextInternal() throws IOException {
         int r;
-<span class="fc bfc" id="L265" title="All 2 branches covered.">        while ((r = read()) != -1) {</span>
-<span class="pc bpc" id="L266" title="1 of 8 branches missed.">            if (r != ' ' &amp;&amp; r != '\t' &amp;&amp; r != '\r' &amp;&amp; r != '\n') {</span>
-<span class="fc bfc" id="L267" title="All 2 branches covered.">                if (r == Token.kShellComment) {</span>
-<span class="pc bpc" id="L268" title="1 of 2 branches missed.">                    while ((r = read()) != -1) {</span>
-<span class="fc bfc" id="L269" title="All 4 branches covered.">                        if (r == '\n' || r == '\r') {</span>
-<span class="fc" id="L270">                            break;</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">        while ((r = read()) != -1) {</span>
+<span class="pc bpc" id="L289" title="1 of 8 branches missed.">            if (r != ' ' &amp;&amp; r != '\t' &amp;&amp; r != '\r' &amp;&amp; r != '\n') {</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">                if (r == Token.kShellComment) {</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">                    while ((r = read()) != -1) {</span>
+<span class="fc bfc" id="L292" title="All 4 branches covered.">                        if (r == '\n' || r == '\r') {</span>
+<span class="fc" id="L293">                            break;</span>
                         }
                     }
                 } else {
@@ -276,35 +299,35 @@ public class Tokenizer extends InputStream {
             }
         }
 
-<span class="fc bfc" id="L279" title="All 2 branches covered.">        if (r &lt; 0) {</span>
-<span class="fc" id="L280">            return null;</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">        if (r &lt; 0) {</span>
+<span class="fc" id="L303">            return null;</span>
         }
 
         // Known symbols.
-<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (Token.kSymbols.indexOf(r) &gt;= 0) {</span>
-<span class="fc" id="L285">            return nextSymbol(r);</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        if (Token.kSymbols.indexOf(r) &gt;= 0) {</span>
+<span class="fc" id="L308">            return nextSymbol(r);</span>
         }
 
         // String literals.
-<span class="pc bpc" id="L289" title="1 of 4 branches missed.">        if (r == Token.kLiteralQuote || r == Token.kLiteralDoubleQuote) {</span>
-<span class="fc" id="L290">            return nextStringLiteral(r);</span>
+<span class="pc bpc" id="L312" title="1 of 4 branches missed.">        if (r == Token.kLiteralQuote || r == Token.kLiteralDoubleQuote) {</span>
+<span class="fc" id="L313">            return nextStringLiteral(r);</span>
         }
 
         // Number.
-<span class="pc bpc" id="L294" title="1 of 8 branches missed.">        if (r == '.' || r == '-' || (r &gt;= '0' &amp;&amp; r &lt;= '9')) {</span>
-<span class="fc" id="L295">            return nextNumber(r);</span>
+<span class="pc bpc" id="L317" title="1 of 8 branches missed.">        if (r == '.' || r == '-' || (r &gt;= '0' &amp;&amp; r &lt;= '9')) {</span>
+<span class="fc" id="L318">            return nextNumber(r);</span>
         }
 
         // Identifier / qualified identifier / type name token.
-<span class="pc bpc" id="L299" title="3 of 10 branches missed.">        if (r == '_' || (r &gt;= 'a' &amp;&amp; r &lt;= 'z') || (r &gt;= 'A' &amp;&amp; r &lt;= 'Z')) {</span>
-<span class="fc" id="L300">            return nextIdentifier();</span>
+<span class="pc bpc" id="L322" title="3 of 10 branches missed.">        if (r == '_' || (r &gt;= 'a' &amp;&amp; r &lt;= 'z') || (r &gt;= 'A' &amp;&amp; r &lt;= 'Z')) {</span>
+<span class="fc" id="L323">            return nextIdentifier();</span>
         }
 
-<span class="fc" id="L303">        throw failure(lineNo, linePos, 1, &quot;Unknown token initiator '%c'&quot;, r);</span>
+<span class="fc" id="L326">        throw failure(lineNo, linePos, 1, &quot;Unknown token initiator '%c'&quot;, r);</span>
     }
 
     protected Token nextSymbol(int lastByte) throws TokenizerException {
-<span class="fc" id="L307">        return token(readOffset, 1, linePos);</span>
+<span class="fc" id="L330">        return token(readOffset, 1, linePos);</span>
     }
 
     private Token nextNumber(int lastByte) throws TokenizerException {
@@ -323,185 +346,185 @@ public class Tokenizer extends InputStream {
         // It is programmed as a state-engine to be very efficient, but
         // correctly detect valid JSON (and what is invalid if not).
 
-<span class="fc" id="L326">        int startLinePos = linePos;</span>
-<span class="fc" id="L327">        int startLineNo = lineNo;</span>
-<span class="fc" id="L328">        int startOffset = readOffset;</span>
-<span class="fc" id="L329">        int len = 0;</span>
+<span class="fc" id="L349">        int startLinePos = linePos;</span>
+<span class="fc" id="L350">        int startLineNo = lineNo;</span>
+<span class="fc" id="L351">        int startOffset = readOffset;</span>
+<span class="fc" id="L352">        int len = 0;</span>
 
-<span class="fc bfc" id="L331" title="All 2 branches covered.">        if (lastByte == '-') {</span>
-<span class="fc" id="L332">            lastByte = read();</span>
-<span class="fc" id="L333">            ++len;</span>
-<span class="fc bfc" id="L334" title="All 2 branches covered.">            if (lastByte &lt; 0) {</span>
-<span class="fc" id="L335">                throw failure(startLineNo, startLinePos, len,</span>
+<span class="fc bfc" id="L354" title="All 2 branches covered.">        if (lastByte == '-') {</span>
+<span class="fc" id="L355">            lastByte = read();</span>
+<span class="fc" id="L356">            ++len;</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">            if (lastByte &lt; 0) {</span>
+<span class="fc" id="L358">                throw failure(startLineNo, startLinePos, len,</span>
                               &quot;Unexpected end of stream after negative indicator&quot;);
             }
-<span class="pc bpc" id="L338" title="2 of 6 branches missed.">            if (!(lastByte == '.' || (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9'))) {</span>
-<span class="fc" id="L339">                throw failure(startLineNo, startLinePos, len,</span>
+<span class="pc bpc" id="L361" title="2 of 6 branches missed.">            if (!(lastByte == '.' || (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9'))) {</span>
+<span class="fc" id="L362">                throw failure(startLineNo, startLinePos, len,</span>
                               &quot;No decimal after negative indicator&quot;);
             }
-<span class="fc bfc" id="L342" title="All 2 branches covered.">        } else if (lastByte == '0') {</span>
-<span class="fc" id="L343">            lastByte = read();</span>
-<span class="fc" id="L344">            ++len;</span>
-<span class="fc bfc" id="L345" title="All 2 branches covered.">            if (lastByte == 'x') {</span>
-<span class="fc" id="L346">                ++len;</span>
+<span class="fc bfc" id="L365" title="All 2 branches covered.">        } else if (lastByte == '0') {</span>
+<span class="fc" id="L366">            lastByte = read();</span>
+<span class="fc" id="L367">            ++len;</span>
+<span class="fc bfc" id="L368" title="All 2 branches covered.">            if (lastByte == 'x') {</span>
+<span class="fc" id="L369">                ++len;</span>
                 // hexadecimal.
-<span class="pc bpc" id="L348" title="1 of 2 branches missed.">                while ((lastByte = read()) != -1) {</span>
-<span class="pc bpc" id="L349" title="7 of 12 branches missed.">                    if ((lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') || (lastByte &gt;= 'a' &amp;&amp; lastByte &lt;= 'f') ||</span>
+<span class="pc bpc" id="L371" title="1 of 2 branches missed.">                while ((lastByte = read()) != -1) {</span>
+<span class="pc bpc" id="L372" title="7 of 12 branches missed.">                    if ((lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') || (lastByte &gt;= 'a' &amp;&amp; lastByte &lt;= 'f') ||</span>
                         (lastByte &gt;= 'A' &amp;&amp; lastByte &lt;= 'F')) {
-<span class="fc" id="L351">                        ++len;</span>
-<span class="fc" id="L352">                        continue;</span>
+<span class="fc" id="L374">                        ++len;</span>
+<span class="fc" id="L375">                        continue;</span>
                     }
                     // we read a char that's *not* part of the
                     break;
                 }
 
-<span class="fc" id="L358">                return validateAfterNumber(lastByte, startOffset, startLinePos, len);</span>
-<span class="fc bfc" id="L359" title="All 4 branches covered.">            } else if ('0' &lt;= lastByte &amp;&amp; lastByte &lt;= '7') {</span>
-<span class="fc" id="L360">                ++len;</span>
+<span class="fc" id="L381">                return validateAfterNumber(lastByte, startOffset, startLinePos, len);</span>
+<span class="fc bfc" id="L382" title="All 4 branches covered.">            } else if ('0' &lt;= lastByte &amp;&amp; lastByte &lt;= '7') {</span>
+<span class="fc" id="L383">                ++len;</span>
                 // Octals have 0 in front, and then more digits.
-<span class="pc bpc" id="L362" title="1 of 2 branches missed.">                while ((lastByte = read()) != -1) {</span>
-<span class="pc bpc" id="L363" title="1 of 4 branches missed.">                    if ((lastByte &lt; '0' || lastByte &gt; '7')) {</span>
-<span class="fc" id="L364">                        ++len;</span>
-<span class="fc" id="L365">                        break;</span>
+<span class="pc bpc" id="L385" title="1 of 2 branches missed.">                while ((lastByte = read()) != -1) {</span>
+<span class="pc bpc" id="L386" title="1 of 4 branches missed.">                    if ((lastByte &lt; '0' || lastByte &gt; '7')) {</span>
+<span class="fc" id="L387">                        ++len;</span>
+<span class="fc" id="L388">                        break;</span>
                     }
                 }
 
-<span class="fc" id="L369">                return validateAfterNumber(lastByte, startOffset, startLinePos, len);</span>
+<span class="fc" id="L392">                return validateAfterNumber(lastByte, startOffset, startLinePos, len);</span>
             }
 
         }
 
         // decimal part.
-<span class="fc bfc" id="L375" title="All 4 branches covered.">        while (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') {</span>
-<span class="fc" id="L376">            ++len;</span>
+<span class="fc bfc" id="L398" title="All 4 branches covered.">        while (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') {</span>
+<span class="fc" id="L399">            ++len;</span>
             // numbers are terminated by first non-numeric character.
-<span class="fc" id="L378">            lastByte = read();</span>
-<span class="fc bfc" id="L379" title="All 2 branches covered.">            if (lastByte &lt; 0) {</span>
-<span class="fc" id="L380">                break;</span>
+<span class="fc" id="L401">            lastByte = read();</span>
+<span class="fc bfc" id="L402" title="All 2 branches covered.">            if (lastByte &lt; 0) {</span>
+<span class="fc" id="L403">                break;</span>
             }
         }
         // fraction part.
-<span class="fc bfc" id="L384" title="All 2 branches covered.">        if (lastByte == '.') {</span>
-<span class="fc" id="L385">            ++len;</span>
+<span class="fc bfc" id="L407" title="All 2 branches covered.">        if (lastByte == '.') {</span>
+<span class="fc" id="L408">            ++len;</span>
             // numbers are terminated by first non-numeric character.
-<span class="fc" id="L387">            lastByte = read();</span>
-<span class="pc bpc" id="L388" title="1 of 2 branches missed.">            if (lastByte &gt;= 0) {</span>
-<span class="fc bfc" id="L389" title="All 4 branches covered.">                while (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') {</span>
-<span class="fc" id="L390">                    ++len;</span>
+<span class="fc" id="L410">            lastByte = read();</span>
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">            if (lastByte &gt;= 0) {</span>
+<span class="fc bfc" id="L412" title="All 4 branches covered.">                while (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') {</span>
+<span class="fc" id="L413">                    ++len;</span>
                     // numbers are terminated by first non-numeric character.
-<span class="fc" id="L392">                    lastByte = read();</span>
-<span class="fc bfc" id="L393" title="All 2 branches covered.">                    if (lastByte &lt; 0) {</span>
-<span class="fc" id="L394">                        break;</span>
+<span class="fc" id="L415">                    lastByte = read();</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">                    if (lastByte &lt; 0) {</span>
+<span class="fc" id="L417">                        break;</span>
                     }
                 }
             }
         }
         // exponent part.
-<span class="fc bfc" id="L400" title="All 4 branches covered.">        if (lastByte == 'e' || lastByte == 'E') {</span>
-<span class="fc" id="L401">            ++len;</span>
+<span class="fc bfc" id="L423" title="All 4 branches covered.">        if (lastByte == 'e' || lastByte == 'E') {</span>
+<span class="fc" id="L424">            ++len;</span>
             // numbers are terminated by first non-numeric character.
-<span class="fc" id="L403">            lastByte = read();</span>
-<span class="fc bfc" id="L404" title="All 2 branches covered.">            if (lastByte &gt;= 0) {</span>
+<span class="fc" id="L426">            lastByte = read();</span>
+<span class="fc bfc" id="L427" title="All 2 branches covered.">            if (lastByte &gt;= 0) {</span>
                 // The exponent can be explicitly prefixed with both '+'
                 // and '-'.
-<span class="fc bfc" id="L407" title="All 4 branches covered.">                if (lastByte == '-' || lastByte == '+') {</span>
-<span class="fc" id="L408">                    ++len;</span>
+<span class="fc bfc" id="L430" title="All 4 branches covered.">                if (lastByte == '-' || lastByte == '+') {</span>
+<span class="fc" id="L431">                    ++len;</span>
                     // numbers are terminated by first non-numeric character.
-<span class="fc" id="L410">                    lastByte = read();</span>
+<span class="fc" id="L433">                    lastByte = read();</span>
                 }
 
-<span class="pc bpc" id="L413" title="1 of 4 branches missed.">                if (lastByte &lt; '0' || '9' &lt; lastByte) {</span>
-<span class="fc" id="L414">                    throw failure(startLineNo, startLinePos, len + 1, &quot;Missing exponent value&quot;);</span>
+<span class="pc bpc" id="L436" title="1 of 4 branches missed.">                if (lastByte &lt; '0' || '9' &lt; lastByte) {</span>
+<span class="fc" id="L437">                    throw failure(startLineNo, startLinePos, len + 1, &quot;Missing exponent value&quot;);</span>
                 }
 
-<span class="fc bfc" id="L417" title="All 4 branches covered.">                while (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') {</span>
-<span class="fc" id="L418">                    ++len;</span>
+<span class="fc bfc" id="L440" title="All 4 branches covered.">                while (lastByte &gt;= '0' &amp;&amp; lastByte &lt;= '9') {</span>
+<span class="fc" id="L441">                    ++len;</span>
                     // numbers are terminated by first non-numeric character.
-<span class="fc" id="L420">                    lastByte = read();</span>
-<span class="fc bfc" id="L421" title="All 2 branches covered.">                    if (lastByte &lt; 0) {</span>
-<span class="fc" id="L422">                        break;</span>
+<span class="fc" id="L443">                    lastByte = read();</span>
+<span class="fc bfc" id="L444" title="All 2 branches covered.">                    if (lastByte &lt; 0) {</span>
+<span class="fc" id="L445">                        break;</span>
                     }
                 }
             } else {
-<span class="fc" id="L426">                throw failure(startLineNo, startLinePos, len,</span>
+<span class="fc" id="L449">                throw failure(startLineNo, startLinePos, len,</span>
                               &quot;Unexpected end of stream after exponent indicator&quot;);
             }
         }
 
-<span class="fc" id="L431">        return validateAfterNumber(lastByte, startOffset, startLinePos, len);</span>
+<span class="fc" id="L454">        return validateAfterNumber(lastByte, startOffset, startLinePos, len);</span>
     }
 
     private Token validateAfterNumber(int lastByte, int startOffset, int startLinePos, int len)
             throws TokenizerException {
         // A number must be terminated correctly: End of stream, space, newline
         // or a symbol that may be after a value: ':', ',' ';' '}' ')' ']', '#'.
-<span class="pc bpc" id="L438" title="5 of 24 branches missed.">        if (lastByte &lt; 0 || lastByte == ' ' || lastByte == '\t' || lastByte == '\n' || lastByte == '\r' ||</span>
+<span class="pc bpc" id="L461" title="5 of 24 branches missed.">        if (lastByte &lt; 0 || lastByte == ' ' || lastByte == '\t' || lastByte == '\n' || lastByte == '\r' ||</span>
             lastByte == Token.kKeyValueSep ||
             lastByte == Token.kMessageEnd || lastByte == Token.kListEnd || lastByte == Token.kParamsEnd ||
             lastByte == Token.kLineSep1 || lastByte == Token.kLineSep2 || lastByte == Token.kShellComment) {
-<span class="fc bfc" id="L442" title="All 2 branches covered.">            if (Token.kSymbols.indexOf(lastByte) &gt;= 0) {</span>
-<span class="fc" id="L443">                unread();</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">            if (Token.kSymbols.indexOf(lastByte) &gt;= 0) {</span>
+<span class="fc" id="L466">                unread();</span>
             }
-<span class="fc" id="L445">            return token(startOffset, len, startLinePos);</span>
+<span class="fc" id="L468">            return token(startOffset, len, startLinePos);</span>
         } else {
             // This is safe since line breaks are valid.
-<span class="fc" id="L448">            ++len;</span>
-<span class="fc" id="L449">            Token token = token(startOffset, len, startLinePos);</span>
-<span class="fc" id="L450">            throw failure(token,</span>
+<span class="fc" id="L471">            ++len;</span>
+<span class="fc" id="L472">            Token token = token(startOffset, len, startLinePos);</span>
+<span class="fc" id="L473">            throw failure(token,</span>
                           &quot;Invalid termination of number: '%s'&quot;,
-<span class="fc" id="L452">                          Strings.escape(token.asString()));</span>
+<span class="fc" id="L475">                          Strings.escape(token.asString()));</span>
         }
 
     }
 
     private Token nextIdentifier() throws TokenizerException {
-<span class="fc" id="L458">        int startOffset = readOffset;</span>
-<span class="fc" id="L459">        int startLinePos = linePos;</span>
-<span class="fc" id="L460">        int startLineNo = lineNo;</span>
+<span class="fc" id="L481">        int startOffset = readOffset;</span>
+<span class="fc" id="L482">        int startLinePos = linePos;</span>
+<span class="fc" id="L483">        int startLineNo = lineNo;</span>
 
-<span class="fc" id="L462">        int len = 1, r;</span>
-<span class="fc" id="L463">        boolean dot = false;</span>
-<span class="pc bpc" id="L464" title="1 of 2 branches missed.">        while ((r = read()) != -1) {</span>
-<span class="fc bfc" id="L465" title="All 2 branches covered.">            if (r == '.') {</span>
-<span class="fc" id="L466">                ++len;</span>
-<span class="fc bfc" id="L467" title="All 2 branches covered.">                if (dot) {</span>
-<span class="fc" id="L468">                    throw failure(startLineNo, startLinePos, len,</span>
+<span class="fc" id="L485">        int len = 1, r;</span>
+<span class="fc" id="L486">        boolean dot = false;</span>
+<span class="pc bpc" id="L487" title="1 of 2 branches missed.">        while ((r = read()) != -1) {</span>
+<span class="fc bfc" id="L488" title="All 2 branches covered.">            if (r == '.') {</span>
+<span class="fc" id="L489">                ++len;</span>
+<span class="fc bfc" id="L490" title="All 2 branches covered.">                if (dot) {</span>
+<span class="fc" id="L491">                    throw failure(startLineNo, startLinePos, len,</span>
                                   &quot;Identifier with double '.'&quot;);
                 }
-<span class="fc" id="L471">                dot = true;</span>
-<span class="fc" id="L472">                continue;</span>
-<span class="fc bfc" id="L473" title="All 2 branches covered.">            } else if (dot) {</span>
-<span class="pc bpc" id="L474" title="5 of 10 branches missed.">                if (!(r == '_' ||</span>
+<span class="fc" id="L494">                dot = true;</span>
+<span class="fc" id="L495">                continue;</span>
+<span class="fc bfc" id="L496" title="All 2 branches covered.">            } else if (dot) {</span>
+<span class="pc bpc" id="L497" title="5 of 10 branches missed.">                if (!(r == '_' ||</span>
                       (r &gt;= 'a' &amp;&amp; r &lt;= 'z') ||
                       (r &gt;= 'A' &amp;&amp; r &lt;= 'Z'))) {
-<span class="pc bpc" id="L477" title="1 of 4 branches missed.">                    if (r &gt;= '0' &amp;&amp; r &lt;= '9') {</span>
-<span class="fc" id="L478">                        throw failure(startLineNo, startLinePos, len + 1,</span>
+<span class="pc bpc" id="L500" title="1 of 4 branches missed.">                    if (r &gt;= '0' &amp;&amp; r &lt;= '9') {</span>
+<span class="fc" id="L501">                        throw failure(startLineNo, startLinePos, len + 1,</span>
                                      &quot;Identifier part starting with digit '&quot; + ((char) r) + &quot;'&quot;);
                     } else {
-<span class="fc" id="L481">                        throw failure(startLineNo, startLinePos, len,</span>
+<span class="fc" id="L504">                        throw failure(startLineNo, startLinePos, len,</span>
                                       &quot;Identifier with trailing '.'&quot;);
                     }
                 }
-<span class="fc" id="L485">                ++len;</span>
-<span class="fc" id="L486">                dot = false;</span>
-<span class="fc" id="L487">                continue;</span>
-<span class="fc bfc" id="L488" title="All 14 branches covered.">            } else if (r == '_' ||</span>
+<span class="fc" id="L508">                ++len;</span>
+<span class="fc" id="L509">                dot = false;</span>
+<span class="fc" id="L510">                continue;</span>
+<span class="fc bfc" id="L511" title="All 14 branches covered.">            } else if (r == '_' ||</span>
                        (r &gt;= '0' &amp;&amp; r &lt;= '9') ||
                        (r &gt;= 'a' &amp;&amp; r &lt;= 'z') ||
                        (r &gt;= 'A' &amp;&amp; r &lt;= 'Z')) {
-<span class="fc" id="L492">                ++len;</span>
-<span class="fc" id="L493">                continue;</span>
+<span class="fc" id="L515">                ++len;</span>
+<span class="fc" id="L516">                continue;</span>
             }
 
-<span class="fc" id="L496">            unread();</span>
-<span class="fc" id="L497">            break;</span>
+<span class="fc" id="L519">            unread();</span>
+<span class="fc" id="L520">            break;</span>
         }
 
-<span class="pc bpc" id="L500" title="2 of 12 branches missed.">        if (r == -1 || r == ' ' || r == '\t' || r == '\n' || r == '\r' || Token.kSymbols.indexOf(r) &gt;= 0) {</span>
-<span class="fc" id="L501">            return token(startOffset, len, startLinePos);</span>
+<span class="pc bpc" id="L523" title="2 of 12 branches missed.">        if (r == -1 || r == ' ' || r == '\t' || r == '\n' || r == '\r' || Token.kSymbols.indexOf(r) &gt;= 0) {</span>
+<span class="fc" id="L524">            return token(startOffset, len, startLinePos);</span>
         } else {
-<span class="fc" id="L503">            throw failure(startLineNo, startLinePos, len,</span>
-<span class="fc" id="L504">                          &quot;Wrongly terminated identifier: '%s'&quot;, escapeChar(r));</span>
+<span class="fc" id="L526">            throw failure(startLineNo, startLinePos, len,</span>
+<span class="fc" id="L527">                          &quot;Wrongly terminated identifier: '%s'&quot;, escapeChar(r));</span>
         }
     }
 
@@ -513,32 +536,36 @@ public class Tokenizer extends InputStream {
      */
     @Nonnull
     public String getLine(final int theLine) {
-<span class="pc bpc" id="L516" title="1 of 2 branches missed.">        if (theLine &lt; 1) {</span>
-<span class="nc" id="L517">            throw new IllegalArgumentException(theLine + &quot; is not a valid line number. Must be 1 .. N&quot;);</span>
+<span class="pc bpc" id="L539" title="1 of 2 branches missed.">        if (theLine &lt; 1) {</span>
+<span class="nc" id="L540">            throw new IllegalArgumentException(theLine + &quot; is not a valid line number. Must be 1 .. N&quot;);</span>
         }
-<span class="fc" id="L519">        int originalReadOffset = readOffset;</span>
-<span class="fc" id="L520">        int originalLineNo = lineNo;</span>
-<span class="fc" id="L521">        int originalLinePos = linePos;</span>
+<span class="fc" id="L542">        int originalReadOffset = readOffset;</span>
+<span class="fc" id="L543">        int originalLineNo = lineNo;</span>
+<span class="fc" id="L544">        int originalLinePos = linePos;</span>
 
         // reset read position.
-<span class="fc" id="L524">        readOffset = -1;</span>
-<span class="fc" id="L525">        lineNo = 1;</span>
-<span class="fc" id="L526">        linePos = 0;</span>
+<span class="fc" id="L547">        readOffset = -1;</span>
+<span class="fc" id="L548">        lineNo = 1;</span>
+<span class="fc" id="L549">        linePos = 0;</span>
 
         try {
-<span class="fc" id="L529">            int line = theLine;</span>
-<span class="fc bfc" id="L530" title="All 2 branches covered.">            while (--line &gt; 0) {</span>
-<span class="pc bpc" id="L531" title="1 of 2 branches missed.">                if (!IOUtils.skipUntil(this, (byte) '\n')) {</span>
-<span class="nc" id="L532">                    throw new IOException(&quot;No such line &quot; + theLine);</span>
+<span class="fc" id="L552">            int line = theLine;</span>
+<span class="fc bfc" id="L553" title="All 2 branches covered.">            while (--line &gt; 0) {</span>
+                int c;
+<span class="pc bpc" id="L555" title="1 of 2 branches missed.">                while ((c = this.read()) &gt;= 0) {</span>
+<span class="pc bpc" id="L556" title="1 of 2 branches missed.">                    if (c == '\n') break;</span>
                 }
-            }
-<span class="fc" id="L535">            return IOUtils.readString(this, &quot;\n&quot;);</span>
-<span class="nc" id="L536">        } catch (IOException e) {</span>
-<span class="nc" id="L537">            throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="pc bpc" id="L558" title="1 of 2 branches missed.">                if (c &lt; 0) {</span>
+<span class="nc" id="L559">                    throw new IOException(&quot;No such line &quot; + theLine);</span>
+                }
+<span class="fc" id="L561">            }</span>
+<span class="fc" id="L562">            return IOUtils.readString(this, &quot;\n&quot;);</span>
+<span class="nc" id="L563">        } catch (IOException e) {</span>
+<span class="nc" id="L564">            throw new UncheckedIOException(e.getMessage(), e);</span>
         } finally {
-<span class="pc" id="L539">            readOffset = originalReadOffset;</span>
-<span class="pc" id="L540">            lineNo = originalLineNo;</span>
-<span class="pc" id="L541">            linePos = originalLinePos;</span>
+<span class="pc" id="L566">            readOffset = originalReadOffset;</span>
+<span class="pc" id="L567">            lineNo = originalLineNo;</span>
+<span class="pc" id="L568">            linePos = originalLinePos;</span>
         }
     }
 
@@ -552,28 +579,28 @@ public class Tokenizer extends InputStream {
      * @throws TokenizerException On illegal content.
      */
     public String readBinary(char end) throws IOException {
-<span class="fc" id="L555">        int startOffset = readOffset + 1;</span>
-<span class="fc" id="L556">        int startLinePos = linePos;</span>
-<span class="fc" id="L557">        int startLineNo = lineNo;</span>
+<span class="fc" id="L582">        int startOffset = readOffset + 1;</span>
+<span class="fc" id="L583">        int startLinePos = linePos;</span>
+<span class="fc" id="L584">        int startLineNo = lineNo;</span>
 
         int r;
-<span class="pc bpc" id="L560" title="1 of 2 branches missed.">        while ((r = read()) != -1) {</span>
-<span class="fc bfc" id="L561" title="All 2 branches covered.">            if (r == end) {</span>
-<span class="fc" id="L562">                return new Slice(buffer, startOffset, readOffset - startOffset).asString();</span>
-<span class="pc bpc" id="L563" title="4 of 8 branches missed.">            } else if (r == ' ' || r == '\t' || r == '\n' || r == '\r') {</span>
-<span class="nc" id="L564">                throw failure(startLineNo, startLinePos, linePos - startLinePos + 1, &quot;Illegal char '%s' in binary&quot;, escapeChar(r));</span>
+<span class="pc bpc" id="L587" title="1 of 2 branches missed.">        while ((r = read()) != -1) {</span>
+<span class="fc bfc" id="L588" title="All 2 branches covered.">            if (r == end) {</span>
+<span class="fc" id="L589">                return new CharSlice(buffer, startOffset, readOffset - startOffset).asString();</span>
+<span class="pc bpc" id="L590" title="4 of 8 branches missed.">            } else if (r == ' ' || r == '\t' || r == '\n' || r == '\r') {</span>
+<span class="nc" id="L591">                throw failure(startLineNo, startLinePos, linePos - startLinePos + 1, &quot;Illegal char '%s' in binary&quot;, escapeChar(r));</span>
             }
         }
 
         // throw in with the old start.
-<span class="nc" id="L569">        throw failure(startLineNo, startLinePos, linePos - startLinePos + 1, &quot;unexpected end of stream in binary&quot;);</span>
+<span class="nc" id="L596">        throw failure(startLineNo, startLinePos, linePos - startLinePos + 1, &quot;unexpected end of stream in binary&quot;);</span>
     }
 
     @Nonnull
     public TokenizerException failure(Token token, String message, Object... params) {
-<span class="fc" id="L574">        return failure(token.getLineNo(),</span>
-<span class="fc" id="L575">                       token.getLinePos(),</span>
-<span class="fc" id="L576">                       token.length(),</span>
+<span class="fc" id="L601">        return failure(token.getLineNo(),</span>
+<span class="fc" id="L602">                       token.getLinePos(),</span>
+<span class="fc" id="L603">                       token.length(),</span>
                        message, params);
     }
 
@@ -583,10 +610,10 @@ public class Tokenizer extends InputStream {
                                          int length,
                                          String format,
                                          Object... params) {
-<span class="fc" id="L586">        return failure(format, params).setLineNo(startLineNo)</span>
-<span class="fc" id="L587">                                      .setLinePos(startLinePos)</span>
-<span class="fc" id="L588">                                      .setLine(getLine(startLineNo))</span>
-<span class="fc" id="L589">                                      .setLength(length);</span>
+<span class="fc" id="L613">        return failure(format, params).setLineNo(startLineNo)</span>
+<span class="fc" id="L614">                                      .setLinePos(startLinePos)</span>
+<span class="fc" id="L615">                                      .setLine(getLine(startLineNo))</span>
+<span class="fc" id="L616">                                      .setLength(length);</span>
     }
 
     @Nonnull
@@ -596,26 +623,26 @@ public class Tokenizer extends InputStream {
                                          int length,
                                          String message,
                                          Object... params) {
-<span class="nc" id="L599">        return failure(startLineNo, startLinePos, length, message, params).initCause(cause);</span>
+<span class="nc" id="L626">        return failure(startLineNo, startLinePos, length, message, params).initCause(cause);</span>
     }
 
     @Nonnull
     protected TokenizerException failure(String format, Object ... params) {
-<span class="fc" id="L604">        return new TokenizerException(format, params);</span>
+<span class="fc" id="L631">        return new TokenizerException(format, params);</span>
     }
 
     @Nonnull
     protected Token token(int off, int len, int linePos) {
-<span class="fc" id="L609">        return token(off, len, lineNo, linePos);</span>
+<span class="fc" id="L636">        return token(off, len, lineNo, linePos);</span>
     }
 
     @Nonnull
     public Token token(int off, int len, int lineNo, int linePos) {
-<span class="fc" id="L614">        return new Token(buffer, off, len, lineNo, linePos);</span>
+<span class="fc" id="L641">        return new Token(buffer, off, len, lineNo, linePos);</span>
     }
 
     private static String escapeChar(int c) {
-<span class="fc" id="L618">        return Strings.escape(new String(new char[]{(char) c}));</span>
+<span class="fc" id="L645">        return Strings.escape(new String(new char[]{(char) c}));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
