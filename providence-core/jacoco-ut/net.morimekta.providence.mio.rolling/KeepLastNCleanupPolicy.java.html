@@ -1,4 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KeepLastNCleanupPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">KeepLastNCleanupPolicy.java</span></div><h1>KeepLastNCleanupPolicy.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.mio.rolling;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KeepLastNCleanupPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">KeepLastNCleanupPolicy.java</span></div><h1>KeepLastNCleanupPolicy.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2017 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.mio.rolling;
 
 import net.morimekta.providence.mio.RollingFileMessageWriter;
 
@@ -8,57 +28,62 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Cleanup policy that keeps the N &lt;i&gt;previous&lt;/i&gt; files. This means
+ * there should be no more than &lt;code&gt;N + 1&lt;/code&gt; files or the writer
+ * at any time.
+ */
 public class KeepLastNCleanupPolicy implements RollingFileMessageWriter.CleanupPolicy {
     private final int     keepLastN;
     private final Pattern filePattern;
 
     public KeepLastNCleanupPolicy(int keepLastN,
                                   String filePattern) {
-<span class="fc" id="L17">        this(keepLastN, Pattern.compile(filePattern));</span>
-<span class="fc" id="L18">    }</span>
+<span class="fc" id="L42">        this(keepLastN, Pattern.compile(filePattern));</span>
+<span class="fc" id="L43">    }</span>
 
     public KeepLastNCleanupPolicy(int keepLastN,
-<span class="fc" id="L21">                                  Pattern filePattern) {</span>
-<span class="fc" id="L22">        this.keepLastN = keepLastN;</span>
-<span class="fc" id="L23">        this.filePattern = filePattern;</span>
-<span class="fc" id="L24">    }</span>
+<span class="fc" id="L46">                                  Pattern filePattern) {</span>
+<span class="fc" id="L47">        this.keepLastN = keepLastN;</span>
+<span class="fc" id="L48">        this.filePattern = filePattern;</span>
+<span class="fc" id="L49">    }</span>
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public List&lt;String&gt; getFilesToDelete(@Nonnull List&lt;String&gt; candidateFiles,
                                          @Nonnull String currentFileName) {
-<span class="fc" id="L31">        List&lt;String&gt; out = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L32">        List&lt;String&gt; candidatesBeforeFiles = candidateFiles</span>
-<span class="fc" id="L33">                .stream()</span>
-<span class="fc" id="L34">                .filter(f -&gt; filePattern.matcher(f).matches())</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">                .filter(f -&gt; f.compareTo(currentFileName) &lt; 0)</span>
-<span class="fc" id="L36">                .sorted()</span>
-<span class="fc" id="L37">                .collect(Collectors.toList());</span>
-<span class="fc" id="L38">        List&lt;String&gt; candidatesAfterFiles = candidateFiles</span>
-<span class="fc" id="L39">                .stream()</span>
-<span class="fc" id="L40">                .filter(f -&gt; filePattern.matcher(f).matches())</span>
-<span class="fc bfc" id="L41" title="All 2 branches covered.">                .filter(f -&gt; f.compareTo(currentFileName) &gt; 0)</span>
-<span class="fc" id="L42">                .sorted()</span>
-<span class="fc" id="L43">                .collect(Collectors.toList());</span>
+<span class="fc" id="L56">        List&lt;String&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L57">        List&lt;String&gt; candidatesBeforeFiles = candidateFiles</span>
+<span class="fc" id="L58">                .stream()</span>
+<span class="fc" id="L59">                .filter(f -&gt; filePattern.matcher(f).matches())</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                .filter(f -&gt; f.compareTo(currentFileName) &lt; 0)</span>
+<span class="fc" id="L61">                .sorted()</span>
+<span class="fc" id="L62">                .collect(Collectors.toList());</span>
+<span class="fc" id="L63">        List&lt;String&gt; candidatesAfterFiles = candidateFiles</span>
+<span class="fc" id="L64">                .stream()</span>
+<span class="fc" id="L65">                .filter(f -&gt; filePattern.matcher(f).matches())</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                .filter(f -&gt; f.compareTo(currentFileName) &gt; 0)</span>
+<span class="fc" id="L67">                .sorted()</span>
+<span class="fc" id="L68">                .collect(Collectors.toList());</span>
 
         // including N as this list does not contain the current file.
-<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (candidatesAfterFiles.size() &gt; 0 &amp;&amp;</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">            candidatesAfterFiles.size() + candidatesBeforeFiles.size() &gt;= keepLastN) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (candidatesAfterFiles.size() &gt; 0 &amp;&amp;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            candidatesAfterFiles.size() + candidatesBeforeFiles.size() &gt;= keepLastN) {</span>
             // First remove files sorted AFTER the current file.
-<span class="fc" id="L49">            int remove = (candidatesBeforeFiles.size() + candidatesAfterFiles.size()) - keepLastN + 1;</span>
-<span class="fc" id="L50">            out.addAll(candidatesAfterFiles.stream()</span>
-<span class="fc" id="L51">                                           .limit(remove)</span>
-<span class="fc" id="L52">                                           .collect(Collectors.toList()));</span>
+<span class="fc" id="L74">            int remove = (candidatesBeforeFiles.size() + candidatesAfterFiles.size()) - keepLastN + 1;</span>
+<span class="fc" id="L75">            out.addAll(candidatesAfterFiles.stream()</span>
+<span class="fc" id="L76">                                           .limit(remove)</span>
+<span class="fc" id="L77">                                           .collect(Collectors.toList()));</span>
         }
 
         // including N as this list does not contain the current file.
-<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (candidatesBeforeFiles.size() &gt;= keepLastN) {</span>
-<span class="fc" id="L57">            int remove = candidatesBeforeFiles.size() - keepLastN + 1;</span>
-<span class="fc" id="L58">            out.addAll(candidatesBeforeFiles.subList(0, remove));</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (candidatesBeforeFiles.size() &gt;= keepLastN) {</span>
+<span class="fc" id="L82">            int remove = candidatesBeforeFiles.size() - keepLastN + 1;</span>
+<span class="fc" id="L83">            out.addAll(candidatesBeforeFiles.subList(0, remove));</span>
         }
 
-<span class="fc" id="L61">        return out;</span>
+<span class="fc" id="L86">        return out;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

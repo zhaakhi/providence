@@ -25,10 +25,15 @@ import net.morimekta.providence.serializer.pretty.Token;
 import net.morimekta.providence.serializer.pretty.Tokenizer;
 import net.morimekta.providence.serializer.pretty.TokenizerException;
 import net.morimekta.util.Strings;
+import net.morimekta.util.io.IOUtils;
+import net.morimekta.util.io.Utf8StreamReader;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.util.Stack;
+import java.util.regex.Pattern;
 
 /**
  * Specialization of the 'pretty' tokenizer to make it handle some
@@ -59,35 +64,101 @@ public class ThriftTokenizer extends Tokenizer {
     public static final String kBlockCommentStart = &quot;/*&quot;;
     public static final String kBlockCommentEnd   = &quot;*/&quot;;
 
-    public ThriftTokenizer(InputStream in) throws IOException {
-<span class="fc" id="L63">        super(in, false);</span>
-<span class="fc" id="L64">    }</span>
+    public ThriftTokenizer(InputStream in) {
+<span class="fc" id="L68">        this(new Utf8StreamReader(in));</span>
+<span class="fc" id="L69">    }</span>
 
-    protected Token nextSymbol(int lastByte) throws TokenizerException {
-<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (lastByte == '/') {</span>
-<span class="fc" id="L68">            int startOffset = readOffset;</span>
-<span class="fc" id="L69">            int startLineNo = lineNo;</span>
-<span class="fc" id="L70">            int startLinePos = linePos;</span>
+    public ThriftTokenizer(Reader reader) {
+<span class="fc" id="L72">        super(reader, Tokenizer.DEFAULT_BUFFER_SIZE, true);</span>
+<span class="fc" id="L73">    }</span>
 
-<span class="fc" id="L72">            int next = read();</span>
-<span class="pc bpc" id="L73" title="1 of 2 branches missed.">            if (next &lt; 0) {</span>
-<span class="nc" id="L74">                throw failure(startLineNo, startLinePos, 1,</span>
-                              &quot;Expected java-style comment, got end of file&quot;);
-            }
-<span class="pc bpc" id="L77" title="1 of 4 branches missed.">            if (next == '/' || next == '*') {</span>
-<span class="fc" id="L78">                return token(startOffset, 2, startLinePos);</span>
-            }
-<span class="nc" id="L80">            throw failure(startLineNo, startLinePos, 2,</span>
-                          &quot;Expected java-style comment, got '%s' after '/'&quot;,
-<span class="nc" id="L82">                          Strings.escape((char) next));</span>
-        }
-<span class="fc" id="L84">        return super.nextSymbol(lastByte);</span>
+    @Nonnull
+    private Token token(int off, int len, int linePos) {
+<span class="fc" id="L77">        return token(off, len, lineNo, linePos);</span>
     }
+
+    @Nonnull
+    private Token token(int off, int len, int lineNo, int linePos) {
+<span class="fc" id="L82">        return new Token(buffer, off, len, lineNo, linePos);</span>
+    }
+
+    @Nonnull
+    protected Token nextSymbol() throws IOException {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (lastChar == '/') {</span>
+<span class="fc" id="L88">            int startOffset = bufferOffset;</span>
+<span class="fc" id="L89">            int startLinePos = linePos;</span>
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">            if (!readNextChar()) {</span>
+<span class="fc" id="L92">                throw eof(&quot;Expected java-style comment, got end of file&quot;);</span>
+            }
+<span class="fc bfc" id="L94" title="All 4 branches covered.">            if (lastChar == '/' || lastChar == '*') {</span>
+<span class="fc" id="L95">                lastChar = 0;</span>
+<span class="fc" id="L96">                return token(startOffset, 2, startLinePos);</span>
+            }
+<span class="fc" id="L98">            throw failure(lineNo, startLinePos, 2,</span>
+                          &quot;Expected java-style comment, got '%s' after '/'&quot;,
+<span class="fc" id="L100">                          Strings.escape((char) lastChar));</span>
+        }
+<span class="fc" id="L102">        return super.nextSymbol();</span>
+    }
+
+    public String parseDocBlock() throws IOException {
+<span class="fc" id="L106">        String block = IOUtils.readString(this, ThriftTokenizer.kBlockCommentEnd).trim();</span>
+<span class="fc" id="L107">        String[] lines = block.split(&quot;\\r?\\n&quot;);</span>
+<span class="fc" id="L108">        StringBuilder builder = new StringBuilder();</span>
+
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (String line : lines) {</span>
+<span class="fc" id="L111">            builder.append(RE_BLOCK_LINE.matcher(line).replaceFirst(&quot;&quot;));</span>
+<span class="fc" id="L112">            builder.append('\n');</span>
+        }
+<span class="fc" id="L114">        return builder.toString()</span>
+<span class="fc" id="L115">                      .trim();</span>
+    }
+
+    public Token parseValue() throws IOException {
+<span class="fc" id="L119">        Stack&lt;Character&gt; enclosures = new Stack&lt;&gt;();</span>
+
+<span class="fc" id="L121">        int startLineNo = 0;</span>
+<span class="fc" id="L122">        int startLinePos = 0;</span>
+<span class="fc" id="L123">        int offset = -1;</span>
+        while (true) {
+<span class="fc" id="L125">            Token token = expect(&quot;const value&quot;);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (offset &lt; 0) {</span>
+<span class="fc" id="L127">                offset = token.getOffset();</span>
+<span class="fc" id="L128">                startLineNo = token.getLineNo();</span>
+<span class="fc" id="L129">                startLinePos = token.getLinePos();</span>
+            }
+
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">            if (token.strEquals(kBlockCommentStart)) {</span>
+<span class="nc" id="L133">                parseDocBlock();  // ignore.</span>
+<span class="nc" id="L134">                continue;</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            } else if (token.strEquals(kLineCommentStart)) {</span>
+<span class="nc" id="L136">                IOUtils.readString(this, Token.kNewLine);</span>
+<span class="nc" id="L137">                continue;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">            } else if (token.isSymbol(Token.kMessageStart)) {</span>
+<span class="fc" id="L139">                enclosures.push(Token.kMessageEnd);</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            } else if (token.isSymbol(Token.kListStart)) {</span>
+<span class="fc" id="L141">                enclosures.push(Token.kListEnd);</span>
+<span class="fc bfc" id="L142" title="All 4 branches covered.">            } else if ((token.isSymbol(Token.kMessageEnd) || token.isSymbol(Token.kListEnd)) &amp;&amp;</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">                       enclosures.peek().equals(token.charAt(0))) {</span>
+<span class="fc" id="L144">                enclosures.pop();</span>
+            }
+
+<span class="fc bfc" id="L147" title="All 2 branches covered.">            if (enclosures.isEmpty()) {</span>
+<span class="fc" id="L148">                return token(offset,</span>
+<span class="fc" id="L149">                             (token.getOffset() - offset) + token.length(),</span>
+                             startLineNo,
+                             startLinePos);
+            }
+<span class="fc" id="L153">        }</span>
+    }
+
+<span class="fc" id="L156">    private final static Pattern RE_BLOCK_LINE = Pattern.compile(&quot;^([\\s]*[*])?[\\s]?&quot;);</span>
 
     @Nonnull
     @Override
     protected TokenizerException failure(String format, Object... params) {
-<span class="fc" id="L90">        return new ParseException(format, params);</span>
+<span class="fc" id="L161">        return new ParseException(format, params);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

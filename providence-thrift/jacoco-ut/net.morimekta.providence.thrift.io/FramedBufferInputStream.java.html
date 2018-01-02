@@ -60,113 +60,114 @@ public class FramedBufferInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (buffer.limit() == 0) {</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">            if (readFrame() &lt; 0) {</span>
-<span class="fc" id="L65">                return -1;</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (buffer.limit() == 0) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (readFrame() &lt; 0) {</span>
+<span class="nc" id="L65">                return -1;</span>
             }
         }
-<span class="fc" id="L68">        return intValue(buffer.get());</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (buffer.remaining() &lt; 1) return -1;</span>
+<span class="nc" id="L69">        return intValue(buffer.get());</span>
     }
 
     private static int intValue(byte b) {
-<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (b &lt; 0) return b + 0x100;</span>
-<span class="fc" id="L73">        return b;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (b &lt; 0) return b + 0x100;</span>
+<span class="nc" id="L74">        return b;</span>
     }
 
     @Override
     public int read(@Nonnull byte[] data) throws IOException {
-<span class="fc" id="L78">        return read(data, 0, data.length);</span>
+<span class="fc" id="L79">        return read(data, 0, data.length);</span>
     }
 
     @Override
     public int read(@Nonnull byte[] data, int off, int len) throws IOException {
-<span class="pc bpc" id="L83" title="2 of 4 branches missed.">        if (off &lt; 0 || len &lt; 0) {</span>
-<span class="nc" id="L84">            throw new IOException();</span>
+<span class="pc bpc" id="L84" title="2 of 4 branches missed.">        if (off &lt; 0 || len &lt; 0) {</span>
+<span class="nc" id="L85">            throw new IOException();</span>
         }
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (off + len &gt; data.length) {</span>
-<span class="nc" id="L87">            throw new IOException();</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (off + len &gt; data.length) {</span>
+<span class="nc" id="L88">            throw new IOException();</span>
         }
 
-<span class="fc" id="L90">        int pos = 0;</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">        while (pos &lt; len) {</span>
+<span class="fc" id="L91">        int pos = 0;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        while (pos &lt; len) {</span>
             // nothing is read yet.
-<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (buffer.limit() == 0) {</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                if (readFrame() &lt; 0) {</span>
-<span class="nc" id="L95">                    return pos;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (buffer.limit() == 0) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                if (readFrame() &lt; 0) {</span>
+<span class="fc" id="L96">                    return pos;</span>
                 }
             }
-<span class="fc bfc" id="L98" title="All 2 branches covered.">            if (buffer.remaining() == 0) {</span>
-<span class="fc" id="L99">                return pos;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (buffer.remaining() == 0) {</span>
+<span class="fc" id="L100">                return pos;</span>
             }
 
-<span class="fc" id="L102">            int remaining = buffer.remaining();</span>
-<span class="fc" id="L103">            int readLen = min(len - pos, remaining);</span>
-<span class="fc" id="L104">            buffer.get(data, off + pos, readLen);</span>
-<span class="fc" id="L105">            pos += readLen;</span>
-<span class="fc" id="L106">        }</span>
+<span class="fc" id="L103">            int remaining = buffer.remaining();</span>
+<span class="fc" id="L104">            int readLen = min(len - pos, remaining);</span>
+<span class="fc" id="L105">            buffer.get(data, off + pos, readLen);</span>
+<span class="fc" id="L106">            pos += readLen;</span>
+<span class="fc" id="L107">        }</span>
 
-<span class="fc" id="L108">        return pos;</span>
+<span class="fc" id="L109">        return pos;</span>
     }
 
     /**
      * Skip the rest of the current frame, regardless of how much has bean read / used.
      */
     public void nextFrame() {
-<span class="fc" id="L115">        buffer.rewind();</span>
-<span class="fc" id="L116">        buffer.limit(0);</span>
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L116">        buffer.rewind();</span>
+<span class="fc" id="L117">        buffer.limit(0);</span>
+<span class="fc" id="L118">    }</span>
 
     private int readFrame() throws IOException {
-<span class="fc" id="L120">        frameSizeBuffer.rewind();</span>
+<span class="fc" id="L121">        frameSizeBuffer.rewind();</span>
 
-<span class="fc" id="L122">        in.read(frameSizeBuffer);</span>
-<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (frameSizeBuffer.position() == 0) {</span>
-<span class="fc" id="L124">            return -1;</span>
+<span class="fc" id="L123">        in.read(frameSizeBuffer);</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (frameSizeBuffer.position() == 0) {</span>
+<span class="fc" id="L125">            return -1;</span>
         }
-<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (frameSizeBuffer.position() &lt; Integer.BYTES) {</span>
-<span class="nc" id="L127">            throw new IOException();</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (frameSizeBuffer.position() &lt; Integer.BYTES) {</span>
+<span class="nc" id="L128">            throw new IOException(&quot;Not enough bytes for frame size: &quot; + frameSizeBuffer.position());</span>
         }
 
-<span class="fc" id="L130">        int frameSize = TFramedTransport.decodeFrameSize(frameSizeBuffer.array());</span>
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (frameSize &lt; 1) {</span>
-<span class="nc" id="L132">            throw new IOException(&quot;Invalid frame size &quot; + frameSize);</span>
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        } else if (frameSize &gt; buffer.capacity()) {</span>
-<span class="nc" id="L134">            IOException ex = new IOException(&quot;Frame size too large &quot; + frameSize + &quot; &gt; &quot; + buffer.capacity());</span>
+<span class="fc" id="L131">        int frameSize = TFramedTransport.decodeFrameSize(frameSizeBuffer.array());</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (frameSize &lt; 1) {</span>
+<span class="nc" id="L133">            throw new IOException(&quot;Invalid frame size &quot; + frameSize);</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        } else if (frameSize &gt; buffer.capacity()) {</span>
+<span class="nc" id="L135">            IOException ex = new IOException(&quot;Frame size too large &quot; + frameSize + &quot; &gt; &quot; + buffer.capacity());</span>
             try {
                 // Try to consume the frame so we can continue with the next.
-<span class="nc bnc" id="L137" title="All 2 branches missed.">                while (frameSize &gt; 0) {</span>
-<span class="nc" id="L138">                    buffer.rewind();</span>
-<span class="nc" id="L139">                    buffer.limit(Math.max(frameSize, buffer.capacity()));</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                while (frameSize &gt; 0) {</span>
+<span class="nc" id="L139">                    buffer.rewind();</span>
+<span class="nc" id="L140">                    buffer.limit(Math.max(frameSize, buffer.capacity()));</span>
 
-<span class="nc" id="L141">                    int r = in.read(buffer);</span>
-<span class="nc bnc" id="L142" title="All 2 branches missed.">                    if (r &gt; 0) {</span>
-<span class="nc" id="L143">                        frameSize -= r;</span>
+<span class="nc" id="L142">                    int r = in.read(buffer);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                    if (r &gt; 0) {</span>
+<span class="nc" id="L144">                        frameSize -= r;</span>
                     } else {
                         break;
                     }
-<span class="nc" id="L147">                }</span>
-<span class="nc" id="L148">            } catch (Exception e) {</span>
-<span class="nc" id="L149">                ex.addSuppressed(e);</span>
-<span class="nc" id="L150">            }</span>
+<span class="nc" id="L148">                }</span>
+<span class="nc" id="L149">            } catch (Exception e) {</span>
+<span class="nc" id="L150">                ex.addSuppressed(e);</span>
+<span class="nc" id="L151">            }</span>
 
-<span class="nc" id="L152">            throw ex;</span>
+<span class="nc" id="L153">            throw ex;</span>
         }
 
-<span class="fc" id="L155">        buffer.rewind();</span>
-<span class="fc" id="L156">        buffer.limit(frameSize);</span>
+<span class="fc" id="L156">        buffer.rewind();</span>
+<span class="fc" id="L157">        buffer.limit(frameSize);</span>
 
-<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        while (in.read(buffer) &gt; 0) {</span>
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">            if (buffer.position() == frameSize) {</span>
-<span class="fc" id="L160">                break;</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        while (in.read(buffer) &gt; 0) {</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">            if (buffer.position() == frameSize) {</span>
+<span class="fc" id="L161">                break;</span>
             }
-<span class="nc" id="L162">            LOGGER.debug(&quot;still not enough:  &quot;+ buffer.position() + &quot; of &quot; + frameSize);</span>
+<span class="nc" id="L163">            LOGGER.debug(&quot;still not enough:  &quot;+ buffer.position() + &quot; of &quot; + frameSize);</span>
         }
-<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (buffer.position() &lt; frameSize) {</span>
-<span class="nc" id="L165">            throw new IOException();</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (buffer.position() &lt; frameSize) {</span>
+<span class="nc" id="L166">            throw new IOException();</span>
         }
 
-<span class="fc" id="L168">        buffer.flip();</span>
-<span class="fc" id="L169">        return frameSize;</span>
+<span class="fc" id="L169">        buffer.flip();</span>
+<span class="fc" id="L170">        return frameSize;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

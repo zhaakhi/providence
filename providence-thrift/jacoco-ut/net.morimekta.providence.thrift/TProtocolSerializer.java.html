@@ -120,19 +120,19 @@ class TProtocolSerializer extends Serializer {
     public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     int serialize(@Nonnull OutputStream output, @Nonnull PServiceCall&lt;Message, Field&gt; call)
             throws IOException {
-<span class="nc" id="L123">        CountingOutputStream wrapper = new CountingOutputStream(output);</span>
-<span class="nc" id="L124">        TTransport transport = new TIOStreamTransport(wrapper);</span>
+<span class="fc" id="L123">        CountingOutputStream wrapper = new CountingOutputStream(output);</span>
+<span class="fc" id="L124">        TTransport transport = new TIOStreamTransport(wrapper);</span>
         try {
-<span class="nc" id="L126">            TProtocol protocol = protocolFactory.getProtocol(transport);</span>
-<span class="nc" id="L127">            TMessage tm = new TMessage(call.getMethod(), (byte) call.getType().asInteger(), call.getSequence());</span>
+<span class="fc" id="L126">            TProtocol protocol = protocolFactory.getProtocol(transport);</span>
+<span class="fc" id="L127">            TMessage tm = new TMessage(call.getMethod(), (byte) call.getType().asInteger(), call.getSequence());</span>
 
-<span class="nc" id="L129">            protocol.writeMessageBegin(tm);</span>
-<span class="nc" id="L130">            writeMessage(call.getMessage(), protocol);</span>
-<span class="nc" id="L131">            protocol.writeMessageEnd();</span>
+<span class="fc" id="L129">            protocol.writeMessageBegin(tm);</span>
+<span class="fc" id="L130">            writeMessage(call.getMessage(), protocol);</span>
+<span class="fc" id="L131">            protocol.writeMessageEnd();</span>
 
-<span class="nc" id="L133">            transport.flush();</span>
-<span class="nc" id="L134">            wrapper.flush();</span>
-<span class="nc" id="L135">            return wrapper.getByteCount();</span>
+<span class="fc" id="L133">            transport.flush();</span>
+<span class="fc" id="L134">            wrapper.flush();</span>
+<span class="fc" id="L135">            return wrapper.getByteCount();</span>
 <span class="nc" id="L136">        } catch (TException e) {</span>
 <span class="nc" id="L137">            throw new SerializerException(e, e.getMessage());</span>
         }
@@ -160,275 +160,282 @@ class TProtocolSerializer extends Serializer {
     public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     PServiceCall&lt;Message, Field&gt; deserialize(@Nonnull InputStream input, @Nonnull PService service)
             throws SerializerException {
-<span class="nc" id="L163">        PServiceCallType type = null;</span>
-<span class="nc" id="L164">        TMessage tm = null;</span>
+<span class="fc" id="L163">        PServiceCallType type = null;</span>
+<span class="fc" id="L164">        TMessage tm = null;</span>
         try {
-<span class="nc" id="L166">            TTransport transport = new TIOStreamTransport(input);</span>
-<span class="nc" id="L167">            TProtocol protocol = protocolFactory.getProtocol(transport);</span>
+<span class="fc" id="L166">            TTransport transport = new TIOStreamTransport(input);</span>
+<span class="fc" id="L167">            TProtocol protocol = protocolFactory.getProtocol(transport);</span>
 
-<span class="nc" id="L169">            tm = protocol.readMessageBegin();</span>
+<span class="fc" id="L169">            tm = protocol.readMessageBegin();</span>
 
-<span class="nc" id="L171">            type = PServiceCallType.findById(tm.type);</span>
-<span class="nc bnc" id="L172" title="All 2 branches missed.">            if (type == null) {</span>
-<span class="nc" id="L173">                throw new SerializerException(&quot;Unknown call type for id &quot; + tm.type);</span>
-<span class="nc bnc" id="L174" title="All 2 branches missed.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
-<span class="nc" id="L175">                PApplicationException exception = readMessage(protocol, PApplicationException.kDescriptor);</span>
-<span class="nc" id="L176">                return new PServiceCall(tm.name, type, tm.seqid, exception);</span>
+<span class="fc" id="L171">            type = PServiceCallType.findById(tm.type);</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            if (type == null) {</span>
+<span class="nc" id="L173">                throw new SerializerException(&quot;Unknown call type for id &quot; + tm.type)</span>
+<span class="nc" id="L174">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
+<span class="fc" id="L176">                PApplicationException exception = readMessage(protocol, PApplicationException.kDescriptor);</span>
+<span class="fc" id="L177">                return new PServiceCall(tm.name, type, tm.seqid, exception);</span>
             }
 
-<span class="nc" id="L179">            PServiceMethod method = service.getMethod(tm.name);</span>
-<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (method == null) {</span>
-<span class="nc" id="L181">                throw new SerializerException(&quot;No such method &quot; + tm.name + &quot; on &quot; + service.getQualifiedName());</span>
+<span class="fc" id="L180">            PServiceMethod method = service.getMethod(tm.name);</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">            if (method == null) {</span>
+<span class="nc" id="L182">                throw new SerializerException(&quot;No such method &quot; + tm.name + &quot; on &quot; + service.getQualifiedName())</span>
+<span class="nc" id="L183">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
 
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc bnc" id="L185" title="All 2 branches missed.">            PMessageDescriptor&lt;Message,Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">            PMessageDescriptor&lt;Message,Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
 
-<span class="nc" id="L187">            Message message = readMessage(protocol, descriptor);</span>
+<span class="fc" id="L189">            Message message = readMessage(protocol, descriptor);</span>
 
-<span class="nc" id="L189">            protocol.readMessageEnd();</span>
+<span class="fc" id="L191">            protocol.readMessageEnd();</span>
 
-<span class="nc" id="L191">            return new PServiceCall&lt;&gt;(tm.name, type, tm.seqid, message);</span>
-<span class="nc" id="L192">        } catch (TTransportException e) {</span>
-<span class="nc" id="L193">            throw new SerializerException(e, e.getMessage())</span>
-<span class="nc" id="L194">                    .setExceptionType(PApplicationExceptionType.findById(e.getType()))</span>
-<span class="nc bnc" id="L195" title="All 2 branches missed.">                    .setCallType(type)</span>
-<span class="nc bnc" id="L196" title="All 2 branches missed.">                    .setSequenceNo(tm != null ? tm.seqid : 0)</span>
-<span class="nc" id="L197">                    .setMethodName(tm != null ? tm.name : null);</span>
-<span class="nc" id="L198">        } catch (TException e) {</span>
-<span class="nc" id="L199">            throw new SerializerException(e, e.getMessage())</span>
-<span class="nc" id="L200">                    .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR)</span>
-<span class="nc bnc" id="L201" title="All 2 branches missed.">                    .setCallType(type)</span>
-<span class="nc bnc" id="L202" title="All 2 branches missed.">                    .setSequenceNo(tm != null ? tm.seqid : 0)</span>
-<span class="nc" id="L203">                    .setMethodName(tm != null ? tm.name : null);</span>
+<span class="fc" id="L193">            return new PServiceCall&lt;&gt;(tm.name, type, tm.seqid, message);</span>
+<span class="fc" id="L194">        } catch (TTransportException e) {</span>
+<span class="fc" id="L195">            throw new SerializerException(e, e.getMessage())</span>
+<span class="fc" id="L196">                    .setExceptionType(PApplicationExceptionType.findById(e.getType()))</span>
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">                    .setCallType(type)</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                    .setSequenceNo(tm != null ? tm.seqid : 0)</span>
+<span class="fc" id="L199">                    .setMethodName(tm != null ? tm.name : null);</span>
+<span class="nc" id="L200">        } catch (TException e) {</span>
+<span class="nc" id="L201">            throw new SerializerException(e, e.getMessage())</span>
+<span class="nc" id="L202">                    .setExceptionType(PApplicationExceptionType.PROTOCOL_ERROR)</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">                    .setCallType(type)</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                    .setSequenceNo(tm != null ? tm.seqid : 0)</span>
+<span class="nc" id="L205">                    .setMethodName(tm != null ? tm.name : null);</span>
+<span class="nc" id="L206">        } catch (SerializerException e) {</span>
+<span class="nc" id="L207">            e.setMethodName(tm.name)</span>
+<span class="nc" id="L208">             .setSequenceNo(tm.seqid)</span>
+<span class="nc" id="L209">             .setCallType(type);</span>
+<span class="nc" id="L210">            throw e;</span>
         }
     }
 
     private void writeMessage(PMessage&lt;?,?&gt; message, TProtocol protocol) throws TException, SerializerException {
-<span class="fc" id="L208">        PMessageDescriptor&lt;?, ?&gt; type = message.descriptor();</span>
+<span class="fc" id="L215">        PMessageDescriptor&lt;?, ?&gt; type = message.descriptor();</span>
 
-<span class="fc" id="L210">        protocol.writeStructBegin(new TStruct(message.descriptor()</span>
-<span class="fc" id="L211">                                                     .getQualifiedName()));</span>
+<span class="fc" id="L217">        protocol.writeStructBegin(new TStruct(message.descriptor()</span>
+<span class="fc" id="L218">                                                     .getQualifiedName()));</span>
 
-<span class="fc bfc" id="L213" title="All 2 branches covered.">        for (PField field : type.getFields()) {</span>
-<span class="fc bfc" id="L214" title="All 2 branches covered.">            if (!message.has(field.getId())) {</span>
-<span class="fc" id="L215">                continue;</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        for (PField field : type.getFields()) {</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">            if (!message.has(field.getId())) {</span>
+<span class="fc" id="L222">                continue;</span>
             }
 
-<span class="fc" id="L218">            protocol.writeFieldBegin(new TField(field.getName(),</span>
-<span class="fc" id="L219">                                                forType(field.getDescriptor().getType()),</span>
-<span class="fc" id="L220">                                                (short) field.getId()));</span>
+<span class="fc" id="L225">            protocol.writeFieldBegin(new TField(field.getName(),</span>
+<span class="fc" id="L226">                                                forType(field.getDescriptor().getType()),</span>
+<span class="fc" id="L227">                                                (short) field.getId()));</span>
 
-<span class="fc" id="L222">            writeTypedValue(message.get(field.getId()), field.getDescriptor(), protocol);</span>
+<span class="fc" id="L229">            writeTypedValue(message.get(field.getId()), field.getDescriptor(), protocol);</span>
 
-<span class="fc" id="L224">            protocol.writeFieldEnd();</span>
+<span class="fc" id="L231">            protocol.writeFieldEnd();</span>
         }
 
-<span class="fc" id="L227">        protocol.writeFieldStop();</span>
-<span class="fc" id="L228">        protocol.writeStructEnd();</span>
-<span class="fc" id="L229">    }</span>
+<span class="fc" id="L234">        protocol.writeFieldStop();</span>
+<span class="fc" id="L235">        protocol.writeStructEnd();</span>
+<span class="fc" id="L236">    }</span>
 
     private &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Message readMessage(TProtocol protocol, PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws SerializerException, TException {
         TField f;
 
-<span class="fc" id="L236">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
-<span class="fc" id="L237">        protocol.readStructBegin();  // ignored.</span>
-<span class="pc bpc" id="L238" title="1 of 2 branches missed.">        while ((f = protocol.readFieldBegin()) != null) {</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">            if (f.type == BinaryType.STOP) {</span>
-<span class="fc" id="L240">                break;</span>
+<span class="fc" id="L243">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
+<span class="fc" id="L244">        protocol.readStructBegin();  // ignored.</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        while ((f = protocol.readFieldBegin()) != null) {</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">            if (f.type == BinaryType.STOP) {</span>
+<span class="fc" id="L247">                break;</span>
             }
 
             PField field;
             // f.name is never fulled out, rely on f.id being correct.
-<span class="fc" id="L245">            field = descriptor.findFieldById(f.id);</span>
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">            if (field != null) {</span>
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">                if (f.type != forType(field.getDescriptor().getType())) {</span>
-<span class="nc" id="L248">                    throw new SerializerException(&quot;Incompatible serialized type &quot; + asString(f.type) +</span>
-<span class="nc" id="L249">                                                  &quot; for field &quot; + field.getName() +</span>
-<span class="nc" id="L250">                                                  &quot;, expected &quot; + asString(forType(field.getDescriptor().getType())));</span>
+<span class="fc" id="L252">            field = descriptor.findFieldById(f.id);</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">            if (field != null) {</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">                if (f.type != forType(field.getDescriptor().getType())) {</span>
+<span class="nc" id="L255">                    throw new SerializerException(&quot;Incompatible serialized type &quot; + asString(f.type) +</span>
+<span class="nc" id="L256">                                                  &quot; for field &quot; + field.getName() +</span>
+<span class="nc" id="L257">                                                  &quot;, expected &quot; + asString(forType(field.getDescriptor().getType())));</span>
                 }
 
-<span class="fc" id="L253">                Object value = readTypedValue(f.type, field.getDescriptor(), protocol, true);</span>
-<span class="pc bpc" id="L254" title="1 of 2 branches missed.">                if (value != null) {</span>
-<span class="fc" id="L255">                    builder.set(field.getId(), value);</span>
+<span class="fc" id="L260">                Object value = readTypedValue(f.type, field.getDescriptor(), protocol, true);</span>
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">                if (value != null) {</span>
+<span class="fc" id="L262">                    builder.set(field.getId(), value);</span>
                 }
-<span class="fc" id="L257">            } else {</span>
-<span class="nc" id="L258">                TProtocolUtil.skip(protocol, f.type);</span>
+<span class="fc" id="L264">            } else {</span>
+<span class="nc" id="L265">                TProtocolUtil.skip(protocol, f.type);</span>
             }
 
-<span class="fc" id="L261">            protocol.readFieldEnd();</span>
-<span class="fc" id="L262">        }</span>
-<span class="fc" id="L263">        protocol.readStructEnd();</span>
+<span class="fc" id="L268">            protocol.readFieldEnd();</span>
+<span class="fc" id="L269">        }</span>
+<span class="fc" id="L270">        protocol.readStructEnd();</span>
 
-<span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if (readStrict) {</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">        if (readStrict) {</span>
             try {
-<span class="nc" id="L267">                builder.validate();</span>
-<span class="nc" id="L268">            } catch (IllegalStateException e) {</span>
-<span class="nc" id="L269">                throw new SerializerException(e, e.getMessage());</span>
-<span class="nc" id="L270">            }</span>
+<span class="nc" id="L274">                builder.validate();</span>
+<span class="nc" id="L275">            } catch (IllegalStateException e) {</span>
+<span class="nc" id="L276">                throw new SerializerException(e, e.getMessage());</span>
+<span class="nc" id="L277">            }</span>
         }
 
-<span class="fc" id="L273">        return builder.build();</span>
+<span class="fc" id="L280">        return builder.build();</span>
     }
 
     private Object readTypedValue(byte tType, PDescriptor type, TProtocol protocol, boolean allowNull)
             throws TException, SerializerException {
-<span class="pc bpc" id="L278" title="1 of 2 branches missed.">        if (tType != forType(type.getType())) {</span>
-<span class="nc" id="L279">            throw new SerializerException(&quot;Expected type &quot; +</span>
-<span class="nc" id="L280">                                          asString(forType(type.getType())) +</span>
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">        if (tType != forType(type.getType())) {</span>
+<span class="nc" id="L286">            throw new SerializerException(&quot;Expected type &quot; +</span>
+<span class="nc" id="L287">                                          asString(forType(type.getType())) +</span>
                                           &quot; but found &quot; +
-<span class="nc" id="L282">                                          asString(tType));</span>
+<span class="nc" id="L289">                                          asString(tType));</span>
         }
-<span class="pc bpc" id="L284" title="1 of 12 branches missed.">        switch (tType) {</span>
+<span class="pc bpc" id="L291" title="1 of 12 branches missed.">        switch (tType) {</span>
             case BinaryType.BOOL:
-<span class="fc" id="L286">                return protocol.readBool();</span>
+<span class="fc" id="L293">                return protocol.readBool();</span>
             case BinaryType.BYTE:
-<span class="fc" id="L288">                return protocol.readByte();</span>
+<span class="fc" id="L295">                return protocol.readByte();</span>
             case BinaryType.I16:
-<span class="fc" id="L290">                return protocol.readI16();</span>
+<span class="fc" id="L297">                return protocol.readI16();</span>
             case BinaryType.I32:
-<span class="fc bfc" id="L292" title="All 2 branches covered.">                if (PType.ENUM == type.getType()) {</span>
-<span class="fc" id="L293">                    PEnumDescriptor&lt;?&gt; et = (PEnumDescriptor&lt;?&gt;) type;</span>
-<span class="fc" id="L294">                    PEnumBuilder&lt;?&gt; eb = et.builder();</span>
-<span class="fc" id="L295">                    int value = protocol.readI32();</span>
-<span class="fc" id="L296">                    eb.setById(value);</span>
-<span class="pc bpc" id="L297" title="3 of 4 branches missed.">                    if (!eb.valid() &amp;&amp; !allowNull) {</span>
-<span class="nc" id="L298">                        throw new SerializerException(&quot;Invalid enum value &quot; + value + &quot; for &quot; +</span>
-<span class="nc" id="L299">                                                      et.getQualifiedName());</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">                if (PType.ENUM == type.getType()) {</span>
+<span class="fc" id="L300">                    PEnumDescriptor&lt;?&gt; et = (PEnumDescriptor&lt;?&gt;) type;</span>
+<span class="fc" id="L301">                    PEnumBuilder&lt;?&gt; eb = et.builder();</span>
+<span class="fc" id="L302">                    int value = protocol.readI32();</span>
+<span class="fc" id="L303">                    eb.setById(value);</span>
+<span class="pc bpc" id="L304" title="3 of 4 branches missed.">                    if (!eb.valid() &amp;&amp; !allowNull) {</span>
+<span class="nc" id="L305">                        throw new SerializerException(&quot;Invalid enum value &quot; + value + &quot; for &quot; +</span>
+<span class="nc" id="L306">                                                      et.getQualifiedName());</span>
                     }
-<span class="fc" id="L301">                    return eb.build();</span>
+<span class="fc" id="L308">                    return eb.build();</span>
                 } else {
-<span class="fc" id="L303">                    return protocol.readI32();</span>
+<span class="fc" id="L310">                    return protocol.readI32();</span>
                 }
             case BinaryType.I64:
-<span class="fc" id="L306">                return protocol.readI64();</span>
+<span class="fc" id="L313">                return protocol.readI64();</span>
             case BinaryType.DOUBLE:
-<span class="fc" id="L308">                return protocol.readDouble();</span>
+<span class="fc" id="L315">                return protocol.readDouble();</span>
             case BinaryType.STRING:
-<span class="fc bfc" id="L310" title="All 2 branches covered.">                if (type == PPrimitive.BINARY) {</span>
-<span class="fc" id="L311">                    ByteBuffer buffer = protocol.readBinary();</span>
-<span class="fc" id="L312">                    return Binary.wrap(buffer.array());</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">                if (type == PPrimitive.BINARY) {</span>
+<span class="fc" id="L318">                    ByteBuffer buffer = protocol.readBinary();</span>
+<span class="fc" id="L319">                    return Binary.wrap(buffer.array());</span>
                 }
-<span class="fc" id="L314">                return protocol.readString();</span>
+<span class="fc" id="L321">                return protocol.readString();</span>
             case BinaryType.STRUCT:
-<span class="fc" id="L316">                return readMessage(protocol, (PMessageDescriptor&lt;?, ?&gt;) type);</span>
+<span class="fc" id="L323">                return readMessage(protocol, (PMessageDescriptor&lt;?, ?&gt;) type);</span>
             case BinaryType.LIST:
-<span class="fc" id="L318">                TList listInfo = protocol.readListBegin();</span>
-<span class="fc" id="L319">                PList&lt;Object&gt; lDesc = (PList&lt;Object&gt;) type;</span>
-<span class="fc" id="L320">                PDescriptor liDesc = lDesc.itemDescriptor();</span>
+<span class="fc" id="L325">                TList listInfo = protocol.readListBegin();</span>
+<span class="fc" id="L326">                PList&lt;Object&gt; lDesc = (PList&lt;Object&gt;) type;</span>
+<span class="fc" id="L327">                PDescriptor liDesc = lDesc.itemDescriptor();</span>
 
-<span class="fc" id="L322">                PList.Builder&lt;Object&gt; list = lDesc.builder();</span>
-<span class="fc bfc" id="L323" title="All 2 branches covered.">                for (int i = 0; i &lt; listInfo.size; ++i) {</span>
-<span class="fc" id="L324">                    list.add(readTypedValue(listInfo.elemType, liDesc, protocol, false));</span>
+<span class="fc" id="L329">                PList.Builder&lt;Object&gt; list = lDesc.builder();</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">                for (int i = 0; i &lt; listInfo.size; ++i) {</span>
+<span class="fc" id="L331">                    list.add(readTypedValue(listInfo.elemType, liDesc, protocol, false));</span>
                 }
 
-<span class="fc" id="L327">                protocol.readListEnd();</span>
-<span class="fc" id="L328">                return list.build();</span>
+<span class="fc" id="L334">                protocol.readListEnd();</span>
+<span class="fc" id="L335">                return list.build();</span>
             case BinaryType.SET:
-<span class="fc" id="L330">                TSet setInfo = protocol.readSetBegin();</span>
-<span class="fc" id="L331">                PSet&lt;Object&gt; sDesc = (PSet&lt;Object&gt;) type;</span>
-<span class="fc" id="L332">                PDescriptor siDesc = sDesc.itemDescriptor();</span>
+<span class="fc" id="L337">                TSet setInfo = protocol.readSetBegin();</span>
+<span class="fc" id="L338">                PSet&lt;Object&gt; sDesc = (PSet&lt;Object&gt;) type;</span>
+<span class="fc" id="L339">                PDescriptor siDesc = sDesc.itemDescriptor();</span>
 
-<span class="fc" id="L334">                PSet.Builder&lt;Object&gt; set = sDesc.builder();</span>
-<span class="fc bfc" id="L335" title="All 2 branches covered.">                for (int i = 0; i &lt; setInfo.size; ++i) {</span>
-<span class="fc" id="L336">                    set.add(readTypedValue(setInfo.elemType, siDesc, protocol, false));</span>
+<span class="fc" id="L341">                PSet.Builder&lt;Object&gt; set = sDesc.builder();</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">                for (int i = 0; i &lt; setInfo.size; ++i) {</span>
+<span class="fc" id="L343">                    set.add(readTypedValue(setInfo.elemType, siDesc, protocol, false));</span>
                 }
 
-<span class="fc" id="L339">                protocol.readSetEnd();</span>
-<span class="fc" id="L340">                return set.build();</span>
+<span class="fc" id="L346">                protocol.readSetEnd();</span>
+<span class="fc" id="L347">                return set.build();</span>
             case BinaryType.MAP:
-<span class="fc" id="L342">                TMap mapInfo = protocol.readMapBegin();</span>
-<span class="fc" id="L343">                PMap&lt;Object, Object&gt; mDesc = (PMap&lt;Object, Object&gt;) type;</span>
-<span class="fc" id="L344">                PDescriptor mkDesc = mDesc.keyDescriptor();</span>
-<span class="fc" id="L345">                PDescriptor miDesc = mDesc.itemDescriptor();</span>
+<span class="fc" id="L349">                TMap mapInfo = protocol.readMapBegin();</span>
+<span class="fc" id="L350">                PMap&lt;Object, Object&gt; mDesc = (PMap&lt;Object, Object&gt;) type;</span>
+<span class="fc" id="L351">                PDescriptor mkDesc = mDesc.keyDescriptor();</span>
+<span class="fc" id="L352">                PDescriptor miDesc = mDesc.itemDescriptor();</span>
 
-<span class="fc" id="L347">                PMap.Builder&lt;Object, Object&gt; map = mDesc.builder();</span>
-<span class="fc bfc" id="L348" title="All 2 branches covered.">                for (int i = 0; i &lt; mapInfo.size; ++i) {</span>
-<span class="fc" id="L349">                    Object key = readTypedValue(mapInfo.keyType, mkDesc, protocol, false);</span>
-<span class="fc" id="L350">                    Object val = readTypedValue(mapInfo.valueType, miDesc, protocol, false);</span>
-<span class="fc" id="L351">                    map.put(key, val);</span>
+<span class="fc" id="L354">                PMap.Builder&lt;Object, Object&gt; map = mDesc.builder();</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">                for (int i = 0; i &lt; mapInfo.size; ++i) {</span>
+<span class="fc" id="L356">                    Object key = readTypedValue(mapInfo.keyType, mkDesc, protocol, false);</span>
+<span class="fc" id="L357">                    Object val = readTypedValue(mapInfo.valueType, miDesc, protocol, false);</span>
+<span class="fc" id="L358">                    map.put(key, val);</span>
                 }
 
-<span class="fc" id="L354">                protocol.readMapEnd();</span>
-<span class="fc" id="L355">                return map.build();</span>
+<span class="fc" id="L361">                protocol.readMapEnd();</span>
+<span class="fc" id="L362">                return map.build();</span>
             default:
-<span class="nc" id="L357">                throw new SerializerException(&quot;Unsupported protocol field type: &quot; + tType);</span>
+<span class="nc" id="L364">                throw new SerializerException(&quot;Unsupported protocol field type: &quot; + tType);</span>
         }
     }
 
     private void writeTypedValue(Object item, PDescriptor type, TProtocol protocol)
             throws TException, SerializerException {
-<span class="pc bpc" id="L363" title="1 of 14 branches missed.">        switch (type.getType()) {</span>
+<span class="pc bpc" id="L370" title="1 of 14 branches missed.">        switch (type.getType()) {</span>
             case BOOL:
-<span class="fc" id="L365">                protocol.writeBool((Boolean) item);</span>
-<span class="fc" id="L366">                break;</span>
+<span class="fc" id="L372">                protocol.writeBool((Boolean) item);</span>
+<span class="fc" id="L373">                break;</span>
             case BYTE:
-<span class="fc" id="L368">                protocol.writeByte((Byte) item);</span>
-<span class="fc" id="L369">                break;</span>
+<span class="fc" id="L375">                protocol.writeByte((Byte) item);</span>
+<span class="fc" id="L376">                break;</span>
             case I16:
-<span class="fc" id="L371">                protocol.writeI16((Short) item);</span>
-<span class="fc" id="L372">                break;</span>
+<span class="fc" id="L378">                protocol.writeI16((Short) item);</span>
+<span class="fc" id="L379">                break;</span>
             case I32:
-<span class="fc" id="L374">                protocol.writeI32((Integer) item);</span>
-<span class="fc" id="L375">                break;</span>
+<span class="fc" id="L381">                protocol.writeI32((Integer) item);</span>
+<span class="fc" id="L382">                break;</span>
             case I64:
-<span class="fc" id="L377">                protocol.writeI64((Long) item);</span>
-<span class="fc" id="L378">                break;</span>
+<span class="fc" id="L384">                protocol.writeI64((Long) item);</span>
+<span class="fc" id="L385">                break;</span>
             case DOUBLE:
-<span class="fc" id="L380">                protocol.writeDouble((Double) item);</span>
-<span class="fc" id="L381">                break;</span>
+<span class="fc" id="L387">                protocol.writeDouble((Double) item);</span>
+<span class="fc" id="L388">                break;</span>
             case STRING:
-<span class="fc" id="L383">                protocol.writeString((String) item);</span>
-<span class="fc" id="L384">                break;</span>
-            case BINARY:
-<span class="fc" id="L386">                protocol.writeBinary(((Binary) item).getByteBuffer());</span>
-<span class="fc" id="L387">                break;</span>
-            case ENUM:
-<span class="fc" id="L389">                PEnumValue&lt;?&gt; value = (PEnumValue&lt;?&gt;) item;</span>
-<span class="fc" id="L390">                protocol.writeI32(value.asInteger());</span>
+<span class="fc" id="L390">                protocol.writeString((String) item);</span>
 <span class="fc" id="L391">                break;</span>
-            case MESSAGE:
-<span class="fc" id="L393">                writeMessage((PMessage&lt;?,?&gt;) item, protocol);</span>
+            case BINARY:
+<span class="fc" id="L393">                protocol.writeBinary(((Binary) item).getByteBuffer());</span>
 <span class="fc" id="L394">                break;</span>
+            case ENUM:
+<span class="fc" id="L396">                PEnumValue&lt;?&gt; value = (PEnumValue&lt;?&gt;) item;</span>
+<span class="fc" id="L397">                protocol.writeI32(value.asInteger());</span>
+<span class="fc" id="L398">                break;</span>
+            case MESSAGE:
+<span class="fc" id="L400">                writeMessage((PMessage&lt;?,?&gt;) item, protocol);</span>
+<span class="fc" id="L401">                break;</span>
             case LIST:
-<span class="fc" id="L396">                PList&lt;?&gt; lType = (PList&lt;?&gt;) type;</span>
-<span class="fc" id="L397">                List&lt;?&gt; list = (List&lt;?&gt;) item;</span>
-<span class="fc" id="L398">                TList listInfo = new TList(forType(lType.itemDescriptor().getType()), list.size());</span>
-<span class="fc" id="L399">                protocol.writeListBegin(listInfo);</span>
-<span class="fc bfc" id="L400" title="All 2 branches covered.">                for (Object i : list) {</span>
-<span class="fc" id="L401">                    writeTypedValue(i, lType.itemDescriptor(), protocol);</span>
-<span class="fc" id="L402">                }</span>
-<span class="fc" id="L403">                protocol.writeListEnd();</span>
-<span class="fc" id="L404">                break;</span>
+<span class="fc" id="L403">                PList&lt;?&gt; lType = (PList&lt;?&gt;) type;</span>
+<span class="fc" id="L404">                List&lt;?&gt; list = (List&lt;?&gt;) item;</span>
+<span class="fc" id="L405">                TList listInfo = new TList(forType(lType.itemDescriptor().getType()), list.size());</span>
+<span class="fc" id="L406">                protocol.writeListBegin(listInfo);</span>
+<span class="fc bfc" id="L407" title="All 2 branches covered.">                for (Object i : list) {</span>
+<span class="fc" id="L408">                    writeTypedValue(i, lType.itemDescriptor(), protocol);</span>
+<span class="fc" id="L409">                }</span>
+<span class="fc" id="L410">                protocol.writeListEnd();</span>
+<span class="fc" id="L411">                break;</span>
             case SET:
-<span class="fc" id="L406">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) type;</span>
-<span class="fc" id="L407">                Set&lt;?&gt; set = (Set&lt;?&gt;) item;</span>
-<span class="fc" id="L408">                TSet setInfo = new TSet(forType(sType.itemDescriptor().getType()), set.size());</span>
-<span class="fc" id="L409">                protocol.writeSetBegin(setInfo);</span>
-<span class="fc bfc" id="L410" title="All 2 branches covered.">                for (Object i : set) {</span>
-<span class="fc" id="L411">                    writeTypedValue(i, sType.itemDescriptor(), protocol);</span>
-<span class="fc" id="L412">                }</span>
-<span class="fc" id="L413">                protocol.writeSetEnd();</span>
-<span class="fc" id="L414">                break;</span>
+<span class="fc" id="L413">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) type;</span>
+<span class="fc" id="L414">                Set&lt;?&gt; set = (Set&lt;?&gt;) item;</span>
+<span class="fc" id="L415">                TSet setInfo = new TSet(forType(sType.itemDescriptor().getType()), set.size());</span>
+<span class="fc" id="L416">                protocol.writeSetBegin(setInfo);</span>
+<span class="fc bfc" id="L417" title="All 2 branches covered.">                for (Object i : set) {</span>
+<span class="fc" id="L418">                    writeTypedValue(i, sType.itemDescriptor(), protocol);</span>
+<span class="fc" id="L419">                }</span>
+<span class="fc" id="L420">                protocol.writeSetEnd();</span>
+<span class="fc" id="L421">                break;</span>
             case MAP:
-<span class="fc" id="L416">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) type;</span>
-<span class="fc" id="L417">                Map&lt;?, ?&gt; map = (Map&lt;?, ?&gt;) item;</span>
-<span class="fc" id="L418">                protocol.writeMapBegin(new TMap(forType(mType.keyDescriptor().getType()),</span>
-<span class="fc" id="L419">                                                forType(mType.itemDescriptor().getType()),</span>
-<span class="fc" id="L420">                                                map.size()));</span>
+<span class="fc" id="L423">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) type;</span>
+<span class="fc" id="L424">                Map&lt;?, ?&gt; map = (Map&lt;?, ?&gt;) item;</span>
+<span class="fc" id="L425">                protocol.writeMapBegin(new TMap(forType(mType.keyDescriptor().getType()),</span>
+<span class="fc" id="L426">                                                forType(mType.itemDescriptor().getType()),</span>
+<span class="fc" id="L427">                                                map.size()));</span>
 
-<span class="fc bfc" id="L422" title="All 2 branches covered.">                for (Map.Entry&lt;?, ?&gt; entry : map.entrySet()) {</span>
-<span class="fc" id="L423">                    writeTypedValue(entry.getKey(), mType.keyDescriptor(), protocol);</span>
-<span class="fc" id="L424">                    writeTypedValue(entry.getValue(), mType.itemDescriptor(), protocol);</span>
-<span class="fc" id="L425">                }</span>
+<span class="fc bfc" id="L429" title="All 2 branches covered.">                for (Map.Entry&lt;?, ?&gt; entry : map.entrySet()) {</span>
+<span class="fc" id="L430">                    writeTypedValue(entry.getKey(), mType.keyDescriptor(), protocol);</span>
+<span class="fc" id="L431">                    writeTypedValue(entry.getValue(), mType.itemDescriptor(), protocol);</span>
+<span class="fc" id="L432">                }</span>
 
-<span class="fc" id="L427">                protocol.writeMapEnd();</span>
-<span class="fc" id="L428">                break;</span>
+<span class="fc" id="L434">                protocol.writeMapEnd();</span>
+<span class="fc" id="L435">                break;</span>
             default:
                 break;
         }
-<span class="fc" id="L432">    }</span>
+<span class="fc" id="L439">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

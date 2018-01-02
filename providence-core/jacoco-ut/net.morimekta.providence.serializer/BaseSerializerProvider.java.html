@@ -20,6 +20,8 @@
  */
 package net.morimekta.providence.serializer;
 
+import com.google.common.net.MediaType;
+
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +30,8 @@ import java.util.Map;
  * Default serializer provider for core serializers.
  */
 public abstract class BaseSerializerProvider implements SerializerProvider {
+<span class="fc" id="L33">    private static final String ANY_MEDIA_TYPE = MediaType.ANY_TYPE.toString();</span>
+
     private final Map&lt;String, Serializer&gt; serializerMap;
     private final String                  defaultMediaType;
 
@@ -36,25 +40,35 @@ public abstract class BaseSerializerProvider implements SerializerProvider {
      *
      * @param defaultMediaType The default media-type.
      */
-<span class="fc" id="L39">    public BaseSerializerProvider(String defaultMediaType) {</span>
-<span class="fc" id="L40">        this.defaultMediaType = defaultMediaType;</span>
-<span class="fc" id="L41">        this.serializerMap = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L43">    public BaseSerializerProvider(String defaultMediaType) {</span>
+<span class="fc" id="L44">        this.defaultMediaType = defaultMediaType;</span>
+<span class="fc" id="L45">        this.serializerMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L46">    }</span>
 
     @Override
     @Nonnull
     public Serializer getSerializer(String mediaType) {
-<span class="fc" id="L47">        Serializer serializer = serializerMap.get(mediaType);</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (serializer == null) {</span>
-<span class="fc" id="L49">            throw new IllegalArgumentException(&quot;No such serializer for media type &quot; + mediaType);</span>
+<span class="fc" id="L51">        mediaType = MediaType.parse(mediaType)</span>
+<span class="fc" id="L52">                             .withoutParameters()</span>
+<span class="fc" id="L53">                             .toString();</span>
+
+        Serializer serializer;
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (ANY_MEDIA_TYPE.equals(mediaType)) {</span>
+<span class="nc" id="L57">            serializer = serializerMap.get(defaultMediaType);</span>
+        } else {
+<span class="fc" id="L59">            serializer = serializerMap.get(mediaType);</span>
         }
-<span class="fc" id="L51">        return serializer;</span>
+
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (serializer == null) {</span>
+<span class="fc" id="L63">            throw new IllegalArgumentException(&quot;No serializer for media type '&quot; + mediaType + &quot;'&quot;);</span>
+        }
+<span class="fc" id="L65">        return serializer;</span>
     }
 
     @Override
     @Nonnull
     public Serializer getDefault() {
-<span class="fc" id="L57">        return getSerializer(defaultMediaType);</span>
+<span class="fc" id="L71">        return getSerializer(defaultMediaType);</span>
     }
 
     /**
@@ -64,9 +78,9 @@ public abstract class BaseSerializerProvider implements SerializerProvider {
      * @param mediaTypes The media types to register it for.
      */
     protected void register(Serializer serializer, String... mediaTypes) {
-<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (String mediaType : mediaTypes) {</span>
-<span class="fc" id="L68">            this.serializerMap.put(mediaType, serializer);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (String mediaType : mediaTypes) {</span>
+<span class="fc" id="L82">            this.serializerMap.put(mediaType, serializer);</span>
         }
-<span class="fc" id="L70">    }</span>
+<span class="fc" id="L84">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

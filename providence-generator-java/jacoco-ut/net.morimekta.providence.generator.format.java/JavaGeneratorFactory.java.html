@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JavaGeneratorFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Java</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator.format.java</a> &gt; <span class="el_source">JavaGeneratorFactory.java</span></div><h1>JavaGeneratorFactory.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.generator.format.java;
+
+import net.morimekta.providence.generator.Generator;
+import net.morimekta.providence.generator.GeneratorFactory;
+import net.morimekta.providence.generator.GeneratorOptions;
+import net.morimekta.providence.generator.util.FileManager;
+
+import java.io.PrintStream;
+import java.util.Collection;
+
+<span class="nc" id="L11">public class JavaGeneratorFactory implements GeneratorFactory {</span>
+    @Override
+    public String generatorName() {
+<span class="nc" id="L14">        return &quot;java&quot;;</span>
+    }
+
+    @Override
+    public String generatorDescription() {
+<span class="nc" id="L19">        return &quot;Generates java (1.8+) classes.&quot;;</span>
+    }
+
+    @Override
+    public void printGeneratorOptionsHelp(PrintStream out) {
+<span class="nc" id="L24">        out.println(&quot; - android             : Add android parcelable interface to model classes.&quot;);</span>
+<span class="nc" id="L25">        out.println(&quot; - jackson             : Add jackson 2 annotations to model classes.&quot;);</span>
+<span class="nc" id="L26">        out.println(&quot; - no_rw_binary        : Skip adding the binary RW methods to generated code. [Default on]&quot;);</span>
+<span class="nc" id="L27">        out.println(&quot; - hazelcast_portable  : Add hazelcast portable to annotated model classes, and add portable\n&quot; +</span>
+                    &quot;                         factories.&quot;);
+<span class="nc" id="L29">        out.println(&quot; - no_generated_annotation_version : Remove providence version from the &lt;code&gt;@Generated&lt;/code&gt;\n&quot; +</span>
+                    &quot;                         annotation for each generated class. [Default on]&quot;);
+<span class="nc" id="L31">        out.println(&quot; - public_constructors : Generate public constructors for all structs and exceptions. Have no\n&quot; +</span>
+                    &quot;                         effect on unions.&quot;);
+<span class="nc" id="L33">    }</span>
+
+    private JavaOptions makeJavaOptions(Collection&lt;String&gt; optionNames) {
+<span class="nc" id="L36">        JavaOptions options = new JavaOptions();</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">        for (String opt : optionNames) {</span>
+<span class="nc bnc" id="L38" title="All 26 branches missed.">            switch (opt) {</span>
+                case &quot;android&quot;:
+<span class="nc" id="L40">                    options.android = true;</span>
+<span class="nc" id="L41">                    break;</span>
+                case &quot;jackson&quot;:
+<span class="nc" id="L43">                    options.jackson = true;</span>
+<span class="nc" id="L44">                    break;</span>
+                case &quot;no_rw_binary&quot;:
+<span class="nc" id="L46">                    options.rw_binary = false;</span>
+<span class="nc" id="L47">                    break;</span>
+                case &quot;hazelcast_portable&quot;:
+<span class="nc" id="L49">                    options.hazelcast_portable = true;</span>
+<span class="nc" id="L50">                    break;</span>
+                case &quot;no_generated_annotation_version&quot;:
+<span class="nc" id="L52">                    options.generated_annotation_version = false;</span>
+<span class="nc" id="L53">                    break;</span>
+                case &quot;public_constructors&quot;:
+<span class="nc" id="L55">                    options.public_constructors = true;</span>
+<span class="nc" id="L56">                    break;</span>
+                default:
+<span class="nc" id="L58">                    throw new RuntimeException(&quot;No such option for java generator: &quot; + opt);</span>
+            }
+<span class="nc" id="L60">        }</span>
+<span class="nc" id="L61">        return options;</span>
+    }
+
+    @Override
+    public Generator createGenerator(FileManager manager,
+                                     GeneratorOptions generatorOptions,
+                                     Collection&lt;String&gt; options) {
+<span class="nc" id="L68">        return new JavaGenerator(manager, generatorOptions, makeJavaOptions(options));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -2,6 +2,7 @@
 
 import net.morimekta.providence.descriptor.PDeclaredDescriptor;
 import net.morimekta.providence.descriptor.PService;
+import net.morimekta.providence.model.ProgramType;
 import net.morimekta.providence.reflect.contained.CProgram;
 
 import javax.annotation.Nonnull;
@@ -12,37 +13,46 @@ import javax.annotation.Nonnull;
  */
 public class ProgramTypeRegistry extends RecursiveTypeRegistry {
     private CProgram program;
+    private ProgramType programType;
 
     public ProgramTypeRegistry(@Nonnull String localProgramContext) {
-<span class="fc" id="L17">        super(localProgramContext);</span>
-<span class="fc" id="L18">    }</span>
+<span class="fc" id="L19">        super(localProgramContext);</span>
+<span class="fc" id="L20">    }</span>
 
     @Nonnull
     public CProgram getProgramForName(String programName) {
-<span class="nc" id="L22">        RecursiveTypeRegistry tmp = getRegistryForProgramName(programName);</span>
-<span class="nc bnc" id="L23" title="All 4 branches missed.">        if (tmp != null &amp;&amp; tmp instanceof ProgramTypeRegistry) {</span>
-<span class="nc" id="L24">            return ((ProgramTypeRegistry) tmp).getProgram();</span>
+<span class="nc" id="L24">        RecursiveTypeRegistry tmp = getRegistryForProgramName(programName);</span>
+<span class="nc bnc" id="L25" title="All 4 branches missed.">        if (tmp != null &amp;&amp; tmp instanceof ProgramTypeRegistry) {</span>
+<span class="nc" id="L26">            return ((ProgramTypeRegistry) tmp).getProgram();</span>
         }
-<span class="nc" id="L26">        throw new IllegalArgumentException(&quot;No program for name &quot; + programName);</span>
+<span class="nc" id="L28">        throw new IllegalArgumentException(&quot;No program for name &quot; + programName);</span>
     }
 
     public CProgram getProgram() {
-<span class="fc" id="L30">        return program;</span>
+<span class="fc" id="L32">        return program;</span>
+    }
+
+    public ProgramType getProgramType() {
+<span class="nc" id="L36">        return programType;</span>
     }
 
     public void setProgram(CProgram program) {
-<span class="fc" id="L34">        this.program = program;</span>
-<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (isEmpty()) {</span>
-<span class="nc" id="L36">            program.getTypedefs().forEach((id, type) -&gt; {</span>
-<span class="nc" id="L37">                registerTypedef(id, getLocalProgramContext(), type);</span>
-<span class="nc" id="L38">            });</span>
-<span class="nc bnc" id="L39" title="All 2 branches missed.">            for (PDeclaredDescriptor&lt;?&gt; descriptor : program.getDeclaredTypes()) {</span>
-<span class="nc" id="L40">                registerRecursively(descriptor);</span>
-<span class="nc" id="L41">            }</span>
-<span class="nc bnc" id="L42" title="All 2 branches missed.">            for (PService service : program.getServices()) {</span>
-<span class="nc" id="L43">                registerRecursively(service);</span>
-<span class="nc" id="L44">            }</span>
+<span class="fc" id="L40">        this.program = program;</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (isEmpty()) {</span>
+<span class="nc" id="L42">            program.getTypedefs().forEach((id, type) -&gt; {</span>
+<span class="nc" id="L43">                registerTypedef(id, getLocalProgramContext(), type);</span>
+<span class="nc" id="L44">            });</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">            for (PDeclaredDescriptor&lt;?&gt; descriptor : program.getDeclaredTypes()) {</span>
+<span class="nc" id="L46">                registerRecursively(descriptor);</span>
+<span class="nc" id="L47">            }</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            for (PService service : program.getServices()) {</span>
+<span class="nc" id="L49">                registerRecursively(service);</span>
+<span class="nc" id="L50">            }</span>
         }
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L52">    }</span>
+
+    public void setProgramType(ProgramType type) {
+<span class="fc" id="L55">        this.programType = type;</span>
+<span class="fc" id="L56">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

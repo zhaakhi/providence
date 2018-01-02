@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProvidenceServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core : Servers</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.server</a> &gt; <span class="el_source">ProvidenceServlet.java</span></div><h1>ProvidenceServlet.java</h1><pre class="source lang-java linenums">/*
- * Copyright 2016 Providence Authors
+ * Copyright 2016-2017 Providence Authors
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
@@ -141,10 +141,10 @@ public class ProvidenceServlet extends HttpServlet {
 <span class="fc" id="L141">                    MediaType mediaType = MediaType.parse(req.getContentType());</span>
 <span class="fc" id="L142">                    requestSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
 <span class="fc" id="L143">                                                                                  .toString());</span>
-<span class="nc" id="L144">                } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L145">                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, &quot;Unknown content-type: &quot; + req.getContentType());</span>
-<span class="nc" id="L146">                    LOGGER.warn(&quot;Unknown content type in request&quot;, e);</span>
-<span class="nc" id="L147">                    return;</span>
+<span class="fc" id="L144">                } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L145">                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, &quot;Unknown content-type: &quot; + req.getContentType());</span>
+<span class="fc" id="L146">                    LOGGER.warn(&quot;Unknown content type in request&quot;, e);</span>
+<span class="fc" id="L147">                    return;</span>
 <span class="fc" id="L148">                }</span>
             } else {
 <span class="nc" id="L150">                LOGGER.debug(&quot;Request is missing content type.&quot;);</span>
@@ -159,65 +159,69 @@ public class ProvidenceServlet extends HttpServlet {
 <span class="pc bpc" id="L159" title="1 of 2 branches missed.">                    if (entry.isEmpty()) {</span>
 <span class="nc" id="L160">                        continue;</span>
                     }
+<span class="fc bfc" id="L162" title="All 2 branches covered.">                    if (&quot;*/*&quot;.equals(entry)) {</span>
+                        // Then responding same as request is good.
+<span class="fc" id="L164">                        break;</span>
+                    }
 
                     try {
-<span class="fc" id="L164">                        MediaType mediaType = MediaType.parse(entry);</span>
-<span class="fc" id="L165">                        responseSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
-<span class="fc" id="L166">                                                                                       .toString());</span>
-<span class="fc" id="L167">                        break;</span>
-<span class="nc" id="L168">                    } catch (IllegalArgumentException ignore) {</span>
+<span class="fc" id="L168">                        MediaType mediaType = MediaType.parse(entry);</span>
+<span class="fc" id="L169">                        responseSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
+<span class="fc" id="L170">                                                                                       .toString());</span>
+<span class="fc" id="L171">                        break;</span>
+<span class="nc" id="L172">                    } catch (IllegalArgumentException ignore) {</span>
                         // Ignore. Bad header input is pretty common.
                     }
                 }
             }
 
-<span class="fc" id="L174">            MessageReader reader = new IOMessageReader(req.getInputStream(), requestSerializer);</span>
+<span class="fc" id="L178">            MessageReader reader = new IOMessageReader(req.getInputStream(), requestSerializer);</span>
 
-<span class="fc" id="L176">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="fc" id="L177">            MessageWriter writer = new IOMessageWriter(baos, responseSerializer);</span>
+<span class="fc" id="L180">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L181">            MessageWriter writer = new IOMessageWriter(baos, responseSerializer);</span>
 
-<span class="fc" id="L179">            getHandler(processor).process(reader, writer);</span>
-<span class="fc" id="L180">            resp.setStatus(HttpServletResponse.SC_OK);</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">            if (baos.size() &gt; 0) {</span>
-<span class="fc" id="L182">                resp.setContentType(responseSerializer.mediaType());</span>
-<span class="fc" id="L183">                resp.setContentLength(baos.size());</span>
-<span class="fc" id="L184">                resp.getOutputStream().write(baos.toByteArray());</span>
-<span class="fc" id="L185">                resp.getOutputStream().flush();</span>
+<span class="fc" id="L183">            getHandler(processor).process(reader, writer);</span>
+<span class="fc" id="L184">            resp.setStatus(HttpServletResponse.SC_OK);</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            if (baos.size() &gt; 0) {</span>
+<span class="fc" id="L186">                resp.setContentType(responseSerializer.mediaType());</span>
+<span class="fc" id="L187">                resp.setContentLength(baos.size());</span>
+<span class="fc" id="L188">                resp.getOutputStream().write(baos.toByteArray());</span>
+<span class="fc" id="L189">                resp.getOutputStream().flush();</span>
             }
 
-<span class="fc" id="L188">            long endTime = System.nanoTime();</span>
-<span class="fc" id="L189">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+<span class="fc" id="L192">            long endTime = System.nanoTime();</span>
+<span class="fc" id="L193">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
             try {
-<span class="fc" id="L191">                instrumentation.onComplete(duration, callRef.get(), responseRef.get());</span>
-<span class="nc" id="L192">            } catch (Throwable th) {</span>
-<span class="nc" id="L193">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
-<span class="fc" id="L194">            }</span>
-<span class="nc" id="L195">        } catch (EOFException e) {</span>
+<span class="fc" id="L195">                instrumentation.onComplete(duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L196">            } catch (Throwable th) {</span>
+<span class="nc" id="L197">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="fc" id="L198">            }</span>
+<span class="nc" id="L199">        } catch (EOFException e) {</span>
             // output stream closed before write is complete.
             // So we cannot even try to respond.
 
-<span class="nc" id="L199">            long endTime = System.nanoTime();</span>
-<span class="nc" id="L200">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+<span class="nc" id="L203">            long endTime = System.nanoTime();</span>
+<span class="nc" id="L204">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
             try {
-<span class="nc" id="L202">                instrumentation.onTransportException(e, duration, callRef.get(), responseRef.get());</span>
-<span class="nc" id="L203">            } catch (Throwable th) {</span>
-<span class="nc" id="L204">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
-<span class="nc" id="L205">            }</span>
-<span class="nc" id="L206">        } catch (Exception e) {</span>
+<span class="nc" id="L206">                instrumentation.onTransportException(e, duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L207">            } catch (Throwable th) {</span>
+<span class="nc" id="L208">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="nc" id="L209">            }</span>
+<span class="nc" id="L210">        } catch (Exception e) {</span>
             try {
-<span class="nc" id="L208">                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Internal server error: &quot; + e.getMessage());</span>
-<span class="nc" id="L209">            } catch (IOException ioEx) {</span>
-<span class="nc" id="L210">                e.addSuppressed(ioEx);</span>
-<span class="nc" id="L211">            }</span>
+<span class="nc" id="L212">                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Internal server error: &quot; + e.getMessage());</span>
+<span class="nc" id="L213">            } catch (IOException ioEx) {</span>
+<span class="nc" id="L214">                e.addSuppressed(ioEx);</span>
+<span class="nc" id="L215">            }</span>
 
-<span class="nc" id="L213">            long endTime = System.nanoTime();</span>
-<span class="nc" id="L214">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
+<span class="nc" id="L217">            long endTime = System.nanoTime();</span>
+<span class="nc" id="L218">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
             try {
-<span class="nc" id="L216">                instrumentation.onTransportException(e, duration, callRef.get(), responseRef.get());</span>
-<span class="nc" id="L217">            } catch (Throwable th) {</span>
-<span class="nc" id="L218">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
-<span class="nc" id="L219">            }</span>
-<span class="pc" id="L220">        }</span>
-<span class="fc" id="L221">    }</span>
+<span class="nc" id="L220">                instrumentation.onTransportException(e, duration, callRef.get(), responseRef.get());</span>
+<span class="nc" id="L221">            } catch (Throwable th) {</span>
+<span class="nc" id="L222">                LOGGER.error(&quot;Exception in service instrumentation&quot;, th);</span>
+<span class="nc" id="L223">            }</span>
+<span class="pc" id="L224">        }</span>
+<span class="fc" id="L225">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

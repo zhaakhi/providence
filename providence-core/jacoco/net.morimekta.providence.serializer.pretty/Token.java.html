@@ -52,34 +52,39 @@ public class Token extends CharSlice {
     public static final char kLiteralDoubleQuote = '\&quot;';
     public static final char kShellComment       = '#';
 
+    public static final char kNewLine       = '\n';
+    public static final char kCarriageReturn       = '\r';
+    public static final char kSpace       = ' ';
+    public static final char kTab       = '\t';
+
     public static final String B64 = &quot;b64&quot;;
     public static final String HEX = &quot;hex&quot;;
 
     public static final String kSymbols = &quot;{}:=()&lt;&gt;,;#[]&amp;/*|%$@^&quot;;
 
-<span class="fc" id="L60">    private static final Pattern RE_IDENTIFIER                  = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*&quot;);</span>
-<span class="fc" id="L61">    private static final Pattern RE_QUALIFIED_IDENTIFIER        = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*[.][_a-zA-Z][_a-zA-Z0-9]*&quot;);</span>
-<span class="fc" id="L62">    private static final Pattern RE_DOUBLE_QUALIFIED_IDENTIFIER = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*[.][_a-zA-Z][_a-zA-Z0-9]*[.][_a-zA-Z][_a-zA-Z0-9]*&quot;);</span>
-<span class="fc" id="L63">    private static final Pattern RE_REFERENCE_IDENTIFIER        = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*([.][_a-zA-Z][_a-zA-Z0-9]*)*&quot;);</span>
-<span class="fc" id="L64">    private static final Pattern RE_INTEGER                     = Pattern.compile(&quot;-?(0|[1-9][0-9]*|0[0-7]+|0x[0-9a-fA-F]+)&quot;);</span>
-<span class="fc" id="L65">    private static final Pattern RE_REAL                        = Pattern.compile(&quot;-?(0?\\.[0-9]+|[1-9][0-9]*\\.[0-9]*)([eE][+-]?[0-9][0-9]*)?&quot;);</span>
+<span class="fc" id="L65">    private static final Pattern RE_IDENTIFIER                  = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*&quot;);</span>
+<span class="fc" id="L66">    private static final Pattern RE_QUALIFIED_IDENTIFIER        = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*[.][_a-zA-Z][_a-zA-Z0-9]*&quot;);</span>
+<span class="fc" id="L67">    private static final Pattern RE_DOUBLE_QUALIFIED_IDENTIFIER = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*[.][_a-zA-Z][_a-zA-Z0-9]*[.][_a-zA-Z][_a-zA-Z0-9]*&quot;);</span>
+<span class="fc" id="L68">    private static final Pattern RE_REFERENCE_IDENTIFIER        = Pattern.compile(&quot;[_a-zA-Z][_a-zA-Z0-9]*([.][_a-zA-Z][_a-zA-Z0-9]*)*&quot;);</span>
+<span class="fc" id="L69">    private static final Pattern RE_INTEGER                     = Pattern.compile(&quot;-?(0|[1-9][0-9]*|0[0-7]+|0x[0-9a-fA-F]+)&quot;);</span>
+<span class="fc" id="L70">    private static final Pattern RE_REAL                        = Pattern.compile(&quot;-?(0?\\.[0-9]+|[1-9][0-9]*\\.[0-9]*)([eE][+-]?[0-9][0-9]*)?&quot;);</span>
 
     private final int lineNo;
     private final int linePos;
 
     public Token(char[] fb, int off, int len, int lineNo, int linePos) {
-<span class="fc" id="L71">        super(fb, off, len);</span>
-<span class="fc" id="L72">        this.lineNo = lineNo;</span>
-<span class="fc" id="L73">        this.linePos = linePos;</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L76">        super(fb, off, len);</span>
+<span class="fc" id="L77">        this.lineNo = lineNo;</span>
+<span class="fc" id="L78">        this.linePos = linePos;</span>
+<span class="fc" id="L79">    }</span>
 
     @Override
     public boolean equals(Object o) {
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if (o == this) return true;</span>
-<span class="pc bpc" id="L79" title="2 of 4 branches missed.">        if (o == null || !getClass().equals(o.getClass())) return false;</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (o == this) return true;</span>
+<span class="pc bpc" id="L84" title="2 of 4 branches missed.">        if (o == null || !getClass().equals(o.getClass())) return false;</span>
 
-<span class="fc" id="L81">        Token other = (Token) o;</span>
-<span class="pc bpc" id="L82" title="4 of 10 branches missed.">        return asString().equals(other.asString()) &amp;&amp;</span>
+<span class="fc" id="L86">        Token other = (Token) o;</span>
+<span class="pc bpc" id="L87" title="4 of 10 branches missed.">        return asString().equals(other.asString()) &amp;&amp;</span>
                (len == other.len) &amp;&amp;
                (off == other.off) &amp;&amp;
                (lineNo == other.lineNo) &amp;&amp;
@@ -88,54 +93,54 @@ public class Token extends CharSlice {
 
     @Override
     public int hashCode() {
-<span class="fc" id="L91">        return Objects.hash(Token.class, Arrays.hashCode(fb), off, len, lineNo, linePos);</span>
+<span class="fc" id="L96">        return Objects.hash(Token.class, Arrays.hashCode(fb), off, len, lineNo, linePos);</span>
     }
 
     public int getLineNo() {
-<span class="fc" id="L95">        return lineNo;</span>
+<span class="fc" id="L100">        return lineNo;</span>
     }
 
     public int getLinePos() {
-<span class="fc" id="L99">        return linePos;</span>
+<span class="fc" id="L104">        return linePos;</span>
     }
 
     public boolean isSymbol(char symbol) {
-<span class="fc bfc" id="L103" title="All 4 branches covered.">        return len == 1 &amp;&amp; fb[off] == symbol;</span>
+<span class="fc bfc" id="L108" title="All 4 branches covered.">        return len == 1 &amp;&amp; fb[off] == symbol;</span>
     }
 
     public boolean isStringLiteral() {
-<span class="pc bpc" id="L107" title="2 of 6 branches missed.">        return (length() &gt; 1 &amp;&amp; ((charAt(0) == '\&quot;' &amp;&amp; charAt(-1) == '\&quot;') ||</span>
-<span class="pc bpc" id="L108" title="3 of 4 branches missed.">                                 (charAt(0) == '\'' &amp;&amp; charAt(-1) == '\'')));</span>
+<span class="pc bpc" id="L112" title="2 of 6 branches missed.">        return (length() &gt; 1 &amp;&amp; ((charAt(0) == '\&quot;' &amp;&amp; charAt(-1) == '\&quot;') ||</span>
+<span class="pc bpc" id="L113" title="3 of 4 branches missed.">                                 (charAt(0) == '\'' &amp;&amp; charAt(-1) == '\'')));</span>
     }
 
     public boolean isIdentifier() {
-<span class="fc" id="L112">        return RE_IDENTIFIER.matcher(asString()).matches();</span>
+<span class="fc" id="L117">        return RE_IDENTIFIER.matcher(asString()).matches();</span>
     }
 
     public boolean isQualifiedIdentifier() {
-<span class="fc" id="L116">        return RE_QUALIFIED_IDENTIFIER.matcher(asString()).matches();</span>
+<span class="fc" id="L121">        return RE_QUALIFIED_IDENTIFIER.matcher(asString()).matches();</span>
     }
 
     public boolean isDoubleQualifiedIdentifier() {
-<span class="fc" id="L120">        return RE_DOUBLE_QUALIFIED_IDENTIFIER.matcher(asString()).matches();</span>
+<span class="fc" id="L125">        return RE_DOUBLE_QUALIFIED_IDENTIFIER.matcher(asString()).matches();</span>
     }
 
     public boolean isReferenceIdentifier() {
-<span class="fc" id="L124">        return RE_REFERENCE_IDENTIFIER.matcher(asString()).matches();</span>
+<span class="fc" id="L129">        return RE_REFERENCE_IDENTIFIER.matcher(asString()).matches();</span>
     }
 
     public boolean isInteger() {
-<span class="fc" id="L128">        return RE_INTEGER.matcher(asString())</span>
-<span class="fc" id="L129">                         .matches();</span>
+<span class="fc" id="L133">        return RE_INTEGER.matcher(asString())</span>
+<span class="fc" id="L134">                         .matches();</span>
     }
 
     public boolean isReal() {
-<span class="fc" id="L133">        return RE_REAL.matcher(asString())</span>
-<span class="fc" id="L134">                      .matches();</span>
+<span class="fc" id="L138">        return RE_REAL.matcher(asString())</span>
+<span class="fc" id="L139">                      .matches();</span>
     }
 
     public boolean strEquals(String str) {
-<span class="nc" id="L138">        return super.strEquals(str.toCharArray());</span>
+<span class="fc" id="L143">        return super.strEquals(str.toCharArray());</span>
     }
 
     /**
@@ -146,125 +151,125 @@ public class Token extends CharSlice {
      */
     public String decodeLiteral(boolean strict) {
         // This decodes the string from UTF_8 bytes.
-<span class="fc" id="L149">        String tmp = substring(1, -1).asString();</span>
-<span class="fc" id="L150">        final int l = tmp.length();</span>
-<span class="fc" id="L151">        StringBuilder out = new StringBuilder(l);</span>
+<span class="fc" id="L154">        String tmp = substring(1, -1).asString();</span>
+<span class="fc" id="L155">        final int l = tmp.length();</span>
+<span class="fc" id="L156">        StringBuilder out = new StringBuilder(l);</span>
 
-<span class="fc" id="L153">        boolean esc = false;</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        for (int i = 0; i &lt; l; ++i) {</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (esc) {</span>
-<span class="fc" id="L156">                esc = false;</span>
+<span class="fc" id="L158">        boolean esc = false;</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (int i = 0; i &lt; l; ++i) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (esc) {</span>
+<span class="fc" id="L161">                esc = false;</span>
 
-<span class="fc" id="L158">                char ch = tmp.charAt(i);</span>
-<span class="fc bfc" id="L159" title="All 10 branches covered.">                switch (ch) {</span>
+<span class="fc" id="L163">                char ch = tmp.charAt(i);</span>
+<span class="fc bfc" id="L164" title="All 10 branches covered.">                switch (ch) {</span>
                     case 'b':
-<span class="fc" id="L161">                        out.append('\b');</span>
-<span class="fc" id="L162">                        break;</span>
+<span class="fc" id="L166">                        out.append('\b');</span>
+<span class="fc" id="L167">                        break;</span>
                     case 'f':
-<span class="fc" id="L164">                        out.append('\f');</span>
-<span class="fc" id="L165">                        break;</span>
+<span class="fc" id="L169">                        out.append('\f');</span>
+<span class="fc" id="L170">                        break;</span>
                     case 'n':
-<span class="fc" id="L167">                        out.append('\n');</span>
-<span class="fc" id="L168">                        break;</span>
+<span class="fc" id="L172">                        out.append('\n');</span>
+<span class="fc" id="L173">                        break;</span>
                     case 'r':
-<span class="fc" id="L170">                        out.append('\r');</span>
-<span class="fc" id="L171">                        break;</span>
+<span class="fc" id="L175">                        out.append('\r');</span>
+<span class="fc" id="L176">                        break;</span>
                     case 't':
-<span class="fc" id="L173">                        out.append('\t');</span>
-<span class="fc" id="L174">                        break;</span>
+<span class="fc" id="L178">                        out.append('\t');</span>
+<span class="fc" id="L179">                        break;</span>
                     case '\&quot;':
                     case '\'':
                     case '\\':
-<span class="fc" id="L178">                        out.append(ch);</span>
-<span class="fc" id="L179">                        break;</span>
+<span class="fc" id="L183">                        out.append(ch);</span>
+<span class="fc" id="L184">                        break;</span>
                     case 'u':
-<span class="fc bfc" id="L181" title="All 2 branches covered.">                        if (l &lt; i + 5) {</span>
-<span class="fc bfc" id="L182" title="All 2 branches covered.">                            if (strict) {</span>
-<span class="fc" id="L183">                                throw new IllegalArgumentException(&quot;Invalid escaped unicode char: '\\&quot; +</span>
-<span class="fc" id="L184">                                                                   Strings.escape(tmp.substring(i)) +</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">                        if (l &lt; i + 5) {</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">                            if (strict) {</span>
+<span class="fc" id="L188">                                throw new IllegalArgumentException(&quot;Invalid escaped unicode char: '\\&quot; +</span>
+<span class="fc" id="L189">                                                                   Strings.escape(tmp.substring(i)) +</span>
                                                                    &quot;'&quot;);
                             }
-<span class="fc" id="L187">                            out.append('?');</span>
+<span class="fc" id="L192">                            out.append('?');</span>
                         } else {
-<span class="fc" id="L189">                            String n = tmp.substring(i + 1, i + 5);</span>
+<span class="fc" id="L194">                            String n = tmp.substring(i + 1, i + 5);</span>
                             try {
-<span class="fc" id="L191">                                int cp = Integer.parseInt(n, 16);</span>
-<span class="fc" id="L192">                                out.append((char) cp);</span>
-<span class="fc" id="L193">                            } catch (NumberFormatException e) {</span>
-<span class="fc bfc" id="L194" title="All 2 branches covered.">                                if (strict) {</span>
-<span class="fc" id="L195">                                    throw new IllegalArgumentException(&quot;Invalid escaped unicode char: '\\u&quot; +</span>
-<span class="fc" id="L196">                                                                       Strings.escape(n) +</span>
+<span class="fc" id="L196">                                int cp = Integer.parseInt(n, 16);</span>
+<span class="fc" id="L197">                                out.append((char) cp);</span>
+<span class="fc" id="L198">                            } catch (NumberFormatException e) {</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">                                if (strict) {</span>
+<span class="fc" id="L200">                                    throw new IllegalArgumentException(&quot;Invalid escaped unicode char: '\\u&quot; +</span>
+<span class="fc" id="L201">                                                                       Strings.escape(n) +</span>
                                                                        &quot;'&quot;);
                                 }
-<span class="fc" id="L199">                                out.append('?');</span>
-<span class="fc" id="L200">                            }</span>
+<span class="fc" id="L204">                                out.append('?');</span>
+<span class="fc" id="L205">                            }</span>
                         }
-<span class="fc" id="L202">                        i += 4;  // skipping 4 more characters.</span>
-<span class="fc" id="L203">                        break;</span>
+<span class="fc" id="L207">                        i += 4;  // skipping 4 more characters.</span>
+<span class="fc" id="L208">                        break;</span>
                     case '0':
-<span class="pc bpc" id="L205" title="1 of 4 branches missed.">                        if (l == i + 1 ||</span>
-<span class="pc bpc" id="L206" title="1 of 4 branches missed.">                            (l &gt; i + 1 &amp;&amp; (tmp.charAt(i + 1) &lt; '0' || tmp.charAt(i + 1) &gt; '9'))) {</span>
+<span class="pc bpc" id="L210" title="1 of 4 branches missed.">                        if (l == i + 1 ||</span>
+<span class="pc bpc" id="L211" title="1 of 4 branches missed.">                            (l &gt; i + 1 &amp;&amp; (tmp.charAt(i + 1) &lt; '0' || tmp.charAt(i + 1) &gt; '9'))) {</span>
                             // allow single digit '\0' if the next char is not a digit.
-<span class="fc" id="L208">                            out.append('\0');</span>
-<span class="fc" id="L209">                            break;</span>
+<span class="fc" id="L213">                            out.append('\0');</span>
+<span class="fc" id="L214">                            break;</span>
                         }
                         // Intentional fallthrough
                     case '1':
-<span class="fc bfc" id="L213" title="All 2 branches covered.">                        if (l &lt; (i + 3)) {</span>
-<span class="fc bfc" id="L214" title="All 2 branches covered.">                            if (strict) {</span>
-<span class="fc" id="L215">                                throw new IllegalArgumentException(&quot;Invalid escaped char: '\\&quot; +</span>
-<span class="fc" id="L216">                                                                   Strings.escape(tmp.substring(i)) +</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">                        if (l &lt; (i + 3)) {</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">                            if (strict) {</span>
+<span class="fc" id="L220">                                throw new IllegalArgumentException(&quot;Invalid escaped char: '\\&quot; +</span>
+<span class="fc" id="L221">                                                                   Strings.escape(tmp.substring(i)) +</span>
                                                                    &quot;'&quot;);
                             }
-<span class="fc" id="L219">                            out.append('?');</span>
+<span class="fc" id="L224">                            out.append('?');</span>
                         } else {
-<span class="fc" id="L221">                            String n = tmp.substring(i, i + 3);</span>
+<span class="fc" id="L226">                            String n = tmp.substring(i, i + 3);</span>
                             try {
-<span class="fc" id="L223">                                int cp = Integer.parseInt(n, 8);</span>
-<span class="fc" id="L224">                                out.append((char) cp);</span>
-<span class="fc" id="L225">                            } catch (NumberFormatException e) {</span>
-<span class="fc bfc" id="L226" title="All 2 branches covered.">                                if (strict) {</span>
-<span class="fc" id="L227">                                    throw new IllegalArgumentException(&quot;Invalid escaped char: '\\&quot; +</span>
-<span class="fc" id="L228">                                                                       Strings.escape(n) +</span>
+<span class="fc" id="L228">                                int cp = Integer.parseInt(n, 8);</span>
+<span class="fc" id="L229">                                out.append((char) cp);</span>
+<span class="fc" id="L230">                            } catch (NumberFormatException e) {</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">                                if (strict) {</span>
+<span class="fc" id="L232">                                    throw new IllegalArgumentException(&quot;Invalid escaped char: '\\&quot; +</span>
+<span class="fc" id="L233">                                                                       Strings.escape(n) +</span>
                                                                        &quot;'&quot;);
                                 }
-<span class="fc" id="L231">                                out.append('?');</span>
-<span class="fc" id="L232">                            }</span>
+<span class="fc" id="L236">                                out.append('?');</span>
+<span class="fc" id="L237">                            }</span>
                         }
-<span class="fc" id="L234">                        i += 2;  // skipping 2 more characters.</span>
-<span class="fc" id="L235">                        break;</span>
+<span class="fc" id="L239">                        i += 2;  // skipping 2 more characters.</span>
+<span class="fc" id="L240">                        break;</span>
                     default:
-<span class="fc bfc" id="L237" title="All 2 branches covered.">                        if (strict) {</span>
-<span class="fc" id="L238">                            throw new IllegalArgumentException(&quot;Invalid escaped char: '\\&quot; +</span>
-<span class="fc" id="L239">                                                               Strings.escape(String.valueOf(ch)) +</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">                        if (strict) {</span>
+<span class="fc" id="L243">                            throw new IllegalArgumentException(&quot;Invalid escaped char: '\\&quot; +</span>
+<span class="fc" id="L244">                                                               Strings.escape(String.valueOf(ch)) +</span>
                                                                &quot;'&quot;);
                         }
-<span class="fc" id="L242">                        out.append('?');</span>
+<span class="fc" id="L247">                        out.append('?');</span>
                         break;
                 }
-<span class="fc bfc" id="L245" title="All 2 branches covered.">            } else if (tmp.charAt(i) == '\\') {</span>
-<span class="fc" id="L246">                esc = true;</span>
-<span class="fc bfc" id="L247" title="All 2 branches covered.">            } else if (!Strings.isConsolePrintable(tmp.codePointAt(i))) {</span>
-<span class="fc bfc" id="L248" title="All 2 branches covered.">                if (strict) {</span>
-<span class="fc" id="L249">                    throw new IllegalArgumentException(&quot;Unescaped string char: '&quot; +</span>
-<span class="fc" id="L250">                                                       Strings.escape(String.valueOf(tmp.charAt(i))) +</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">            } else if (tmp.charAt(i) == '\\') {</span>
+<span class="fc" id="L251">                esc = true;</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">            } else if (!Strings.isConsolePrintable(tmp.codePointAt(i))) {</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">                if (strict) {</span>
+<span class="fc" id="L254">                    throw new IllegalArgumentException(&quot;Unescaped string char: '&quot; +</span>
+<span class="fc" id="L255">                                                       Strings.escape(String.valueOf(tmp.charAt(i))) +</span>
                                                        &quot;'&quot;);
                 }
-<span class="fc" id="L253">                out.append('?');</span>
+<span class="fc" id="L258">                out.append('?');</span>
             } else {
-<span class="fc" id="L255">                out.append(tmp.charAt(i));</span>
+<span class="fc" id="L260">                out.append(tmp.charAt(i));</span>
             }
         }
-<span class="fc" id="L258">        return out.toString();</span>
+<span class="fc" id="L263">        return out.toString();</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L263">        return String.format(&quot;Token('%s',%d:%d-%d)&quot;, asString(), lineNo, linePos, linePos + len - 1);</span>
+<span class="fc" id="L268">        return String.format(&quot;Token('%s',%d:%d-%d)&quot;, asString(), lineNo, linePos, linePos + len - 1);</span>
     }
 
     public int getOffset() {
-<span class="nc" id="L267">        return off;</span>
+<span class="nc" id="L272">        return off;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

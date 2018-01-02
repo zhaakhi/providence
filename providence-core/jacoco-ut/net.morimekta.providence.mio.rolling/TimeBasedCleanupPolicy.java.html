@@ -1,4 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimeBasedCleanupPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">TimeBasedCleanupPolicy.java</span></div><h1>TimeBasedCleanupPolicy.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.mio.rolling;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimeBasedCleanupPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">TimeBasedCleanupPolicy.java</span></div><h1>TimeBasedCleanupPolicy.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2017 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.mio.rolling;
 
 import net.morimekta.providence.mio.RollingFileMessageWriter;
 
@@ -17,6 +37,11 @@ import java.util.regex.Matcher;
 import static net.morimekta.providence.mio.rolling.TimeBasedRollingPolicy.FILE_PATTERN;
 import static net.morimekta.providence.mio.rolling.TimeBasedRollingPolicy.getFormatter;
 
+/**
+ * A cleanup policy that removes files older than a certain date.
+ * Uses a date-based file pattern in order to determine the date
+ * on the file. the actual file mtime is &lt;b&gt;not&lt;/b&gt; checked.
+ */
 public class TimeBasedCleanupPolicy implements RollingFileMessageWriter.CleanupPolicy {
     /**
      * Create a time based cleanup policy using the system clock for parsing timestampts.
@@ -26,8 +51,8 @@ public class TimeBasedCleanupPolicy implements RollingFileMessageWriter.CleanupP
      * @param rollingFilePattern Pattern matching the files, see {@link TimeBasedRollingPolicy}.
      */
     public TimeBasedCleanupPolicy(int units, TimeUnit resolution, String rollingFilePattern) {
-<span class="fc" id="L29">        this(units, resolution, rollingFilePattern, Clock.systemDefaultZone());</span>
-<span class="fc" id="L30">    }</span>
+<span class="fc" id="L54">        this(units, resolution, rollingFilePattern, Clock.systemDefaultZone());</span>
+<span class="fc" id="L55">    }</span>
 
     /**
      * Create a time based cleanup policy.
@@ -37,49 +62,49 @@ public class TimeBasedCleanupPolicy implements RollingFileMessageWriter.CleanupP
      * @param rollingFilePattern Pattern matching the files, see {@link TimeBasedRollingPolicy}.
      * @param clock The clock to use.
      */
-<span class="fc" id="L40">    public TimeBasedCleanupPolicy(int units, TimeUnit resolution, String rollingFilePattern, Clock clock) {</span>
-<span class="fc" id="L41">        Matcher matcher = FILE_PATTERN.matcher(rollingFilePattern);</span>
-<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (!matcher.matches()) {</span>
-<span class="fc" id="L43">            throw new IllegalArgumentException(&quot;No timestamp input in rolling file pattern&quot;);</span>
+<span class="fc" id="L65">    public TimeBasedCleanupPolicy(int units, TimeUnit resolution, String rollingFilePattern, Clock clock) {</span>
+<span class="fc" id="L66">        Matcher matcher = FILE_PATTERN.matcher(rollingFilePattern);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (!matcher.matches()) {</span>
+<span class="fc" id="L68">            throw new IllegalArgumentException(&quot;No timestamp input in rolling file pattern&quot;);</span>
         }
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (units &lt; 1) {</span>
-<span class="fc" id="L46">            throw new IllegalArgumentException(&quot;Invalid duration: &quot; + units);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (units &lt; 1) {</span>
+<span class="fc" id="L71">            throw new IllegalArgumentException(&quot;Invalid duration: &quot; + units);</span>
         }
 
-<span class="fc" id="L49">        this.filePrefix = matcher.group(1);</span>
-<span class="fc" id="L50">        this.fileSuffix = matcher.group(3);</span>
+<span class="fc" id="L74">        this.filePrefix = matcher.group(1);</span>
+<span class="fc" id="L75">        this.fileSuffix = matcher.group(3);</span>
 
-<span class="fc" id="L52">        this.units = units;</span>
-<span class="fc" id="L53">        this.resolution = resolution;</span>
-<span class="fc" id="L54">        this.formatter = getFormatter(matcher.group(2), resolution);</span>
-<span class="fc" id="L55">        this.clock = clock;</span>
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L77">        this.units = units;</span>
+<span class="fc" id="L78">        this.resolution = resolution;</span>
+<span class="fc" id="L79">        this.formatter = getFormatter(matcher.group(2), resolution);</span>
+<span class="fc" id="L80">        this.clock = clock;</span>
+<span class="fc" id="L81">    }</span>
 
     @Nonnull
     @Override
     public List&lt;String&gt; getFilesToDelete(@Nonnull List&lt;String&gt; candidateFiles, @Nonnull String currentFileName) {
-<span class="fc" id="L61">        List&lt;String&gt; out = new ArrayList&lt;&gt;(candidateFiles.size());</span>
+<span class="fc" id="L86">        List&lt;String&gt; out = new ArrayList&lt;&gt;(candidateFiles.size());</span>
 
-<span class="fc" id="L63">        ZonedDateTime removeBefore = ZonedDateTime.ofInstant(Instant.ofEpochMilli(clock.millis()), clock.getZone())</span>
-<span class="fc" id="L64">                                                  .minusSeconds(resolution.toSeconds(units));</span>
+<span class="fc" id="L88">        ZonedDateTime removeBefore = ZonedDateTime.ofInstant(Instant.ofEpochMilli(clock.millis()), clock.getZone())</span>
+<span class="fc" id="L89">                                                  .minusSeconds(resolution.toSeconds(units));</span>
 
-<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (String candidate : candidateFiles) {</span>
-<span class="pc bpc" id="L67" title="2 of 4 branches missed.">            if (candidate.startsWith(filePrefix) &amp;&amp; candidate.endsWith(fileSuffix) &amp;&amp;</span>
-<span class="pc bpc" id="L68" title="1 of 2 branches missed.">                candidate.length() &gt; filePrefix.length() + fileSuffix.length()) {</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        for (String candidate : candidateFiles) {</span>
+<span class="pc bpc" id="L92" title="2 of 4 branches missed.">            if (candidate.startsWith(filePrefix) &amp;&amp; candidate.endsWith(fileSuffix) &amp;&amp;</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                candidate.length() &gt; filePrefix.length() + fileSuffix.length()) {</span>
                 try {
-<span class="fc" id="L70">                    String date = candidate.substring(filePrefix.length(), candidate.length() - fileSuffix.length());</span>
-<span class="fc" id="L71">                    ZonedDateTime ts = ZonedDateTime.ofInstant(Instant.ofEpochMilli(LocalDateTime.parse(date, formatter)</span>
-<span class="fc" id="L72">                                                                                                 .toInstant(ZoneOffset.UTC)</span>
-<span class="fc" id="L73">                                                                                                 .toEpochMilli()), clock.getZone());</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">                    if (ts.isBefore(removeBefore)) {</span>
-<span class="fc" id="L75">                        out.add(candidate);</span>
+<span class="fc" id="L95">                    String date = candidate.substring(filePrefix.length(), candidate.length() - fileSuffix.length());</span>
+<span class="fc" id="L96">                    ZonedDateTime ts = ZonedDateTime.ofInstant(Instant.ofEpochMilli(LocalDateTime.parse(date, formatter)</span>
+<span class="fc" id="L97">                                                                                                 .toInstant(ZoneOffset.UTC)</span>
+<span class="fc" id="L98">                                                                                                 .toEpochMilli()), clock.getZone());</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                    if (ts.isBefore(removeBefore)) {</span>
+<span class="fc" id="L100">                        out.add(candidate);</span>
                     }
-<span class="nc" id="L77">                } catch (Exception ignore) {</span>
+<span class="nc" id="L102">                } catch (Exception ignore) {</span>
                     // Just ignore any errors.
-<span class="fc" id="L79">                }</span>
+<span class="fc" id="L104">                }</span>
             }
-<span class="fc" id="L81">        }</span>
-<span class="fc" id="L82">        return out;</span>
+<span class="fc" id="L106">        }</span>
+<span class="fc" id="L107">        return out;</span>
     }
 
     private final String            filePrefix;

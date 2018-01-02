@@ -1,4 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimeBasedRollingPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">TimeBasedRollingPolicy.java</span></div><h1>TimeBasedRollingPolicy.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.mio.rolling;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimeBasedRollingPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">TimeBasedRollingPolicy.java</span></div><h1>TimeBasedRollingPolicy.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2017 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.mio.rolling;
 
 import net.morimekta.providence.mio.RollingFileMessageWriter;
 
@@ -12,44 +32,50 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A rolling policy that writes messages into files for certain time
+ * periods based on a date based file pattern and a time resolution.
+ * The time pattern must at least have the accuracy of the selected
+ * resolution.
+ */
 public class TimeBasedRollingPolicy implements RollingFileMessageWriter.RollingPolicy {
     public TimeBasedRollingPolicy(TimeUnit resolution,
                                   String rollingFilePattern) {
-<span class="fc" id="L18">        this(1, resolution, rollingFilePattern);</span>
-<span class="fc" id="L19">    }</span>
+<span class="fc" id="L44">        this(1, resolution, rollingFilePattern);</span>
+<span class="fc" id="L45">    }</span>
 
     public TimeBasedRollingPolicy(int units,
                                   TimeUnit resolution,
                                   String rollingFilePattern) {
-<span class="fc" id="L24">        this(units, resolution, rollingFilePattern, Clock.systemDefaultZone());</span>
-<span class="fc" id="L25">    }</span>
+<span class="fc" id="L50">        this(units, resolution, rollingFilePattern, Clock.systemDefaultZone());</span>
+<span class="fc" id="L51">    }</span>
 
     public TimeBasedRollingPolicy(TimeUnit resolution,
                                   String rollingFilePattern,
                                   Clock clock) {
-<span class="fc" id="L30">        this(1, resolution, rollingFilePattern, clock);</span>
-<span class="fc" id="L31">    }</span>
+<span class="fc" id="L56">        this(1, resolution, rollingFilePattern, clock);</span>
+<span class="fc" id="L57">    }</span>
 
     public TimeBasedRollingPolicy(int units,
                                   TimeUnit resolution,
                                   String rollingFilePattern,
-<span class="fc" id="L36">                                  Clock clock) {</span>
-<span class="fc" id="L37">        Matcher matcher = FILE_PATTERN.matcher(rollingFilePattern);</span>
-<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (!matcher.matches()) {</span>
-<span class="fc" id="L39">            throw new IllegalArgumentException(&quot;No timestamp input in rolling file pattern&quot;);</span>
+<span class="fc" id="L62">                                  Clock clock) {</span>
+<span class="fc" id="L63">        Matcher matcher = FILE_PATTERN.matcher(rollingFilePattern);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (!matcher.matches()) {</span>
+<span class="fc" id="L65">            throw new IllegalArgumentException(&quot;No timestamp input in rolling file pattern&quot;);</span>
         }
-<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (units &lt; 1) {</span>
-<span class="fc" id="L42">            throw new IllegalArgumentException(&quot;Invalid duration: &quot; + units);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (units &lt; 1) {</span>
+<span class="fc" id="L68">            throw new IllegalArgumentException(&quot;Invalid duration: &quot; + units);</span>
         }
 
-<span class="fc" id="L45">        this.filePrefix = matcher.group(1);</span>
-<span class="fc" id="L46">        this.fileSuffix = matcher.group(3);</span>
+<span class="fc" id="L71">        this.filePrefix = matcher.group(1);</span>
+<span class="fc" id="L72">        this.fileSuffix = matcher.group(3);</span>
 
-<span class="fc" id="L48">        this.units = units;</span>
-<span class="fc" id="L49">        this.resolution = resolution;</span>
-<span class="fc" id="L50">        this.formatter = getFormatter(matcher.group(2), resolution);</span>
-<span class="fc" id="L51">        this.clock = clock;</span>
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L74">        this.units = units;</span>
+<span class="fc" id="L75">        this.resolution = resolution;</span>
+<span class="fc" id="L76">        this.formatter = getFormatter(matcher.group(2), resolution);</span>
+<span class="fc" id="L77">        this.clock = clock;</span>
+<span class="fc" id="L78">    }</span>
 
     @Override
     public void maybeUpdateCurrentFile(@Nonnull RollingFileMessageWriter.CurrentFileUpdater onRollFile,
@@ -58,16 +84,16 @@ public class TimeBasedRollingPolicy implements RollingFileMessageWriter.RollingP
         // requested resolution. Note that if the units are not really divisible
         // in the time unit, you may get some wacky timestamps, e.g. having a resolution
         // of 11 minutes.
-<span class="fc" id="L61">        long ts = resolution.toMillis(</span>
-<span class="fc" id="L62">                units * (resolution.convert(clock.millis(), TimeUnit.MILLISECONDS) / units));</span>
-<span class="fc bfc" id="L63" title="All 4 branches covered.">        if (initialCall || ts != lastUpdateTs) {</span>
+<span class="fc" id="L87">        long ts = resolution.toMillis(</span>
+<span class="fc" id="L88">                units * (resolution.convert(clock.millis(), TimeUnit.MILLISECONDS) / units));</span>
+<span class="fc bfc" id="L89" title="All 4 branches covered.">        if (initialCall || ts != lastUpdateTs) {</span>
             // This is the actual roll over.
-<span class="fc" id="L65">            onRollFile.updateCurrentFile(filePrefix + fileTimestamp(ts) + fileSuffix);</span>
-<span class="fc" id="L66">            lastUpdateTs = ts;</span>
+<span class="fc" id="L91">            onRollFile.updateCurrentFile(filePrefix + fileTimestamp(ts) + fileSuffix);</span>
+<span class="fc" id="L92">            lastUpdateTs = ts;</span>
         }
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L94">    }</span>
 
-<span class="fc" id="L70">    static final Pattern FILE_PATTERN = Pattern.compile(</span>
+<span class="fc" id="L96">    static final Pattern FILE_PATTERN = Pattern.compile(</span>
             &quot;(.*)[%]d[{]([^{}]*)[}](.*)&quot;);
 
     private final String   filePrefix;
@@ -80,22 +106,22 @@ public class TimeBasedRollingPolicy implements RollingFileMessageWriter.RollingP
     private long lastUpdateTs;
 
     private String fileTimestamp(long ts) {
-<span class="fc" id="L83">        ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(ts), Clock.systemUTC().getZone())</span>
-<span class="fc" id="L84">                                         .withZoneSameLocal(clock.getZone());</span>
-<span class="fc" id="L85">        return formatter.format(zdt);</span>
+<span class="fc" id="L109">        ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(ts), Clock.systemUTC().getZone())</span>
+<span class="fc" id="L110">                                         .withZoneSameLocal(clock.getZone());</span>
+<span class="fc" id="L111">        return formatter.format(zdt);</span>
     }
 
     protected static DateTimeFormatter getFormatter(String timestampPattern,
                                                     TimeUnit resolution) {
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (timestampPattern.length() &gt; 0) {</span>
-<span class="fc" id="L91">            return DateTimeFormatter.ofPattern(timestampPattern);</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (timestampPattern.length() &gt; 0) {</span>
+<span class="fc" id="L117">            return DateTimeFormatter.ofPattern(timestampPattern);</span>
         }
 
-<span class="pc bfc" id="L94" title="All 4 branches covered.">        switch (resolution) {</span>
-<span class="fc" id="L95">            case DAYS: return DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;);</span>
-<span class="fc" id="L96">            case HOURS: return DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd'T'HH&quot;);</span>
-<span class="fc" id="L97">            case MINUTES: return DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd'T'HH:mm&quot;);</span>
-<span class="fc" id="L98">            default: throw new IllegalArgumentException(&quot;Not a valid log rotation resolution: &quot; + resolution.toString() + &quot;, must be days, hours or minutes&quot;);</span>
+<span class="pc bfc" id="L120" title="All 4 branches covered.">        switch (resolution) {</span>
+<span class="fc" id="L121">            case DAYS: return DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;);</span>
+<span class="fc" id="L122">            case HOURS: return DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd'T'HH&quot;);</span>
+<span class="fc" id="L123">            case MINUTES: return DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd'T'HH:mm&quot;);</span>
+<span class="fc" id="L124">            default: throw new IllegalArgumentException(&quot;Not a valid log rotation resolution: &quot; + resolution.toString() + &quot;, must be days, hours or minutes&quot;);</span>
         }
     }
 }

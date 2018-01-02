@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeneratorFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Generator : Common</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.generator</a> &gt; <span class="el_source">GeneratorFactory.java</span></div><h1>GeneratorFactory.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.generator;
+
+import net.morimekta.providence.generator.util.FileManager;
+
+import java.io.PrintStream;
+import java.util.Collection;
+
+/**
+ * Interface for handling generators in the providence compiler (pvdc).
+ *
+ * To make a generator module:
+ * &lt;ul&gt;
+ *     &lt;li&gt;Place following dependencies as &lt;code&gt;provided&lt;/code&gt; scope.
+ *     &lt;li&gt;Make a jar file bundle with the &lt;code&gt;maven-shade-plugin&lt;/code&gt;.
+ *     &lt;li&gt;Set the &lt;code&gt;Providence-Generator-Factory&lt;/code&gt; property in the
+ *         java &lt;code&gt;MANIFEST.MF&lt;/code&gt; to point at the implementation of
+ *         this interface.
+ *     &lt;li&gt;See documentation for &lt;code&gt;pvdc&lt;/code&gt; for where the jar file
+ *         should be placed to be included in the available generators.
+ * &lt;/ul&gt;
+ *
+ * &lt;h3&gt;Dependencies&lt;/h3&gt;
+ *
+ * &lt;pre&gt;{@code
+ * &lt;dependencies&gt;
+ *     &lt;dependency&gt;
+ *         &lt;groupId&gt;net.morimekta.providence&lt;/groupId&gt;
+ *         &lt;artifactId&gt;providence-core&lt;/artifactId&gt;
+ *         &lt;scope&gt;provided&lt;/scope&gt;
+ *     &lt;/dependency&gt;
+ *     &lt;dependency&gt;
+ *         &lt;groupId&gt;net.morimekta.providence&lt;/groupId&gt;
+ *         &lt;artifactId&gt;providence-reflect&lt;/artifactId&gt;
+ *         &lt;scope&gt;provided&lt;/scope&gt;
+ *     &lt;/dependency&gt;
+ *     &lt;dependency&gt;
+ *         &lt;groupId&gt;net.morimekta.providence&lt;/groupId&gt;
+ *         &lt;artifactId&gt;providence-generator&lt;/artifactId&gt;
+ *         &lt;scope&gt;provided&lt;/scope&gt;
+ *     &lt;/dependency&gt;
+ *     &lt;dependency&gt;
+ *         &lt;groupId&gt;com.google.guava&lt;/groupId&gt;
+ *         &lt;artifactId&gt;guava&lt;/artifactId&gt;
+ *         &lt;scope&gt;provided&lt;/scope&gt;
+ *     &lt;/dependency&gt;
+ *     &lt;dependency&gt;
+ *         &lt;groupId&gt;net.morimekta.utils&lt;/groupId&gt;
+ *         &lt;artifactId&gt;io-util&lt;/artifactId&gt;
+ *         &lt;scope&gt;provided&lt;/scope&gt;
+ *     &lt;/dependency&gt;
+ * &lt;/dependencies&gt;
+ * }&lt;/pre&gt;
+ *
+ * &lt;h3&gt;Manifest Transformer&lt;/h3&gt;
+ *
+ * &lt;pre&gt;{@code
+ * &lt;transformers&gt;
+ *     &lt;transformer implementation=&quot;org.apache.maven.plugins.shade.resource.ManifestResourceTransformer&quot;&gt;
+ *         &lt;manifestEntries&gt;
+ *             &lt;Providence-Generator-Factory&gt;net.morimekta.providence.generator.format.js.JSGenerator&lt;/Providence-Generator-Factory&gt;
+ *         &lt;/manifestEntries&gt;
+ *     &lt;/transformer&gt;
+ * &lt;/transformers&gt;
+ * }&lt;/pre&gt;
+ */
+public interface GeneratorFactory {
+    /**
+     * The name of the generator. This is what must be matched in the
+     * &lt;code&gt;--gen&lt;/code&gt; generator CLI argument.
+     *
+     * @return The name of the generator.
+     */
+    String generatorName();
+
+    /**
+     * A general description of the generator.
+     * Should be in the range of 20-60 characters.
+     *
+     * @return The generator description.
+     */
+    String generatorDescription();
+
+    /**
+     * Print a listing of the generator options in a CLI like
+     * point list. E.g.:
+     * &lt;pre&gt;
+     * - first          : The first option, does this.
+     * - second         : The second option, does that.
+     * &lt;/pre&gt;
+     *
+     * @param out The print stream to write to.
+     */
+    default void printGeneratorOptionsHelp(PrintStream out) {
+<span class="nc" id="L94">        out.println(&quot;No options available for the &quot; + generatorName() + &quot; generator.&quot;);</span>
+<span class="nc" id="L95">    }</span>
+
+    /**
+     * Create the actual generator. The generator instance is usually the same
+     * when generating many thrift programs, but does not need to be synchronized.
+     *
+     * @param manager The file manager to use for creating files.
+     * @param generatorOptions The general generator options.
+     * @param options List of string options to create generator-specific options.
+     * @return The generator instance.
+     */
+    Generator createGenerator(FileManager manager,
+                              GeneratorOptions generatorOptions,
+                              Collection&lt;String&gt; options);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

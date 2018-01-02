@@ -53,12 +53,12 @@ public class FramedBufferOutputStream extends OutputStream {
 
     @Override
     public void write(int val) throws IOException {
-<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (!buffer.hasRemaining()) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (!buffer.hasRemaining()) {</span>
 <span class="nc" id="L57">            throw new IOException(String.format(&quot;Frame size exceeded: 1 needed, 0 remaining, %d total&quot;,</span>
 <span class="nc" id="L58">                                                buffer.capacity()));</span>
         }
-<span class="fc" id="L60">        buffer.put((byte) val);</span>
-<span class="fc" id="L61">    }</span>
+<span class="nc" id="L60">        buffer.put((byte) val);</span>
+<span class="nc" id="L61">    }</span>
 
     @Override
     public void write(@Nonnull byte[] bytes) throws IOException {
@@ -71,12 +71,12 @@ public class FramedBufferOutputStream extends OutputStream {
 
     @Override
     public void write(@Nonnull byte[] var1, int off, int len) throws IOException {
-<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (buffer.remaining() &lt; len) {</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (buffer.remaining() &lt; len) {</span>
 <span class="nc" id="L75">            throw new IOException(String.format(&quot;Frame size exceeded: %d needed, %d remaining, %d total&quot;,</span>
 <span class="nc" id="L76">                                                len, buffer.remaining(), buffer.capacity()));</span>
         }
-<span class="nc" id="L78">        buffer.put(var1, off, off);</span>
-<span class="nc" id="L79">    }</span>
+<span class="fc" id="L78">        buffer.put(var1, off, len);</span>
+<span class="fc" id="L79">    }</span>
 
     /**
      * Write the frame at the current state, and reset the buffer to be able to
@@ -86,22 +86,25 @@ public class FramedBufferOutputStream extends OutputStream {
      */
     public void completeFrame() throws IOException {
 <span class="fc" id="L88">        int frameSize = buffer.position();</span>
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (frameSize &gt; 0) {</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (frameSize &gt; 0) {</span>
 <span class="fc" id="L90">            TFramedTransport.encodeFrameSize(frameSize, frameSizeBuffer);</span>
-<span class="fc" id="L91">            out.write(ByteBuffer.wrap(frameSizeBuffer));</span>
+<span class="fc" id="L91">            buffer.flip();</span>
 
-<span class="fc" id="L93">            buffer.flip();</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">            while (buffer.hasRemaining()) {</span>
-<span class="fc" id="L95">                out.write(buffer);</span>
-            }
-<span class="fc" id="L97">            buffer.rewind();</span>
-<span class="fc" id="L98">            buffer.limit(buffer.capacity());</span>
+<span class="fc" id="L93">            synchronized (out) {</span>
+<span class="fc" id="L94">                out.write(ByteBuffer.wrap(frameSizeBuffer));</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                while (buffer.hasRemaining()) {</span>
+<span class="fc" id="L96">                    out.write(buffer);</span>
+                }
+<span class="pc" id="L98">            }</span>
+
+<span class="fc" id="L100">            buffer.rewind();</span>
+<span class="fc" id="L101">            buffer.limit(buffer.capacity());</span>
         }
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L103">    }</span>
 
     @Override
     public void close() throws IOException {
-<span class="nc" id="L104">        completeFrame();</span>
-<span class="nc" id="L105">    }</span>
+<span class="fc" id="L107">        completeFrame();</span>
+<span class="fc" id="L108">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

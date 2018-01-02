@@ -1,8 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigSupplier.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config</a> &gt; <span class="el_source">ConfigSupplier.java</span></div><h1>ConfigSupplier.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.config;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigSupplier.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config</a> &gt; <span class="el_source">ConfigSupplier.java</span></div><h1>ConfigSupplier.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2017 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.config;
 
 import net.morimekta.providence.PMessage;
 import net.morimekta.providence.descriptor.PField;
 
+import javax.annotation.Nonnull;
 import java.util.function.Supplier;
 
 /**
@@ -20,14 +41,14 @@ public interface ConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PFie
      *
      * @param listener The config change listener to be added.
      */
-    void addListener(ConfigListener&lt;M, F&gt; listener);
+    void addListener(@Nonnull ConfigListener&lt;M, F&gt; listener);
 
     /**
      * Remove a config change listener.
      *
      * @param listener The config change listener to be removed.
      */
-    void removeListener(ConfigListener&lt;M,F&gt; listener);
+    void removeListener(@Nonnull ConfigListener&lt;M,F&gt; listener);
 
     /**
      * Get a simple descriptive name for this config supplier.
@@ -43,10 +64,13 @@ public interface ConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PFie
      */
     long configTimestamp();
 
+    /**
+     * Get a snapshot of the current config.
+     *
+     * @return Non-modifiable supplier of current config containing a snapshot.
+     */
     default ConfigSupplier&lt;M,F&gt; snapshot() {
-<span class="nc" id="L47">        synchronized (this) {</span>
-<span class="nc" id="L48">            return new FixedConfigSupplier&lt;&gt;(get(), configTimestamp());</span>
-<span class="nc" id="L49">        }</span>
+<span class="nc" id="L73">        return new FixedConfigSupplier&lt;&gt;(this);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

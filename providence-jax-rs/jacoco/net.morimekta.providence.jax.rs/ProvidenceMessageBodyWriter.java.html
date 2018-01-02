@@ -48,22 +48,21 @@ public abstract class ProvidenceMessageBodyWriter implements MessageBodyWriter&l
 
     @Override
     public boolean isWriteable(Class&lt;?&gt; type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (!PMessage.class.isAssignableFrom(type)) {</span>
+<span class="fc bfc" id="L51" title="All 4 branches covered.">        if (!PMessage.class.isAssignableFrom(type) || MediaType.WILDCARD_TYPE.equals(mediaType)) {</span>
 <span class="fc" id="L52">            return false;</span>
         }
-<span class="fc" id="L54">        String contentType = mediaType.getType() + &quot;/&quot; + mediaType.getSubtype();</span>
         try {
-<span class="fc" id="L56">            provider.getSerializer(contentType);</span>
-<span class="fc" id="L57">            return true;</span>
-<span class="fc" id="L58">        } catch (Exception e) {</span>
-<span class="fc" id="L59">            return false;</span>
+<span class="fc" id="L55">            provider.getSerializer(mediaType.toString());</span>
+<span class="fc" id="L56">            return true;</span>
+<span class="fc" id="L57">        } catch (Exception e) {</span>
+<span class="fc" id="L58">            return false;</span>
         }
     }
 
     @Override
     public long getSize(PMessage t, Class&lt;?&gt; type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         // deprecated by JAX-RS 2.0 and ignored by Jersey runtime
-<span class="nc" id="L66">        return 0;</span>
+<span class="nc" id="L65">        return 0;</span>
     }
 
     @Override
@@ -75,16 +74,14 @@ public abstract class ProvidenceMessageBodyWriter implements MessageBodyWriter&l
                         MediaType mediaType,
                         MultivaluedMap&lt;String, Object&gt; httpHeaders,
                         OutputStream entityStream) throws IOException, WebApplicationException {
-<span class="nc" id="L78">        String contentType = mediaType.getType() + &quot;/&quot; + mediaType.getSubtype();</span>
-
         try {
-<span class="nc" id="L81">            provider.getSerializer(contentType)</span>
-<span class="nc" id="L82">                    .serialize(entityStream, entity);</span>
-<span class="nc" id="L83">        } catch (NotSupportedException e) {</span>
-<span class="nc" id="L84">            throw new ProcessingException(&quot;Unknown media type: &quot; + mediaType, e);</span>
-<span class="nc" id="L85">        } catch (SerializerException se) {</span>
-<span class="nc" id="L86">            throw new ProcessingException(&quot;Unable to serialize entity&quot;, se);</span>
-<span class="nc" id="L87">        }</span>
-<span class="nc" id="L88">    }</span>
+<span class="nc" id="L78">            provider.getSerializer(mediaType.toString())</span>
+<span class="nc" id="L79">                    .serialize(entityStream, entity);</span>
+<span class="nc" id="L80">        } catch (NotSupportedException e) {</span>
+<span class="nc" id="L81">            throw new ProcessingException(&quot;Unknown media type: &quot; + mediaType, e);</span>
+<span class="nc" id="L82">        } catch (SerializerException se) {</span>
+<span class="nc" id="L83">            throw new ProcessingException(&quot;Unable to serialize entity&quot;, se);</span>
+<span class="nc" id="L84">        }</span>
+<span class="nc" id="L85">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

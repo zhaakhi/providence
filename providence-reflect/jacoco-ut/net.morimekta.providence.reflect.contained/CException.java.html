@@ -23,6 +23,7 @@ package net.morimekta.providence.reflect.contained;
 import net.morimekta.providence.PMessageBuilder;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -33,72 +34,70 @@ public class CException extends Exception implements CMessage&lt;CException&gt; 
     private final CExceptionDescriptor descriptor;
     private final Map&lt;Integer, Object&gt; values;
 
-<span class="fc" id="L36">    private CException(Builder builder) {</span>
-<span class="fc" id="L37">        values = builder.getValueMap();</span>
-<span class="fc" id="L38">        descriptor = builder.descriptor;</span>
-<span class="fc" id="L39">    }</span>
+<span class="fc" id="L37">    private CException(Builder builder) {</span>
+<span class="fc" id="L38">        values = builder.getValueMap();</span>
+<span class="fc" id="L39">        descriptor = builder.descriptor;</span>
+<span class="fc" id="L40">    }</span>
 
     @Override
     public Map&lt;Integer,Object&gt; values() {
-<span class="fc" id="L43">        return values;</span>
+<span class="fc" id="L44">        return values;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L48" title="All 6 branches covered.">        return this == o ||</span>
+<span class="fc bfc" id="L49" title="All 6 branches covered.">        return this == o ||</span>
                !(o == null ||
-<span class="fc bfc" id="L50" title="All 2 branches covered.">                 !(o instanceof CException)) &amp;&amp; CStruct.equals(this, (CException) o);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">                 !(o instanceof CException)) &amp;&amp; CStruct.equals(this, (CException) o);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L55">        return CStruct.hashCode(this);</span>
+<span class="fc" id="L56">        return CStruct.hashCode(this);</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L60">        return descriptor().getQualifiedName() + asString();</span>
+<span class="fc" id="L61">        return descriptor().getQualifiedName() + asString();</span>
     }
 
     @Override
     @Nonnull
     public PMessageBuilder&lt;CException,CField&gt; mutate() {
-<span class="fc" id="L66">        return new Builder(descriptor).merge(this);</span>
+<span class="fc" id="L67">        return new Builder(descriptor).merge(this);</span>
     }
 
     @Nonnull
     @Override
     public CExceptionDescriptor descriptor() {
-<span class="fc" id="L72">        return descriptor;</span>
+<span class="fc" id="L73">        return descriptor;</span>
     }
 
     public static class Builder extends CMessageBuilder&lt;Builder, CException&gt; {
         private final CExceptionDescriptor descriptor;
 
-<span class="fc" id="L78">        public Builder(CExceptionDescriptor type) {</span>
-<span class="fc" id="L79">            descriptor = type;</span>
-<span class="fc" id="L80">        }</span>
+<span class="fc" id="L79">        public Builder(CExceptionDescriptor type) {</span>
+<span class="fc" id="L80">            descriptor = type;</span>
+<span class="fc" id="L81">        }</span>
 
         @Nonnull
         @Override
         public CExceptionDescriptor descriptor() {
-<span class="fc" id="L85">            return descriptor;</span>
+<span class="fc" id="L86">            return descriptor;</span>
         }
 
         @Nonnull
         @Override
         public CException build() {
-<span class="fc" id="L91">            CException e = new CException(this);</span>
+<span class="fc" id="L92">            CException e = new CException(this);</span>
 
             try {
-<span class="fc" id="L94">                StackTraceElement[] stackTrace = e.getStackTrace();</span>
-<span class="fc" id="L95">                StackTraceElement[] subTrace = new StackTraceElement[stackTrace.length - 1];</span>
-<span class="fc" id="L96">                System.arraycopy(stackTrace, 1, subTrace, 0, subTrace.length);</span>
-<span class="fc" id="L97">                e.setStackTrace(subTrace);</span>
-<span class="nc" id="L98">            } catch (Throwable ignored) {</span>
-<span class="fc" id="L99">            }</span>
+<span class="fc" id="L95">                StackTraceElement[] stackTrace = e.getStackTrace();</span>
+<span class="fc" id="L96">                e.setStackTrace(Arrays.copyOfRange(stackTrace, 1, stackTrace.length));</span>
+<span class="nc" id="L97">            } catch (Throwable ignored) {</span>
+<span class="fc" id="L98">            }</span>
 
-<span class="fc" id="L101">            return e;</span>
+<span class="fc" id="L100">            return e;</span>
         }
     }
 }

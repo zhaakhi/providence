@@ -44,6 +44,8 @@ import net.morimekta.util.Binary;
 import net.morimekta.util.io.LittleEndianBinaryReader;
 import net.morimekta.util.io.LittleEndianBinaryWriter;
 
+import com.google.common.annotations.Beta;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -56,11 +58,13 @@ import java.util.Map;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Compact binary serializer. This uses the most compact binary format
- * allowable.
+ * Compact binary serializer. This uses a pretty compact binary format
+ * while being optimized for fewer operations during read and write.
  * &lt;p&gt;
- * See data definition file &lt;code&gt;docs/fast-binary.md&lt;/code&gt; for format spec.
+ * Documentation: &lt;a href=&quot;http://www.morimekta.net/providence/serializer-fast-binary.html&quot;&gt;Fast Binary Serialization Format&lt;/a&gt;
+ * with IDL and explanation.
  */
+@Beta
 public class FastBinarySerializer extends Serializer {
     public static final String MEDIA_TYPE = &quot;application/vnd.morimekta.providence.binary&quot;;
 
@@ -70,37 +74,37 @@ public class FastBinarySerializer extends Serializer {
      * Construct a serializer instance.
      */
     public FastBinarySerializer() {
-<span class="nc" id="L73">        this(DEFAULT_STRICT);</span>
-<span class="nc" id="L74">    }</span>
+<span class="nc" id="L77">        this(DEFAULT_STRICT);</span>
+<span class="nc" id="L78">    }</span>
 
     /**
      * Construct a serializer instance.
      *
      * @param readStrict If serializer should fail on unknown input data.
      */
-<span class="fc" id="L81">    public FastBinarySerializer(boolean readStrict) {</span>
-<span class="fc" id="L82">        this.readStrict = readStrict;</span>
-<span class="fc" id="L83">    }</span>
+<span class="fc" id="L85">    public FastBinarySerializer(boolean readStrict) {</span>
+<span class="fc" id="L86">        this.readStrict = readStrict;</span>
+<span class="fc" id="L87">    }</span>
 
     @Override
     public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     int serialize(@Nonnull OutputStream os, @Nonnull Message message) throws IOException {
-<span class="fc" id="L88">        LittleEndianBinaryWriter out = new LittleEndianBinaryWriter(os);</span>
-<span class="fc" id="L89">        return writeMessage(out, message);</span>
+<span class="fc" id="L92">        LittleEndianBinaryWriter out = new LittleEndianBinaryWriter(os);</span>
+<span class="fc" id="L93">        return writeMessage(out, message);</span>
     }
 
     @Override
     public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     int serialize(@Nonnull OutputStream os, @Nonnull PServiceCall&lt;Message, Field&gt; call)
             throws IOException {
-<span class="fc" id="L96">        LittleEndianBinaryWriter out = new LittleEndianBinaryWriter(os);</span>
-<span class="fc" id="L97">        byte[] method = call.getMethod().getBytes(UTF_8);</span>
-<span class="fc" id="L98">        int len = out.writeVarint(method.length &lt;&lt; 3 | call.getType().asInteger());</span>
-<span class="fc" id="L99">        len += method.length;</span>
-<span class="fc" id="L100">        out.write(method);</span>
-<span class="fc" id="L101">        len += out.writeVarint(call.getSequence());</span>
-<span class="fc" id="L102">        len += writeMessage(out, call.getMessage());</span>
-<span class="fc" id="L103">        return len;</span>
+<span class="fc" id="L100">        LittleEndianBinaryWriter out = new LittleEndianBinaryWriter(os);</span>
+<span class="fc" id="L101">        byte[] method = call.getMethod().getBytes(UTF_8);</span>
+<span class="fc" id="L102">        int len = out.writeVarint(method.length &lt;&lt; 3 | call.getType().asInteger());</span>
+<span class="fc" id="L103">        len += method.length;</span>
+<span class="fc" id="L104">        out.write(method);</span>
+<span class="fc" id="L105">        len += out.writeVarint(call.getSequence());</span>
+<span class="fc" id="L106">        len += writeMessage(out, call.getMessage());</span>
+<span class="fc" id="L107">        return len;</span>
     }
 
     @Nonnull
@@ -109,8 +113,8 @@ public class FastBinarySerializer extends Serializer {
     Message deserialize(@Nonnull InputStream is,
                         @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
-<span class="fc" id="L112">        LittleEndianBinaryReader in = new LittleEndianBinaryReader(is);</span>
-<span class="fc" id="L113">        return readMessage(in, descriptor);</span>
+<span class="fc" id="L116">        LittleEndianBinaryReader in = new LittleEndianBinaryReader(is);</span>
+<span class="fc" id="L117">        return readMessage(in, descriptor);</span>
     }
 
     @Nonnull
@@ -119,69 +123,69 @@ public class FastBinarySerializer extends Serializer {
     public &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     PServiceCall&lt;Message, Field&gt; deserialize(@Nonnull InputStream is, @Nonnull PService service)
             throws SerializerException {
-<span class="fc" id="L122">        String methodName = null;</span>
-<span class="fc" id="L123">        int sequence = 0;</span>
-<span class="fc" id="L124">        PServiceCallType type = null;</span>
+<span class="fc" id="L126">        String methodName = null;</span>
+<span class="fc" id="L127">        int sequence = 0;</span>
+<span class="fc" id="L128">        PServiceCallType type = null;</span>
         try {
-<span class="fc" id="L126">            LittleEndianBinaryReader in = new LittleEndianBinaryReader(is);</span>
+<span class="fc" id="L130">            LittleEndianBinaryReader in = new LittleEndianBinaryReader(is);</span>
             // Max method name length: 255 chars.
-<span class="fc" id="L128">            int tag = in.readIntVarint();</span>
-<span class="fc" id="L129">            int len = tag &gt;&gt;&gt; 3;</span>
-<span class="fc" id="L130">            int typeKey = tag &amp; 0x07;</span>
+<span class="fc" id="L132">            int tag = in.readIntVarint();</span>
+<span class="fc" id="L133">            int len = tag &gt;&gt;&gt; 3;</span>
+<span class="fc" id="L134">            int typeKey = tag &amp; 0x07;</span>
 
-<span class="fc" id="L132">            methodName = new String(in.expectBytes(len), UTF_8);</span>
-<span class="fc" id="L133">            sequence = in.readIntVarint();</span>
-<span class="fc" id="L134">            type = PServiceCallType.findById(typeKey);</span>
+<span class="fc" id="L136">            methodName = new String(in.expectBytes(len), UTF_8);</span>
+<span class="fc" id="L137">            sequence = in.readIntVarint();</span>
+<span class="fc" id="L138">            type = PServiceCallType.findById(typeKey);</span>
 
-<span class="pc bpc" id="L136" title="1 of 2 branches missed.">            if (type == null) {</span>
-<span class="nc" id="L137">                throw new SerializerException(&quot;Invalid call type &quot; + typeKey)</span>
-<span class="nc" id="L138">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
-<span class="fc bfc" id="L139" title="All 2 branches covered.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
-<span class="fc" id="L140">                PApplicationException ex = readMessage(in, PApplicationException.kDescriptor);</span>
-<span class="fc" id="L141">                return (PServiceCall&lt;Message, Field&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">            if (type == null) {</span>
+<span class="nc" id="L141">                throw new SerializerException(&quot;Invalid call type &quot; + typeKey)</span>
+<span class="nc" id="L142">                        .setExceptionType(PApplicationExceptionType.INVALID_MESSAGE_TYPE);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            } else if (type == PServiceCallType.EXCEPTION) {</span>
+<span class="fc" id="L144">                PApplicationException ex = readMessage(in, PApplicationException.kDescriptor);</span>
+<span class="fc" id="L145">                return (PServiceCall&lt;Message, Field&gt;) new PServiceCall&lt;&gt;(methodName, type, sequence, ex);</span>
             }
 
-<span class="fc" id="L144">            PServiceMethod method = service.getMethod(methodName);</span>
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            if (method == null) {</span>
-<span class="nc" id="L146">                throw new SerializerException(&quot;No such method %s on %s&quot;,</span>
+<span class="fc" id="L148">            PServiceMethod method = service.getMethod(methodName);</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">            if (method == null) {</span>
+<span class="nc" id="L150">                throw new SerializerException(&quot;No such method %s on %s&quot;,</span>
                                               methodName,
-<span class="nc" id="L148">                                              service.getQualifiedName())</span>
-<span class="nc" id="L149">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
+<span class="nc" id="L152">                                              service.getQualifiedName())</span>
+<span class="nc" id="L153">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
 
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc bfc" id="L153" title="All 2 branches covered.">            PMessageDescriptor&lt;Message, Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
-<span class="pc bpc" id="L154" title="1 of 2 branches missed.">            if (descriptor == null) {</span>
-<span class="nc" id="L155">                throw new SerializerException(&quot;No such %s descriptor for %s&quot;,</span>
-<span class="nc bnc" id="L156" title="All 2 branches missed.">                                              isRequestCallType(type) ? &quot;request&quot; : &quot;response&quot;,</span>
-<span class="nc" id="L157">                                              service.getQualifiedName())</span>
-<span class="nc" id="L158">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            PMessageDescriptor&lt;Message, Field&gt; descriptor = isRequestCallType(type) ? method.getRequestType() : method.getResponseType();</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">            if (descriptor == null) {</span>
+<span class="nc" id="L159">                throw new SerializerException(&quot;No such %s descriptor for %s&quot;,</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                                              isRequestCallType(type) ? &quot;request&quot; : &quot;response&quot;,</span>
+<span class="nc" id="L161">                                              service.getQualifiedName())</span>
+<span class="nc" id="L162">                        .setExceptionType(PApplicationExceptionType.UNKNOWN_METHOD);</span>
             }
 
-<span class="fc" id="L161">            Message message = readMessage(in, descriptor);</span>
-<span class="fc" id="L162">            return new PServiceCall&lt;&gt;(methodName, type, sequence, message);</span>
-<span class="nc" id="L163">        } catch (SerializerException e) {</span>
-<span class="nc" id="L164">            throw new SerializerException(e)</span>
-<span class="nc" id="L165">                    .setCallType(type)</span>
-<span class="nc" id="L166">                    .setMethodName(methodName)</span>
-<span class="nc" id="L167">                    .setSequenceNo(sequence);</span>
-<span class="nc" id="L168">        } catch (IOException e) {</span>
-<span class="nc" id="L169">            throw new SerializerException(e, e.getMessage())</span>
-<span class="nc" id="L170">                    .setCallType(type)</span>
-<span class="nc" id="L171">                    .setMethodName(methodName)</span>
-<span class="nc" id="L172">                    .setSequenceNo(sequence);</span>
+<span class="fc" id="L165">            Message message = readMessage(in, descriptor);</span>
+<span class="fc" id="L166">            return new PServiceCall&lt;&gt;(methodName, type, sequence, message);</span>
+<span class="nc" id="L167">        } catch (SerializerException e) {</span>
+<span class="nc" id="L168">            throw new SerializerException(e)</span>
+<span class="nc" id="L169">                    .setCallType(type)</span>
+<span class="nc" id="L170">                    .setMethodName(methodName)</span>
+<span class="nc" id="L171">                    .setSequenceNo(sequence);</span>
+<span class="nc" id="L172">        } catch (IOException e) {</span>
+<span class="nc" id="L173">            throw new SerializerException(e, e.getMessage())</span>
+<span class="nc" id="L174">                    .setCallType(type)</span>
+<span class="nc" id="L175">                    .setMethodName(methodName)</span>
+<span class="nc" id="L176">                    .setSequenceNo(sequence);</span>
         }
     }
 
     @Override
     public boolean binaryProtocol() {
-<span class="fc" id="L178">        return true;</span>
+<span class="fc" id="L182">        return true;</span>
     }
 
     @Nonnull
     @Override
     public String mediaType() {
-<span class="nc" id="L184">        return MEDIA_TYPE;</span>
+<span class="nc" id="L188">        return MEDIA_TYPE;</span>
     }
 
     // --- MESSAGE ---
@@ -189,31 +193,31 @@ public class FastBinarySerializer extends Serializer {
     private &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     int writeMessage(LittleEndianBinaryWriter out, Message message)
             throws IOException {
-<span class="fc" id="L192">        int len = 0;</span>
-<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">            if (((PUnion) message).unionFieldIsSet()) {</span>
-<span class="fc" id="L195">                PField field = ((PUnion) message).unionField();</span>
-<span class="fc" id="L196">                len += writeFieldValue(out, field.getId(), field.getDescriptor(), message.get(field.getId()));</span>
-<span class="fc" id="L197">            }</span>
+<span class="fc" id="L196">        int len = 0;</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        if (message instanceof PUnion) {</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (((PUnion) message).unionFieldIsSet()) {</span>
+<span class="fc" id="L199">                PField field = ((PUnion) message).unionField();</span>
+<span class="fc" id="L200">                len += writeFieldValue(out, field.getId(), field.getDescriptor(), message.get(field.getId()));</span>
+<span class="fc" id="L201">            }</span>
         } else {
-<span class="fc bfc" id="L199" title="All 2 branches covered.">            for (PField field : message.descriptor()</span>
-<span class="fc" id="L200">                                          .getFields()) {</span>
-<span class="fc bfc" id="L201" title="All 2 branches covered.">                if (message.has(field.getId())) {</span>
-<span class="fc" id="L202">                    len += writeFieldValue(out, field.getId(), field.getDescriptor(), message.get(field.getId()));</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            for (PField field : message.descriptor()</span>
+<span class="fc" id="L204">                                          .getFields()) {</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                if (message.has(field.getId())) {</span>
+<span class="fc" id="L206">                    len += writeFieldValue(out, field.getId(), field.getDescriptor(), message.get(field.getId()));</span>
                 }
             }
         }
         // write STOP field.
-<span class="fc" id="L207">        return len + out.writeVarint(STOP);</span>
+<span class="fc" id="L211">        return len + out.writeVarint(STOP);</span>
     }
 
     private void consumeMessage(LittleEndianBinaryReader in) throws IOException {
         int tag;
-<span class="fc bfc" id="L212" title="All 2 branches covered.">        while ((tag = in.readIntVarint()) != STOP) {</span>
-<span class="fc" id="L213">            int type = tag &amp; 0x07;</span>
-<span class="fc" id="L214">            readFieldValue(in, type, null);</span>
-<span class="fc" id="L215">        }</span>
-<span class="fc" id="L216">    }</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        while ((tag = in.readIntVarint()) != STOP) {</span>
+<span class="fc" id="L217">            int type = tag &amp; 0x07;</span>
+<span class="fc" id="L218">            readFieldValue(in, type, null);</span>
+<span class="fc" id="L219">        }</span>
+<span class="fc" id="L220">    }</span>
 
     @Nonnull
     private &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
@@ -221,28 +225,28 @@ public class FastBinarySerializer extends Serializer {
                         @Nonnull PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws IOException {
         int tag;
-<span class="fc" id="L224">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
-<span class="fc bfc" id="L225" title="All 2 branches covered.">        while ((tag = in.readIntVarint()) != STOP) {</span>
-<span class="fc" id="L226">            int id = tag &gt;&gt;&gt; 3;</span>
-<span class="fc" id="L227">            int type = tag &amp; 0x07;</span>
-<span class="fc" id="L228">            Field field = descriptor.findFieldById(id);</span>
-<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (field != null) {</span>
-<span class="fc" id="L230">                Object value = readFieldValue(in, type, field.getDescriptor());</span>
-<span class="fc" id="L231">                builder.set(field.getId(), value);</span>
-<span class="fc" id="L232">            } else {</span>
-<span class="fc" id="L233">                readFieldValue(in, type, null);</span>
+<span class="fc" id="L228">        PMessageBuilder&lt;Message, Field&gt; builder = descriptor.builder();</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">        while ((tag = in.readIntVarint()) != STOP) {</span>
+<span class="fc" id="L230">            int id = tag &gt;&gt;&gt; 3;</span>
+<span class="fc" id="L231">            int type = tag &amp; 0x07;</span>
+<span class="fc" id="L232">            Field field = descriptor.findFieldById(id);</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">            if (field != null) {</span>
+<span class="fc" id="L234">                Object value = readFieldValue(in, type, field.getDescriptor());</span>
+<span class="fc" id="L235">                builder.set(field.getId(), value);</span>
+<span class="fc" id="L236">            } else {</span>
+<span class="fc" id="L237">                readFieldValue(in, type, null);</span>
             }
-<span class="fc" id="L235">        }</span>
+<span class="fc" id="L239">        }</span>
 
-<span class="pc bpc" id="L237" title="1 of 2 branches missed.">        if (readStrict) {</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">        if (readStrict) {</span>
             try {
-<span class="fc" id="L239">                builder.validate();</span>
-<span class="nc" id="L240">            } catch (IllegalStateException e) {</span>
-<span class="nc" id="L241">                throw new SerializerException(e, e.getMessage());</span>
-<span class="fc" id="L242">            }</span>
+<span class="fc" id="L243">                builder.validate();</span>
+<span class="nc" id="L244">            } catch (IllegalStateException e) {</span>
+<span class="nc" id="L245">                throw new SerializerException(e, e.getMessage());</span>
+<span class="fc" id="L246">            }</span>
         }
 
-<span class="fc" id="L245">        return builder.build();</span>
+<span class="fc" id="L249">        return builder.build();</span>
     }
 
     // --- FIELD VALUE ---
@@ -250,63 +254,63 @@ public class FastBinarySerializer extends Serializer {
     @SuppressWarnings(&quot;unchecked&quot;)
     private int writeFieldValue(LittleEndianBinaryWriter out, int key, PDescriptor descriptor, Object value)
             throws IOException {
-<span class="pc bpc" id="L253" title="2 of 13 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L257" title="2 of 13 branches missed.">        switch (descriptor.getType()) {</span>
             case VOID: {
-<span class="nc" id="L255">                return out.writeVarint(key &lt;&lt; 3 | TRUE);</span>
+<span class="nc" id="L259">                return out.writeVarint(key &lt;&lt; 3 | TRUE);</span>
             }
             case BOOL: {
-<span class="fc bfc" id="L258" title="All 2 branches covered.">                return out.writeVarint(key &lt;&lt; 3 | ((Boolean) value ? TRUE : NONE));</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">                return out.writeVarint(key &lt;&lt; 3 | ((Boolean) value ? TRUE : NONE));</span>
             }
             case BYTE: {
-<span class="fc" id="L261">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
-<span class="fc" id="L262">                return len + out.writeZigzag((byte) value);</span>
+<span class="fc" id="L265">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
+<span class="fc" id="L266">                return len + out.writeZigzag((byte) value);</span>
             }
             case I16: {
-<span class="fc" id="L265">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
-<span class="fc" id="L266">                return len + out.writeZigzag((short) value);</span>
+<span class="fc" id="L269">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
+<span class="fc" id="L270">                return len + out.writeZigzag((short) value);</span>
             }
             case I32: {
-<span class="fc" id="L269">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
-<span class="fc" id="L270">                return len + out.writeZigzag((int) value);</span>
+<span class="fc" id="L273">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
+<span class="fc" id="L274">                return len + out.writeZigzag((int) value);</span>
             }
             case I64: {
-<span class="fc" id="L273">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
-<span class="fc" id="L274">                return len + out.writeZigzag((long) value);</span>
+<span class="fc" id="L277">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
+<span class="fc" id="L278">                return len + out.writeZigzag((long) value);</span>
             }
             case DOUBLE: {
-<span class="fc" id="L277">                int len = out.writeVarint(key &lt;&lt; 3 | FIXED_64);</span>
-<span class="fc" id="L278">                return len + out.writeDouble((Double) value);</span>
+<span class="fc" id="L281">                int len = out.writeVarint(key &lt;&lt; 3 | FIXED_64);</span>
+<span class="fc" id="L282">                return len + out.writeDouble((Double) value);</span>
             }
             case STRING: {
-<span class="fc" id="L281">                byte[] bytes = ((String) value).getBytes(StandardCharsets.UTF_8);</span>
-<span class="fc" id="L282">                int len = out.writeVarint(key &lt;&lt; 3 | BINARY);</span>
-<span class="fc" id="L283">                len += out.writeVarint(bytes.length);</span>
-<span class="fc" id="L284">                out.write(bytes);</span>
-<span class="fc" id="L285">                return len + bytes.length;</span>
+<span class="fc" id="L285">                byte[] bytes = ((String) value).getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L286">                int len = out.writeVarint(key &lt;&lt; 3 | BINARY);</span>
+<span class="fc" id="L287">                len += out.writeVarint(bytes.length);</span>
+<span class="fc" id="L288">                out.write(bytes);</span>
+<span class="fc" id="L289">                return len + bytes.length;</span>
             }
             case BINARY: {
-<span class="fc" id="L288">                Binary bytes = (Binary) value;</span>
-<span class="fc" id="L289">                int len = out.writeVarint(key &lt;&lt; 3 | BINARY);</span>
-<span class="fc" id="L290">                len += out.writeVarint(bytes.length());</span>
-<span class="fc" id="L291">                bytes.write(out);</span>
-<span class="fc" id="L292">                return len + bytes.length();</span>
+<span class="fc" id="L292">                Binary bytes = (Binary) value;</span>
+<span class="fc" id="L293">                int len = out.writeVarint(key &lt;&lt; 3 | BINARY);</span>
+<span class="fc" id="L294">                len += out.writeVarint(bytes.length());</span>
+<span class="fc" id="L295">                bytes.write(out);</span>
+<span class="fc" id="L296">                return len + bytes.length();</span>
             }
             case ENUM: {
-<span class="fc" id="L295">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
-<span class="fc" id="L296">                return len + out.writeZigzag(((PEnumValue) value).asInteger());</span>
+<span class="fc" id="L299">                int len = out.writeVarint(key &lt;&lt; 3 | VARINT);</span>
+<span class="fc" id="L300">                return len + out.writeZigzag(((PEnumValue) value).asInteger());</span>
             }
             case MESSAGE: {
-<span class="fc" id="L299">                int len = out.writeVarint(key &lt;&lt; 3 | MESSAGE);</span>
-<span class="fc" id="L300">                return len + writeMessage(out, (PMessage) value);</span>
+<span class="fc" id="L303">                int len = out.writeVarint(key &lt;&lt; 3 | MESSAGE);</span>
+<span class="fc" id="L304">                return len + writeMessage(out, (PMessage) value);</span>
             }
             case MAP:
             case SET:
             case LIST: {
-<span class="fc" id="L305">                int len = out.writeVarint(key &lt;&lt; 3 | COLLECTION);</span>
-<span class="fc" id="L306">                return len + writeContainerEntry(out, COLLECTION, descriptor, value);</span>
+<span class="fc" id="L309">                int len = out.writeVarint(key &lt;&lt; 3 | COLLECTION);</span>
+<span class="fc" id="L310">                return len + writeContainerEntry(out, COLLECTION, descriptor, value);</span>
             }
             default:
-<span class="nc" id="L309">                throw new Error(&quot;Unreachable code reached&quot;);</span>
+<span class="nc" id="L313">                throw new Error(&quot;Unreachable code reached&quot;);</span>
         }
     }
 
@@ -314,71 +318,71 @@ public class FastBinarySerializer extends Serializer {
     @SuppressWarnings(&quot;unchecked&quot;)
     private int writeContainerEntry(LittleEndianBinaryWriter out, int typeid, PDescriptor descriptor, Object value)
             throws IOException {
-<span class="pc bpc" id="L317" title="1 of 6 branches missed.">        switch (typeid) {</span>
+<span class="pc bpc" id="L321" title="1 of 6 branches missed.">        switch (typeid) {</span>
             case VARINT: {
-<span class="fc bfc" id="L319" title="All 2 branches covered.">                if (value instanceof Boolean) {</span>
-<span class="fc bfc" id="L320" title="All 2 branches covered.">                    return out.writeVarint(((Boolean) value ? 1 : 0));</span>
-<span class="fc bfc" id="L321" title="All 2 branches covered.">                } else if (value instanceof Number) {</span>
-<span class="fc" id="L322">                    return out.writeZigzag(((Number) value).longValue());</span>
-<span class="pc bpc" id="L323" title="1 of 2 branches missed.">                } else if (value instanceof PEnumValue) {</span>
-<span class="fc" id="L324">                    return out.writeZigzag(((PEnumValue) value).asInteger());</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">                if (value instanceof Boolean) {</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">                    return out.writeVarint(((Boolean) value ? 1 : 0));</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">                } else if (value instanceof Number) {</span>
+<span class="fc" id="L326">                    return out.writeZigzag(((Number) value).longValue());</span>
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">                } else if (value instanceof PEnumValue) {</span>
+<span class="fc" id="L328">                    return out.writeZigzag(((PEnumValue) value).asInteger());</span>
                 } else {
-<span class="nc" id="L326">                    throw new SerializerException(&quot;&quot;);</span>
+<span class="nc" id="L330">                    throw new SerializerException(&quot;&quot;);</span>
                 }
             }
             case FIXED_64: {
-<span class="fc" id="L330">                return out.writeDouble((Double) value);</span>
+<span class="fc" id="L334">                return out.writeDouble((Double) value);</span>
             }
             case BINARY: {
-<span class="fc bfc" id="L333" title="All 2 branches covered.">                if (value instanceof CharSequence) {</span>
-<span class="fc" id="L334">                    byte[] bytes = ((String) value).getBytes(StandardCharsets.UTF_8);</span>
-<span class="fc" id="L335">                    int len = out.writeVarint(bytes.length);</span>
-<span class="fc" id="L336">                    out.write(bytes);</span>
-<span class="fc" id="L337">                    return len + bytes.length;</span>
-<span class="pc bpc" id="L338" title="1 of 2 branches missed.">                } else if (value instanceof Binary) {</span>
-<span class="fc" id="L339">                    Binary bytes = (Binary) value;</span>
-<span class="fc" id="L340">                    int len = out.writeVarint(bytes.length());</span>
-<span class="fc" id="L341">                    bytes.write(out);</span>
-<span class="fc" id="L342">                    return len + bytes.length();</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">                if (value instanceof CharSequence) {</span>
+<span class="fc" id="L338">                    byte[] bytes = ((String) value).getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L339">                    int len = out.writeVarint(bytes.length);</span>
+<span class="fc" id="L340">                    out.write(bytes);</span>
+<span class="fc" id="L341">                    return len + bytes.length;</span>
+<span class="pc bpc" id="L342" title="1 of 2 branches missed.">                } else if (value instanceof Binary) {</span>
+<span class="fc" id="L343">                    Binary bytes = (Binary) value;</span>
+<span class="fc" id="L344">                    int len = out.writeVarint(bytes.length());</span>
+<span class="fc" id="L345">                    bytes.write(out);</span>
+<span class="fc" id="L346">                    return len + bytes.length();</span>
                 } else {
-<span class="nc" id="L344">                    throw new SerializerException(&quot;&quot;);</span>
+<span class="nc" id="L348">                    throw new SerializerException(&quot;&quot;);</span>
                 }
             }
             case MESSAGE: {
-<span class="fc" id="L348">                return writeMessage(out, (PMessage) value);</span>
+<span class="fc" id="L352">                return writeMessage(out, (PMessage) value);</span>
             }
             case COLLECTION: {
-<span class="fc bfc" id="L351" title="All 2 branches covered.">                if (value instanceof Map) {</span>
-<span class="fc" id="L352">                    Map&lt;Object, Object&gt; map = (Map&lt;Object, Object&gt;) value;</span>
-<span class="fc" id="L353">                    PMap&lt;?, ?&gt; desc = (PMap&lt;?, ?&gt;) descriptor;</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">                if (value instanceof Map) {</span>
+<span class="fc" id="L356">                    Map&lt;Object, Object&gt; map = (Map&lt;Object, Object&gt;) value;</span>
+<span class="fc" id="L357">                    PMap&lt;?, ?&gt; desc = (PMap&lt;?, ?&gt;) descriptor;</span>
 
-<span class="fc" id="L355">                    int ktype = itemType(desc.keyDescriptor());</span>
-<span class="fc" id="L356">                    int vtype = itemType(desc.itemDescriptor());</span>
+<span class="fc" id="L359">                    int ktype = itemType(desc.keyDescriptor());</span>
+<span class="fc" id="L360">                    int vtype = itemType(desc.itemDescriptor());</span>
 
-<span class="fc" id="L358">                    int len = out.writeVarint(map.size() * 2);</span>
-<span class="fc" id="L359">                    len += out.writeVarint(ktype &lt;&lt; 3 | vtype);</span>
-<span class="fc bfc" id="L360" title="All 2 branches covered.">                    for (Map.Entry&lt;Object, Object&gt; entry : map.entrySet()) {</span>
-<span class="fc" id="L361">                        len += writeContainerEntry(out, ktype, desc.keyDescriptor(), entry.getKey());</span>
-<span class="fc" id="L362">                        len += writeContainerEntry(out, vtype, desc.itemDescriptor(), entry.getValue());</span>
-<span class="fc" id="L363">                    }</span>
-<span class="fc" id="L364">                    return len;</span>
-<span class="pc bpc" id="L365" title="1 of 2 branches missed.">                } else if (value instanceof Collection){</span>
-<span class="fc" id="L366">                    Collection&lt;Object&gt; coll = (Collection&lt;Object&gt;) value;</span>
-<span class="fc" id="L367">                    PContainer&lt;?&gt; desc = (PContainer&lt;?&gt;) descriptor;</span>
-<span class="fc" id="L368">                    int vtype = itemType(desc.itemDescriptor());</span>
+<span class="fc" id="L362">                    int len = out.writeVarint(map.size() * 2);</span>
+<span class="fc" id="L363">                    len += out.writeVarint(ktype &lt;&lt; 3 | vtype);</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">                    for (Map.Entry&lt;Object, Object&gt; entry : map.entrySet()) {</span>
+<span class="fc" id="L365">                        len += writeContainerEntry(out, ktype, desc.keyDescriptor(), entry.getKey());</span>
+<span class="fc" id="L366">                        len += writeContainerEntry(out, vtype, desc.itemDescriptor(), entry.getValue());</span>
+<span class="fc" id="L367">                    }</span>
+<span class="fc" id="L368">                    return len;</span>
+<span class="pc bpc" id="L369" title="1 of 2 branches missed.">                } else if (value instanceof Collection){</span>
+<span class="fc" id="L370">                    Collection&lt;Object&gt; coll = (Collection&lt;Object&gt;) value;</span>
+<span class="fc" id="L371">                    PContainer&lt;?&gt; desc = (PContainer&lt;?&gt;) descriptor;</span>
+<span class="fc" id="L372">                    int vtype = itemType(desc.itemDescriptor());</span>
 
-<span class="fc" id="L370">                    int len = out.writeVarint(coll.size());</span>
-<span class="fc" id="L371">                    len    += out.writeVarint(vtype);</span>
-<span class="fc bfc" id="L372" title="All 2 branches covered.">                    for (Object item : coll) {</span>
-<span class="fc" id="L373">                        len += writeContainerEntry(out, vtype, desc.itemDescriptor(), item);</span>
-<span class="fc" id="L374">                    }</span>
-<span class="fc" id="L375">                    return len;</span>
+<span class="fc" id="L374">                    int len = out.writeVarint(coll.size());</span>
+<span class="fc" id="L375">                    len    += out.writeVarint(vtype);</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">                    for (Object item : coll) {</span>
+<span class="fc" id="L377">                        len += writeContainerEntry(out, vtype, desc.itemDescriptor(), item);</span>
+<span class="fc" id="L378">                    }</span>
+<span class="fc" id="L379">                    return len;</span>
                 } else {
-<span class="nc" id="L377">                    throw new SerializerException(&quot;&quot;);</span>
+<span class="nc" id="L381">                    throw new SerializerException(&quot;&quot;);</span>
                 }
             }
             default:
-<span class="nc" id="L381">                throw new SerializerException(&quot;&quot;);</span>
+<span class="nc" id="L385">                throw new SerializerException(&quot;&quot;);</span>
         }
     }
 
@@ -387,159 +391,159 @@ public class FastBinarySerializer extends Serializer {
                                   int type,
                                   @Nullable PDescriptor descriptor)
             throws IOException {
-<span class="pc bpc" id="L390" title="1 of 8 branches missed.">        switch (type) {</span>
+<span class="pc bpc" id="L394" title="1 of 8 branches missed.">        switch (type) {</span>
             case NONE:
-<span class="fc" id="L392">                return Boolean.FALSE;</span>
+<span class="fc" id="L396">                return Boolean.FALSE;</span>
             case TRUE:
-<span class="fc" id="L394">                return Boolean.TRUE;</span>
+<span class="fc" id="L398">                return Boolean.TRUE;</span>
             case VARINT: {
-<span class="fc bfc" id="L396" title="All 2 branches covered.">                if (descriptor == null) {</span>
-<span class="fc" id="L397">                    in.readLongVarint();</span>
-<span class="fc" id="L398">                    return null;</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">                if (descriptor == null) {</span>
+<span class="fc" id="L401">                    in.readLongVarint();</span>
+<span class="fc" id="L402">                    return null;</span>
                 }
-<span class="pc bpc" id="L400" title="1 of 7 branches missed.">                switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L404" title="1 of 7 branches missed.">                switch (descriptor.getType()) {</span>
                     case BOOL:
-<span class="fc bfc" id="L402" title="All 2 branches covered.">                        return in.readIntVarint() != 0;</span>
+<span class="fc bfc" id="L406" title="All 2 branches covered.">                        return in.readIntVarint() != 0;</span>
                     case BYTE:
-<span class="fc" id="L404">                        return (byte) in.readIntZigzag();</span>
+<span class="fc" id="L408">                        return (byte) in.readIntZigzag();</span>
                     case I16:
-<span class="fc" id="L406">                        return (short) in.readIntZigzag();</span>
+<span class="fc" id="L410">                        return (short) in.readIntZigzag();</span>
                     case I32:
-<span class="fc" id="L408">                        return in.readIntZigzag();</span>
+<span class="fc" id="L412">                        return in.readIntZigzag();</span>
                     case I64:
-<span class="fc" id="L410">                        return in.readLongZigzag();</span>
+<span class="fc" id="L414">                        return in.readLongZigzag();</span>
                     case ENUM: {
-<span class="fc" id="L412">                        PEnumBuilder&lt;?&gt; builder = ((PEnumDescriptor&lt;?&gt;) descriptor).builder();</span>
-<span class="fc" id="L413">                        builder.setById(in.readIntZigzag());</span>
-<span class="fc" id="L414">                        return builder.build();</span>
+<span class="fc" id="L416">                        PEnumBuilder&lt;?&gt; builder = ((PEnumDescriptor&lt;?&gt;) descriptor).builder();</span>
+<span class="fc" id="L417">                        builder.setById(in.readIntZigzag());</span>
+<span class="fc" id="L418">                        return builder.build();</span>
                     }
                     default: {
-<span class="nc" id="L417">                        throw new SerializerException(&quot;&quot;);</span>
+<span class="nc" id="L421">                        throw new SerializerException(&quot;&quot;);</span>
                     }
                 }
             }
             case FIXED_64:
-<span class="fc" id="L422">                return in.expectDouble();</span>
+<span class="fc" id="L426">                return in.expectDouble();</span>
             case BINARY: {
-<span class="fc" id="L424">                int len = in.readIntVarint();</span>
-<span class="fc" id="L425">                byte[] data = in.expectBytes(len);</span>
-<span class="fc bfc" id="L426" title="All 2 branches covered.">                if (descriptor != null) {</span>
-<span class="pc bpc" id="L427" title="1 of 3 branches missed.">                    switch (descriptor.getType()) {</span>
+<span class="fc" id="L428">                int len = in.readIntVarint();</span>
+<span class="fc" id="L429">                byte[] data = in.expectBytes(len);</span>
+<span class="fc bfc" id="L430" title="All 2 branches covered.">                if (descriptor != null) {</span>
+<span class="pc bpc" id="L431" title="1 of 3 branches missed.">                    switch (descriptor.getType()) {</span>
                         case STRING:
-<span class="fc" id="L429">                            return new String(data, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L433">                            return new String(data, StandardCharsets.UTF_8);</span>
                         case BINARY:
-<span class="fc" id="L431">                            return Binary.wrap(data);</span>
+<span class="fc" id="L435">                            return Binary.wrap(data);</span>
                         default:
-<span class="nc" id="L433">                            throw new SerializerException(&quot;&quot;);</span>
+<span class="nc" id="L437">                            throw new SerializerException(&quot;&quot;);</span>
                     }
                 } else {
-<span class="fc" id="L436">                    return null;</span>
+<span class="fc" id="L440">                    return null;</span>
                 }
             }
             case MESSAGE:
-<span class="fc bfc" id="L440" title="All 2 branches covered.">                if (descriptor == null) {</span>
-<span class="fc" id="L441">                    consumeMessage(in);</span>
-<span class="fc" id="L442">                    return null;</span>
+<span class="fc bfc" id="L444" title="All 2 branches covered.">                if (descriptor == null) {</span>
+<span class="fc" id="L445">                    consumeMessage(in);</span>
+<span class="fc" id="L446">                    return null;</span>
                 }
-<span class="fc" id="L444">                return readMessage(in, (PMessageDescriptor&lt;?, ?&gt;) descriptor);</span>
+<span class="fc" id="L448">                return readMessage(in, (PMessageDescriptor&lt;?, ?&gt;) descriptor);</span>
             case COLLECTION:
-<span class="fc bfc" id="L446" title="All 2 branches covered.">                if (descriptor == null) {</span>
-<span class="fc" id="L447">                    final int len = in.readIntVarint();</span>
-<span class="fc" id="L448">                    final int tag = in.readIntVarint();</span>
-<span class="fc" id="L449">                    final int vtype = tag &amp; 0x07;</span>
-<span class="fc bfc" id="L450" title="All 2 branches covered.">                    final int ktype = tag &gt; 0x07 ? tag &gt;&gt;&gt; 3 : vtype;</span>
-<span class="fc bfc" id="L451" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i) {</span>
-<span class="fc bfc" id="L452" title="All 2 branches covered.">                        if (i % 2 == 0) {</span>
-<span class="fc" id="L453">                            readFieldValue(in, ktype, null);</span>
+<span class="fc bfc" id="L450" title="All 2 branches covered.">                if (descriptor == null) {</span>
+<span class="fc" id="L451">                    final int len = in.readIntVarint();</span>
+<span class="fc" id="L452">                    final int tag = in.readIntVarint();</span>
+<span class="fc" id="L453">                    final int vtype = tag &amp; 0x07;</span>
+<span class="fc bfc" id="L454" title="All 2 branches covered.">                    final int ktype = tag &gt; 0x07 ? tag &gt;&gt;&gt; 3 : vtype;</span>
+<span class="fc bfc" id="L455" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i) {</span>
+<span class="fc bfc" id="L456" title="All 2 branches covered.">                        if (i % 2 == 0) {</span>
+<span class="fc" id="L457">                            readFieldValue(in, ktype, null);</span>
                         } else {
-<span class="fc" id="L455">                            readFieldValue(in, vtype, null);</span>
+<span class="fc" id="L459">                            readFieldValue(in, vtype, null);</span>
                         }
                     }
-<span class="fc" id="L458">                    return null;</span>
-<span class="fc bfc" id="L459" title="All 2 branches covered.">                } else if (descriptor.getType() == PType.MAP) {</span>
-<span class="fc" id="L460">                    PMap&lt;Object, Object&gt; ct = (PMap&lt;Object, Object&gt;) descriptor;</span>
-<span class="fc" id="L461">                    PDescriptor kt = ct.keyDescriptor();</span>
-<span class="fc" id="L462">                    PDescriptor vt = ct.itemDescriptor();</span>
+<span class="fc" id="L462">                    return null;</span>
+<span class="fc bfc" id="L463" title="All 2 branches covered.">                } else if (descriptor.getType() == PType.MAP) {</span>
+<span class="fc" id="L464">                    PMap&lt;Object, Object&gt; ct = (PMap&lt;Object, Object&gt;) descriptor;</span>
+<span class="fc" id="L465">                    PDescriptor kt = ct.keyDescriptor();</span>
+<span class="fc" id="L466">                    PDescriptor vt = ct.itemDescriptor();</span>
 
-<span class="fc" id="L464">                    PMap.Builder&lt;Object, Object&gt; out = ct.builder();</span>
-<span class="fc" id="L465">                    final int len = in.readIntVarint();</span>
-<span class="fc" id="L466">                    final int tag = in.readIntVarint();</span>
-<span class="fc" id="L467">                    final int vtype = tag &amp; 0x07;</span>
-<span class="pc bpc" id="L468" title="1 of 2 branches missed.">                    final int ktype = tag &gt; 0x07 ? tag &gt;&gt;&gt; 3 : vtype;</span>
-<span class="fc bfc" id="L469" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i, ++i) {</span>
-<span class="fc" id="L470">                        Object key = readFieldValue(in, ktype, kt);</span>
-<span class="fc" id="L471">                        Object value = readFieldValue(in, vtype, vt);</span>
-<span class="pc bpc" id="L472" title="2 of 4 branches missed.">                        if (key != null &amp;&amp; value != null) {</span>
-<span class="fc" id="L473">                            out.put(key, value);</span>
-<span class="nc bnc" id="L474" title="All 2 branches missed.">                        } else if (readStrict) {</span>
-<span class="nc bnc" id="L475" title="All 2 branches missed.">                            if (key == null) {</span>
-<span class="nc" id="L476">                                throw new SerializerException(&quot;Unknown enum key in map&quot;);</span>
+<span class="fc" id="L468">                    PMap.Builder&lt;Object, Object&gt; out = ct.builder();</span>
+<span class="fc" id="L469">                    final int len = in.readIntVarint();</span>
+<span class="fc" id="L470">                    final int tag = in.readIntVarint();</span>
+<span class="fc" id="L471">                    final int vtype = tag &amp; 0x07;</span>
+<span class="pc bpc" id="L472" title="1 of 2 branches missed.">                    final int ktype = tag &gt; 0x07 ? tag &gt;&gt;&gt; 3 : vtype;</span>
+<span class="fc bfc" id="L473" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i, ++i) {</span>
+<span class="fc" id="L474">                        Object key = readFieldValue(in, ktype, kt);</span>
+<span class="fc" id="L475">                        Object value = readFieldValue(in, vtype, vt);</span>
+<span class="pc bpc" id="L476" title="2 of 4 branches missed.">                        if (key != null &amp;&amp; value != null) {</span>
+<span class="fc" id="L477">                            out.put(key, value);</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">                        } else if (readStrict) {</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">                            if (key == null) {</span>
+<span class="nc" id="L480">                                throw new SerializerException(&quot;Unknown enum key in map&quot;);</span>
                             }
-<span class="nc" id="L478">                            throw new SerializerException(&quot;Null value in map&quot;);</span>
+<span class="nc" id="L482">                            throw new SerializerException(&quot;Null value in map&quot;);</span>
                         }
                     }
-<span class="fc" id="L481">                    return out.build();</span>
-<span class="fc bfc" id="L482" title="All 2 branches covered.">                } else if (descriptor.getType() == PType.LIST) {</span>
-<span class="fc" id="L483">                    PList&lt;Object&gt; ct = (PList&lt;Object&gt;) descriptor;</span>
-<span class="fc" id="L484">                    PDescriptor it = ct.itemDescriptor();</span>
-<span class="fc" id="L485">                    PList.Builder&lt;Object&gt; out = ct.builder();</span>
-<span class="fc" id="L486">                    final int len = in.readIntVarint();</span>
-<span class="fc" id="L487">                    final int vtype = in.readIntVarint() &amp; 0x07;</span>
-<span class="fc bfc" id="L488" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i) {</span>
-<span class="fc" id="L489">                        Object item = readFieldValue(in, vtype, it);</span>
-<span class="pc bpc" id="L490" title="1 of 2 branches missed.">                        if (item != null) {</span>
-<span class="fc" id="L491">                            out.add(item);</span>
-<span class="nc bnc" id="L492" title="All 2 branches missed.">                        } else if (readStrict) {</span>
-<span class="nc" id="L493">                            throw new SerializerException(&quot;Null value in list&quot;);</span>
+<span class="fc" id="L485">                    return out.build();</span>
+<span class="fc bfc" id="L486" title="All 2 branches covered.">                } else if (descriptor.getType() == PType.LIST) {</span>
+<span class="fc" id="L487">                    PList&lt;Object&gt; ct = (PList&lt;Object&gt;) descriptor;</span>
+<span class="fc" id="L488">                    PDescriptor it = ct.itemDescriptor();</span>
+<span class="fc" id="L489">                    PList.Builder&lt;Object&gt; out = ct.builder();</span>
+<span class="fc" id="L490">                    final int len = in.readIntVarint();</span>
+<span class="fc" id="L491">                    final int vtype = in.readIntVarint() &amp; 0x07;</span>
+<span class="fc bfc" id="L492" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i) {</span>
+<span class="fc" id="L493">                        Object item = readFieldValue(in, vtype, it);</span>
+<span class="pc bpc" id="L494" title="1 of 2 branches missed.">                        if (item != null) {</span>
+<span class="fc" id="L495">                            out.add(item);</span>
+<span class="nc bnc" id="L496" title="All 2 branches missed.">                        } else if (readStrict) {</span>
+<span class="nc" id="L497">                            throw new SerializerException(&quot;Null value in list&quot;);</span>
                         }
                     }
-<span class="fc" id="L496">                    return out.build();</span>
-<span class="pc bpc" id="L497" title="1 of 2 branches missed.">                } else if (descriptor.getType() == PType.SET) {</span>
-<span class="fc" id="L498">                    PSet&lt;Object&gt; ct = (PSet&lt;Object&gt;) descriptor;</span>
-<span class="fc" id="L499">                    PDescriptor it = ct.itemDescriptor();</span>
-<span class="fc" id="L500">                    PSet.Builder&lt;Object&gt; out = ct.builder();</span>
-<span class="fc" id="L501">                    final int len = in.readIntVarint();</span>
-<span class="fc" id="L502">                    final int vtype = in.readIntVarint() &amp; 0x07;</span>
-<span class="fc bfc" id="L503" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i) {</span>
-<span class="fc" id="L504">                        Object item = readFieldValue(in, vtype, it);</span>
-<span class="pc bpc" id="L505" title="1 of 2 branches missed.">                        if (item != null) {</span>
-<span class="fc" id="L506">                            out.add(item);</span>
-<span class="nc bnc" id="L507" title="All 2 branches missed.">                        } else if (readStrict) {</span>
-<span class="nc" id="L508">                            throw new SerializerException(&quot;Null value in set&quot;);</span>
+<span class="fc" id="L500">                    return out.build();</span>
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">                } else if (descriptor.getType() == PType.SET) {</span>
+<span class="fc" id="L502">                    PSet&lt;Object&gt; ct = (PSet&lt;Object&gt;) descriptor;</span>
+<span class="fc" id="L503">                    PDescriptor it = ct.itemDescriptor();</span>
+<span class="fc" id="L504">                    PSet.Builder&lt;Object&gt; out = ct.builder();</span>
+<span class="fc" id="L505">                    final int len = in.readIntVarint();</span>
+<span class="fc" id="L506">                    final int vtype = in.readIntVarint() &amp; 0x07;</span>
+<span class="fc bfc" id="L507" title="All 2 branches covered.">                    for (int i = 0; i &lt; len; ++i) {</span>
+<span class="fc" id="L508">                        Object item = readFieldValue(in, vtype, it);</span>
+<span class="pc bpc" id="L509" title="1 of 2 branches missed.">                        if (item != null) {</span>
+<span class="fc" id="L510">                            out.add(item);</span>
+<span class="nc bnc" id="L511" title="All 2 branches missed.">                        } else if (readStrict) {</span>
+<span class="nc" id="L512">                            throw new SerializerException(&quot;Null value in set&quot;);</span>
                         }
                     }
-<span class="fc" id="L511">                    return out.build();</span>
+<span class="fc" id="L515">                    return out.build();</span>
                 } else {
-<span class="nc" id="L513">                    throw new SerializerException(&quot;Type &quot; + descriptor.getType() +</span>
+<span class="nc" id="L517">                    throw new SerializerException(&quot;Type &quot; + descriptor.getType() +</span>
                                                   &quot; not compatible with collection data&quot;);
                 }
             default:
-<span class="nc" id="L517">                throw new Error(&quot;Unreachable code reached&quot;);</span>
+<span class="nc" id="L521">                throw new Error(&quot;Unreachable code reached&quot;);</span>
         }
     }
 
     private static int itemType(PDescriptor descriptor) {
-<span class="pc bpc" id="L522" title="1 of 6 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L526" title="1 of 6 branches missed.">        switch (descriptor.getType()) {</span>
             case BOOL:
             case BYTE:
             case I16:
             case I32:
             case I64:
             case ENUM:
-<span class="fc" id="L529">                return VARINT;</span>
+<span class="fc" id="L533">                return VARINT;</span>
             case DOUBLE:
-<span class="fc" id="L531">                return FIXED_64;</span>
+<span class="fc" id="L535">                return FIXED_64;</span>
             case BINARY:
             case STRING:
-<span class="fc" id="L534">                return BINARY;</span>
+<span class="fc" id="L538">                return BINARY;</span>
             case MESSAGE:
-<span class="fc" id="L536">                return MESSAGE;</span>
+<span class="fc" id="L540">                return MESSAGE;</span>
             case SET:
             case LIST:
             case MAP:
-<span class="fc" id="L540">                return COLLECTION;</span>
+<span class="fc" id="L544">                return COLLECTION;</span>
             default:
-<span class="nc" id="L542">                throw new Error(&quot;Unreachable code reached&quot;);</span>
+<span class="nc" id="L546">                throw new Error(&quot;Unreachable code reached&quot;);</span>
         }
     }
 

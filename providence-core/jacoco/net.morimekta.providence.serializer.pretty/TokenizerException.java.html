@@ -35,6 +35,8 @@ import static java.lang.Math.max;
  * Exception when totalizing fails to make token or read the expected content.
  */
 public class TokenizerException extends SerializerException {
+    private final static long serialVersionUID = 1513434504497049610L;
+
     private int    lineNo;
     private int    linePos;
     private String line;
@@ -42,150 +44,150 @@ public class TokenizerException extends SerializerException {
     private int    length;
 
     public TokenizerException(TokenizerException e, File file) {
-<span class="fc" id="L45">        super(e.getMessage());</span>
-<span class="fc" id="L46">        initCause(e);</span>
-<span class="fc" id="L47">        setLine(e.getLine());</span>
-<span class="fc" id="L48">        setLineNo(e.getLineNo());</span>
-<span class="fc" id="L49">        setLinePos(e.getLinePos());</span>
-<span class="fc" id="L50">        setLength(e.getLength());</span>
+<span class="fc" id="L47">        super(e.getMessage());</span>
+<span class="fc" id="L48">        initCause(e);</span>
+<span class="fc" id="L49">        setLine(e.getLine());</span>
+<span class="fc" id="L50">        setLineNo(e.getLineNo());</span>
+<span class="fc" id="L51">        setLinePos(e.getLinePos());</span>
+<span class="fc" id="L52">        setLength(e.getLength());</span>
         // Keep the specified file, if there is one.
-<span class="pc bpc" id="L52" title="1 of 4 branches missed.">        if (e.getFile() == null &amp;&amp; file != null) {</span>
-<span class="fc" id="L53">            setFile(file.getName());</span>
+<span class="pc bpc" id="L54" title="1 of 4 branches missed.">        if (e.getFile() == null &amp;&amp; file != null) {</span>
+<span class="fc" id="L55">            setFile(file.getName());</span>
         } else {
-<span class="fc" id="L55">            setFile(e.getFile());</span>
+<span class="fc" id="L57">            setFile(e.getFile());</span>
         }
-<span class="fc" id="L57">    }</span>
+<span class="fc" id="L59">    }</span>
 
     public TokenizerException(String format, Object... args) {
-<span class="fc" id="L60">        super(format, args);</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L62">        super(format, args);</span>
+<span class="fc" id="L63">    }</span>
 
     public TokenizerException(Throwable cause, String format, Object... args) {
-<span class="fc" id="L64">        super(cause, format, args);</span>
-<span class="fc" id="L65">    }</span>
+<span class="fc" id="L66">        super(cause, format, args);</span>
+<span class="fc" id="L67">    }</span>
 
     public TokenizerException(Token token, String format, Object... args) {
-<span class="nc" id="L68">        super(format, args);</span>
-<span class="nc" id="L69">        setLinePos(token.getLinePos());</span>
-<span class="nc" id="L70">        setLineNo(token.getLineNo());</span>
-<span class="nc" id="L71">        setLength(token.asString().length());</span>
-<span class="nc" id="L72">    }</span>
+<span class="fc" id="L70">        super(format, args);</span>
+<span class="fc" id="L71">        setLinePos(token.getLinePos());</span>
+<span class="fc" id="L72">        setLineNo(token.getLineNo());</span>
+<span class="fc" id="L73">        setLength(token.asString().length());</span>
+<span class="fc" id="L74">    }</span>
 
     /**
      * @return The 1-indexed line number of the fault.
      */
     public int getLineNo() {
-<span class="fc" id="L78">        return lineNo;</span>
+<span class="fc" id="L80">        return lineNo;</span>
     }
 
     /**
      * @return The 1-indexed position on the given line.
      */
     public int getLinePos() {
-<span class="fc" id="L85">        return linePos;</span>
+<span class="fc" id="L87">        return linePos;</span>
     }
 
     /**
      * @return The number of u16 chars representing the fault.
      */
     public int getLength() {
-<span class="fc" id="L92">        return length;</span>
+<span class="fc" id="L94">        return length;</span>
     }
 
     /**
      * @return The whole line of the fault, not including line feed.
      */
     public String getLine() {
-<span class="fc" id="L99">        return line;</span>
+<span class="fc" id="L101">        return line;</span>
     }
 
     /**
      * @return The file that contains the fault.
      */
     public String getFile() {
-<span class="fc" id="L106">        return file;</span>
+<span class="fc" id="L108">        return file;</span>
     }
 
     public TokenizerException setLineNo(int lineNo) {
-<span class="fc" id="L110">        this.lineNo = lineNo;</span>
-<span class="fc" id="L111">        return this;</span>
+<span class="fc" id="L112">        this.lineNo = lineNo;</span>
+<span class="fc" id="L113">        return this;</span>
     }
 
     public TokenizerException setLinePos(int linePos) {
-<span class="fc" id="L115">        this.linePos = linePos;</span>
-<span class="fc" id="L116">        return this;</span>
+<span class="fc" id="L117">        this.linePos = linePos;</span>
+<span class="fc" id="L118">        return this;</span>
     }
 
     public TokenizerException setLength(int len) {
-<span class="fc" id="L120">        this.length = len;</span>
-<span class="fc" id="L121">        return this;</span>
+<span class="fc" id="L122">        this.length = len;</span>
+<span class="fc" id="L123">        return this;</span>
     }
 
     public TokenizerException setLine(String line) {
-<span class="fc" id="L125">        this.line = line;</span>
-<span class="fc" id="L126">        return this;</span>
+<span class="fc" id="L127">        this.line = line;</span>
+<span class="fc" id="L128">        return this;</span>
     }
 
     public TokenizerException setFile(String file) {
-<span class="fc" id="L130">        this.file = file;</span>
-<span class="fc" id="L131">        return this;</span>
+<span class="fc" id="L132">        this.file = file;</span>
+<span class="fc" id="L133">        return this;</span>
     }
 
     @Override
     public TokenizerException initCause(Throwable cause) {
-<span class="fc" id="L136">        return (TokenizerException) super.initCause(cause);</span>
+<span class="fc" id="L138">        return (TokenizerException) super.initCause(cause);</span>
     }
 
     @Override
     public String asString() {
-<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (lineNo &gt; 0) {</span>
-<span class="fc" id="L142">            String fileSpec = &quot;&quot;;</span>
-<span class="fc bfc" id="L143" title="All 2 branches covered.">            if (file != null) {</span>
-<span class="fc" id="L144">                fileSpec = &quot; in &quot; + file;</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (lineNo &gt; 0) {</span>
+<span class="fc" id="L144">            String fileSpec = &quot;&quot;;</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">            if (file != null) {</span>
+<span class="fc" id="L146">                fileSpec = &quot; in &quot; + file;</span>
             }
-<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (line != null) {</span>
-<span class="fc" id="L147">                return String.format(&quot;Error%s on line %d, pos %d: %s%n&quot; +</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">            if (line != null) {</span>
+<span class="fc" id="L149">                return String.format(&quot;Error%s on line %d, pos %d: %s%n&quot; +</span>
                                      &quot;%s%n&quot; +
                                      &quot;%s%s&quot;,
                                      fileSpec,
-<span class="fc" id="L151">                                     getLineNo(),</span>
-<span class="fc" id="L152">                                     getLinePos(),</span>
-<span class="fc" id="L153">                                     getMessage(),</span>
-<span class="fc" id="L154">                                     getLine(),</span>
-<span class="fc" id="L155">                                     Strings.times(&quot;-&quot;, linePos - 1),</span>
-<span class="fc" id="L156">                                     Strings.times(&quot;^&quot;, max(1, length)));</span>
+<span class="fc" id="L153">                                     getLineNo(),</span>
+<span class="fc" id="L154">                                     getLinePos(),</span>
+<span class="fc" id="L155">                                     getMessage(),</span>
+<span class="fc" id="L156">                                     getLine(),</span>
+<span class="fc" id="L157">                                     Strings.times(&quot;-&quot;, linePos - 1),</span>
+<span class="fc" id="L158">                                     Strings.times(&quot;^&quot;, max(1, length)));</span>
             } else {
-<span class="fc" id="L158">                return String.format(&quot;Error%s on line %d, pos %d: %s&quot;,</span>
+<span class="fc" id="L160">                return String.format(&quot;Error%s on line %d, pos %d: %s&quot;,</span>
                                      fileSpec,
-<span class="fc" id="L160">                                     getLineNo(),</span>
-<span class="fc" id="L161">                                     getLinePos(),</span>
-<span class="fc" id="L162">                                     getMessage());</span>
+<span class="fc" id="L162">                                     getLineNo(),</span>
+<span class="fc" id="L163">                                     getLinePos(),</span>
+<span class="fc" id="L164">                                     getMessage());</span>
             }
         } else {
-<span class="fc" id="L165">            return String.format(&quot;Error: %s&quot;, getMessage());</span>
+<span class="fc" id="L167">            return String.format(&quot;Error: %s&quot;, getMessage());</span>
         }
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L171">        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(getClass())</span>
-<span class="fc" id="L172">                          .omitNullValues()</span>
-<span class="fc" id="L173">                          .addValue(getMessage())</span>
-<span class="fc" id="L174">                          .add(&quot;file&quot;, file);</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (getExceptionType() != PApplicationExceptionType.PROTOCOL_ERROR) {</span>
-<span class="fc" id="L176">            helper.add(&quot;e&quot;, getExceptionType());</span>
+<span class="fc" id="L173">        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(getClass())</span>
+<span class="fc" id="L174">                          .omitNullValues()</span>
+<span class="fc" id="L175">                          .addValue(getMessage())</span>
+<span class="fc" id="L176">                          .add(&quot;file&quot;, file);</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (getExceptionType() != PApplicationExceptionType.PROTOCOL_ERROR) {</span>
+<span class="fc" id="L178">            helper.add(&quot;e&quot;, getExceptionType());</span>
         }
-<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (!isNullOrEmpty(getLine())) {</span>
-<span class="fc" id="L179">            helper.add(&quot;line&quot;, lineNo);</span>
-<span class="fc" id="L180">            helper.add(&quot;pos&quot;, linePos);</span>
-<span class="fc" id="L181">            helper.add(&quot;len&quot;, length);</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        if (!isNullOrEmpty(getLine())) {</span>
+<span class="fc" id="L181">            helper.add(&quot;line&quot;, lineNo);</span>
+<span class="fc" id="L182">            helper.add(&quot;pos&quot;, linePos);</span>
+<span class="fc" id="L183">            helper.add(&quot;len&quot;, length);</span>
         }
-<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (!isNullOrEmpty(getMethodName())) {</span>
-<span class="fc" id="L184">            helper.add(&quot;method&quot;, getMethodName());</span>
-<span class="fc" id="L185">            helper.add(&quot;type&quot;, getCallType());</span>
-<span class="fc" id="L186">            helper.add(&quot;seq&quot;, getSequenceNo());</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (!isNullOrEmpty(getMethodName())) {</span>
+<span class="fc" id="L186">            helper.add(&quot;method&quot;, getMethodName());</span>
+<span class="fc" id="L187">            helper.add(&quot;type&quot;, getCallType());</span>
+<span class="fc" id="L188">            helper.add(&quot;seq&quot;, getSequenceNo());</span>
         }
-<span class="fc" id="L188">        return helper.toString();</span>
+<span class="fc" id="L190">        return helper.toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

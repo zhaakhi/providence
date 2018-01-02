@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpClientHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core : Clients</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.client</a> &gt; <span class="el_source">HttpClientHandler.java</span></div><h1>HttpClientHandler.java</h1><pre class="source lang-java linenums">/*
- * Copyright 2016 Providence Authors
+ * Copyright 2016-2017 Providence Authors
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
@@ -67,8 +67,8 @@ public class HttpClientHandler implements PServiceCallHandler {
      * @param urlSupplier The HTTP url supplier.
      */
     public HttpClientHandler(@Nonnull Supplier&lt;GenericUrl&gt; urlSupplier) {
-<span class="nc" id="L70">        this(urlSupplier, new NetHttpTransport().createRequestFactory(), new DefaultSerializerProvider());</span>
-<span class="nc" id="L71">    }</span>
+<span class="fc" id="L70">        this(urlSupplier, new NetHttpTransport().createRequestFactory());</span>
+<span class="fc" id="L71">    }</span>
 
     /**
      * Create a HTTP client with default serialization and no instrumentation.
@@ -78,8 +78,8 @@ public class HttpClientHandler implements PServiceCallHandler {
      */
     public HttpClientHandler(@Nonnull Supplier&lt;GenericUrl&gt; urlSupplier,
                              @Nonnull HttpRequestFactory factory) {
-<span class="nc" id="L81">        this(urlSupplier, factory, new DefaultSerializerProvider());</span>
-<span class="nc" id="L82">    }</span>
+<span class="fc" id="L81">        this(urlSupplier, factory, new DefaultSerializerProvider());</span>
+<span class="fc" id="L82">    }</span>
 
     /**
      * Create a HTTP client with no instrumentation.
@@ -120,8 +120,8 @@ public class HttpClientHandler implements PServiceCallHandler {
             ResponseField extends PField&gt;
     PServiceCall&lt;Response, ResponseField&gt; handleCall(PServiceCall&lt;Request, RequestField&gt; call,
                                                      PService service) throws IOException {
-<span class="pc bpc" id="L123" title="2 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
-<span class="nc" id="L124">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
+<span class="pc bpc" id="L123" title="1 of 4 branches missed.">        if (call.getType() == PServiceCallType.EXCEPTION || call.getType() == PServiceCallType.REPLY) {</span>
+<span class="fc" id="L124">            throw new PApplicationException(&quot;Request with invalid call type: &quot; + call.getType(),</span>
                                             PApplicationExceptionType.INVALID_MESSAGE_TYPE);
         }
 
@@ -141,30 +141,30 @@ public class HttpClientHandler implements PServiceCallHandler {
 <span class="fc" id="L141">                       .setAccept(requestSerializer.mediaType());</span>
 <span class="fc" id="L142">                HttpResponse response = request.execute();</span>
                 try {
-<span class="fc" id="L144">                    Serializer responseSerializer = requestSerializer;</span>
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                    if (response.getContentType() != null) {</span>
-                        try {
-<span class="fc" id="L147">                            MediaType mediaType = MediaType.parse(response.getContentType());</span>
-<span class="fc" id="L148">                            responseSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
-<span class="fc" id="L149">                                                                                           .toString());</span>
-<span class="nc" id="L150">                        } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L151">                            throw new PApplicationException(&quot;Unknown content-type in response: &quot; + response.getContentType(),</span>
-<span class="nc" id="L152">                                                            PApplicationExceptionType.INVALID_PROTOCOL).initCause(e);</span>
-<span class="fc" id="L153">                        }</span>
-                    }
+<span class="fc bfc" id="L144" title="All 2 branches covered.">                    if (call.getType() == PServiceCallType.CALL) {</span>
+<span class="fc" id="L145">                        Serializer responseSerializer = requestSerializer;</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                        if (response.getContentType() != null) {</span>
+                            try {
+<span class="fc" id="L148">                                MediaType mediaType = MediaType.parse(response.getContentType());</span>
+<span class="fc" id="L149">                                responseSerializer = serializerProvider.getSerializer(mediaType.withoutParameters()</span>
+<span class="fc" id="L150">                                                                                               .toString());</span>
+<span class="fc" id="L151">                            } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L152">                                throw new PApplicationException(&quot;Unknown content-type in response: &quot; + response.getContentType(),</span>
+<span class="fc" id="L153">                                                                PApplicationExceptionType.INVALID_PROTOCOL).initCause(e);</span>
+<span class="fc" id="L154">                            }</span>
+                        }
 
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">                    if (call.getType() == PServiceCallType.CALL) {</span>
                         // non 200 responses should have triggered a HttpResponseException,
                         // so this is safe.
 <span class="fc" id="L159">                        reply = responseSerializer.deserialize(response.getContent(), service);</span>
 
-<span class="pc bpc" id="L161" title="2 of 4 branches missed.">                        if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
-<span class="nc" id="L162">                            throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
+<span class="pc bpc" id="L161" title="1 of 4 branches missed.">                        if (reply.getType() == PServiceCallType.CALL || reply.getType() == PServiceCallType.ONEWAY) {</span>
+<span class="fc" id="L162">                            throw new PApplicationException(&quot;Reply with invalid call type: &quot; + reply.getType(),</span>
                                                             PApplicationExceptionType.INVALID_MESSAGE_TYPE);
                         }
-<span class="pc bpc" id="L165" title="1 of 2 branches missed.">                        if (reply.getSequence() != call.getSequence()) {</span>
-<span class="nc" id="L166">                            throw new PApplicationException(</span>
-<span class="nc" id="L167">                                    &quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">                        if (reply.getSequence() != call.getSequence()) {</span>
+<span class="fc" id="L166">                            throw new PApplicationException(</span>
+<span class="fc" id="L167">                                    &quot;Reply sequence out of order: call = &quot; + call.getSequence() + &quot;, reply = &quot; + reply.getSequence(),</span>
                                     PApplicationExceptionType.BAD_SEQUENCE_ID);
                         }
                     }
@@ -173,14 +173,14 @@ public class HttpClientHandler implements PServiceCallHandler {
 <span class="fc" id="L173">                    double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
                     try {
 <span class="fc" id="L175">                        instrumentation.onComplete(duration, call, reply);</span>
-<span class="nc" id="L176">                    } catch (Exception ignore) {</span>
+<span class="fc" id="L176">                    } catch (Exception ignore) {</span>
 <span class="fc" id="L177">                    }</span>
 
 <span class="fc" id="L179">                    return reply;</span>
                 } finally {
                     // Ignore whatever is left of the response when returning, in
                     // case we did'nt read the whole response.
-<span class="pc" id="L183">                    response.ignore();</span>
+<span class="fc" id="L183">                    response.ignore();</span>
                 }
 <span class="nc" id="L185">            } catch (HttpHostConnectException e) {</span>
 <span class="nc" id="L186">                throw e;</span>
@@ -194,8 +194,8 @@ public class HttpClientHandler implements PServiceCallHandler {
 <span class="fc" id="L194">            double duration = ((double) (endTime - startTime)) / NS_IN_MILLIS;</span>
             try {
 <span class="fc" id="L196">                instrumentation.onTransportException(e, duration, call, reply);</span>
-<span class="nc" id="L197">            } catch (Throwable ie) {</span>
-<span class="nc" id="L198">                e.addSuppressed(ie);</span>
+<span class="fc" id="L197">            } catch (Throwable ie) {</span>
+<span class="fc" id="L198">                e.addSuppressed(ie);</span>
 <span class="fc" id="L199">            }</span>
 
 <span class="fc" id="L201">            throw e;</span>

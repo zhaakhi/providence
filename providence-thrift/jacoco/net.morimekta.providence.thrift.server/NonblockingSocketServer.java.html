@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NonblockingSocketServer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Thrift Bridge</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.thrift.server</a> &gt; <span class="el_source">NonblockingSocketServer.java</span></div><h1>NonblockingSocketServer.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.thrift.server;
+
+import net.morimekta.providence.PApplicationException;
+import net.morimekta.providence.PApplicationExceptionType;
+import net.morimekta.providence.PProcessor;
+import net.morimekta.providence.PServiceCall;
+import net.morimekta.providence.PServiceCallType;
+import net.morimekta.providence.serializer.BinarySerializer;
+import net.morimekta.providence.serializer.Serializer;
+import net.morimekta.providence.thrift.io.FramedBufferOutputStream;
+import net.morimekta.providence.util.ServiceCallInstrumentation;
+import net.morimekta.util.io.ByteBufferInputStream;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.thrift.transport.TFramedTransport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Based heavily on {@link org.apache.thrift.transport.TNonblockingServerTransport},
+ * and meant to be a providence replacement for it.
+ */
+public class NonblockingSocketServer implements AutoCloseable {
+    public static class Builder {
+        private final PProcessor                 processor;
+        private       ServiceCallInstrumentation instrumentation;
+        private       InetSocketAddress          bindAddress;
+
+<span class="fc" id="L65">        private int maxFrameSizeInBytes = 16384000; // 16M.</span>
+<span class="fc" id="L66">        private int readTimeoutInMs     = 60000;  // 60 seconds</span>
+<span class="fc" id="L67">        private int backlog             = 50;</span>
+<span class="fc" id="L68">        private int workerThreads       = 10;</span>
+
+        private ThreadFactory receiverThreadFactory;
+        private ThreadFactory workerThreadFactory;
+        private Serializer    serializer;
+
+<span class="fc" id="L74">        public Builder(@Nonnull PProcessor processor) {</span>
+<span class="fc" id="L75">            this.processor = processor;</span>
+<span class="fc" id="L76">            this.bindAddress = new InetSocketAddress(0);</span>
+<span class="fc" id="L77">            this.workerThreadFactory = new ThreadFactoryBuilder()</span>
+<span class="fc" id="L78">                    .setNameFormat(&quot;providence-nonblocking-server-%d&quot;)</span>
+<span class="fc" id="L79">                    .setDaemon(true)</span>
+<span class="fc" id="L80">                    .build();</span>
+<span class="fc" id="L81">            this.receiverThreadFactory = workerThreadFactory;</span>
+<span class="fc" id="L82">            this.serializer = new BinarySerializer();</span>
+<span class="fc" id="L83">        }</span>
+
+        public Builder withPort(int port) {
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if (port &lt; 0) {</span>
+<span class="nc" id="L87">                throw new IllegalArgumentException();</span>
+            }
+<span class="fc" id="L89">            this.bindAddress = new InetSocketAddress(port);</span>
+<span class="fc" id="L90">            return this;</span>
+        }
+
+        public Builder withBindAddress(@Nonnull InetSocketAddress bindAddress) {
+<span class="fc" id="L94">            this.bindAddress = bindAddress;</span>
+<span class="fc" id="L95">            return this;</span>
+        }
+
+        public Builder withMaxBacklog(int maxBacklog) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">            if (maxBacklog &lt; 0) {</span>
+<span class="nc" id="L100">                throw new IllegalArgumentException();</span>
+            }
+<span class="nc" id="L102">            this.backlog = maxBacklog;</span>
+<span class="nc" id="L103">            return this;</span>
+        }
+
+        public Builder withMaxFrameSizeInBytes(int size) {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (size &lt; 1024) {</span>
+<span class="nc" id="L108">                throw new IllegalArgumentException();</span>
+            }
+<span class="nc" id="L110">            this.maxFrameSizeInBytes = size;</span>
+<span class="nc" id="L111">            return this;</span>
+        }
+
+        public Builder withInstrumentation(@Nonnull ServiceCallInstrumentation instrumentation) {
+<span class="fc" id="L115">            this.instrumentation = instrumentation;</span>
+<span class="fc" id="L116">            return this;</span>
+        }
+
+        public Builder withReadTimeout(int timeoutInMs) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (timeoutInMs &lt; 1) {</span>
+<span class="nc" id="L121">                throw new IllegalArgumentException();</span>
+            }
+<span class="nc" id="L123">            this.readTimeoutInMs = timeoutInMs;</span>
+<span class="nc" id="L124">            return this;</span>
+        }
+
+        public Builder withWorkerThreads(int numThreads) {
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">            if (numThreads &lt; 1) {</span>
+<span class="nc" id="L129">                throw new IllegalArgumentException();</span>
+            }
+
+<span class="fc" id="L132">            this.workerThreads = numThreads;</span>
+<span class="fc" id="L133">            return this;</span>
+        }
+
+        public Builder withWorkerThreadFactory(ThreadFactory factory) {
+<span class="nc" id="L137">            this.workerThreadFactory = factory;</span>
+<span class="nc" id="L138">            return this;</span>
+        }
+
+        public Builder withReceiverThreadFactory(ThreadFactory factory) {
+<span class="nc" id="L142">            this.receiverThreadFactory = factory;</span>
+<span class="nc" id="L143">            return this;</span>
+        }
+
+        public Builder withSerializer(Serializer serializer) {
+<span class="fc" id="L147">            this.serializer = serializer;</span>
+<span class="fc" id="L148">            return this;</span>
+        }
+
+        public NonblockingSocketServer start() {
+<span class="fc" id="L152">            return new NonblockingSocketServer(this);</span>
+        }
+    }
+
+    public static Builder builder(@Nonnull PProcessor processor) {
+<span class="fc" id="L157">        return new Builder(processor);</span>
+    }
+
+    public int getPort() {
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (receiverExecutor.isShutdown())</span>
+<span class="nc" id="L162">            return -1;</span>
+<span class="fc" id="L163">        return serverSocket.getLocalPort();</span>
+    }
+
+    public void close() throws IOException {
+<span class="fc" id="L167">        receiverExecutor.shutdown();</span>
+<span class="fc" id="L168">        workerExecutor.shutdown();</span>
+        try {
+            // this should trigger exception in the accept task.
+<span class="fc" id="L171">            serverSocket.close();</span>
+<span class="nc" id="L172">        } catch (IOException e) {</span>
+<span class="nc" id="L173">            e.printStackTrace();</span>
+        } finally {
+<span class="nc" id="L175">            try {</span>
+<span class="pc" id="L176">                workerExecutor.awaitTermination(10, TimeUnit.MILLISECONDS);</span>
+<span class="nc" id="L177">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L178">                e.printStackTrace();</span>
+<span class="pc" id="L179">            }</span>
+            try {
+<span class="pc" id="L181">                receiverExecutor.awaitTermination(10, TimeUnit.MILLISECONDS);</span>
+<span class="nc" id="L182">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L183">                e.printStackTrace();</span>
+<span class="pc" id="L184">            }</span>
+            // really really try to kill it now.
+<span class="pc" id="L186">            receiverExecutor.shutdownNow();</span>
+<span class="pc" id="L187">            workerExecutor.shutdownNow();</span>
+<span class="pc" id="L188">        }</span>
+<span class="fc" id="L189">    }</span>
+
+<span class="fc" id="L191">    private final static Logger LOGGER       = LoggerFactory.getLogger(NonblockingSocketServer.class);</span>
+<span class="fc" id="L192">    private final static long   NS_IN_MILLIS = ServiceCallInstrumentation.NS_IN_MILLIS;</span>
+
+    private final Selector               selector;
+    private final PProcessor             processor;
+    private final Serializer             serializer;
+    private final ServiceCallInstrumentation instrumentation;
+    private final ServerSocketChannel    serverSocketChannel;
+    private final ServerSocket           serverSocket;
+    private final ExecutorService        receiverExecutor;
+    private final ExecutorService        workerExecutor;
+    private final int                    maxFrameSizeInBytes;
+
+<span class="fc" id="L204">    private NonblockingSocketServer(Builder builder) {</span>
+        try {
+<span class="fc" id="L206">            maxFrameSizeInBytes = builder.maxFrameSizeInBytes;</span>
+
+<span class="fc" id="L208">            serializer = builder.serializer;</span>
+<span class="fc" id="L209">            processor = builder.processor;</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">            instrumentation = builder.instrumentation != null</span>
+<span class="pc" id="L211">                              ? builder.instrumentation</span>
+<span class="nc" id="L212">                              : (duration, call, response) -&gt; {};</span>
+<span class="fc" id="L213">            selector = Selector.open();</span>
+
+<span class="fc" id="L215">            serverSocketChannel = ServerSocketChannel.open();</span>
+<span class="fc" id="L216">            serverSocketChannel.configureBlocking(false);</span>
+
+            // Make server socket
+<span class="fc" id="L219">            serverSocket = serverSocketChannel.socket();</span>
+<span class="fc" id="L220">            serverSocketChannel.socket().setSoTimeout(builder.readTimeoutInMs);</span>
+
+            // Prevent 2MSL delay problem on server restarts
+<span class="fc" id="L223">            serverSocket.setReuseAddress(true);</span>
+            // Bind to listening port
+<span class="fc" id="L225">            serverSocket.bind(builder.bindAddress, builder.backlog);</span>
+
+            // Needs one thread for each receiver, and one for each response writer.
+<span class="fc" id="L228">            receiverExecutor = Executors.newSingleThreadExecutor(builder.receiverThreadFactory);</span>
+<span class="fc" id="L229">            workerExecutor = Executors.newFixedThreadPool(builder.workerThreads, builder.workerThreadFactory);</span>
+
+<span class="fc" id="L231">            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);</span>
+
+<span class="fc" id="L233">            receiverExecutor.submit(this::selectLoop);</span>
+<span class="nc" id="L234">        } catch (IOException e) {</span>
+<span class="nc" id="L235">            throw new UncheckedIOException(e);</span>
+<span class="fc" id="L236">        }</span>
+<span class="fc" id="L237">    }</span>
+
+    private synchronized void selectLoop() {
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        while (serverSocketChannel.isOpen()) {</span>
+            try {
+<span class="fc" id="L242">                selector.select();</span>
+<span class="fc" id="L243">                Iterator&lt;SelectionKey&gt; selectedKeys = selector.selectedKeys()</span>
+<span class="fc" id="L244">                                                              .iterator();</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">                while (selectedKeys.hasNext()) {</span>
+<span class="fc" id="L246">                    SelectionKey key = selectedKeys.next();</span>
+
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">                    if (!key.isValid()) {</span>
+                        // clean up?
+<span class="nc" id="L250">                        selectedKeys.remove();</span>
+<span class="nc" id="L251">                        continue;</span>
+                    }
+
+<span class="fc bfc" id="L254" title="All 2 branches covered.">                    if (key.isAcceptable()) {</span>
+<span class="fc" id="L255">                        accept();</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">                    } else if (key.isReadable()) {</span>
+<span class="fc" id="L257">                        handleRead(key, (Context) key.attachment());</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">                    } else if (key.isWritable()) {</span>
+<span class="fc" id="L259">                        handleWrite(key, (Context) key.attachment());</span>
+                    }
+
+                    // only remove successfully handled keys from currently selected.
+<span class="fc" id="L263">                    selectedKeys.remove();</span>
+<span class="fc" id="L264">                }</span>
+<span class="nc" id="L265">            } catch (IOException e) {</span>
+<span class="nc" id="L266">                LOGGER.error(&quot;Exception in thread: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L267">            }</span>
+
+            // TODO: Figure out if this needs to be in a separate thread.
+<span class="fc bfc" id="L270" title="All 2 branches covered.">            for (SelectionKey cleanupKey : selector.keys()) {</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">                if (cleanupKey.channel() == serverSocketChannel) {</span>
+<span class="fc" id="L272">                    continue;</span>
+                }
+
+<span class="fc" id="L275">                SocketChannel channel = (SocketChannel) cleanupKey.channel();</span>
+<span class="pc bpc" id="L276" title="1 of 4 branches missed.">                if (!cleanupKey.isValid() || !channel.isOpen() || channel.socket()</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">                                                                         .isClosed()) {</span>
+                    try {
+<span class="fc" id="L279">                        cleanupKey.channel()</span>
+<span class="fc" id="L280">                                  .close();</span>
+<span class="nc" id="L281">                    } catch (IOException e) {</span>
+<span class="nc" id="L282">                        e.printStackTrace();</span>
+<span class="fc" id="L283">                    }</span>
+<span class="fc" id="L284">                    cleanupKey.cancel();</span>
+                }
+<span class="fc" id="L286">            }</span>
+        }
+<span class="fc" id="L288">    }</span>
+
+    private void accept() {
+        try {
+            SocketChannel socketChannel;
+<span class="fc bfc" id="L293" title="All 2 branches covered.">            while ((socketChannel = serverSocketChannel.accept()) != null) {</span>
+                // But make the actual accepted channel blocking.
+<span class="fc" id="L295">                socketChannel.configureBlocking(false);</span>
+<span class="fc" id="L296">                socketChannel.register(selector, SelectionKey.OP_READ, new Context(socketChannel));</span>
+            }
+<span class="nc" id="L298">        } catch (IOException e) {</span>
+<span class="nc" id="L299">            LOGGER.error(&quot;Exception when accepting: {}&quot;, e.getMessage(), e);</span>
+<span class="fc" id="L300">        }</span>
+<span class="fc" id="L301">    }</span>
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void handleRead(SelectionKey key, Context context) throws IOException {
+<span class="fc" id="L305">        long startTime = System.nanoTime();</span>
+
+        // part a: read into the readBuffer.
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">        if (context.currentFrameSize == 0) {</span>
+            // read frame size.
+            try {
+<span class="fc bfc" id="L311" title="All 2 branches covered.">                if (context.channel.read(context.sizeBuffer) &lt; 0) {</span>
+<span class="fc" id="L312">                    context.close();</span>
+<span class="fc" id="L313">                    key.cancel();</span>
+<span class="fc" id="L314">                    return;</span>
+                }
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">                if (context.sizeBuffer.position() &lt; 4) {</span>
+<span class="nc" id="L317">                    return;</span>
+                }
+<span class="nc" id="L319">            } catch (IOException e) {</span>
+                // LOGGER.error(e.getMessage(), e);
+<span class="nc" id="L321">                context.close();</span>
+<span class="nc" id="L322">                key.cancel();</span>
+<span class="nc" id="L323">                return;</span>
+<span class="fc" id="L324">            }</span>
+
+<span class="fc" id="L326">            context.currentFrameSize = TFramedTransport.decodeFrameSize(context.sizeBuffer.array());</span>
+<span class="fc" id="L327">            context.sizeBuffer.rewind();</span>
+
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">            if (context.currentFrameSize &gt; maxFrameSizeInBytes) {</span>
+<span class="nc" id="L330">                LOGGER.warn(&quot;Attempting message of &quot; + context.currentFrameSize + &quot; &gt; &quot; + maxFrameSizeInBytes);</span>
+<span class="nc" id="L331">                context.close();</span>
+<span class="nc" id="L332">                key.cancel();</span>
+<span class="nc" id="L333">                return;</span>
+            }
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">            if (context.currentFrameSize &lt; 1) {</span>
+<span class="nc" id="L336">                LOGGER.warn(&quot;Attempting message of &quot; + context.currentFrameSize);</span>
+<span class="nc" id="L337">                context.close();</span>
+<span class="nc" id="L338">                key.cancel();</span>
+<span class="nc" id="L339">                return;</span>
+            }
+
+<span class="fc" id="L342">            context.readBuffer.rewind();</span>
+<span class="fc" id="L343">            context.readBuffer.limit(context.currentFrameSize);</span>
+        }
+
+        try {
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">            if (context.channel.read(context.readBuffer) &lt; 0) {</span>
+<span class="nc" id="L348">                LOGGER.warn(&quot;Closed connection while reading frame&quot;);</span>
+<span class="nc" id="L349">                context.close();</span>
+<span class="nc" id="L350">                key.cancel();</span>
+<span class="nc" id="L351">                return;</span>
+            }
+<span class="nc" id="L353">        } catch (IOException e) {</span>
+<span class="nc" id="L354">            LOGGER.warn(&quot;Exception reading frame: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L355">            context.close();</span>
+<span class="nc" id="L356">            key.cancel();</span>
+<span class="nc" id="L357">            return;</span>
+<span class="fc" id="L358">        }</span>
+
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">        if (context.readBuffer.position() &lt; context.readBuffer.limit()) {</span>
+            // wait until next read, and see if remaining of frame has arrived.
+<span class="nc" id="L362">            return;</span>
+        }
+
+        // part b: if the read buffer is complete, handle the content.
+        PServiceCall call;
+        try {
+<span class="fc" id="L368">            context.currentFrameSize = 0;</span>
+<span class="fc" id="L369">            context.readBuffer.flip();</span>
+
+<span class="fc" id="L371">            call = serializer.deserialize(new ByteBufferInputStream(context.readBuffer),</span>
+<span class="fc" id="L372">                                          processor.getDescriptor());</span>
+<span class="fc" id="L373">            context.readBuffer.clear();</span>
+
+<span class="fc" id="L375">            workerExecutor.submit(() -&gt; {</span>
+                PServiceCall reply;
+                try {
+<span class="fc" id="L378">                    reply = processor.handleCall(call);</span>
+<span class="nc" id="L379">                } catch (Exception e) {</span>
+<span class="nc" id="L380">                    reply = new PServiceCall&lt;&gt;(call.getMethod(),</span>
+                                               PServiceCallType.EXCEPTION,
+<span class="nc" id="L382">                                               call.getSequence(),</span>
+<span class="nc" id="L383">                                               PApplicationException.builder()</span>
+<span class="nc" id="L384">                                                                    .setMessage(e.getMessage())</span>
+<span class="nc" id="L385">                                                                    .setId(PApplicationExceptionType.INTERNAL_ERROR)</span>
+<span class="nc" id="L386">                                                                    .initCause(e)</span>
+<span class="nc" id="L387">                                                                    .build());</span>
+<span class="fc" id="L388">                }</span>
+
+<span class="fc" id="L390">                synchronized (context.writeQueue) {</span>
+<span class="fc" id="L391">                    context.writeQueue.offer(new WriteEntry(startTime, call, reply));</span>
+<span class="fc" id="L392">                    key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);</span>
+<span class="fc" id="L393">                    selector.wakeup();</span>
+<span class="pc" id="L394">                }</span>
+<span class="fc" id="L395">            });</span>
+<span class="nc" id="L396">        } catch (IOException e) {</span>
+<span class="nc" id="L397">            double duration = ((double) System.nanoTime() - startTime) / NS_IN_MILLIS;</span>
+<span class="nc" id="L398">            instrumentation.onTransportException(e, duration, null, null);</span>
+<span class="fc" id="L399">        }</span>
+<span class="fc" id="L400">    }</span>
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void handleWrite(SelectionKey key, Context context) {
+        WriteEntry entry;
+<span class="fc bfc" id="L405" title="All 2 branches covered.">        while ((entry = context.writeQueue.poll()) != null) {</span>
+<span class="fc" id="L406">            Exception ex = null;</span>
+            try {
+<span class="fc" id="L408">                serializer.serialize(context.out, entry.reply);</span>
+<span class="nc" id="L409">            } catch (IOException e) {</span>
+<span class="nc" id="L410">                ex = e;</span>
+            } finally {
+<span class="nc" id="L412">                try {</span>
+<span class="pc" id="L413">                    context.out.completeFrame();</span>
+<span class="pc" id="L414">                    context.out.flush();</span>
+<span class="nc" id="L415">                } catch (IOException e) {</span>
+<span class="nc" id="L416">                    LOGGER.error(&quot;Failed to write frame: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L417">                    context.close();</span>
+<span class="nc" id="L418">                    key.cancel();</span>
+                } finally {
+<span class="pc" id="L420">                    double duration = ((double) System.nanoTime() - entry.startTime) / NS_IN_MILLIS;</span>
+<span class="pc bpc" id="L421" title="17 of 18 branches missed.">                    if (ex == null) {</span>
+<span class="pc" id="L422">                        instrumentation.onComplete(duration, entry.call, entry.reply);</span>
+                    } else {
+<span class="nc" id="L424">                        instrumentation.onTransportException(ex, duration, entry.call, entry.reply);</span>
+                    }
+<span class="pc" id="L426">                }</span>
+<span class="pc" id="L427">            }</span>
+<span class="fc" id="L428">        }</span>
+
+<span class="fc" id="L430">        synchronized (context.writeQueue) {</span>
+            // double-guard as a new write entry may just have been added.
+<span class="pc bpc" id="L432" title="1 of 2 branches missed.">            if (context.writeQueue.isEmpty()) {</span>
+<span class="fc" id="L433">                key.interestOps(key.interestOps() &amp; ~SelectionKey.OP_WRITE);</span>
+            }
+<span class="pc" id="L435">        }</span>
+<span class="fc" id="L436">    }</span>
+
+    private class WriteEntry {
+        long startTime;
+        PServiceCall call;
+        PServiceCall reply;
+
+<span class="fc" id="L443">        WriteEntry(long startTime, PServiceCall call, PServiceCall reply) {</span>
+<span class="fc" id="L444">            this.startTime = startTime;</span>
+<span class="fc" id="L445">            this.call = call;</span>
+<span class="fc" id="L446">            this.reply = reply;</span>
+<span class="fc" id="L447">        }</span>
+    }
+
+    private class Context {
+        final SocketChannel            channel;
+        final Queue&lt;WriteEntry&gt;        writeQueue;
+        final FramedBufferOutputStream out;
+
+        final ByteBuffer               sizeBuffer;
+        final ByteBuffer               readBuffer;
+        int currentFrameSize;
+
+<span class="fc" id="L459">        private Context(SocketChannel channel) {</span>
+<span class="fc" id="L460">            this.channel = channel;</span>
+<span class="fc" id="L461">            this.currentFrameSize = 0;</span>
+<span class="fc" id="L462">            this.sizeBuffer = ByteBuffer.allocate(4);</span>
+<span class="fc" id="L463">            this.readBuffer = ByteBuffer.allocateDirect(maxFrameSizeInBytes);</span>
+<span class="fc" id="L464">            this.out = new FramedBufferOutputStream(channel, maxFrameSizeInBytes);</span>
+<span class="fc" id="L465">            this.writeQueue = new ConcurrentLinkedQueue&lt;&gt;();</span>
+<span class="fc" id="L466">        }</span>
+
+        void close() {
+            try {
+<span class="fc" id="L470">                channel.socket().close();</span>
+<span class="fc" id="L471">                channel.close();</span>
+<span class="nc" id="L472">            } catch (IOException e) {</span>
+<span class="nc" id="L473">                LOGGER.warn(&quot;Exception closing channel: {}&quot;, e.getMessage(), e);</span>
+<span class="fc" id="L474">            }</span>
+<span class="fc" id="L475">        }</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

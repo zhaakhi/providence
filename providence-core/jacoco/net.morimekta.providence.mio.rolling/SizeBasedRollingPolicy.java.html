@@ -1,4 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SizeBasedRollingPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">SizeBasedRollingPolicy.java</span></div><h1>SizeBasedRollingPolicy.java</h1><pre class="source lang-java linenums">package net.morimekta.providence.mio.rolling;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SizeBasedRollingPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Core</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.mio.rolling</a> &gt; <span class="el_source">SizeBasedRollingPolicy.java</span></div><h1>SizeBasedRollingPolicy.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2017 Providence Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package net.morimekta.providence.mio.rolling;
 
 import net.morimekta.providence.mio.RollingFileMessageWriter;
 
@@ -9,45 +29,46 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 
 /**
- *
+ * A rolling policy that moves over to a new file whenever the current
+ * file reaches a threshold size.
  */
 public class SizeBasedRollingPolicy implements RollingFileMessageWriter.RollingPolicy {
     public SizeBasedRollingPolicy(File directory,
                                   long rollOnFileSizeInBytes,
-<span class="fc" id="L17">                                  String fileNameFormat) {</span>
-<span class="fc" id="L18">        this.directory = directory;</span>
-<span class="fc" id="L19">        this.rollOnFileSize = rollOnFileSizeInBytes;</span>
-<span class="fc" id="L20">        this.fileNameFormat = fileNameFormat;</span>
-<span class="fc" id="L21">        this.currentFileId = 1;</span>
-<span class="fc" id="L22">        this.currentFile = new File(directory, String.format(fileNameFormat, currentFileId));</span>
+<span class="fc" id="L38">                                  String fileNameFormat) {</span>
+<span class="fc" id="L39">        this.directory = directory;</span>
+<span class="fc" id="L40">        this.rollOnFileSize = rollOnFileSizeInBytes;</span>
+<span class="fc" id="L41">        this.fileNameFormat = fileNameFormat;</span>
+<span class="fc" id="L42">        this.currentFileId = 1;</span>
+<span class="fc" id="L43">        this.currentFile = new File(directory, String.format(fileNameFormat, currentFileId));</span>
         try {
             // Initially skip the files 1..N which has already reached the size trigger.
-<span class="fc bfc" id="L25" title="All 2 branches covered.">            while (currentFile.exists() &amp;&amp;</span>
-<span class="fc bfc" id="L26" title="All 2 branches covered.">                   Files.size(currentFile.toPath()) &gt;= rollOnFileSizeInBytes) {</span>
-<span class="fc" id="L27">                ++currentFileId;</span>
-<span class="fc" id="L28">                this.currentFile = new File(directory, String.format(fileNameFormat, currentFileId));</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            while (currentFile.exists() &amp;&amp;</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">                   Files.size(currentFile.toPath()) &gt;= rollOnFileSizeInBytes) {</span>
+<span class="fc" id="L48">                ++currentFileId;</span>
+<span class="fc" id="L49">                this.currentFile = new File(directory, String.format(fileNameFormat, currentFileId));</span>
             }
-<span class="nc" id="L30">        } catch (IOException e) {</span>
+<span class="nc" id="L51">        } catch (IOException e) {</span>
             // Must be file system error, almost impossible to test.
-<span class="nc" id="L32">            throw new UncheckedIOException(e.getMessage(), e);</span>
-<span class="fc" id="L33">        }</span>
-<span class="fc" id="L34">    }</span>
+<span class="nc" id="L53">            throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L54">        }</span>
+<span class="fc" id="L55">    }</span>
 
     @Override
     public void maybeUpdateCurrentFile(@Nonnull RollingFileMessageWriter.CurrentFileUpdater onRollFile,
                                        boolean initialCall) throws IOException {
-<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (initialCall) {</span>
-<span class="fc" id="L40">            onRollFile.updateCurrentFile(currentFile.getName());</span>
-<span class="fc bfc" id="L41" title="All 2 branches covered.">        } else if (Files.size(currentFile.toPath()) &gt;= rollOnFileSize) {</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (initialCall) {</span>
+<span class="fc" id="L61">            onRollFile.updateCurrentFile(currentFile.getName());</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        } else if (Files.size(currentFile.toPath()) &gt;= rollOnFileSize) {</span>
             // rely on the file for the file size. This can lead to
             // slow roll checking if a networking file system is used.
-<span class="fc" id="L44">            ++currentFileId;</span>
-<span class="fc" id="L45">            currentFile = new File(directory, String.format(fileNameFormat, currentFileId));</span>
+<span class="fc" id="L65">            ++currentFileId;</span>
+<span class="fc" id="L66">            currentFile = new File(directory, String.format(fileNameFormat, currentFileId));</span>
             // When rolling enforce continuity, and delete possible existing files.
-<span class="fc" id="L47">            Files.deleteIfExists(currentFile.toPath());</span>
-<span class="fc" id="L48">            onRollFile.updateCurrentFile(currentFile.getName());</span>
+<span class="fc" id="L68">            Files.deleteIfExists(currentFile.toPath());</span>
+<span class="fc" id="L69">            onRollFile.updateCurrentFile(currentFile.getName());</span>
         }
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L71">    }</span>
 
     private final long     rollOnFileSize;
     private final File     directory;

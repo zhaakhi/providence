@@ -39,6 +39,7 @@ import net.morimekta.providence.reflect.contained.CService;
 import net.morimekta.providence.reflect.util.ProgramTypeRegistry;
 import net.morimekta.util.io.IndentedPrintWriter;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,39 +49,36 @@ import java.io.OutputStream;
  * @since 05.09.15
  */
 public class JavaGenerator extends Generator {
-    private final JHelper          helper;
     private final GeneratorOptions generatorOptions;
-    private final   JavaOptions      javaOptions;
+    private final JavaOptions      javaOptions;
 
     public JavaGenerator(FileManager manager,
-                         ProgramTypeRegistry registry,
                          GeneratorOptions generatorOptions,
                          JavaOptions javaOptions) throws GeneratorException {
-<span class="fc" id="L59">        super(manager);</span>
+<span class="fc" id="L58">        super(manager);</span>
 
-<span class="fc" id="L61">        this.generatorOptions = generatorOptions;</span>
-<span class="fc" id="L62">        this.helper = new JHelper(registry);</span>
-<span class="fc" id="L63">        this.javaOptions = javaOptions;</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L60">        this.generatorOptions = generatorOptions;</span>
+<span class="fc" id="L61">        this.javaOptions = javaOptions;</span>
+<span class="fc" id="L62">    }</span>
 
-    private BaseMessageFormatter messageFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L67">        return new JavaMessageFormatter(writer, helper, generatorOptions, javaOptions);</span>
+    private BaseMessageFormatter messageFormatter(IndentedPrintWriter writer, JHelper helper) {
+<span class="fc" id="L65">        return new JavaMessageFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
     private BaseEnumFormatter enumFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L71">        return new JavaEnumFormatter(writer, generatorOptions, javaOptions);</span>
+<span class="fc" id="L69">        return new JavaEnumFormatter(writer, generatorOptions, javaOptions);</span>
     }
 
-    private BaseProgramFormatter constFomatter(IndentedPrintWriter writer) {
-<span class="fc" id="L75">        return new JavaConstantsFormatter(writer, helper, generatorOptions, javaOptions);</span>
+    private BaseProgramFormatter constFomatter(IndentedPrintWriter writer, JHelper helper) {
+<span class="fc" id="L73">        return new JavaConstantsFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
-    private BaseProgramFormatter hazelcastFomatter(IndentedPrintWriter writer) {
-<span class="fc" id="L79">        return new HazelcastPortableProgramFormatter(writer, helper, generatorOptions, javaOptions);</span>
+    private BaseProgramFormatter hazelcastFomatter(IndentedPrintWriter writer, JHelper helper) {
+<span class="fc" id="L77">        return new HazelcastPortableProgramFormatter(writer, helper, generatorOptions, javaOptions);</span>
     }
 
-    private BaseServiceFormatter serviceFormatter(IndentedPrintWriter writer) {
-<span class="fc" id="L83">        return new JavaServiceFormatter(</span>
+    private BaseServiceFormatter serviceFormatter(IndentedPrintWriter writer, JHelper helper) {
+<span class="fc" id="L81">        return new JavaServiceFormatter(</span>
                 writer,
                 helper,
                 new JavaMessageFormatter(true,
@@ -95,8 +93,10 @@ public class JavaGenerator extends Generator {
 
     @Override
     @SuppressWarnings(&quot;resource&quot;)
-    public void generate(CProgram program) throws IOException, GeneratorException {
-<span class="fc" id="L99">        String javaPackage = JUtils.getJavaPackage(program);</span>
+    public void generate(@Nonnull ProgramTypeRegistry registry) throws IOException, GeneratorException {
+<span class="fc" id="L97">        CProgram program = registry.getProgram();</span>
+<span class="fc" id="L98">        String javaPackage = JUtils.getJavaPackage(program);</span>
+<span class="fc" id="L99">        JHelper helper = new JHelper(registry);</span>
 
 <span class="fc" id="L101">        String path = JUtils.getPackageClassPath(javaPackage);</span>
 
@@ -106,8 +106,8 @@ public class JavaGenerator extends Generator {
             try {
 <span class="fc" id="L107">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
 
-<span class="fc" id="L109">                appendFileHeader(writer, program);</span>
-<span class="fc" id="L110">                constFomatter(writer).appendProgramClass(program);</span>
+<span class="fc" id="L109">                appendFileHeader(writer, helper, program);</span>
+<span class="fc" id="L110">                constFomatter(writer, helper).appendProgramClass(program);</span>
 
 <span class="fc" id="L112">                writer.flush();</span>
             } finally {
@@ -128,8 +128,8 @@ public class JavaGenerator extends Generator {
             try {
 <span class="fc" id="L129">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
 
-<span class="fc" id="L131">                appendFileHeader(writer, program);</span>
-<span class="fc" id="L132">                hazelcastFomatter(writer).appendProgramClass(program);</span>
+<span class="fc" id="L131">                appendFileHeader(writer, helper, program);</span>
+<span class="fc" id="L132">                hazelcastFomatter(writer, helper).appendProgramClass(program);</span>
 
 <span class="fc" id="L134">                writer.flush();</span>
             } finally {
@@ -147,11 +147,11 @@ public class JavaGenerator extends Generator {
             try {
 <span class="fc" id="L148">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
 
-<span class="fc" id="L150">                appendFileHeader(writer, program);</span>
+<span class="fc" id="L150">                appendFileHeader(writer, helper, program);</span>
 
 <span class="pc bpc" id="L152" title="1 of 3 branches missed.">                switch (type.getType()) {</span>
                     case MESSAGE:
-<span class="fc" id="L154">                        messageFormatter(writer).appendMessageClass((PMessageDescriptor&lt;?, ?&gt;) type);</span>
+<span class="fc" id="L154">                        messageFormatter(writer, helper).appendMessageClass((PMessageDescriptor&lt;?, ?&gt;) type);</span>
 <span class="fc" id="L155">                        break;</span>
                     case ENUM:
 <span class="fc" id="L157">                        enumFormatter(writer).appendEnumClass((CEnumDescriptor) type);</span>
@@ -175,8 +175,8 @@ public class JavaGenerator extends Generator {
 <span class="fc" id="L175">            OutputStream out = new BufferedOutputStream(getFileManager().create(path, file));</span>
             try {
 <span class="fc" id="L177">                IndentedPrintWriter writer = new IndentedPrintWriter(out);</span>
-<span class="fc" id="L178">                appendFileHeader(writer, program);</span>
-<span class="fc" id="L179">                serviceFormatter(writer).appendServiceClass(service);</span>
+<span class="fc" id="L178">                appendFileHeader(writer, helper, program);</span>
+<span class="fc" id="L179">                serviceFormatter(writer, helper).appendServiceClass(service);</span>
 <span class="fc" id="L180">                writer.flush();</span>
             } finally {
 <span class="nc" id="L182">                try {</span>
@@ -189,10 +189,11 @@ public class JavaGenerator extends Generator {
 <span class="fc" id="L189">    }</span>
 
     private void appendFileHeader(IndentedPrintWriter writer,
+                                  JHelper helper,
                                   CProgram document)
             throws GeneratorException, IOException {
-<span class="fc" id="L194">        writer.format(&quot;package %s;&quot;, helper.getJavaPackage(document))</span>
-<span class="fc" id="L195">              .newline();</span>
-<span class="fc" id="L196">    }</span>
+<span class="fc" id="L195">        writer.format(&quot;package %s;&quot;, helper.getJavaPackage(document))</span>
+<span class="fc" id="L196">              .newline();</span>
+<span class="fc" id="L197">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

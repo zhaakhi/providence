@@ -23,11 +23,14 @@ package net.morimekta.providence.reflect.contained;
 import net.morimekta.providence.descriptor.PService;
 import net.morimekta.providence.descriptor.PServiceProvider;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,57 +47,73 @@ public class CService extends PService implements CAnnotatedDescriptor {
                     PServiceProvider extendsService,
                     Collection&lt;CServiceMethod&gt; methods,
                     Map&lt;String, String&gt; annotations) {
-<span class="fc" id="L47">        super(programName, name, extendsService, methods);</span>
-<span class="fc" id="L48">        this.documentation = documentation;</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">        this.annotations = annotations == null</span>
+<span class="fc" id="L50">        super(programName, name, extendsService, methods);</span>
+<span class="fc" id="L51">        this.documentation = documentation;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        this.annotations = annotations == null</span>
                            ? Collections.EMPTY_MAP
-<span class="fc" id="L51">                           : ImmutableMap.copyOf(annotations);</span>
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L54">                           : ImmutableMap.copyOf(annotations);</span>
+<span class="fc" id="L55">    }</span>
 
     @Nonnull
     @SuppressWarnings(&quot;unchecked&quot;)
     public Collection&lt;CServiceMethod&gt; getMethods() {
-<span class="fc" id="L57">        return (Collection&lt;CServiceMethod&gt;) super.getMethods();</span>
+<span class="fc" id="L60">        return (Collection&lt;CServiceMethod&gt;) super.getMethods();</span>
     }
 
     @Override
     public CServiceMethod getMethod(String name) {
-<span class="fc bfc" id="L62" title="All 2 branches covered.">        for (CServiceMethod method : getMethods()) {</span>
-<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (method.getName().equals(name)) {</span>
-<span class="fc" id="L64">                return method;</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        for (CServiceMethod method : getMethods()) {</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (method.getName().equals(name)) {</span>
+<span class="fc" id="L67">                return method;</span>
             }
-<span class="fc" id="L66">        }</span>
-<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (getExtendsService() != null) {</span>
-<span class="fc" id="L68">            return getExtendsService().getMethod(name);</span>
+<span class="fc" id="L69">        }</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (getExtendsService() != null) {</span>
+<span class="fc" id="L71">            return getExtendsService().getMethod(name);</span>
         }
-<span class="fc" id="L70">        return null;</span>
+<span class="fc" id="L73">        return null;</span>
     }
 
     @Override
     public CService getExtendsService() {
-<span class="fc" id="L75">        return (CService) super.getExtendsService();</span>
+<span class="fc" id="L78">        return (CService) super.getExtendsService();</span>
+    }
+
+    /**
+     * Get all methods including methods declared in extended services.
+     *
+     * @return The list of service methods.
+     */
+    public Collection&lt;CServiceMethod&gt; getMethodsIncludingExtended() {
+<span class="nc" id="L87">        CService extended = getExtendsService();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (extended == null) {</span>
+<span class="nc" id="L89">            return getMethods();</span>
+        }
+<span class="nc" id="L91">        List&lt;CServiceMethod&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L92">        out.addAll(extended.getMethodsIncludingExtended());</span>
+<span class="nc" id="L93">        out.addAll(getMethods());</span>
+<span class="nc" id="L94">        return ImmutableList.copyOf(out);</span>
     }
 
     @Nonnull
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public Set&lt;String&gt; getAnnotations() {
-<span class="fc" id="L82">        return annotations.keySet();</span>
+<span class="fc" id="L101">        return annotations.keySet();</span>
     }
 
     @Override
     public boolean hasAnnotation(@Nonnull String name) {
-<span class="fc" id="L87">        return annotations.containsKey(name);</span>
+<span class="fc" id="L106">        return annotations.containsKey(name);</span>
     }
 
     @Override
     public String getAnnotationValue(@Nonnull String name) {
-<span class="fc" id="L92">        return annotations.get(name);</span>
+<span class="fc" id="L111">        return annotations.get(name);</span>
     }
 
     @Override
     public String getDocumentation() {
-<span class="fc" id="L97">        return documentation;</span>
+<span class="fc" id="L116">        return documentation;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

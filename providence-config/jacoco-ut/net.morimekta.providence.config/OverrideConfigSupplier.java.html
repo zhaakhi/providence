@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OverrideConfigSupplier.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Providence Utils : Config</a> &gt; <a href="index.source.html" class="el_package">net.morimekta.providence.config</a> &gt; <span class="el_source">OverrideConfigSupplier.java</span></div><h1>OverrideConfigSupplier.java</h1><pre class="source lang-java linenums">/*
- * Copyright 2016 Providence Authors
+ * Copyright 2016,2017 Providence Authors
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
@@ -39,9 +39,8 @@ import net.morimekta.util.Binary;
 import net.morimekta.util.Strings;
 
 import javax.annotation.Nonnull;
-import java.io.ByteArrayInputStream;
+import java.io.CharArrayReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Map;
 import java.util.Properties;
@@ -83,8 +82,8 @@ public class OverrideConfigSupplier&lt;Message extends PMessage&lt;Message, Fiel
     public OverrideConfigSupplier(@Nonnull ConfigSupplier&lt;Message,Field&gt; parent,
                                   @Nonnull Properties overrides)
             throws ProvidenceConfigException {
-<span class="nc" id="L86">        this(parent, propertiesMap(overrides), false);</span>
-<span class="nc" id="L87">    }</span>
+<span class="nc" id="L85">        this(parent, propertiesMap(overrides), false);</span>
+<span class="nc" id="L86">    }</span>
 
     /**
      * Create a config that wraps a providence message instance. This message
@@ -97,8 +96,8 @@ public class OverrideConfigSupplier&lt;Message extends PMessage&lt;Message, Fiel
     public OverrideConfigSupplier(@Nonnull ConfigSupplier&lt;Message,Field&gt; parent,
                                   @Nonnull Map&lt;String, String&gt; overrides)
             throws ProvidenceConfigException {
-<span class="fc" id="L100">        this(parent, overrides, false);</span>
-<span class="fc" id="L101">    }</span>
+<span class="fc" id="L99">        this(parent, overrides, false);</span>
+<span class="fc" id="L100">    }</span>
 
     /**
      * Create a config that wraps a providence message instance. This message
@@ -113,8 +112,8 @@ public class OverrideConfigSupplier&lt;Message extends PMessage&lt;Message, Fiel
                                   @Nonnull Map&lt;String, String&gt; overrides,
                                   boolean strict)
             throws ProvidenceConfigException {
-<span class="fc" id="L116">        this(Clock.systemUTC(), parent, overrides, strict);</span>
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L115">        this(Clock.systemUTC(), parent, overrides, strict);</span>
+<span class="fc" id="L116">    }</span>
     /**
      * Create a config that wraps a providence message instance. This message
      * will be exposed without any key prefix.
@@ -130,334 +129,333 @@ public class OverrideConfigSupplier&lt;Message extends PMessage&lt;Message, Fiel
                                   @Nonnull Map&lt;String, String&gt; overrides,
                                   boolean strict)
             throws ProvidenceConfigException {
-<span class="fc" id="L133">        super(clock);</span>
-<span class="fc" id="L134">        synchronized (this) {</span>
-<span class="fc" id="L135">            this.parent = parent;</span>
-<span class="fc" id="L136">            this.overrides = overrides;</span>
-<span class="fc" id="L137">            this.listener = updated -&gt; {</span>
+<span class="fc" id="L132">        super(clock);</span>
+<span class="fc" id="L133">        synchronized (this) {</span>
+<span class="fc" id="L134">            this.parent = parent;</span>
+<span class="fc" id="L135">            this.overrides = overrides;</span>
+<span class="fc" id="L136">            this.listener = updated -&gt; {</span>
                 try {
-<span class="fc" id="L139">                    set(buildOverrideConfig(updated, overrides, strict));</span>
-<span class="nc" id="L140">                } catch (ProvidenceConfigException e) {</span>
-<span class="nc" id="L141">                    throw new UncheckedProvidenceConfigException(e);</span>
-<span class="fc" id="L142">                }</span>
-<span class="fc" id="L143">            };</span>
-<span class="fc" id="L144">            parent.addListener(listener);</span>
-<span class="fc" id="L145">            set(buildOverrideConfig(parent.get(), overrides, strict));</span>
-<span class="fc" id="L146">        }</span>
-<span class="fc" id="L147">    }</span>
+<span class="fc" id="L138">                    set(buildOverrideConfig(updated, overrides, strict));</span>
+<span class="nc" id="L139">                } catch (ProvidenceConfigException e) {</span>
+<span class="nc" id="L140">                    throw new UncheckedProvidenceConfigException(e);</span>
+<span class="fc" id="L141">                }</span>
+<span class="fc" id="L142">            };</span>
+<span class="fc" id="L143">            parent.addListener(listener);</span>
+<span class="fc" id="L144">            set(buildOverrideConfig(parent.get(), overrides, strict));</span>
+<span class="fc" id="L145">        }</span>
+<span class="fc" id="L146">    }</span>
 
     @Override
     public String toString() {
-<span class="nc" id="L151">        return String.format(&quot;OverrideConfig{[%s], parent=%s}&quot;, Strings.join(&quot;, &quot;, overrides.keySet()), parent.getName());</span>
+<span class="nc" id="L150">        return String.format(&quot;OverrideConfig{[%s], parent=%s}&quot;, Strings.join(&quot;, &quot;, overrides.keySet()), parent.getName());</span>
     }
 
     @Override
     public String getName() {
-<span class="nc" id="L156">        return String.format(&quot;OverrideConfig{[%s]}&quot;, Strings.join(&quot;, &quot;, overrides.keySet()));</span>
+<span class="nc" id="L155">        return String.format(&quot;OverrideConfig{[%s]}&quot;, Strings.join(&quot;, &quot;, overrides.keySet()));</span>
     }
 
     private static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Message buildOverrideConfig(Message parent,
                                 Map&lt;String,String&gt; overrides,
                                 boolean strict) throws ProvidenceConfigException {
-<span class="fc" id="L163">        PMessageBuilder&lt;Message, Field&gt; builder = parent.mutate();</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; override : overrides.entrySet()) {</span>
-<span class="fc" id="L165">            String[] path = override.getKey()</span>
-<span class="fc" id="L166">                                    .split(&quot;[.]&quot;);</span>
+<span class="fc" id="L162">        PMessageBuilder&lt;Message, Field&gt; builder = parent.mutate();</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; override : overrides.entrySet()) {</span>
+<span class="fc" id="L164">            String[] path = override.getKey()</span>
+<span class="fc" id="L165">                                    .split(&quot;[.]&quot;);</span>
 
-<span class="fc" id="L168">            String fieldName = lastFieldName(path);</span>
-<span class="fc" id="L169">            PMessageBuilder containedBuilder = builderForField(strict, builder, path);</span>
-<span class="fc bfc" id="L170" title="All 2 branches covered.">            if (containedBuilder == null) {</span>
-<span class="fc" id="L171">                continue;</span>
+<span class="fc" id="L167">            String fieldName = lastFieldName(path);</span>
+<span class="fc" id="L168">            PMessageBuilder containedBuilder = builderForField(strict, builder, path);</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">            if (containedBuilder == null) {</span>
+<span class="fc" id="L170">                continue;</span>
             }
-<span class="fc" id="L173">            PField field = containedBuilder.descriptor()</span>
-<span class="fc" id="L174">                                           .findFieldByName(fieldName);</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">            if (field == null) {</span>
-<span class="fc bfc" id="L176" title="All 2 branches covered.">                if (strict) {</span>
-<span class="fc" id="L177">                    throw new ProvidenceConfigException(&quot;No such field %s in %s [%s]&quot;,</span>
+<span class="fc" id="L172">            PField field = containedBuilder.descriptor()</span>
+<span class="fc" id="L173">                                           .findFieldByName(fieldName);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">            if (field == null) {</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">                if (strict) {</span>
+<span class="fc" id="L176">                    throw new ProvidenceConfigException(&quot;No such field %s in %s [%s]&quot;,</span>
                                               fieldName,
-<span class="fc" id="L179">                                              containedBuilder.descriptor()</span>
-<span class="fc" id="L180">                                                              .getQualifiedName(),</span>
-<span class="fc" id="L181">                                              String.join(&quot;.&quot;, path));</span>
+<span class="fc" id="L178">                                              containedBuilder.descriptor()</span>
+<span class="fc" id="L179">                                                              .getQualifiedName(),</span>
+<span class="fc" id="L180">                                              String.join(&quot;.&quot;, path));</span>
                 }
                 continue;
             }
 
             try {
-<span class="fc" id="L187">                Tokenizer tokenizer = new Tokenizer(new ByteArrayInputStream(override.getValue()</span>
-<span class="fc" id="L188">                                                                                     .getBytes(StandardCharsets.UTF_8)),</span>
-                                                    true);
-<span class="fc bfc" id="L190" title="All 2 branches covered.">                if (UNDEFINED.equals(override.getValue())) {</span>
-<span class="fc" id="L191">                    containedBuilder.clear(field.getId());</span>
-<span class="fc bfc" id="L192" title="All 2 branches covered.">                } else if (field.getType() == PType.STRING) {</span>
-<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                    if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L194">                        Token next = tokenizer.next();</span>
-<span class="fc bfc" id="L195" title="All 2 branches covered.">                        if (next.isStringLiteral()) {</span>
-<span class="fc" id="L196">                            containedBuilder.set(field.getId(), next.decodeLiteral(strict));</span>
-<span class="fc bfc" id="L197" title="All 2 branches covered.">                            if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L198">                                throw new ProvidenceConfigException(&quot;Garbage after string value [%s]: '%s'&quot;,</span>
-<span class="fc" id="L199">                                                                    override.getKey(),</span>
-<span class="fc" id="L200">                                                                    override.getValue());</span>
+<span class="fc" id="L186">                CharArrayReader reader = new CharArrayReader(override.getValue().toCharArray());</span>
+<span class="fc" id="L187">                Tokenizer tokenizer = new Tokenizer(reader, Tokenizer.DEFAULT_BUFFER_SIZE, true);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">                if (UNDEFINED.equals(override.getValue())) {</span>
+<span class="fc" id="L189">                    containedBuilder.clear(field.getId());</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">                } else if (field.getType() == PType.STRING) {</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">                    if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L192">                        Token next = tokenizer.next();</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">                        if (next.isStringLiteral()) {</span>
+<span class="fc" id="L194">                            containedBuilder.set(field.getId(), next.decodeLiteral(strict));</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">                            if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L196">                                throw new ProvidenceConfigException(&quot;Garbage after string value [%s]: '%s'&quot;,</span>
+<span class="fc" id="L197">                                                                    override.getKey(),</span>
+<span class="fc" id="L198">                                                                    override.getValue());</span>
                             }
-<span class="fc" id="L202">                            continue;</span>
+<span class="fc" id="L200">                            continue;</span>
                         }
                     }
-<span class="fc" id="L205">                    containedBuilder.set(field.getId(), override.getValue());</span>
+<span class="fc" id="L203">                    containedBuilder.set(field.getId(), override.getValue());</span>
                 } else {
-<span class="fc" id="L207">                    containedBuilder.set(field.getId(),</span>
-<span class="fc" id="L208">                                         readFieldValue(tokenizer,</span>
-<span class="fc" id="L209">                                                        tokenizer.expect(&quot;value&quot;),</span>
-<span class="fc" id="L210">                                                        field.getDescriptor(),</span>
+<span class="fc" id="L205">                    containedBuilder.set(field.getId(),</span>
+<span class="fc" id="L206">                                         readFieldValue(tokenizer,</span>
+<span class="fc" id="L207">                                                        tokenizer.expect(&quot;value&quot;),</span>
+<span class="fc" id="L208">                                                        field.getDescriptor(),</span>
                                                         strict));
-<span class="fc bfc" id="L212" title="All 2 branches covered.">                    if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L213">                        throw new ProvidenceConfigException(&quot;Garbage after %s value [%s]: '%s'&quot;,</span>
-<span class="fc" id="L214">                                                            field.getType(),</span>
-<span class="fc" id="L215">                                                            override.getKey(),</span>
-<span class="fc" id="L216">                                                            override.getValue());</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">                    if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L211">                        throw new ProvidenceConfigException(&quot;Garbage after %s value [%s]: '%s'&quot;,</span>
+<span class="fc" id="L212">                                                            field.getType(),</span>
+<span class="fc" id="L213">                                                            override.getKey(),</span>
+<span class="fc" id="L214">                                                            override.getValue());</span>
                     }
                 }
-<span class="fc" id="L219">            } catch (ProvidenceConfigException e) {</span>
-<span class="fc" id="L220">                throw e;</span>
-<span class="fc" id="L221">            } catch (IOException e) {</span>
-<span class="fc" id="L222">                throw new ProvidenceConfigException(e.getMessage() + &quot; [&quot; + override.getKey() + &quot;]&quot;, e);</span>
-<span class="fc" id="L223">            }</span>
-<span class="fc" id="L224">        }</span>
+<span class="fc" id="L217">            } catch (ProvidenceConfigException e) {</span>
+<span class="fc" id="L218">                throw e;</span>
+<span class="fc" id="L219">            } catch (IOException e) {</span>
+<span class="fc" id="L220">                throw new ProvidenceConfigException(e.getMessage() + &quot; [&quot; + override.getKey() + &quot;]&quot;, e);</span>
+<span class="fc" id="L221">            }</span>
+<span class="fc" id="L222">        }</span>
 
-<span class="fc" id="L226">        return builder.build();</span>
+<span class="fc" id="L224">        return builder.build();</span>
     }
 
     private static String lastFieldName(String... path) {
-<span class="fc" id="L230">        return path[path.length - 1];</span>
+<span class="fc" id="L228">        return path[path.length - 1];</span>
     }
 
     private static PMessageBuilder builderForField(boolean strict, PMessageBuilder builder, String... path) throws ProvidenceConfigException {
-<span class="fc bfc" id="L234" title="All 2 branches covered.">        for (int i = 0; i &lt; (path.length - 1); ++i) {</span>
-<span class="fc" id="L235">            PMessageDescriptor descriptor = builder.descriptor();</span>
-<span class="fc" id="L236">            String fieldName = path[i];</span>
-<span class="fc" id="L237">            PField field = descriptor.findFieldByName(fieldName);</span>
-<span class="fc bfc" id="L238" title="All 2 branches covered.">            if (field == null) {</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">                if (strict) {</span>
-<span class="fc" id="L240">                    throw new ProvidenceConfigException(&quot;No such field %s in %s [%s]&quot;,</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        for (int i = 0; i &lt; (path.length - 1); ++i) {</span>
+<span class="fc" id="L233">            PMessageDescriptor descriptor = builder.descriptor();</span>
+<span class="fc" id="L234">            String fieldName = path[i];</span>
+<span class="fc" id="L235">            PField field = descriptor.findFieldByName(fieldName);</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">            if (field == null) {</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">                if (strict) {</span>
+<span class="fc" id="L238">                    throw new ProvidenceConfigException(&quot;No such field %s in %s [%s]&quot;,</span>
                                               fieldName,
-<span class="fc" id="L242">                                              descriptor.getQualifiedName(),</span>
-<span class="fc" id="L243">                                              String.join(&quot;.&quot;, path));</span>
+<span class="fc" id="L240">                                              descriptor.getQualifiedName(),</span>
+<span class="fc" id="L241">                                              String.join(&quot;.&quot;, path));</span>
                 }
-<span class="fc" id="L245">                return null;</span>
+<span class="fc" id="L243">                return null;</span>
             }
-<span class="fc bfc" id="L247" title="All 2 branches covered.">            if (field.getType() != PType.MESSAGE) {</span>
-<span class="fc" id="L248">                throw new ProvidenceConfigException(&quot;'%s' is not a message field in %s [%s]&quot;,</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">            if (field.getType() != PType.MESSAGE) {</span>
+<span class="fc" id="L246">                throw new ProvidenceConfigException(&quot;'%s' is not a message field in %s [%s]&quot;,</span>
                                           fieldName,
-<span class="fc" id="L250">                                          descriptor.getQualifiedName(),</span>
-<span class="fc" id="L251">                                          String.join(&quot;.&quot;, path));</span>
+<span class="fc" id="L248">                                          descriptor.getQualifiedName(),</span>
+<span class="fc" id="L249">                                          String.join(&quot;.&quot;, path));</span>
             }
-<span class="fc" id="L253">            builder = builder.mutator(field.getId());</span>
+<span class="fc" id="L251">            builder = builder.mutator(field.getId());</span>
         }
-<span class="fc" id="L255">        return builder;</span>
+<span class="fc" id="L253">        return builder;</span>
     }
 
     private static Object readFieldValue(Tokenizer tokenizer, Token token, PDescriptor descriptor, boolean strict) throws IOException {
-<span class="pc bpc" id="L259" title="1 of 14 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L257" title="1 of 14 branches missed.">        switch (descriptor.getType()) {</span>
             case BOOL: {
-<span class="pc bpc" id="L261" title="26 of 34 branches missed.">                switch (token.asString().toLowerCase()) {</span>
+<span class="pc bpc" id="L259" title="26 of 34 branches missed.">                switch (token.asString().toLowerCase()) {</span>
                     case &quot;1&quot;:
                     case &quot;t&quot;:
                     case &quot;true&quot;:
                     case &quot;y&quot;:
                     case &quot;yes&quot;:
-<span class="fc" id="L267">                        return Boolean.TRUE;</span>
+<span class="fc" id="L265">                        return Boolean.TRUE;</span>
                     case &quot;0&quot;:
                     case &quot;f&quot;:
                     case &quot;false&quot;:
                     case &quot;n&quot;:
                     case &quot;no&quot;:
-<span class="fc" id="L273">                        return Boolean.FALSE;</span>
+<span class="fc" id="L271">                        return Boolean.FALSE;</span>
                 }
-<span class="fc" id="L275">                throw new TokenizerException(token, &quot;Invalid boolean value &quot; + token.asString())</span>
-<span class="fc" id="L276">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L273">                throw new TokenizerException(token, &quot;Invalid boolean value &quot; + token.asString())</span>
+<span class="fc" id="L274">                        .setLine(tokenizer.getLine());</span>
 
             }
             case BYTE: {
-<span class="fc bfc" id="L280" title="All 2 branches covered.">                if (token.isInteger()) {</span>
-<span class="fc" id="L281">                    long val = token.parseInteger();</span>
-<span class="pc bpc" id="L282" title="1 of 4 branches missed.">                    if (val &gt; Byte.MAX_VALUE || val &lt; Byte.MIN_VALUE) {</span>
-<span class="fc" id="L283">                        throw new TokenizerException(token, &quot;Byte value out of bounds: &quot; + token.asString())</span>
-<span class="fc" id="L284">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L279">                    long val = token.parseInteger();</span>
+<span class="pc bpc" id="L280" title="1 of 4 branches missed.">                    if (val &gt; Byte.MAX_VALUE || val &lt; Byte.MIN_VALUE) {</span>
+<span class="fc" id="L281">                        throw new TokenizerException(token, &quot;Byte value out of bounds: &quot; + token.asString())</span>
+<span class="fc" id="L282">                                .setLine(tokenizer.getLine());</span>
                     }
-<span class="fc" id="L286">                    return (byte) val;</span>
+<span class="fc" id="L284">                    return (byte) val;</span>
                 } else {
-<span class="fc" id="L288">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
-<span class="fc" id="L289">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L286">                    throw new TokenizerException(token, &quot;Invalid byte value: &quot; + token.asString())</span>
+<span class="fc" id="L287">                            .setLine(tokenizer.getLine());</span>
                 }
             }
             case I16: {
-<span class="fc bfc" id="L293" title="All 2 branches covered.">                if (token.isInteger()) {</span>
-<span class="fc" id="L294">                    long val = token.parseInteger();</span>
-<span class="pc bpc" id="L295" title="1 of 4 branches missed.">                    if (val &gt; Short.MAX_VALUE || val &lt; Short.MIN_VALUE) {</span>
-<span class="fc" id="L296">                        throw new TokenizerException(token, &quot;Short value out of bounds: &quot; + token.asString())</span>
-<span class="fc" id="L297">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L292">                    long val = token.parseInteger();</span>
+<span class="pc bpc" id="L293" title="1 of 4 branches missed.">                    if (val &gt; Short.MAX_VALUE || val &lt; Short.MIN_VALUE) {</span>
+<span class="fc" id="L294">                        throw new TokenizerException(token, &quot;Short value out of bounds: &quot; + token.asString())</span>
+<span class="fc" id="L295">                                .setLine(tokenizer.getLine());</span>
                     }
-<span class="fc" id="L299">                    return (short) val;</span>
+<span class="fc" id="L297">                    return (short) val;</span>
                 } else {
-<span class="fc" id="L301">                    throw new TokenizerException(token, &quot;Invalid i16 value: &quot; + token.asString())</span>
-<span class="fc" id="L302">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L299">                    throw new TokenizerException(token, &quot;Invalid i16 value: &quot; + token.asString())</span>
+<span class="fc" id="L300">                            .setLine(tokenizer.getLine());</span>
                 }
             }
             case I32: {
-<span class="fc bfc" id="L306" title="All 2 branches covered.">                if (token.isInteger()) {</span>
-<span class="fc" id="L307">                    long val = token.parseInteger();</span>
-<span class="pc bpc" id="L308" title="1 of 4 branches missed.">                    if (val &gt; Integer.MAX_VALUE || val &lt; Integer.MIN_VALUE) {</span>
-<span class="fc" id="L309">                        throw new TokenizerException(token, &quot;Integer value out of bounds: &quot; + token.asString())</span>
-<span class="fc" id="L310">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L305">                    long val = token.parseInteger();</span>
+<span class="pc bpc" id="L306" title="1 of 4 branches missed.">                    if (val &gt; Integer.MAX_VALUE || val &lt; Integer.MIN_VALUE) {</span>
+<span class="fc" id="L307">                        throw new TokenizerException(token, &quot;Integer value out of bounds: &quot; + token.asString())</span>
+<span class="fc" id="L308">                                .setLine(tokenizer.getLine());</span>
                     }
-<span class="fc" id="L312">                    return (int) val;</span>
+<span class="fc" id="L310">                    return (int) val;</span>
                 } else {
-<span class="fc" id="L314">                    throw new TokenizerException(token, &quot;Invalid i32 value: &quot; + token.asString())</span>
-<span class="fc" id="L315">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L312">                    throw new TokenizerException(token, &quot;Invalid i32 value: &quot; + token.asString())</span>
+<span class="fc" id="L313">                            .setLine(tokenizer.getLine());</span>
                 }
             }
             case I64: {
-<span class="fc bfc" id="L319" title="All 2 branches covered.">                if (token.isInteger()) {</span>
-<span class="fc" id="L320">                    return token.parseInteger();</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L318">                    return token.parseInteger();</span>
                 } else {
-<span class="fc" id="L322">                    throw new TokenizerException(token, &quot;Invalid i64 value: &quot; + token.asString())</span>
-<span class="fc" id="L323">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L320">                    throw new TokenizerException(token, &quot;Invalid i64 value: &quot; + token.asString())</span>
+<span class="fc" id="L321">                            .setLine(tokenizer.getLine());</span>
                 }
             }
             case DOUBLE: {
                 try {
-<span class="fc" id="L328">                    return token.parseDouble();</span>
-<span class="fc" id="L329">                } catch (NumberFormatException nfe) {</span>
-<span class="fc" id="L330">                    throw new TokenizerException(token, &quot;Invalid double value: &quot; + token.asString())</span>
-<span class="fc" id="L331">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L326">                    return token.parseDouble();</span>
+<span class="fc" id="L327">                } catch (NumberFormatException nfe) {</span>
+<span class="fc" id="L328">                    throw new TokenizerException(token, &quot;Invalid double value: &quot; + token.asString())</span>
+<span class="fc" id="L329">                            .setLine(tokenizer.getLine());</span>
                 }
             }
             case STRING: {
-<span class="fc bfc" id="L335" title="All 2 branches covered.">                if (!token.isStringLiteral()) {</span>
-<span class="fc" id="L336">                    throw new TokenizerException(token, &quot;Expected string literal, got '%s'&quot;, token.asString())</span>
-<span class="fc" id="L337">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">                if (!token.isStringLiteral()) {</span>
+<span class="fc" id="L334">                    throw new TokenizerException(token, &quot;Expected string literal, got '%s'&quot;, token.asString())</span>
+<span class="fc" id="L335">                            .setLine(tokenizer.getLine());</span>
                 }
-<span class="fc" id="L339">                return token.decodeLiteral(strict);</span>
+<span class="fc" id="L337">                return token.decodeLiteral(strict);</span>
             }
             case BINARY: {
-<span class="pc bpc" id="L342" title="2 of 10 branches missed.">                switch (token.asString()) {</span>
+<span class="pc bpc" id="L340" title="2 of 10 branches missed.">                switch (token.asString()) {</span>
                     case &quot;b64&quot;: {
                         try {
-<span class="fc" id="L345">                            tokenizer.expectSymbol(&quot;binary content start&quot;, Token.kParamsStart);</span>
-<span class="fc" id="L346">                            String content = tokenizer.readBinary(Token.kParamsEnd);</span>
-<span class="fc" id="L347">                            return Binary.fromBase64(content);</span>
-<span class="fc" id="L348">                        } catch (IllegalArgumentException e) {</span>
-<span class="fc" id="L349">                            throw new TokenizerException(e, e.getMessage());</span>
+<span class="fc" id="L343">                            tokenizer.expectSymbol(&quot;binary content start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L344">                            String content = tokenizer.readBinary(Token.kParamsEnd);</span>
+<span class="fc" id="L345">                            return Binary.fromBase64(content);</span>
+<span class="fc" id="L346">                        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L347">                            throw new TokenizerException(e, e.getMessage());</span>
                         }
                     }
                     case &quot;hex&quot;: {
                         try {
-<span class="fc" id="L354">                            tokenizer.expectSymbol(&quot;binary content start&quot;, Token.kParamsStart);</span>
-<span class="fc" id="L355">                            String content = tokenizer.readBinary(Token.kParamsEnd);</span>
-<span class="fc" id="L356">                            return Binary.fromHexString(content);</span>
-<span class="fc" id="L357">                        } catch (NumberFormatException e) {</span>
-<span class="fc" id="L358">                            throw new TokenizerException(e, &quot;Invalid hex value: &quot; + e.getMessage());</span>
+<span class="fc" id="L352">                            tokenizer.expectSymbol(&quot;binary content start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L353">                            String content = tokenizer.readBinary(Token.kParamsEnd);</span>
+<span class="fc" id="L354">                            return Binary.fromHexString(content);</span>
+<span class="fc" id="L355">                        } catch (NumberFormatException e) {</span>
+<span class="fc" id="L356">                            throw new TokenizerException(e, &quot;Invalid hex value: &quot; + e.getMessage());</span>
                         }
                     }
                     default:
-<span class="fc" id="L362">                        throw new TokenizerException(token, &quot;Unrecognized binary format &quot; + token.asString())</span>
-<span class="fc" id="L363">                                .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L360">                        throw new TokenizerException(token, &quot;Unrecognized binary format &quot; + token.asString())</span>
+<span class="fc" id="L361">                                .setLine(tokenizer.getLine());</span>
                 }
             }
             case ENUM: {
-<span class="fc" id="L367">                PEnumBuilder b = ((PEnumDescriptor) descriptor).builder();</span>
-<span class="fc" id="L368">                b.setByName(token.asString());</span>
-<span class="fc bfc" id="L369" title="All 4 branches covered.">                if (strict &amp;&amp; !b.valid()) {</span>
-<span class="fc" id="L370">                    throw new TokenizerException(token, &quot;No such &quot; + descriptor.getQualifiedName() + &quot; value &quot; + token.asString())</span>
-<span class="fc" id="L371">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L365">                PEnumBuilder b = ((PEnumDescriptor) descriptor).builder();</span>
+<span class="fc" id="L366">                b.setByName(token.asString());</span>
+<span class="fc bfc" id="L367" title="All 4 branches covered.">                if (strict &amp;&amp; !b.valid()) {</span>
+<span class="fc" id="L368">                    throw new TokenizerException(token, &quot;No such &quot; + descriptor.getQualifiedName() + &quot; value &quot; + token.asString())</span>
+<span class="fc" id="L369">                            .setLine(tokenizer.getLine());</span>
                 }
-<span class="fc" id="L373">                return b.build();</span>
+<span class="fc" id="L371">                return b.build();</span>
             }
             case MESSAGE: {
                 // TODO: Parse messages?
-<span class="fc" id="L377">                throw new TokenizerException(token, &quot;Message overrides not allowed&quot;)</span>
-<span class="fc" id="L378">                        .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc" id="L375">                throw new TokenizerException(token, &quot;Message overrides not allowed&quot;)</span>
+<span class="fc" id="L376">                        .setLine(tokenizer.getLine());</span>
             }
             case MAP: {
-<span class="fc bfc" id="L381" title="All 2 branches covered.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
-<span class="fc" id="L382">                    throw new TokenizerException(token, &quot;Expected map start, got '%s'&quot;, token.asString())</span>
-<span class="fc" id="L383">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">                if (!token.isSymbol(Token.kMessageStart)) {</span>
+<span class="fc" id="L380">                    throw new TokenizerException(token, &quot;Expected map start, got '%s'&quot;, token.asString())</span>
+<span class="fc" id="L381">                            .setLine(tokenizer.getLine());</span>
                 }
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L386">                PMap&lt;Object, Object&gt; pMap = (PMap) descriptor;</span>
-<span class="fc" id="L387">                PDescriptor kDesc = pMap.keyDescriptor();</span>
-<span class="fc" id="L388">                PDescriptor iDesc = pMap.itemDescriptor();</span>
+<span class="fc" id="L384">                PMap&lt;Object, Object&gt; pMap = (PMap) descriptor;</span>
+<span class="fc" id="L385">                PDescriptor kDesc = pMap.keyDescriptor();</span>
+<span class="fc" id="L386">                PDescriptor iDesc = pMap.itemDescriptor();</span>
 
-<span class="fc" id="L390">                PMap.Builder&lt;Object, Object&gt; builder = pMap.builder();</span>
+<span class="fc" id="L388">                PMap.Builder&lt;Object, Object&gt; builder = pMap.builder();</span>
 
-<span class="fc" id="L392">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
-<span class="fc bfc" id="L393" title="All 2 branches covered.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
-<span class="fc" id="L394">                    Object key = readFieldValue(tokenizer, token, kDesc, strict);</span>
-<span class="fc" id="L395">                    tokenizer.expectSymbol(&quot;map kv sep&quot;, Token.kKeyValueSep);</span>
-<span class="fc" id="L396">                    Object value = readFieldValue(tokenizer, tokenizer.expect(&quot;map value&quot;), iDesc, strict);</span>
-<span class="fc" id="L397">                    builder.put(key, value);</span>
-<span class="fc" id="L398">                    token = tokenizer.expect(&quot;map sep, end or value&quot;);</span>
-<span class="fc bfc" id="L399" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
-<span class="fc" id="L400">                        token = tokenizer.expect(&quot;map end or value&quot;);</span>
+<span class="fc" id="L390">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
+<span class="fc bfc" id="L391" title="All 2 branches covered.">                while (!token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L392">                    Object key = readFieldValue(tokenizer, token, kDesc, strict);</span>
+<span class="fc" id="L393">                    tokenizer.expectSymbol(&quot;map kv sep&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L394">                    Object value = readFieldValue(tokenizer, tokenizer.expect(&quot;map value&quot;), iDesc, strict);</span>
+<span class="fc" id="L395">                    builder.put(key, value);</span>
+<span class="fc" id="L396">                    token = tokenizer.expect(&quot;map sep, end or value&quot;);</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="fc" id="L398">                        token = tokenizer.expect(&quot;map end or value&quot;);</span>
                     }
-<span class="fc" id="L402">                }</span>
-<span class="fc" id="L403">                return builder.build();</span>
+<span class="fc" id="L400">                }</span>
+<span class="fc" id="L401">                return builder.build();</span>
             }
             case LIST: {
-<span class="fc bfc" id="L406" title="All 2 branches covered.">                if (!token.isSymbol(Token.kListStart)) {</span>
-<span class="fc" id="L407">                    throw new TokenizerException(token, &quot;Expected list start, got '%s'&quot;, token.asString())</span>
-<span class="fc" id="L408">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L404" title="All 2 branches covered.">                if (!token.isSymbol(Token.kListStart)) {</span>
+<span class="fc" id="L405">                    throw new TokenizerException(token, &quot;Expected list start, got '%s'&quot;, token.asString())</span>
+<span class="fc" id="L406">                            .setLine(tokenizer.getLine());</span>
                 }
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L411">                PList&lt;Object&gt; pList = (PList) descriptor;</span>
-<span class="fc" id="L412">                PDescriptor iDesc = pList.itemDescriptor();</span>
+<span class="fc" id="L409">                PList&lt;Object&gt; pList = (PList) descriptor;</span>
+<span class="fc" id="L410">                PDescriptor iDesc = pList.itemDescriptor();</span>
 
-<span class="fc" id="L414">                PList.Builder&lt;Object&gt; builder = pList.builder();</span>
+<span class="fc" id="L412">                PList.Builder&lt;Object&gt; builder = pList.builder();</span>
 
-<span class="fc" id="L416">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
-<span class="fc bfc" id="L417" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
-<span class="fc" id="L418">                    builder.add(readFieldValue(tokenizer, token, iDesc, strict));</span>
-<span class="fc" id="L419">                    token = tokenizer.expect(&quot;list sep, end or value&quot;);</span>
-<span class="fc bfc" id="L420" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
-<span class="fc" id="L421">                        token = tokenizer.expect(&quot;list end or value&quot;);</span>
+<span class="fc" id="L414">                token = tokenizer.expect(&quot;list end or value&quot;);</span>
+<span class="fc bfc" id="L415" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L416">                    builder.add(readFieldValue(tokenizer, token, iDesc, strict));</span>
+<span class="fc" id="L417">                    token = tokenizer.expect(&quot;list sep, end or value&quot;);</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="fc" id="L419">                        token = tokenizer.expect(&quot;list end or value&quot;);</span>
                     }
                 }
 
-<span class="fc" id="L425">                return builder.build();</span>
+<span class="fc" id="L423">                return builder.build();</span>
             }
             case SET: {
-<span class="fc bfc" id="L428" title="All 2 branches covered.">                if (!token.isSymbol(Token.kListStart)) {</span>
-<span class="fc" id="L429">                    throw new TokenizerException(token, &quot;Expected set start, got '%s'&quot;, token.asString())</span>
-<span class="fc" id="L430">                            .setLine(tokenizer.getLine(token.getLineNo()));</span>
+<span class="fc bfc" id="L426" title="All 2 branches covered.">                if (!token.isSymbol(Token.kListStart)) {</span>
+<span class="fc" id="L427">                    throw new TokenizerException(token, &quot;Expected set start, got '%s'&quot;, token.asString())</span>
+<span class="fc" id="L428">                            .setLine(tokenizer.getLine());</span>
                 }
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L433">                PSet&lt;Object&gt; pList = (PSet) descriptor;</span>
-<span class="fc" id="L434">                PDescriptor iDesc = pList.itemDescriptor();</span>
+<span class="fc" id="L431">                PSet&lt;Object&gt; pList = (PSet) descriptor;</span>
+<span class="fc" id="L432">                PDescriptor iDesc = pList.itemDescriptor();</span>
 
-<span class="fc" id="L436">                PSet.Builder&lt;Object&gt; builder = pList.builder();</span>
+<span class="fc" id="L434">                PSet.Builder&lt;Object&gt; builder = pList.builder();</span>
 
-<span class="fc" id="L438">                token = tokenizer.expect(&quot;set end or value&quot;);</span>
-<span class="fc bfc" id="L439" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
-<span class="fc" id="L440">                    builder.add(readFieldValue(tokenizer, token, iDesc, strict));</span>
-<span class="fc" id="L441">                    token = tokenizer.expect(&quot;set sep, end or value&quot;);</span>
-<span class="fc bfc" id="L442" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
-<span class="fc" id="L443">                        token = tokenizer.expect(&quot;set end or value&quot;);</span>
+<span class="fc" id="L436">                token = tokenizer.expect(&quot;set end or value&quot;);</span>
+<span class="fc bfc" id="L437" title="All 2 branches covered.">                while (!token.isSymbol(Token.kListEnd)) {</span>
+<span class="fc" id="L438">                    builder.add(readFieldValue(tokenizer, token, iDesc, strict));</span>
+<span class="fc" id="L439">                    token = tokenizer.expect(&quot;set sep, end or value&quot;);</span>
+<span class="fc bfc" id="L440" title="All 2 branches covered.">                    if (token.isSymbol(Token.kLineSep1)) {</span>
+<span class="fc" id="L441">                        token = tokenizer.expect(&quot;set end or value&quot;);</span>
                     }
                 }
 
-<span class="fc" id="L447">                return builder.build();</span>
+<span class="fc" id="L445">                return builder.build();</span>
             }
             default: {
-<span class="nc" id="L450">                throw new IllegalStateException(&quot;Unhandled field type: &quot; + descriptor.getType());</span>
+<span class="nc" id="L448">                throw new IllegalStateException(&quot;Unhandled field type: &quot; + descriptor.getType());</span>
             }
         }
     }
 
     private static Map&lt;String,String&gt; propertiesMap(Properties properties) {
-<span class="fc" id="L456">        Map&lt;String,String&gt; overrides = new TreeMap&lt;&gt;();</span>
-<span class="fc bfc" id="L457" title="All 2 branches covered.">        for (String key : properties.stringPropertyNames()) {</span>
-<span class="fc" id="L458">            overrides.put(key, properties.getProperty(key));</span>
-<span class="fc" id="L459">        }</span>
-<span class="fc" id="L460">        return overrides;</span>
+<span class="fc" id="L454">        Map&lt;String,String&gt; overrides = new TreeMap&lt;&gt;();</span>
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        for (String key : properties.stringPropertyNames()) {</span>
+<span class="fc" id="L456">            overrides.put(key, properties.getProperty(key));</span>
+<span class="fc" id="L457">        }</span>
+<span class="fc" id="L458">        return overrides;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
