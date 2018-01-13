@@ -25,7 +25,7 @@ import net.morimekta.providence.descriptor.PField;
 import net.morimekta.providence.descriptor.PMessageDescriptor;
 import net.morimekta.providence.descriptor.PRequirement;
 import net.morimekta.providence.util.ThriftAnnotation;
-import net.morimekta.providence.util.ThriftCollection;
+import net.morimekta.providence.util.ThriftContainer;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -185,8 +185,8 @@ public abstract class CMessageBuilder&lt;Builder extends CMessageBuilder&lt;Buil
 <span class="fc" id="L185">                    break;</span>
                 }
                 case SET: {
-<span class="fc" id="L188">                    ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                    if (ctype == ThriftCollection.SORTED) {</span>
+<span class="fc" id="L188">                    ThriftContainer ctype = ThriftContainer.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                    if (ctype == ThriftContainer.SORTED) {</span>
 <span class="nc" id="L190">                        values.put(key, ImmutableSortedSet.copyOf((Collection) value));</span>
                     } else {
 <span class="fc" id="L192">                        values.put(key, ImmutableSet.copyOf((Collection) value));</span>
@@ -194,8 +194,8 @@ public abstract class CMessageBuilder&lt;Builder extends CMessageBuilder&lt;Buil
 <span class="fc" id="L194">                    break;</span>
                 }
                 case MAP: {
-<span class="fc" id="L197">                    ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                    if (ctype == ThriftCollection.SORTED) {</span>
+<span class="fc" id="L197">                    ThriftContainer ctype = ThriftContainer.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                    if (ctype == ThriftContainer.SORTED) {</span>
 <span class="nc" id="L199">                        values.put(key, ImmutableSortedMap.copyOf((Map) value));</span>
                     } else {
 <span class="fc" id="L201">                        values.put(key, ImmutableMap.copyOf((Map) value));</span>
@@ -280,7 +280,7 @@ public abstract class CMessageBuilder&lt;Builder extends CMessageBuilder&lt;Buil
 <span class="fc" id="L280">                        out.put(key, ImmutableList.copyOf((List&lt;Object&gt;) values.get(key)));</span>
 <span class="fc" id="L281">                        break;</span>
                     case SET: {
-<span class="fc" id="L283">                        ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="fc" id="L283">                        ThriftContainer ctype = ThriftContainer.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
 <span class="pc bpc" id="L284" title="1 of 2 branches missed.">                        switch (ctype) {</span>
                             case SORTED:
 <span class="nc" id="L286">                                out.put(key, ImmutableSortedSet.copyOf((Set) values.get(key)));</span>
@@ -292,7 +292,7 @@ public abstract class CMessageBuilder&lt;Builder extends CMessageBuilder&lt;Buil
                         break;
                     }
                     case MAP: {
-<span class="fc" id="L295">                        ThriftCollection ctype = ThriftCollection.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+<span class="fc" id="L295">                        ThriftContainer ctype = ThriftContainer.forName(field.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
 <span class="pc bpc" id="L296" title="1 of 2 branches missed.">                        switch (ctype) {</span>
                             case SORTED:
 <span class="nc" id="L298">                                out.put(key, ImmutableSortedMap.copyOf((Map) values.get(key)));</span>

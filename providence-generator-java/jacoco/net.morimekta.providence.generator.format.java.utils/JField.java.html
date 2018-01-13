@@ -31,6 +31,7 @@ import net.morimekta.providence.generator.GeneratorException;
 import net.morimekta.providence.reflect.contained.CField;
 import net.morimekta.providence.reflect.contained.CMessageDescriptor;
 import net.morimekta.providence.util.ThriftAnnotation;
+import net.morimekta.providence.util.ThriftContainer;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,323 +58,323 @@ public class JField {
     private final JHelper helper;
     private final int     index;
 
-<span class="fc" id="L60">    public JField(CField field, JHelper helper, int index) {</span>
-<span class="fc" id="L61">        this.field = field;</span>
-<span class="fc" id="L62">        this.helper = helper;</span>
-<span class="fc" id="L63">        this.index = index;</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L61">    public JField(CField field, JHelper helper, int index) {</span>
+<span class="fc" id="L62">        this.field = field;</span>
+<span class="fc" id="L63">        this.helper = helper;</span>
+<span class="fc" id="L64">        this.index = index;</span>
+<span class="fc" id="L65">    }</span>
 
     public int index() {
-<span class="fc" id="L67">        return index;</span>
+<span class="fc" id="L68">        return index;</span>
     }
 
     public CField field() {
-<span class="fc" id="L71">        return field;</span>
+<span class="fc" id="L72">        return field;</span>
     }
 
     public PType type() {
-<span class="fc" id="L75">        return field.getType();</span>
+<span class="fc" id="L76">        return field.getType();</span>
     }
 
     public boolean binary() {
-<span class="nc bnc" id="L79" title="All 2 branches missed.">        return field.getType() == PType.BINARY;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        return field.getType() == PType.BINARY;</span>
     }
 
     public int id() {
-<span class="fc" id="L83">        return field.getId();</span>
+<span class="fc" id="L84">        return field.getId();</span>
     }
 
     public String name() {
-<span class="fc" id="L87">        return field.getName();</span>
+<span class="fc" id="L88">        return field.getName();</span>
     }
 
     public String param() {
-<span class="fc" id="L91">        return camelCase(&quot;p&quot;, field.getName());</span>
+<span class="fc" id="L92">        return camelCase(&quot;p&quot;, field.getName());</span>
     }
 
     public String member() {
-<span class="fc" id="L95">        return camelCase(&quot;m&quot;, field.getName());</span>
+<span class="fc" id="L96">        return camelCase(&quot;m&quot;, field.getName());</span>
     }
 
     public String mutable() {
-<span class="fc" id="L99">        return camelCase(&quot;mutable&quot;, field.getName());</span>
+<span class="fc" id="L100">        return camelCase(&quot;mutable&quot;, field.getName());</span>
     }
 
     public String isSet() {
-<span class="fc" id="L103">        return camelCase(&quot;isSet&quot;, field.getName());</span>
+<span class="fc" id="L104">        return camelCase(&quot;isSet&quot;, field.getName());</span>
     }
 
     public String isModified() {
-<span class="fc" id="L107">        return camelCase(&quot;isModified&quot;, field.getName());</span>
+<span class="fc" id="L108">        return camelCase(&quot;isModified&quot;, field.getName());</span>
     }
 
     public String getter() {
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (field.getType() == PType.BOOL) {</span>
-<span class="fc" id="L112">            return camelCase(&quot;is&quot;, field.getName());</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (field.getType() == PType.BOOL) {</span>
+<span class="fc" id="L113">            return camelCase(&quot;is&quot;, field.getName());</span>
         }
-<span class="fc" id="L114">        return camelCase(&quot;get&quot;, field.getName());</span>
+<span class="fc" id="L115">        return camelCase(&quot;get&quot;, field.getName());</span>
     }
 
     public String presence() {
-<span class="fc" id="L118">        return camelCase(&quot;has&quot;, field.getName());</span>
+<span class="fc" id="L119">        return camelCase(&quot;has&quot;, field.getName());</span>
     }
 
     public String counter() {
-<span class="fc" id="L122">        return camelCase(&quot;num&quot;, field.getName());</span>
+<span class="fc" id="L123">        return camelCase(&quot;num&quot;, field.getName());</span>
     }
 
     public String setter() {
-<span class="fc" id="L126">        return camelCase(&quot;set&quot;, field.getName());</span>
+<span class="fc" id="L127">        return camelCase(&quot;set&quot;, field.getName());</span>
     }
 
     public String adder() {
-<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (field.getType() == PType.MAP) {</span>
-<span class="fc" id="L131">            return camelCase(&quot;putIn&quot;, field.getName());</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (field.getType() == PType.MAP) {</span>
+<span class="fc" id="L132">            return camelCase(&quot;putIn&quot;, field.getName());</span>
         } else {
-<span class="fc" id="L133">            return camelCase(&quot;addTo&quot;, field.getName());</span>
+<span class="fc" id="L134">            return camelCase(&quot;addTo&quot;, field.getName());</span>
         }
     }
 
     public String resetter() {
-<span class="fc" id="L138">        return camelCase(&quot;clear&quot;, field.getName());</span>
+<span class="fc" id="L139">        return camelCase(&quot;clear&quot;, field.getName());</span>
     }
 
     public String fieldEnum() {
-<span class="fc" id="L142">        return c_case(field.getName()).toUpperCase();</span>
+<span class="fc" id="L143">        return c_case(field.getName()).toUpperCase();</span>
     }
 
     public String kDefault() {
-<span class="fc" id="L146">        return camelCase(&quot;kDefault&quot;, field.getName());</span>
+<span class="fc" id="L147">        return camelCase(&quot;kDefault&quot;, field.getName());</span>
     }
 
     public boolean hasDefaultConstant() {
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        return isPrimitiveJavaValue() ||</span>
-<span class="fc bfc" id="L151" title="All 2 branches covered.">               alwaysPresent() ||</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">               field.hasDefaultValue();</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        return isPrimitiveJavaValue() ||</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">               alwaysPresent() ||</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">               field.hasDefaultValue();</span>
     }
 
     public boolean isRequired() {
-<span class="fc bfc" id="L156" title="All 2 branches covered.">        return field.getRequirement() == PRequirement.REQUIRED;</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        return field.getRequirement() == PRequirement.REQUIRED;</span>
     }
 
     public boolean container() {
-<span class="pc bfc" id="L160" title="All 2 branches covered.">        switch (field.getType()) {</span>
+<span class="pc bfc" id="L161" title="All 2 branches covered.">        switch (field.getType()) {</span>
             case MAP:
             case SET:
             case LIST:
-<span class="fc" id="L164">                return true;</span>
+<span class="fc" id="L165">                return true;</span>
             default:
-<span class="fc" id="L166">                return false;</span>
+<span class="fc" id="L167">                return false;</span>
         }
     }
 
-    public ContainerType containerType() {
-<span class="fc" id="L171">        return JAnnotation.containerType(this);</span>
+    public ThriftContainer containerType() {
+<span class="fc" id="L172">        return JAnnotation.containerType(this);</span>
     }
 
     public boolean alwaysPresent() {
-<span class="fc bfc" id="L175" title="All 2 branches covered.">        return field.getRequirement() != PRequirement.OPTIONAL &amp;&amp;</span>
-<span class="fc bfc" id="L176" title="All 2 branches covered.">               helper.getDefaultValue(field) != null;</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        return field.getRequirement() != PRequirement.OPTIONAL &amp;&amp;</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">               helper.getDefaultValue(field) != null;</span>
     }
 
     public boolean isPrimitiveJavaValue() {
-<span class="fc bfc" id="L180" title="All 2 branches covered.">        return field.getDescriptor() instanceof PPrimitive &amp;&amp;</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">               ((PPrimitive) field.getDescriptor()).isNativePrimitive();</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        return field.getDescriptor() instanceof PPrimitive &amp;&amp;</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">               ((PPrimitive) field.getDescriptor()).isNativePrimitive();</span>
     }
 
     public String valueType() throws GeneratorException {
-<span class="fc" id="L185">        return helper.getValueType(field.getDescriptor());</span>
+<span class="fc" id="L186">        return helper.getValueType(field.getDescriptor());</span>
     }
 
     public String fieldType() throws GeneratorException {
-<span class="fc bfc" id="L189" title="All 2 branches covered.">        if (alwaysPresent()) {</span>
-<span class="fc" id="L190">            return valueType();</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        if (alwaysPresent()) {</span>
+<span class="fc" id="L191">            return valueType();</span>
         }
-<span class="fc" id="L192">        return helper.getFieldType(field.getDescriptor());</span>
+<span class="fc" id="L193">        return helper.getFieldType(field.getDescriptor());</span>
     }
 
     public String paramType() throws GeneratorException {
-<span class="nc bnc" id="L196" title="All 4 branches missed.">        if (alwaysPresent() &amp;&amp; isRequired()) {</span>
-<span class="nc" id="L197">            return valueType();</span>
+<span class="nc bnc" id="L197" title="All 4 branches missed.">        if (alwaysPresent() &amp;&amp; isRequired()) {</span>
+<span class="nc" id="L198">            return valueType();</span>
         }
-<span class="nc" id="L199">        return helper.getFieldType(field.getDescriptor());</span>
+<span class="nc" id="L200">        return helper.getFieldType(field.getDescriptor());</span>
     }
 
     public String instanceType() throws GeneratorException {
-<span class="fc" id="L203">        return helper.getInstanceClassName(field);</span>
+<span class="fc" id="L204">        return helper.getInstanceClassName(field);</span>
     }
 
     public String builderFieldType() throws GeneratorException  {
-<span class="pc bpc" id="L207" title="3 of 4 branches missed.">        switch (field.getType()) {</span>
+<span class="pc bpc" id="L208" title="3 of 4 branches missed.">        switch (field.getType()) {</span>
             case MAP: {
-<span class="nc" id="L209">                PMap mType = (PMap) field.getDescriptor();</span>
-<span class="nc" id="L210">                String kType = helper.getFieldType(mType.keyDescriptor());</span>
-<span class="nc" id="L211">                String iType = helper.getFieldType(mType.itemDescriptor());</span>
-<span class="nc" id="L212">                return String.format(</span>
+<span class="nc" id="L210">                PMap mType = (PMap) field.getDescriptor();</span>
+<span class="nc" id="L211">                String kType = helper.getFieldType(mType.keyDescriptor());</span>
+<span class="nc" id="L212">                String iType = helper.getFieldType(mType.itemDescriptor());</span>
+<span class="nc" id="L213">                return String.format(</span>
                         &quot;%s&lt;%s,%s&gt;&quot;,
-<span class="nc" id="L214">                        PMap.Builder.class.getName().replace('$', '.'),</span>
+<span class="nc" id="L215">                        PMap.Builder.class.getName().replace('$', '.'),</span>
                         kType, iType);
             }
             case SET: {
-<span class="nc" id="L218">                PSet sType = (PSet) field.getDescriptor();</span>
-<span class="nc" id="L219">                String iType = helper.getFieldType(sType.itemDescriptor());</span>
-<span class="nc" id="L220">                return String.format(</span>
+<span class="nc" id="L219">                PSet sType = (PSet) field.getDescriptor();</span>
+<span class="nc" id="L220">                String iType = helper.getFieldType(sType.itemDescriptor());</span>
+<span class="nc" id="L221">                return String.format(</span>
                         &quot;%s&lt;%s&gt;&quot;,
-<span class="nc" id="L222">                        PSet.Builder.class.getName().replace('$', '.'),</span>
+<span class="nc" id="L223">                        PSet.Builder.class.getName().replace('$', '.'),</span>
                         iType);
             }
             case LIST: {
-<span class="nc" id="L226">                PList lType = (PList) field.getDescriptor();</span>
-<span class="nc" id="L227">                String iType = helper.getFieldType(lType.itemDescriptor());</span>
-<span class="nc" id="L228">                return String.format(</span>
+<span class="nc" id="L227">                PList lType = (PList) field.getDescriptor();</span>
+<span class="nc" id="L228">                String iType = helper.getFieldType(lType.itemDescriptor());</span>
+<span class="nc" id="L229">                return String.format(</span>
                         &quot;%s&lt;%s&gt;&quot;,
-<span class="nc" id="L230">                        PList.Builder.class.getName().replace('$', '.'),</span>
+<span class="nc" id="L231">                        PList.Builder.class.getName().replace('$', '.'),</span>
                         iType);
             }
             default:
-<span class="fc" id="L234">                return fieldType();</span>
+<span class="fc" id="L235">                return fieldType();</span>
         }
     }
 
     public String builderMutableType() throws GeneratorException  {
-<span class="pc bpc" id="L239" title="1 of 5 branches missed.">        switch (field.getType()) {</span>
+<span class="pc bpc" id="L240" title="1 of 5 branches missed.">        switch (field.getType()) {</span>
             case LIST:
-<span class="fc" id="L241">                return ArrayList.class.getName();</span>
+<span class="fc" id="L242">                return ArrayList.class.getName();</span>
             case MAP:
-<span class="pc bpc" id="L243" title="1 of 4 branches missed.">                switch (containerType()) {</span>
-<span class="fc" id="L244">                    case DEFAULT: return HashMap.class.getName();</span>
-<span class="fc" id="L245">                    case SORTED: return TreeMap.class.getName();</span>
-<span class="fc" id="L246">                    case ORDERED: return LinkedHashMap.class.getName();</span>
+<span class="pc bpc" id="L244" title="1 of 4 branches missed.">                switch (containerType()) {</span>
+<span class="fc" id="L245">                    case DEFAULT: return HashMap.class.getName();</span>
+<span class="fc" id="L246">                    case SORTED: return TreeMap.class.getName();</span>
+<span class="fc" id="L247">                    case ORDERED: return LinkedHashMap.class.getName();</span>
                 }
             case SET:
-<span class="pc bpc" id="L249" title="1 of 4 branches missed.">                switch (containerType()) {</span>
-<span class="fc" id="L250">                    case DEFAULT: return HashSet.class.getName();</span>
-<span class="fc" id="L251">                    case SORTED: return TreeSet.class.getName();</span>
-<span class="fc" id="L252">                    case ORDERED: return LinkedHashSet.class.getName();</span>
+<span class="pc bpc" id="L250" title="1 of 4 branches missed.">                switch (containerType()) {</span>
+<span class="fc" id="L251">                    case DEFAULT: return HashSet.class.getName();</span>
+<span class="fc" id="L252">                    case SORTED: return TreeSet.class.getName();</span>
+<span class="fc" id="L253">                    case ORDERED: return LinkedHashSet.class.getName();</span>
                 }
             case MESSAGE:
-<span class="fc" id="L255">                return fieldType() + &quot;._Builder&quot;;</span>
+<span class="fc" id="L256">                return fieldType() + &quot;._Builder&quot;;</span>
             default:
-<span class="nc" id="L257">                return fieldType();</span>
+<span class="nc" id="L258">                return fieldType();</span>
         }
     }
 
     public String fieldInstanceCopy(String var) throws GeneratorException  {
-<span class="pc bpc" id="L262" title="1 of 4 branches missed.">        switch (field.getType()) {</span>
+<span class="pc bpc" id="L263" title="1 of 4 branches missed.">        switch (field.getType()) {</span>
             case LIST:
-<span class="fc" id="L264">                return ImmutableList.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
+<span class="fc" id="L265">                return ImmutableList.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
             case MAP:
-<span class="fc bfc" id="L266" title="All 2 branches covered.">                switch (containerType()) {</span>
-<span class="fc" id="L267">                    case SORTED: return ImmutableSortedMap.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">                switch (containerType()) {</span>
+<span class="fc" id="L268">                    case SORTED: return ImmutableSortedMap.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
                     // ImmutableMap is both both hash-map and order-preserving
-<span class="fc" id="L269">                    default: return ImmutableMap.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
+<span class="fc" id="L270">                    default: return ImmutableMap.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
                 }
             case SET:
-<span class="fc bfc" id="L272" title="All 2 branches covered.">                switch (containerType()) {</span>
-<span class="fc" id="L273">                    case SORTED: return ImmutableSortedSet.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">                switch (containerType()) {</span>
+<span class="fc" id="L274">                    case SORTED: return ImmutableSortedSet.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
                     // ImmutableSet is both both hash-set and order-preserving
-<span class="fc" id="L275">                    default: return ImmutableSet.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
+<span class="fc" id="L276">                    default: return ImmutableSet.class.getName().replace('$', '.') + &quot;.copyOf(&quot; + var + &quot;)&quot;;</span>
                 }
         }
-<span class="nc" id="L278">        throw new GeneratorException(&quot;Unable to instance copy &quot; + field.getType());</span>
+<span class="nc" id="L279">        throw new GeneratorException(&quot;Unable to instance copy &quot; + field.getType());</span>
     }
 
     public String builderInstanceType() throws GeneratorException  {
-<span class="pc bpc" id="L282" title="1 of 4 branches missed.">        switch (field.getType()) {</span>
+<span class="pc bpc" id="L283" title="1 of 4 branches missed.">        switch (field.getType()) {</span>
             case MAP:
-<span class="pc bpc" id="L284" title="1 of 4 branches missed.">                switch (containerType()) {</span>
-<span class="fc" id="L285">                    case DEFAULT: return PMap.DefaultBuilder.class.getName().replace('$', '.');</span>
-<span class="fc" id="L286">                    case SORTED: return PMap.SortedBuilder.class.getName().replace('$', '.');</span>
-<span class="fc" id="L287">                    case ORDERED: return PMap.OrderedBuilder.class.getName().replace('$', '.');</span>
+<span class="pc bpc" id="L285" title="1 of 4 branches missed.">                switch (containerType()) {</span>
+<span class="fc" id="L286">                    case DEFAULT: return PMap.DefaultBuilder.class.getName().replace('$', '.');</span>
+<span class="fc" id="L287">                    case SORTED: return PMap.SortedBuilder.class.getName().replace('$', '.');</span>
+<span class="fc" id="L288">                    case ORDERED: return PMap.OrderedBuilder.class.getName().replace('$', '.');</span>
                 }
             case SET:
-<span class="pc bpc" id="L290" title="1 of 4 branches missed.">                switch (containerType()) {</span>
-<span class="fc" id="L291">                    case DEFAULT: return PSet.DefaultBuilder.class.getName().replace('$', '.');</span>
-<span class="fc" id="L292">                    case SORTED: return PSet.SortedBuilder.class.getName().replace('$', '.');</span>
-<span class="fc" id="L293">                    case ORDERED: return PSet.OrderedBuilder.class.getName().replace('$', '.');</span>
+<span class="pc bpc" id="L291" title="1 of 4 branches missed.">                switch (containerType()) {</span>
+<span class="fc" id="L292">                    case DEFAULT: return PSet.DefaultBuilder.class.getName().replace('$', '.');</span>
+<span class="fc" id="L293">                    case SORTED: return PSet.SortedBuilder.class.getName().replace('$', '.');</span>
+<span class="fc" id="L294">                    case ORDERED: return PSet.OrderedBuilder.class.getName().replace('$', '.');</span>
                 }
             case LIST:
-<span class="fc" id="L296">                return PList.DefaultBuilder.class.getName().replace('$', '.');</span>
+<span class="fc" id="L297">                return PList.DefaultBuilder.class.getName().replace('$', '.');</span>
             default:
-<span class="nc" id="L298">                return fieldType();</span>
+<span class="nc" id="L299">                return fieldType();</span>
         }
     }
 
     public String getProvider()  throws GeneratorException {
-<span class="fc" id="L303">        String container = field.getAnnotationValue(&quot;container&quot;);</span>
-<span class="fc" id="L304">        String containerProvider = &quot;provider&quot;;</span>
-<span class="fc bfc" id="L305" title="All 2 branches covered.">        if (container != null) {</span>
-<span class="fc" id="L306">            ContainerType containerType = ContainerType.valueOf(container.toUpperCase());</span>
-<span class="pc bpc" id="L307" title="2 of 4 branches missed.">            switch (containerType) {</span>
+<span class="fc" id="L304">        String container = field.getAnnotationValue(&quot;container&quot;);</span>
+<span class="fc" id="L305">        String containerProvider = &quot;provider&quot;;</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">        if (container != null) {</span>
+<span class="fc" id="L307">            ThriftContainer containerType = ThriftContainer.forName(container);</span>
+<span class="pc bpc" id="L308" title="2 of 4 branches missed.">            switch (containerType) {</span>
                 case DEFAULT:
-<span class="nc" id="L309">                    containerProvider = &quot;provider&quot;;</span>
-<span class="nc" id="L310">                    break;</span>
+<span class="nc" id="L310">                    containerProvider = &quot;provider&quot;;</span>
+<span class="nc" id="L311">                    break;</span>
                 case SORTED:
-<span class="fc" id="L312">                    containerProvider = &quot;sortedProvider&quot;;</span>
-<span class="fc" id="L313">                    break;</span>
+<span class="fc" id="L313">                    containerProvider = &quot;sortedProvider&quot;;</span>
+<span class="fc" id="L314">                    break;</span>
                 case ORDERED:
-<span class="fc" id="L315">                    containerProvider = &quot;orderedProvider&quot;;</span>
-<span class="fc" id="L316">                    break;</span>
+<span class="fc" id="L316">                    containerProvider = &quot;orderedProvider&quot;;</span>
+<span class="fc" id="L317">                    break;</span>
                 default:
                     break;
             }
         }
 
-<span class="fc bfc" id="L322" title="All 5 branches covered.">        switch (field.getType()) {</span>
+<span class="fc bfc" id="L323" title="All 5 branches covered.">        switch (field.getType()) {</span>
             case ENUM:
             case MESSAGE:
-<span class="fc" id="L325">                return String.format(&quot;%s.provider()&quot;, helper.getFieldType(field.getDescriptor()));</span>
+<span class="fc" id="L326">                return String.format(&quot;%s.provider()&quot;, helper.getFieldType(field.getDescriptor()));</span>
             case LIST:
-<span class="fc" id="L327">                PList&lt;?&gt; lType = (PList&lt;?&gt;) field.getDescriptor();</span>
-<span class="fc" id="L328">                return String.format(&quot;%s.provider(%s)&quot;, PList.class.getName(), helper.getProviderName(lType.itemDescriptor()));</span>
+<span class="fc" id="L328">                PList&lt;?&gt; lType = (PList&lt;?&gt;) field.getDescriptor();</span>
+<span class="fc" id="L329">                return String.format(&quot;%s.provider(%s)&quot;, PList.class.getName(), helper.getProviderName(lType.itemDescriptor()));</span>
             case SET:
-<span class="fc" id="L330">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) field.getDescriptor();</span>
-<span class="fc" id="L331">                return String.format(&quot;%s.%s(%s)&quot;,</span>
-<span class="fc" id="L332">                                     PSet.class.getName(),</span>
+<span class="fc" id="L331">                PSet&lt;?&gt; sType = (PSet&lt;?&gt;) field.getDescriptor();</span>
+<span class="fc" id="L332">                return String.format(&quot;%s.%s(%s)&quot;,</span>
+<span class="fc" id="L333">                                     PSet.class.getName(),</span>
                                      containerProvider,
-<span class="fc" id="L334">                                     helper.getProviderName(sType.itemDescriptor()));</span>
+<span class="fc" id="L335">                                     helper.getProviderName(sType.itemDescriptor()));</span>
             case MAP:
-<span class="fc" id="L336">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) field.getDescriptor();</span>
-<span class="fc" id="L337">                return String.format(&quot;%s.%s(%s,%s)&quot;,</span>
-<span class="fc" id="L338">                                     PMap.class.getName(),</span>
+<span class="fc" id="L337">                PMap&lt;?, ?&gt; mType = (PMap&lt;?, ?&gt;) field.getDescriptor();</span>
+<span class="fc" id="L338">                return String.format(&quot;%s.%s(%s,%s)&quot;,</span>
+<span class="fc" id="L339">                                     PMap.class.getName(),</span>
                                      containerProvider,
-<span class="fc" id="L340">                                     helper.getProviderName(mType.keyDescriptor()),</span>
-<span class="fc" id="L341">                                     helper.getProviderName(mType.itemDescriptor()));</span>
+<span class="fc" id="L341">                                     helper.getProviderName(mType.keyDescriptor()),</span>
+<span class="fc" id="L342">                                     helper.getProviderName(mType.itemDescriptor()));</span>
             default:
-<span class="pc bpc" id="L343" title="1 of 2 branches missed.">                if (!(field.getDescriptor() instanceof PPrimitive)) {</span>
-<span class="nc" id="L344">                    throw new IllegalArgumentException(&quot;Unhandled type group &quot; + field.getType());</span>
+<span class="pc bpc" id="L344" title="1 of 2 branches missed.">                if (!(field.getDescriptor() instanceof PPrimitive)) {</span>
+<span class="nc" id="L345">                    throw new IllegalArgumentException(&quot;Unhandled type group &quot; + field.getType());</span>
                 }
-<span class="fc" id="L346">                return String.format(&quot;%s.%s.provider()&quot;,</span>
-<span class="fc" id="L347">                                     PPrimitive.class.getName(),</span>
-<span class="fc" id="L348">                                     field.getDescriptor().getName().toUpperCase());</span>
+<span class="fc" id="L347">                return String.format(&quot;%s.%s.provider()&quot;,</span>
+<span class="fc" id="L348">                                     PPrimitive.class.getName(),</span>
+<span class="fc" id="L349">                                     field.getDescriptor().getName().toUpperCase());</span>
         }
     }
 
     public boolean hasComment() {
-<span class="fc bfc" id="L353" title="All 2 branches covered.">        return field.getDocumentation() != null;</span>
+<span class="fc bfc" id="L354" title="All 2 branches covered.">        return field.getDocumentation() != null;</span>
     }
 
     public String comment() {
-<span class="fc" id="L357">        return field.getDocumentation();</span>
+<span class="fc" id="L358">        return field.getDocumentation();</span>
     }
 
     public boolean isVoid() {
-<span class="fc bfc" id="L361" title="All 2 branches covered.">        return field.getType() == PType.VOID;</span>
+<span class="fc bfc" id="L362" title="All 2 branches covered.">        return field.getType() == PType.VOID;</span>
     }
 
     public PList toPList() {
-<span class="fc" id="L365">        return (PList) (field()</span>
-<span class="fc" id="L366">                             .getDescriptor());</span>
+<span class="fc" id="L366">        return (PList) (field()</span>
+<span class="fc" id="L367">                             .getDescriptor());</span>
     }
 
     public PSet toPSet() {
-<span class="nc" id="L370">        return (PSet) (field()</span>
-<span class="nc" id="L371">                .getDescriptor());</span>
+<span class="nc" id="L371">        return (PSet) (field()</span>
+<span class="nc" id="L372">                .getDescriptor());</span>
     }
 
     public PMap toPMap() {
-<span class="nc" id="L375">        return (PMap) (field()</span>
-<span class="nc" id="L376">                .getDescriptor());</span>
+<span class="nc" id="L376">        return (PMap) (field()</span>
+<span class="nc" id="L377">                .getDescriptor());</span>
     }
 
     /**
@@ -382,48 +383,48 @@ public class JField {
      *         non-portable messages and all maps.
      */
     public boolean portableRequiresBinarySerialization() {
-<span class="pc bpc" id="L385" title="1 of 4 branches missed.">        switch ( type() ) {</span>
+<span class="pc bpc" id="L386" title="1 of 4 branches missed.">        switch ( type() ) {</span>
             case MESSAGE:
                 // Messages that does not have the hazelcast.class.id
                 // annotation do require binary serialization.
-<span class="pc bpc" id="L389" title="1 of 2 branches missed.">                return !((CMessageDescriptor)field().getDescriptor()).hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID);</span>
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">                return !((CMessageDescriptor)field().getDescriptor()).hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID);</span>
             case MAP:
-<span class="nc" id="L391">                return true;</span>
+<span class="nc" id="L392">                return true;</span>
             case SET:
             case LIST:
-<span class="fc" id="L394">                PDescriptor descriptor = extractItemDescriptor(field().getDescriptor());</span>
-<span class="fc bfc" id="L395" title="All 2 branches covered.">                if( descriptor.getType().equals(PType.MESSAGE) ) {</span>
+<span class="fc" id="L395">                PDescriptor descriptor = extractItemDescriptor(field().getDescriptor());</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">                if( descriptor.getType().equals(PType.MESSAGE) ) {</span>
                     // Lists containing messages that are not portable
                     // should be completely binary serialized.
-<span class="pc bpc" id="L398" title="1 of 2 branches missed.">                    return !((CMessageDescriptor)descriptor).hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID);</span>
+<span class="pc bpc" id="L399" title="1 of 2 branches missed.">                    return !((CMessageDescriptor)descriptor).hasAnnotation(ThriftAnnotation.JAVA_HAZELCAST_CLASS_ID);</span>
                 }
                 // Collections containing collections do require binary
                 // serialization. As this is basically impossible to
                 // model in a usable way with portable.
-<span class="pc bpc" id="L403" title="1 of 2 branches missed.">                if (descriptor.getType() == PType.MAP ||</span>
-<span class="pc bpc" id="L404" title="1 of 2 branches missed.">                    descriptor.getType() == PType.SET ||</span>
-<span class="pc bpc" id="L405" title="1 of 2 branches missed.">                    descriptor.getType() == PType.LIST) {</span>
-<span class="nc" id="L406">                    return true;</span>
+<span class="pc bpc" id="L404" title="1 of 2 branches missed.">                if (descriptor.getType() == PType.MAP ||</span>
+<span class="pc bpc" id="L405" title="1 of 2 branches missed.">                    descriptor.getType() == PType.SET ||</span>
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">                    descriptor.getType() == PType.LIST) {</span>
+<span class="nc" id="L407">                    return true;</span>
                 }
                 break;
         }
-<span class="fc" id="L410">        return false;</span>
+<span class="fc" id="L411">        return false;</span>
     }
 
     private PDescriptor extractItemDescriptor(PDescriptor descriptor) {
         PDescriptor result;
-<span class="pc bpc" id="L415" title="1 of 3 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L416" title="1 of 3 branches missed.">        switch (descriptor.getType()) {</span>
             case SET:
-<span class="nc" id="L417">                result = extractItemDescriptor(((PSet)descriptor).itemDescriptor());</span>
-<span class="nc" id="L418">                break;</span>
+<span class="nc" id="L418">                result = extractItemDescriptor(((PSet)descriptor).itemDescriptor());</span>
+<span class="nc" id="L419">                break;</span>
             case LIST:
-<span class="fc" id="L420">                result = extractItemDescriptor(((PList)descriptor).itemDescriptor());</span>
-<span class="fc" id="L421">                break;</span>
+<span class="fc" id="L421">                result = extractItemDescriptor(((PList)descriptor).itemDescriptor());</span>
+<span class="fc" id="L422">                break;</span>
             default: {
-<span class="fc" id="L423">                result = descriptor;</span>
+<span class="fc" id="L424">                result = descriptor;</span>
             }
         }
-<span class="fc" id="L426">        return result;</span>
+<span class="fc" id="L427">        return result;</span>
     }
 
 

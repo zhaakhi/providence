@@ -29,6 +29,7 @@ import net.morimekta.providence.PServiceCall;
 import net.morimekta.providence.PServiceCallHandler;
 import net.morimekta.providence.PServiceCallType;
 import net.morimekta.providence.descriptor.PField;
+import net.morimekta.providence.descriptor.PRequirement;
 import net.morimekta.providence.descriptor.PService;
 import net.morimekta.providence.descriptor.PServiceMethod;
 import net.morimekta.providence.descriptor.PServiceProvider;
@@ -63,630 +64,651 @@ public class JavaServiceFormatter implements BaseServiceFormatter {
                          JHelper helper,
                          JavaMessageFormatter messageFormat,
                          GeneratorOptions generatorOptions,
-<span class="fc" id="L66">                         JavaOptions javaOptions) {</span>
-<span class="fc" id="L67">        this.writer = writer;</span>
-<span class="fc" id="L68">        this.helper = helper;</span>
-<span class="fc" id="L69">        this.messageFormat = messageFormat;</span>
-<span class="fc" id="L70">        this.generatorOptions = generatorOptions;</span>
-<span class="fc" id="L71">        this.javaOptions = javaOptions;</span>
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L67">                         JavaOptions javaOptions) {</span>
+<span class="fc" id="L68">        this.writer = writer;</span>
+<span class="fc" id="L69">        this.helper = helper;</span>
+<span class="fc" id="L70">        this.messageFormat = messageFormat;</span>
+<span class="fc" id="L71">        this.generatorOptions = generatorOptions;</span>
+<span class="fc" id="L72">        this.javaOptions = javaOptions;</span>
+<span class="fc" id="L73">    }</span>
 
     @Override
     public void appendServiceClass(CService cs) throws GeneratorException, IOException {
-<span class="fc" id="L76">        JService service = new JService(cs, helper);</span>
+<span class="fc" id="L77">        JService service = new JService(cs, helper);</span>
 
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (cs.getDocumentation() != null) {</span>
-<span class="fc" id="L79">            new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L80">                    .comment(cs.getDocumentation())</span>
-<span class="fc" id="L81">                    .finish();</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (cs.getDocumentation() != null) {</span>
+<span class="fc" id="L80">            new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L81">                    .comment(cs.getDocumentation())</span>
+<span class="fc" id="L82">                    .finish();</span>
         }
 
-<span class="fc" id="L84">        String inherits = &quot;&quot;;</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (service.getService().getExtendsService() != null) {</span>
-<span class="fc" id="L86">            CService other = service.getService().getExtendsService();</span>
-<span class="fc" id="L87">            inherits = &quot;extends &quot; + helper.getJavaPackage(other) + &quot;.&quot; +</span>
-<span class="fc" id="L88">                       new JService(other, helper).className() + &quot; &quot;;</span>
+<span class="fc" id="L85">        String inherits = &quot;&quot;;</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (service.getService().getExtendsService() != null) {</span>
+<span class="fc" id="L87">            CService other = service.getService().getExtendsService();</span>
+<span class="fc" id="L88">            inherits = &quot;extends &quot; + helper.getJavaPackage(other) + &quot;.&quot; +</span>
+<span class="fc" id="L89">                       new JService(other, helper).className() + &quot; &quot;;</span>
         }
 
-<span class="fc" id="L91">        writer.appendln(&quot;@SuppressWarnings(\&quot;unused\&quot;)&quot;);</span>
-<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (javaOptions.generated_annotation_version) {</span>
-<span class="fc" id="L93">            writer.formatln(&quot;@%s(\&quot;%s %s\&quot;)&quot;,</span>
-<span class="fc" id="L94">                            Generated.class.getName(),</span>
+<span class="fc" id="L92">        writer.appendln(&quot;@SuppressWarnings(\&quot;unused\&quot;)&quot;);</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (javaOptions.generated_annotation_version) {</span>
+<span class="fc" id="L94">            writer.formatln(&quot;@%s(\&quot;%s %s\&quot;)&quot;,</span>
+<span class="fc" id="L95">                            Generated.class.getName(),</span>
                             generatorOptions.generator_program_name,
                             generatorOptions.program_version);
         } else {
-<span class="nc" id="L98">            writer.formatln(&quot;@%s(\&quot;%s\&quot;)&quot;,</span>
-<span class="nc" id="L99">                            Generated.class.getName(),</span>
+<span class="nc" id="L99">            writer.formatln(&quot;@%s(\&quot;%s\&quot;)&quot;,</span>
+<span class="nc" id="L100">                            Generated.class.getName(),</span>
                             generatorOptions.generator_program_name);
         }
 
-<span class="fc" id="L103">        writer.formatln(&quot;public class %s %s{&quot;, service.className(), inherits)</span>
-<span class="fc" id="L104">              .begin();</span>
+<span class="fc" id="L104">        writer.formatln(&quot;public class %s %s{&quot;, service.className(), inherits)</span>
+<span class="fc" id="L105">              .begin();</span>
 
-<span class="fc" id="L106">        appendIface(writer, service);</span>
+<span class="fc" id="L107">        appendIface(writer, service);</span>
 
-<span class="fc" id="L108">        appendClient(writer, service);</span>
+<span class="fc" id="L109">        appendClient(writer, service);</span>
 
-<span class="fc" id="L110">        appendProcessor(writer, service);</span>
+<span class="fc" id="L111">        appendProcessor(writer, service);</span>
 
-<span class="fc" id="L112">        appendDescriptor(writer, service);</span>
+<span class="fc" id="L113">        appendDescriptor(writer, service);</span>
 
-<span class="fc" id="L114">        appendStructs(writer, service);</span>
+<span class="fc" id="L115">        appendStructs(writer, service);</span>
 
         // protected constructor should defeat instantiation, but can inherit
         // from parent to be able to get access to inner protected classes.
-<span class="fc" id="L118">        writer.formatln(&quot;protected %s() {}&quot;, service.className());</span>
+<span class="fc" id="L119">        writer.formatln(&quot;protected %s() {}&quot;, service.className());</span>
 
-<span class="fc" id="L120">        writer.end()</span>
-<span class="fc" id="L121">              .appendln('}');</span>
-<span class="fc" id="L122">    }</span>
+<span class="fc" id="L121">        writer.end()</span>
+<span class="fc" id="L122">              .appendln('}');</span>
+<span class="fc" id="L123">    }</span>
 
     private void appendClient(IndentedPrintWriter writer, JService service) throws GeneratorException {
-<span class="fc" id="L125">        BlockCommentBuilder comment = new BlockCommentBuilder(writer);</span>
-<span class="fc" id="L126">        if (service.getService()</span>
-<span class="fc bfc" id="L127" title="All 2 branches covered.">                   .getDocumentation() != null) {</span>
-<span class="fc" id="L128">            comment.comment(service.getService().getDocumentation())</span>
-<span class="fc" id="L129">                   .newline();</span>
+<span class="fc" id="L126">        BlockCommentBuilder comment = new BlockCommentBuilder(writer);</span>
+<span class="fc" id="L127">        if (service.getService()</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">                   .getDocumentation() != null) {</span>
+<span class="fc" id="L129">            comment.comment(service.getService().getDocumentation())</span>
+<span class="fc" id="L130">                   .newline();</span>
         }
-<span class="fc" id="L131">        comment.comment(&quot;Client implementation for &quot; + service.getService().getQualifiedName())</span>
-<span class="fc" id="L132">               .finish();</span>
+<span class="fc" id="L132">        comment.comment(&quot;Client implementation for &quot; + service.getService().getQualifiedName())</span>
+<span class="fc" id="L133">               .finish();</span>
 
-<span class="fc" id="L134">        writer.appendln(&quot;public static class Client&quot;)</span>
-<span class="fc" id="L135">              .formatln(&quot;        extends %s&quot;, PClient.class.getName())</span>
-<span class="fc" id="L136">              .formatln(&quot;        implements Iface {&quot;)</span>
-<span class="fc" id="L137">              .begin();</span>
+<span class="fc" id="L135">        writer.appendln(&quot;public static class Client&quot;)</span>
+<span class="fc" id="L136">              .formatln(&quot;        extends %s&quot;, PClient.class.getName())</span>
+<span class="fc" id="L137">              .formatln(&quot;        implements Iface {&quot;)</span>
+<span class="fc" id="L138">              .begin();</span>
 
-<span class="fc" id="L139">        writer.formatln(&quot;private final %s handler;&quot;, PServiceCallHandler.class.getName())</span>
-<span class="fc" id="L140">              .newline();</span>
+<span class="fc" id="L140">        writer.formatln(&quot;private final %s handler;&quot;, PServiceCallHandler.class.getName())</span>
+<span class="fc" id="L141">              .newline();</span>
 
-<span class="fc" id="L142">        new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L143">                .comment(&quot;Create &quot; + service.getService().getQualifiedName() + &quot; service client.&quot;)</span>
-<span class="fc" id="L144">                .newline()</span>
-<span class="fc" id="L145">                .param_(&quot;handler&quot;, &quot;The client handler.&quot;)</span>
-<span class="fc" id="L146">                .finish();</span>
+<span class="fc" id="L143">        new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L144">                .comment(&quot;Create &quot; + service.getService().getQualifiedName() + &quot; service client.&quot;)</span>
+<span class="fc" id="L145">                .newline()</span>
+<span class="fc" id="L146">                .param_(&quot;handler&quot;, &quot;The client handler.&quot;)</span>
+<span class="fc" id="L147">                .finish();</span>
 
-<span class="fc" id="L148">        writer.formatln(&quot;public Client(%s handler) {&quot;, PServiceCallHandler.class.getName())</span>
-<span class="fc" id="L149">              .appendln(&quot;    this.handler = handler;&quot;)</span>
-<span class="fc" id="L150">              .appendln('}')</span>
-<span class="fc" id="L151">              .newline();</span>
+<span class="fc" id="L149">        writer.formatln(&quot;public Client(%s handler) {&quot;, PServiceCallHandler.class.getName())</span>
+<span class="fc" id="L150">              .appendln(&quot;    this.handler = handler;&quot;)</span>
+<span class="fc" id="L151">              .appendln('}')</span>
+<span class="fc" id="L152">              .newline();</span>
 
-<span class="fc" id="L153">        boolean firstMethod = true;</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (firstMethod) {</span>
-<span class="fc" id="L156">                firstMethod = false;</span>
+<span class="fc" id="L154">        boolean firstMethod = true;</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (firstMethod) {</span>
+<span class="fc" id="L157">                firstMethod = false;</span>
             } else {
-<span class="fc" id="L158">                writer.newline();</span>
+<span class="fc" id="L159">                writer.newline();</span>
             }
 
-<span class="fc" id="L161">            writer.appendln(&quot;@Override&quot;);</span>
+<span class="fc" id="L162">            writer.appendln(&quot;@Override&quot;);</span>
 
             // Field ID 0 is the return type.
-<span class="fc" id="L164">            JField ret = method.getResponse();</span>
+<span class="fc" id="L165">            JField ret = method.getResponse();</span>
 
-<span class="fc" id="L166">            writer.appendln(&quot;public &quot;);</span>
-<span class="fc bfc" id="L167" title="All 2 branches covered.">            if (ret != null) {</span>
-<span class="fc" id="L168">                writer.append(ret.valueType());</span>
+<span class="fc" id="L167">            writer.appendln(&quot;public &quot;);</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            if (ret != null) {</span>
+<span class="fc" id="L169">                writer.append(ret.valueType());</span>
             } else {
-<span class="fc" id="L170">                writer.append(&quot;void&quot;);</span>
+<span class="fc" id="L171">                writer.append(&quot;void&quot;);</span>
             }
 
-<span class="fc" id="L173">            writer.format(&quot; %s(&quot;, method.methodName())</span>
-<span class="fc" id="L174">                  .begin(&quot;        &quot;);</span>
+<span class="fc" id="L174">            writer.format(&quot; %s(&quot;, method.methodName())</span>
+<span class="fc" id="L175">                  .begin(&quot;        &quot;);</span>
 
-<span class="fc" id="L176">            boolean first = true;</span>
-<span class="fc bfc" id="L177" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
-<span class="fc bfc" id="L178" title="All 2 branches covered.">                if (first) {</span>
-<span class="fc" id="L179">                    first = false;</span>
+<span class="fc" id="L177">            boolean first = true;</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                if (first) {</span>
+<span class="fc" id="L180">                    first = false;</span>
                 } else {
-<span class="fc" id="L181">                    writer.append(&quot;,&quot;);</span>
+<span class="fc" id="L182">                    writer.append(&quot;,&quot;);</span>
                 }
-<span class="fc" id="L183">                writer.formatln(&quot;%s %s&quot;, param.valueType(), param.param());</span>
+<span class="fc" id="L184">                writer.formatln(&quot;%s %s&quot;, param.fieldType(), param.param());</span>
             }
 
-<span class="fc" id="L186">            writer.end()</span>
-<span class="fc" id="L187">                  .format(&quot;)&quot;)</span>
-<span class="fc" id="L188">                  .formatln(&quot;        throws %s&quot;, IOException.class.getName())</span>
-<span class="fc" id="L189">                  .begin(   &quot;               &quot;);</span>
+<span class="fc" id="L187">            writer.end()</span>
+<span class="fc" id="L188">                  .format(&quot;)&quot;)</span>
+<span class="fc" id="L189">                  .formatln(&quot;        throws %s&quot;, IOException.class.getName())</span>
+<span class="fc" id="L190">                  .begin(   &quot;               &quot;);</span>
 
-<span class="fc bfc" id="L191" title="All 2 branches covered.">            for (JField ex : method.exceptions()) {</span>
-<span class="fc" id="L192">                writer.append(&quot;,&quot;);</span>
-<span class="fc" id="L193">                writer.appendln(ex.instanceType());</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">            for (JField ex : method.exceptions()) {</span>
+<span class="fc" id="L193">                writer.append(&quot;,&quot;);</span>
+<span class="fc" id="L194">                writer.appendln(ex.instanceType());</span>
             }
 
-<span class="fc" id="L196">            writer.format(&quot; {&quot;)</span>
-<span class="fc" id="L197">                  .end()</span>
-<span class="fc" id="L198">                  .begin();</span>
+<span class="fc" id="L197">            writer.format(&quot; {&quot;)</span>
+<span class="fc" id="L198">                  .end()</span>
+<span class="fc" id="L199">                  .begin();</span>
 
-<span class="fc" id="L200">            writer.formatln(&quot;%s._Builder rq = %s.builder();&quot;,</span>
-<span class="fc" id="L201">                            service.getRequestClassRef(method),</span>
-<span class="fc" id="L202">                            service.getRequestClassRef(method));</span>
+<span class="fc" id="L201">            writer.formatln(&quot;%s._Builder rq = %s.builder();&quot;,</span>
+<span class="fc" id="L202">                            service.getRequestClassRef(method),</span>
+<span class="fc" id="L203">                            service.getRequestClassRef(method));</span>
 
-<span class="fc bfc" id="L204" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
-<span class="fc" id="L205">                writer.formatln(&quot;rq.%s(%s);&quot;, param.setter(), param.param());</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">                if (!param.alwaysPresent()) {</span>
+<span class="fc" id="L207">                    writer.formatln(&quot;if (%s != null) {&quot;, param.param())</span>
+<span class="fc" id="L208">                          .begin();</span>
+                }
+<span class="fc" id="L210">                writer.formatln(&quot;rq.%s(%s);&quot;, param.setter(), param.param());</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">                if (!param.alwaysPresent()) {</span>
+<span class="fc" id="L212">                    writer.end()</span>
+<span class="fc" id="L213">                          .appendln(&quot;}&quot;);</span>
+                }
             }
 
-<span class="fc bfc" id="L208" title="All 2 branches covered.">            String type = method.getMethod().isOneway()</span>
-<span class="fc" id="L209">                          ? PServiceCallType.ONEWAY.name()</span>
-<span class="fc" id="L210">                          : PServiceCallType.CALL.name();</span>
-<span class="fc" id="L211">            writer.newline()</span>
-<span class="fc" id="L212">                  .formatln(&quot;%s call = new %s&lt;&gt;(\&quot;%s\&quot;, %s.%s, getNextSequenceId(), rq.build());&quot;,</span>
-<span class="fc" id="L213">                            PServiceCall.class.getName(),</span>
-<span class="fc" id="L214">                            PServiceCall.class.getName(),</span>
-<span class="fc" id="L215">                            method.name(),</span>
-<span class="fc" id="L216">                            PServiceCallType.class.getName(),</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">            String type = method.getMethod().isOneway()</span>
+<span class="fc" id="L218">                          ? PServiceCallType.ONEWAY.name()</span>
+<span class="fc" id="L219">                          : PServiceCallType.CALL.name();</span>
+<span class="fc" id="L220">            writer.newline()</span>
+<span class="fc" id="L221">                  .formatln(&quot;%s call = new %s&lt;&gt;(\&quot;%s\&quot;, %s.%s, getNextSequenceId(), rq.build());&quot;,</span>
+<span class="fc" id="L222">                            PServiceCall.class.getName(),</span>
+<span class="fc" id="L223">                            PServiceCall.class.getName(),</span>
+<span class="fc" id="L224">                            method.name(),</span>
+<span class="fc" id="L225">                            PServiceCallType.class.getName(),</span>
                             type)
-<span class="fc" id="L218">                  .appendln();</span>
+<span class="fc" id="L227">                  .appendln();</span>
 
-<span class="fc bfc" id="L220" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
-<span class="fc" id="L221">                writer.format(&quot;%s resp = &quot;, PServiceCall.class.getName());</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
+<span class="fc" id="L230">                writer.format(&quot;%s resp = &quot;, PServiceCall.class.getName());</span>
             }
 
-<span class="fc" id="L224">            writer.format(&quot;handler.handleCall(call, %s.kDescriptor);&quot;, service.className());</span>
+<span class="fc" id="L233">            writer.format(&quot;handler.handleCall(call, %s.kDescriptor);&quot;, service.className());</span>
 
-<span class="fc bfc" id="L226" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
-<span class="fc" id="L227">                writer.newline()</span>
-<span class="fc" id="L228">                      .formatln(&quot;if (resp.getType() == %s.%s) {&quot;, PServiceCallType.class.getName(), PServiceCallType.EXCEPTION.name())</span>
-<span class="fc" id="L229">                      .formatln(&quot;    throw (%s) resp.getMessage();&quot;,</span>
-<span class="fc" id="L230">                                PApplicationException.class.getName())</span>
-<span class="fc" id="L231">                      .appendln('}')</span>
-<span class="fc" id="L232">                      .newline()</span>
-<span class="fc" id="L233">                      .formatln(&quot;%s msg = (%s) resp.getMessage();&quot;,</span>
-<span class="fc" id="L234">                                service.getResponseClassRef(method),</span>
-<span class="fc" id="L235">                                service.getResponseClassRef(method));</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
+<span class="fc" id="L236">                writer.newline()</span>
+<span class="fc" id="L237">                      .formatln(&quot;if (resp.getType() == %s.%s) {&quot;, PServiceCallType.class.getName(), PServiceCallType.EXCEPTION.name())</span>
+<span class="fc" id="L238">                      .formatln(&quot;    throw (%s) resp.getMessage();&quot;,</span>
+<span class="fc" id="L239">                                PApplicationException.class.getName())</span>
+<span class="fc" id="L240">                      .appendln('}')</span>
+<span class="fc" id="L241">                      .newline()</span>
+<span class="fc" id="L242">                      .formatln(&quot;%s msg = (%s) resp.getMessage();&quot;,</span>
+<span class="fc" id="L243">                                service.getResponseClassRef(method),</span>
+<span class="fc" id="L244">                                service.getResponseClassRef(method));</span>
 
-<span class="fc" id="L237">                writer.appendln(&quot;if (msg.unionField() != null) {&quot;)</span>
-<span class="fc" id="L238">                      .begin()</span>
-<span class="fc" id="L239">                      .appendln(&quot;switch (msg.unionField()) {&quot;)</span>
-<span class="fc" id="L240">                      .begin();</span>
-<span class="fc bfc" id="L241" title="All 2 branches covered.">                if (method.exceptions().length &gt; 0) {</span>
-<span class="fc bfc" id="L242" title="All 2 branches covered.">                    for (JField ex : method.exceptions()) {</span>
-<span class="fc" id="L243">                        writer.formatln(&quot;case %s:&quot;, ex.fieldEnum())</span>
-<span class="fc" id="L244">                              .formatln(&quot;    throw msg.%s();&quot;, ex.getter());</span>
+<span class="fc" id="L246">                writer.appendln(&quot;if (msg.unionField() != null) {&quot;)</span>
+<span class="fc" id="L247">                      .begin()</span>
+<span class="fc" id="L248">                      .appendln(&quot;switch (msg.unionField()) {&quot;)</span>
+<span class="fc" id="L249">                      .begin();</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">                if (method.exceptions().length &gt; 0) {</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">                    for (JField ex : method.exceptions()) {</span>
+<span class="fc" id="L252">                        writer.formatln(&quot;case %s:&quot;, ex.fieldEnum())</span>
+<span class="fc" id="L253">                              .formatln(&quot;    throw msg.%s();&quot;, ex.getter());</span>
                     }
                 }
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">                if (method.getResponse() != null) {</span>
-<span class="fc" id="L248">                    writer.formatln(&quot;case %s:&quot;, method.getResponse().fieldEnum());</span>
-<span class="fc bfc" id="L249" title="All 2 branches covered.">                    if (method.getResponse().isVoid()) {</span>
-<span class="fc" id="L250">                        writer.formatln(&quot;    return;&quot;);</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">                if (method.getResponse() != null) {</span>
+<span class="fc" id="L257">                    writer.formatln(&quot;case %s:&quot;, method.getResponse().fieldEnum());</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">                    if (method.getResponse().isVoid()) {</span>
+<span class="fc" id="L259">                        writer.formatln(&quot;    return;&quot;);</span>
                     } else {
-<span class="fc" id="L252">                        writer.formatln(&quot;    return msg.%s();&quot;, method.getResponse().getter());</span>
+<span class="fc" id="L261">                        writer.formatln(&quot;    return msg.%s();&quot;, method.getResponse().getter());</span>
                     }
                 }
 
-<span class="fc" id="L256">                writer.end()</span>
-<span class="fc" id="L257">                      .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L258">                      .end()</span>
-<span class="fc" id="L259">                      .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L260">                      .newline();</span>
+<span class="fc" id="L265">                writer.end()</span>
+<span class="fc" id="L266">                      .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L267">                      .end()</span>
+<span class="fc" id="L268">                      .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L269">                      .newline();</span>
 
                 // In case there is no return value, and no exception,
                 // the union field is not set. This *should* cause an error.
-<span class="fc" id="L264">                writer.formatln(&quot;throw new %s(\&quot;Result field for %s.%s() not set\&quot;,&quot;,</span>
-<span class="fc" id="L265">                                PApplicationException.class.getName(),</span>
-<span class="fc" id="L266">                                service.getService().getQualifiedName(),</span>
-<span class="fc" id="L267">                                method.name())</span>
-<span class="fc" id="L268">                      .formatln(&quot;          %s %s.%s);&quot;,</span>
-<span class="fc" id="L269">                                PApplicationException.class.getName().replaceAll(&quot;.&quot;, &quot; &quot;),</span>
-<span class="fc" id="L270">                                PApplicationExceptionType.class.getName(),</span>
-<span class="fc" id="L271">                                PApplicationExceptionType.MISSING_RESULT.name());</span>
+<span class="fc" id="L273">                writer.formatln(&quot;throw new %s(\&quot;Result field for %s.%s() not set\&quot;,&quot;,</span>
+<span class="fc" id="L274">                                PApplicationException.class.getName(),</span>
+<span class="fc" id="L275">                                service.getService().getQualifiedName(),</span>
+<span class="fc" id="L276">                                method.name())</span>
+<span class="fc" id="L277">                      .formatln(&quot;          %s %s.%s);&quot;,</span>
+<span class="fc" id="L278">                                PApplicationException.class.getName().replaceAll(&quot;.&quot;, &quot; &quot;),</span>
+<span class="fc" id="L279">                                PApplicationExceptionType.class.getName(),</span>
+<span class="fc" id="L280">                                PApplicationExceptionType.MISSING_RESULT.name());</span>
             }
 
-<span class="fc" id="L274">            writer.end()</span>
-<span class="fc" id="L275">                  .appendln('}');</span>
+<span class="fc" id="L283">            writer.end()</span>
+<span class="fc" id="L284">                  .appendln('}');</span>
         }
 
-<span class="fc" id="L278">        writer.end()</span>
-<span class="fc" id="L279">              .appendln('}')</span>
-<span class="fc" id="L280">              .newline();</span>
-<span class="fc" id="L281">    }</span>
+<span class="fc" id="L287">        writer.end()</span>
+<span class="fc" id="L288">              .appendln('}')</span>
+<span class="fc" id="L289">              .newline();</span>
+<span class="fc" id="L290">    }</span>
 
     private void appendProcessor(IndentedPrintWriter writer, JService service) throws GeneratorException {
-<span class="fc" id="L284">        writer.formatln(&quot;public static class Processor implements %s {&quot;, PProcessor.class.getName())</span>
-<span class="fc" id="L285">              .begin()</span>
-<span class="fc" id="L286">              .appendln(&quot;private final Iface impl;&quot;);</span>
+<span class="fc" id="L293">        writer.formatln(&quot;public static class Processor implements %s {&quot;, PProcessor.class.getName())</span>
+<span class="fc" id="L294">              .begin()</span>
+<span class="fc" id="L295">              .appendln(&quot;private final Iface impl;&quot;);</span>
 
-<span class="fc" id="L288">        writer.formatln(&quot;public Processor(Iface impl) {&quot;)</span>
-<span class="fc" id="L289">              .appendln(&quot;    this.impl = impl;&quot;)</span>
-<span class="fc" id="L290">              .appendln('}')</span>
-<span class="fc" id="L291">              .newline();</span>
+<span class="fc" id="L297">        writer.formatln(&quot;public Processor(Iface impl) {&quot;)</span>
+<span class="fc" id="L298">              .appendln(&quot;    this.impl = impl;&quot;)</span>
+<span class="fc" id="L299">              .appendln('}')</span>
+<span class="fc" id="L300">              .newline();</span>
 
-<span class="fc" id="L293">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L294">              .formatln(&quot;public %s getDescriptor() {&quot;, PService.class.getName())</span>
-<span class="fc" id="L295">              .appendln(&quot;    return kDescriptor;&quot;)</span>
-<span class="fc" id="L296">              .appendln('}')</span>
-<span class="fc" id="L297">              .newline();</span>
+<span class="fc" id="L302">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L303">              .formatln(&quot;public %s getDescriptor() {&quot;, PService.class.getName())</span>
+<span class="fc" id="L304">              .appendln(&quot;    return kDescriptor;&quot;)</span>
+<span class="fc" id="L305">              .appendln('}')</span>
+<span class="fc" id="L306">              .newline();</span>
 
-<span class="fc" id="L299">        writer.appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L300">              .formatln(&quot;public &lt;Request extends %s&lt;Request, RequestField&gt;,&quot;, PMessage.class.getName())</span>
-<span class="fc" id="L301">              .formatln(&quot;        Response extends %s&lt;Response, ResponseField&gt;,&quot;, PMessage.class.getName())</span>
-<span class="fc" id="L302">              .formatln(&quot;        RequestField extends %s,&quot;, PField.class.getName())</span>
-<span class="fc" id="L303">              .formatln(&quot;        ResponseField extends %s&gt;&quot;, PField.class.getName())</span>
-<span class="fc" id="L304">              .formatln(&quot;%s&lt;Response, ResponseField&gt; handleCall(&quot;, PServiceCall.class.getName())</span>
-<span class="fc" id="L305">              .formatln(&quot;        %s&lt;Request, RequestField&gt; call,&quot;, PServiceCall.class.getName())</span>
-<span class="fc" id="L306">              .formatln(&quot;        %s service)&quot;, PService.class.getName())</span>
-<span class="fc" id="L307">              .formatln(&quot;        throws %s,&quot;, IOException.class.getName())</span>
-<span class="fc" id="L308">              .formatln(&quot;               %s {&quot;, SerializerException.class.getName())</span>
-<span class="fc" id="L309">              .begin();</span>
+<span class="fc" id="L308">        writer.appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L309">              .formatln(&quot;public &lt;Request extends %s&lt;Request, RequestField&gt;,&quot;, PMessage.class.getName())</span>
+<span class="fc" id="L310">              .formatln(&quot;        Response extends %s&lt;Response, ResponseField&gt;,&quot;, PMessage.class.getName())</span>
+<span class="fc" id="L311">              .formatln(&quot;        RequestField extends %s,&quot;, PField.class.getName())</span>
+<span class="fc" id="L312">              .formatln(&quot;        ResponseField extends %s&gt;&quot;, PField.class.getName())</span>
+<span class="fc" id="L313">              .formatln(&quot;%s&lt;Response, ResponseField&gt; handleCall(&quot;, PServiceCall.class.getName())</span>
+<span class="fc" id="L314">              .formatln(&quot;        %s&lt;Request, RequestField&gt; call,&quot;, PServiceCall.class.getName())</span>
+<span class="fc" id="L315">              .formatln(&quot;        %s service)&quot;, PService.class.getName())</span>
+<span class="fc" id="L316">              .formatln(&quot;        throws %s,&quot;, IOException.class.getName())</span>
+<span class="fc" id="L317">              .formatln(&quot;               %s {&quot;, SerializerException.class.getName())</span>
+<span class="fc" id="L318">              .begin();</span>
 
-<span class="fc" id="L311">        writer.appendln(&quot;switch(call.getMethod()) {&quot;)</span>
-<span class="fc" id="L312">              .begin();</span>
+<span class="fc" id="L320">        writer.appendln(&quot;switch(call.getMethod()) {&quot;)</span>
+<span class="fc" id="L321">              .begin();</span>
 
-<span class="fc bfc" id="L314" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
-<span class="fc" id="L315">            writer.formatln(&quot;case \&quot;%s\&quot;: {&quot;, method.name())</span>
-<span class="fc" id="L316">                  .begin();</span>
-<span class="fc bfc" id="L317" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
-<span class="fc" id="L318">                writer.formatln(&quot;%s._Builder rsp = %s.builder();&quot;,</span>
-<span class="fc" id="L319">                                service.getResponseClassRef(method),</span>
-<span class="fc" id="L320">                                service.getResponseClassRef(method));</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
+<span class="fc" id="L324">            writer.formatln(&quot;case \&quot;%s\&quot;: {&quot;, method.name())</span>
+<span class="fc" id="L325">                  .begin();</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
+<span class="fc" id="L327">                writer.formatln(&quot;%s._Builder rsp = %s.builder();&quot;,</span>
+<span class="fc" id="L328">                                service.getResponseClassRef(method),</span>
+<span class="fc" id="L329">                                service.getResponseClassRef(method));</span>
             }
-<span class="fc" id="L322">            String methodThrows = service.methodsThrows(method);</span>
+<span class="fc" id="L331">            String methodThrows = service.methodsThrows(method);</span>
 
-<span class="fc bfc" id="L324" title="All 4 branches covered.">            if (methodThrows != null || method.exceptions().length &gt; 0) {</span>
-<span class="fc" id="L325">                writer.appendln(&quot;try {&quot;)</span>
-<span class="fc" id="L326">                      .begin();</span>
+<span class="fc bfc" id="L333" title="All 4 branches covered.">            if (methodThrows != null || method.exceptions().length &gt; 0) {</span>
+<span class="fc" id="L334">                writer.appendln(&quot;try {&quot;)</span>
+<span class="fc" id="L335">                      .begin();</span>
             }
 
-<span class="fc" id="L329">            writer.formatln(&quot;%s req = (%s) call.getMessage();&quot;,</span>
-<span class="fc" id="L330">                            service.getRequestClassRef(method),</span>
-<span class="fc" id="L331">                            service.getRequestClassRef(method));</span>
+<span class="fc" id="L338">            writer.formatln(&quot;%s req = (%s) call.getMessage();&quot;,</span>
+<span class="fc" id="L339">                            service.getRequestClassRef(method),</span>
+<span class="fc" id="L340">                            service.getRequestClassRef(method));</span>
 
-<span class="fc" id="L333">            String indent = &quot;      &quot; + Strings.times(&quot; &quot;, method.methodName().length());</span>
-<span class="fc bfc" id="L334" title="All 4 branches covered.">            if (method.getResponse() != null &amp;&amp; !method.getResponse().isVoid()) {</span>
-<span class="fc" id="L335">                writer.formatln(&quot;%s result =&quot;, method.getResponse().valueType());</span>
-<span class="fc" id="L336">                writer.appendln(&quot;        &quot;);</span>
-<span class="fc" id="L337">                indent += &quot;        &quot;;</span>
+<span class="fc" id="L342">            String indent = &quot;      &quot; + Strings.times(&quot; &quot;, method.methodName().length());</span>
+<span class="fc bfc" id="L343" title="All 4 branches covered.">            if (method.getResponse() != null &amp;&amp; !method.getResponse().isVoid()) {</span>
+<span class="fc" id="L344">                writer.formatln(&quot;%s result =&quot;, method.getResponse().valueType());</span>
+<span class="fc" id="L345">                writer.appendln(&quot;        &quot;);</span>
+<span class="fc" id="L346">                indent += &quot;        &quot;;</span>
             } else {
-<span class="fc" id="L339">                writer.appendln();</span>
+<span class="fc" id="L348">                writer.appendln();</span>
             }
 
-<span class="fc" id="L342">            writer.format(&quot;impl.%s(&quot;, method.methodName())</span>
-<span class="fc" id="L343">                  .begin(indent);</span>
+<span class="fc" id="L351">            writer.format(&quot;impl.%s(&quot;, method.methodName())</span>
+<span class="fc" id="L352">                  .begin(indent);</span>
 
-<span class="fc" id="L345">            boolean first = true;</span>
-<span class="fc bfc" id="L346" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
-<span class="fc bfc" id="L347" title="All 2 branches covered.">                if (first) {</span>
-<span class="fc" id="L348">                    first = false;</span>
+<span class="fc" id="L354">            boolean first = true;</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">                if (first) {</span>
+<span class="fc" id="L357">                    first = false;</span>
                 } else {
-<span class="fc" id="L350">                    writer.append(',')</span>
-<span class="fc" id="L351">                          .appendln();</span>
+<span class="fc" id="L359">                    writer.append(',')</span>
+<span class="fc" id="L360">                          .appendln();</span>
                 }
-<span class="fc" id="L353">                writer.format(&quot;req.%s()&quot;, param.getter());</span>
+                // An optional primitive value without an explicit default
+                // should be called with null value if not present in the
+                // request.
+<span class="fc" id="L365">                boolean optionalPrimitiveNoDefault =</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">                        param.isPrimitiveJavaValue() &amp;&amp;</span>
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">                        param.field().getRequirement() == PRequirement.OPTIONAL &amp;&amp;</span>
+<span class="pc bnc" id="L368" title="All 2 branches missed.">                        param.field().getDefaultValue() == null;</span>
+<span class="pc bpc" id="L369" title="1 of 2 branches missed.">                if (optionalPrimitiveNoDefault) {</span>
+<span class="nc" id="L370">                    writer.format(&quot;req.%s() ? &quot;, param.presence());</span>
+                }
+<span class="fc" id="L372">                writer.format(&quot;req.%s()&quot;, param.getter());</span>
+<span class="pc bpc" id="L373" title="1 of 2 branches missed.">                if (optionalPrimitiveNoDefault) {</span>
+<span class="nc" id="L374">                    writer.append(&quot; : null&quot;);</span>
+                }
             }
-<span class="fc" id="L355">            writer.end()</span>
-<span class="fc" id="L356">                  .append(&quot;);&quot;);</span>
+<span class="fc" id="L377">            writer.end()</span>
+<span class="fc" id="L378">                  .append(&quot;);&quot;);</span>
 
-<span class="fc bfc" id="L358" title="All 2 branches covered.">            if (method.getResponse() != null) {</span>
-<span class="fc bfc" id="L359" title="All 2 branches covered.">                if (method.getResponse().isVoid()) {</span>
-<span class="fc" id="L360">                    writer.formatln(&quot;rsp.%s();&quot;, method.getResponse().setter());</span>
+<span class="fc bfc" id="L380" title="All 2 branches covered.">            if (method.getResponse() != null) {</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">                if (method.getResponse().isVoid()) {</span>
+<span class="fc" id="L382">                    writer.formatln(&quot;rsp.%s();&quot;, method.getResponse().setter());</span>
                 } else {
-<span class="fc" id="L362">                    writer.formatln(&quot;rsp.%s(result);&quot;, method.getResponse().setter());</span>
+<span class="fc" id="L384">                    writer.formatln(&quot;rsp.%s(result);&quot;, method.getResponse().setter());</span>
                 }
             }
 
-<span class="fc bfc" id="L366" title="All 4 branches covered.">            if (methodThrows != null || method.exceptions().length &gt; 0) {</span>
-<span class="fc" id="L367">                writer.end();</span>
-<span class="fc bfc" id="L368" title="All 2 branches covered.">                for (JField ex : method.exceptions()) {</span>
-<span class="fc" id="L369">                    writer.formatln(&quot;} catch (%s e) {&quot;, ex.instanceType())</span>
-<span class="fc" id="L370">                          .formatln(&quot;    rsp.%s(e);&quot;, ex.setter());</span>
+<span class="fc bfc" id="L388" title="All 4 branches covered.">            if (methodThrows != null || method.exceptions().length &gt; 0) {</span>
+<span class="fc" id="L389">                writer.end();</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">                for (JField ex : method.exceptions()) {</span>
+<span class="fc" id="L391">                    writer.formatln(&quot;} catch (%s e) {&quot;, ex.instanceType())</span>
+<span class="fc" id="L392">                          .formatln(&quot;    rsp.%s(e);&quot;, ex.setter());</span>
                 }
-<span class="fc bfc" id="L372" title="All 2 branches covered.">                if (methodThrows != null) {</span>
-<span class="fc" id="L373">                    writer.formatln(&quot;} catch (%s e) {&quot;, methodThrows)</span>
-<span class="fc" id="L374">                          .formatln(&quot;    throw new %s(e.getMessage(), e);&quot;, IOException.class.getName());</span>
+<span class="fc bfc" id="L394" title="All 2 branches covered.">                if (methodThrows != null) {</span>
+<span class="fc" id="L395">                    writer.formatln(&quot;} catch (%s e) {&quot;, methodThrows)</span>
+<span class="fc" id="L396">                          .formatln(&quot;    throw new %s(e.getMessage(), e);&quot;, IOException.class.getName());</span>
                 }
-<span class="fc" id="L376">                writer.appendln('}');</span>
+<span class="fc" id="L398">                writer.appendln('}');</span>
             }
 
-<span class="fc bfc" id="L379" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
-<span class="fc" id="L380">                String spaces = PServiceCall.class.getName().replaceAll(&quot;[\\S]&quot;, &quot; &quot;);</span>
-<span class="fc" id="L381">                writer.formatln(&quot;%s reply =&quot;, PServiceCall.class.getName())</span>
-<span class="fc" id="L382">                      .formatln(&quot;        new %s&lt;&gt;(call.getMethod(),&quot;,</span>
-<span class="fc" id="L383">                                PServiceCall.class.getName())</span>
-<span class="fc" id="L384">                      .formatln(&quot;            %s   %s.%s,&quot;,</span>
+<span class="fc bfc" id="L401" title="All 2 branches covered.">            if (method.getResponseClass() != null) {</span>
+<span class="fc" id="L402">                String spaces = PServiceCall.class.getName().replaceAll(&quot;[\\S]&quot;, &quot; &quot;);</span>
+<span class="fc" id="L403">                writer.formatln(&quot;%s reply =&quot;, PServiceCall.class.getName())</span>
+<span class="fc" id="L404">                      .formatln(&quot;        new %s&lt;&gt;(call.getMethod(),&quot;,</span>
+<span class="fc" id="L405">                                PServiceCall.class.getName())</span>
+<span class="fc" id="L406">                      .formatln(&quot;            %s   %s.%s,&quot;,</span>
                                 spaces,
-<span class="fc" id="L386">                                PServiceCallType.class.getName(),</span>
-<span class="fc" id="L387">                                PServiceCallType.REPLY.name())</span>
-<span class="fc" id="L388">                      .formatln(&quot;            %s   call.getSequence(),&quot;,</span>
+<span class="fc" id="L408">                                PServiceCallType.class.getName(),</span>
+<span class="fc" id="L409">                                PServiceCallType.REPLY.name())</span>
+<span class="fc" id="L410">                      .formatln(&quot;            %s   call.getSequence(),&quot;,</span>
                                 spaces)
-<span class="fc" id="L390">                      .formatln(&quot;            %s   rsp.build());&quot;,</span>
+<span class="fc" id="L412">                      .formatln(&quot;            %s   rsp.build());&quot;,</span>
                                 spaces)
-<span class="fc" id="L392">                      .appendln(&quot;return reply;&quot;);</span>
-<span class="fc" id="L393">            } else {</span>
+<span class="fc" id="L414">                      .appendln(&quot;return reply;&quot;);</span>
+<span class="fc" id="L415">            } else {</span>
                 // No reply, but it's fine.
-<span class="fc" id="L395">                writer.appendln(&quot;return null;&quot;);</span>
+<span class="fc" id="L417">                writer.appendln(&quot;return null;&quot;);</span>
             }
 
-<span class="fc" id="L398">            writer.end()</span>
-<span class="fc" id="L399">                  .appendln('}');</span>
+<span class="fc" id="L420">            writer.end()</span>
+<span class="fc" id="L421">                  .appendln('}');</span>
         }
 
-<span class="fc" id="L402">        writer.appendln(&quot;default: {&quot;)</span>
-<span class="fc" id="L403">              .begin()</span>
-<span class="fc" id="L404">              .formatln(&quot;%s ex =&quot;, PApplicationException.class.getName())</span>
-<span class="fc" id="L405">              .formatln(&quot;        new %s(&quot;, PApplicationException.class.getName())</span>
-<span class="fc" id="L406">              .formatln(&quot;                \&quot;Unknown method \\\&quot;\&quot; + call.getMethod() + \&quot;\\\&quot; on %s.\&quot;,&quot;,</span>
-<span class="fc" id="L407">                        service.getService().getQualifiedName())</span>
-<span class="fc" id="L408">              .formatln(&quot;                %s.%s);&quot;,</span>
-<span class="fc" id="L409">                        PApplicationExceptionType.class.getName(),</span>
-<span class="fc" id="L410">                        PApplicationExceptionType.UNKNOWN_METHOD.asString());</span>
+<span class="fc" id="L424">        writer.appendln(&quot;default: {&quot;)</span>
+<span class="fc" id="L425">              .begin()</span>
+<span class="fc" id="L426">              .formatln(&quot;%s ex =&quot;, PApplicationException.class.getName())</span>
+<span class="fc" id="L427">              .formatln(&quot;        new %s(&quot;, PApplicationException.class.getName())</span>
+<span class="fc" id="L428">              .formatln(&quot;                \&quot;Unknown method \\\&quot;\&quot; + call.getMethod() + \&quot;\\\&quot; on %s.\&quot;,&quot;,</span>
+<span class="fc" id="L429">                        service.getService().getQualifiedName())</span>
+<span class="fc" id="L430">              .formatln(&quot;                %s.%s);&quot;,</span>
+<span class="fc" id="L431">                        PApplicationExceptionType.class.getName(),</span>
+<span class="fc" id="L432">                        PApplicationExceptionType.UNKNOWN_METHOD.asString());</span>
 
-<span class="fc" id="L412">        String spaces = PServiceCall.class.getName().replaceAll(&quot;[\\S]&quot;, &quot; &quot;);</span>
-<span class="fc" id="L413">        writer.formatln(&quot;%s reply =&quot;, PServiceCall.class.getName())</span>
-<span class="fc" id="L414">              .formatln(&quot;        new %s(call.getMethod(),&quot;,</span>
-<span class="fc" id="L415">                        PServiceCall.class.getName())</span>
-<span class="fc" id="L416">              .formatln(&quot;            %s %s.%s,&quot;,</span>
+<span class="fc" id="L434">        String spaces = PServiceCall.class.getName().replaceAll(&quot;[\\S]&quot;, &quot; &quot;);</span>
+<span class="fc" id="L435">        writer.formatln(&quot;%s reply =&quot;, PServiceCall.class.getName())</span>
+<span class="fc" id="L436">              .formatln(&quot;        new %s(call.getMethod(),&quot;,</span>
+<span class="fc" id="L437">                        PServiceCall.class.getName())</span>
+<span class="fc" id="L438">              .formatln(&quot;            %s %s.%s,&quot;,</span>
                         spaces,
-<span class="fc" id="L418">                        PServiceCallType.class.getName(),</span>
-<span class="fc" id="L419">                        PServiceCallType.EXCEPTION.name())</span>
-<span class="fc" id="L420">              .formatln(&quot;            %s call.getSequence(),&quot;,</span>
+<span class="fc" id="L440">                        PServiceCallType.class.getName(),</span>
+<span class="fc" id="L441">                        PServiceCallType.EXCEPTION.name())</span>
+<span class="fc" id="L442">              .formatln(&quot;            %s call.getSequence(),&quot;,</span>
                         spaces)
-<span class="fc" id="L422">              .formatln(&quot;            %s ex);&quot;,</span>
+<span class="fc" id="L444">              .formatln(&quot;            %s ex);&quot;,</span>
                         spaces)
-<span class="fc" id="L424">              .appendln(&quot;return reply;&quot;);</span>
+<span class="fc" id="L446">              .appendln(&quot;return reply;&quot;);</span>
 
-<span class="fc" id="L426">        writer.end()</span>
-<span class="fc" id="L427">              .appendln('}')</span>
-<span class="fc" id="L428">              .end()</span>
-<span class="fc" id="L429">              .appendln('}');</span>
+<span class="fc" id="L448">        writer.end()</span>
+<span class="fc" id="L449">              .appendln('}')</span>
+<span class="fc" id="L450">              .end()</span>
+<span class="fc" id="L451">              .appendln('}');</span>
 
-<span class="fc" id="L431">        writer.end()</span>
-<span class="fc" id="L432">              .appendln('}');</span>
+<span class="fc" id="L453">        writer.end()</span>
+<span class="fc" id="L454">              .appendln('}');</span>
 
-<span class="fc" id="L434">        writer.end()</span>
-<span class="fc" id="L435">              .appendln('}')</span>
-<span class="fc" id="L436">              .newline();</span>
-<span class="fc" id="L437">    }</span>
+<span class="fc" id="L456">        writer.end()</span>
+<span class="fc" id="L457">              .appendln('}')</span>
+<span class="fc" id="L458">              .newline();</span>
+<span class="fc" id="L459">    }</span>
 
     private void appendDescriptor(IndentedPrintWriter writer, JService service) throws GeneratorException {
-<span class="fc" id="L440">        writer.formatln(&quot;public enum Method implements %s {&quot;, PServiceMethod.class.getName())</span>
-<span class="fc" id="L441">              .begin();</span>
+<span class="fc" id="L462">        writer.formatln(&quot;public enum Method implements %s {&quot;, PServiceMethod.class.getName())</span>
+<span class="fc" id="L463">              .begin();</span>
 
-<span class="fc bfc" id="L443" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
-<span class="fc bfc" id="L444" title="All 2 branches covered.">            String responseDesc = method.getResponseClass() == null</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">            String responseDesc = method.getResponseClass() == null</span>
                                   ? &quot;null&quot;
-<span class="fc" id="L446">                                  : service.getResponseClassRef(method) + &quot;.kDescriptor&quot;;</span>
+<span class="fc" id="L468">                                  : service.getResponseClassRef(method) + &quot;.kDescriptor&quot;;</span>
 
-<span class="fc" id="L448">            writer.formatln(&quot;%s(\&quot;%s\&quot;, %b, %s.kDescriptor, %s),&quot;,</span>
-<span class="fc" id="L449">                            method.constant(),</span>
-<span class="fc" id="L450">                            method.name(),</span>
-<span class="fc" id="L451">                            method.getMethod().isOneway(),</span>
-<span class="fc" id="L452">                            service.getRequestClassRef(method),</span>
+<span class="fc" id="L470">            writer.formatln(&quot;%s(\&quot;%s\&quot;, %b, %s.kDescriptor, %s),&quot;,</span>
+<span class="fc" id="L471">                            method.constant(),</span>
+<span class="fc" id="L472">                            method.name(),</span>
+<span class="fc" id="L473">                            method.getMethod().isOneway(),</span>
+<span class="fc" id="L474">                            service.getRequestClassRef(method),</span>
                             responseDesc);
         }
 
-<span class="fc" id="L456">        writer.appendln(';')</span>
-<span class="fc" id="L457">              .newline();</span>
+<span class="fc" id="L478">        writer.appendln(';')</span>
+<span class="fc" id="L479">              .newline();</span>
 
-<span class="fc" id="L459">        writer.appendln(&quot;private final String name;&quot;)</span>
-<span class="fc" id="L460">              .appendln(&quot;private final boolean oneway;&quot;)</span>
-<span class="fc" id="L461">              .formatln(&quot;private final %s request;&quot;, PStructDescriptor.class.getName())</span>
-<span class="fc" id="L462">              .formatln(&quot;private final %s response;&quot;, PUnionDescriptor.class.getName())</span>
-<span class="fc" id="L463">              .newline();</span>
+<span class="fc" id="L481">        writer.appendln(&quot;private final String name;&quot;)</span>
+<span class="fc" id="L482">              .appendln(&quot;private final boolean oneway;&quot;)</span>
+<span class="fc" id="L483">              .formatln(&quot;private final %s request;&quot;, PStructDescriptor.class.getName())</span>
+<span class="fc" id="L484">              .formatln(&quot;private final %s response;&quot;, PUnionDescriptor.class.getName())</span>
+<span class="fc" id="L485">              .newline();</span>
 
-<span class="fc" id="L465">        writer.formatln(&quot;private Method(String name, boolean oneway, %s request, %s response) {&quot;,</span>
-<span class="fc" id="L466">                        PStructDescriptor.class.getName(), PUnionDescriptor.class.getName())</span>
-<span class="fc" id="L467">              .appendln(&quot;    this.name = name;&quot;)</span>
-<span class="fc" id="L468">              .appendln(&quot;    this.oneway = oneway;&quot;)</span>
-<span class="fc" id="L469">              .appendln(&quot;    this.request = request;&quot;)</span>
-<span class="fc" id="L470">              .appendln(&quot;    this.response = response;&quot;)</span>
-<span class="fc" id="L471">              .appendln('}')</span>
-<span class="fc" id="L472">              .newline();</span>
+<span class="fc" id="L487">        writer.formatln(&quot;private Method(String name, boolean oneway, %s request, %s response) {&quot;,</span>
+<span class="fc" id="L488">                        PStructDescriptor.class.getName(), PUnionDescriptor.class.getName())</span>
+<span class="fc" id="L489">              .appendln(&quot;    this.name = name;&quot;)</span>
+<span class="fc" id="L490">              .appendln(&quot;    this.oneway = oneway;&quot;)</span>
+<span class="fc" id="L491">              .appendln(&quot;    this.request = request;&quot;)</span>
+<span class="fc" id="L492">              .appendln(&quot;    this.response = response;&quot;)</span>
+<span class="fc" id="L493">              .appendln('}')</span>
+<span class="fc" id="L494">              .newline();</span>
 
-<span class="fc" id="L474">        writer.appendln(&quot;public String getName() {&quot;)</span>
-<span class="fc" id="L475">              .appendln(&quot;    return name;&quot;)</span>
-<span class="fc" id="L476">              .appendln('}')</span>
-<span class="fc" id="L477">              .newline()</span>
-<span class="fc" id="L478">              .appendln(&quot;public boolean isOneway() {&quot;)</span>
-<span class="fc" id="L479">              .appendln(&quot;    return oneway;&quot;)</span>
-<span class="fc" id="L480">              .appendln('}')</span>
-<span class="fc" id="L481">              .newline()</span>
-<span class="fc" id="L482">              .formatln(&quot;public %s getRequestType() {&quot;,</span>
-<span class="fc" id="L483">                        PStructDescriptor.class.getName())</span>
-<span class="fc" id="L484">              .formatln(&quot;    return request;&quot;)</span>
-<span class="fc" id="L485">              .appendln('}')</span>
-<span class="fc" id="L486">              .newline()</span>
-<span class="fc" id="L487">              .formatln(&quot;public %s getResponseType() {&quot;,</span>
-<span class="fc" id="L488">                        PUnionDescriptor.class.getName())</span>
-<span class="fc" id="L489">              .formatln(&quot;    return response;&quot;)</span>
-<span class="fc" id="L490">              .appendln('}')</span>
-<span class="fc" id="L491">              .newline();</span>
+<span class="fc" id="L496">        writer.appendln(&quot;public String getName() {&quot;)</span>
+<span class="fc" id="L497">              .appendln(&quot;    return name;&quot;)</span>
+<span class="fc" id="L498">              .appendln('}')</span>
+<span class="fc" id="L499">              .newline()</span>
+<span class="fc" id="L500">              .appendln(&quot;public boolean isOneway() {&quot;)</span>
+<span class="fc" id="L501">              .appendln(&quot;    return oneway;&quot;)</span>
+<span class="fc" id="L502">              .appendln('}')</span>
+<span class="fc" id="L503">              .newline()</span>
+<span class="fc" id="L504">              .formatln(&quot;public %s getRequestType() {&quot;,</span>
+<span class="fc" id="L505">                        PStructDescriptor.class.getName())</span>
+<span class="fc" id="L506">              .formatln(&quot;    return request;&quot;)</span>
+<span class="fc" id="L507">              .appendln('}')</span>
+<span class="fc" id="L508">              .newline()</span>
+<span class="fc" id="L509">              .formatln(&quot;public %s getResponseType() {&quot;,</span>
+<span class="fc" id="L510">                        PUnionDescriptor.class.getName())</span>
+<span class="fc" id="L511">              .formatln(&quot;    return response;&quot;)</span>
+<span class="fc" id="L512">              .appendln('}')</span>
+<span class="fc" id="L513">              .newline();</span>
 
-<span class="fc" id="L493">        writer.appendln(&quot;public static Method findByName(String name) {&quot;)</span>
-<span class="fc" id="L494">              .begin()</span>
-<span class="fc" id="L495">              .appendln(&quot;switch (name) {&quot;)</span>
-<span class="fc" id="L496">              .begin();</span>
+<span class="fc" id="L515">        writer.appendln(&quot;public static Method findByName(String name) {&quot;)</span>
+<span class="fc" id="L516">              .begin()</span>
+<span class="fc" id="L517">              .appendln(&quot;switch (name) {&quot;)</span>
+<span class="fc" id="L518">              .begin();</span>
 
-<span class="fc bfc" id="L498" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
-<span class="fc" id="L499">            writer.formatln(&quot;case \&quot;%s\&quot;: return %s;&quot;,</span>
-<span class="fc" id="L500">                            method.name(), method.constant());</span>
+<span class="fc bfc" id="L520" title="All 2 branches covered.">        for (JServiceMethod method : service.methods()) {</span>
+<span class="fc" id="L521">            writer.formatln(&quot;case \&quot;%s\&quot;: return %s;&quot;,</span>
+<span class="fc" id="L522">                            method.name(), method.constant());</span>
         }
 
-<span class="fc" id="L503">        writer.end()</span>
-<span class="fc" id="L504">              .appendln('}')</span>
-<span class="fc" id="L505">              .appendln(&quot;return null;&quot;)</span>
-<span class="fc" id="L506">              .end()</span>
-<span class="fc" id="L507">              .appendln('}');</span>
+<span class="fc" id="L525">        writer.end()</span>
+<span class="fc" id="L526">              .appendln('}')</span>
+<span class="fc" id="L527">              .appendln(&quot;return null;&quot;)</span>
+<span class="fc" id="L528">              .end()</span>
+<span class="fc" id="L529">              .appendln('}');</span>
 
-<span class="fc" id="L509">        writer.appendln(JAnnotation.NON_NULL)</span>
-<span class="fc" id="L510">              .appendln(&quot;public static Method methodForName(String name) {&quot;)</span>
-<span class="fc" id="L511">              .begin()</span>
-<span class="fc" id="L512">              .appendln(&quot;Method method = findByName(name);&quot;)</span>
-<span class="fc" id="L513">              .appendln(&quot;if (method == null) {&quot;)</span>
-<span class="fc" id="L514">              .formatln(&quot;    throw new IllegalArgumentException(\&quot;No such method \\\&quot;\&quot; + name + \&quot;\\\&quot; in service %s\&quot;);&quot;,</span>
-<span class="fc" id="L515">                        service.getService().getQualifiedName())</span>
-<span class="fc" id="L516">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L517">              .appendln(&quot;return method;&quot;)</span>
-<span class="fc" id="L518">              .end()</span>
-<span class="fc" id="L519">              .appendln('}');</span>
+<span class="fc" id="L531">        writer.appendln(JAnnotation.NON_NULL)</span>
+<span class="fc" id="L532">              .appendln(&quot;public static Method methodForName(String name) {&quot;)</span>
+<span class="fc" id="L533">              .begin()</span>
+<span class="fc" id="L534">              .appendln(&quot;Method method = findByName(name);&quot;)</span>
+<span class="fc" id="L535">              .appendln(&quot;if (method == null) {&quot;)</span>
+<span class="fc" id="L536">              .formatln(&quot;    throw new IllegalArgumentException(\&quot;No such method \\\&quot;\&quot; + name + \&quot;\\\&quot; in service %s\&quot;);&quot;,</span>
+<span class="fc" id="L537">                        service.getService().getQualifiedName())</span>
+<span class="fc" id="L538">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L539">              .appendln(&quot;return method;&quot;)</span>
+<span class="fc" id="L540">              .end()</span>
+<span class="fc" id="L541">              .appendln('}');</span>
 
-<span class="fc" id="L521">        writer.end()</span>
-<span class="fc" id="L522">              .appendln('}')</span>
-<span class="fc" id="L523">              .newline();</span>
+<span class="fc" id="L543">        writer.end()</span>
+<span class="fc" id="L544">              .appendln('}')</span>
+<span class="fc" id="L545">              .newline();</span>
         // Ended methods enum.
 
-<span class="fc" id="L526">        String inherits = &quot;null&quot;;</span>
-<span class="fc bfc" id="L527" title="All 2 branches covered.">        if (service.getService().getExtendsService() != null) {</span>
-<span class="fc" id="L528">            CService other = service.getService().getExtendsService();</span>
-<span class="fc" id="L529">            inherits = helper.getJavaPackage(other) + &quot;.&quot; +</span>
-<span class="fc" id="L530">                       new JService(other, helper).className() + &quot;.provider()&quot;;</span>
+<span class="fc" id="L548">        String inherits = &quot;null&quot;;</span>
+<span class="fc bfc" id="L549" title="All 2 branches covered.">        if (service.getService().getExtendsService() != null) {</span>
+<span class="fc" id="L550">            CService other = service.getService().getExtendsService();</span>
+<span class="fc" id="L551">            inherits = helper.getJavaPackage(other) + &quot;.&quot; +</span>
+<span class="fc" id="L552">                       new JService(other, helper).className() + &quot;.provider()&quot;;</span>
         }
 
-<span class="fc" id="L533">        writer.formatln(&quot;private static class _Descriptor extends %s {&quot;,</span>
-<span class="fc" id="L534">                        PService.class.getName())</span>
-<span class="fc" id="L535">              .begin()</span>
-<span class="fc" id="L536">              .appendln(&quot;private _Descriptor() {&quot;)</span>
-<span class="fc" id="L537">              .formatln(&quot;    super(\&quot;%s\&quot;, \&quot;%s\&quot;, %s, Method.values());&quot;,</span>
-<span class="fc" id="L538">                        service.getService().getProgramName(),</span>
-<span class="fc" id="L539">                        service.getService().getName(),</span>
+<span class="fc" id="L555">        writer.formatln(&quot;private static class _Descriptor extends %s {&quot;,</span>
+<span class="fc" id="L556">                        PService.class.getName())</span>
+<span class="fc" id="L557">              .begin()</span>
+<span class="fc" id="L558">              .appendln(&quot;private _Descriptor() {&quot;)</span>
+<span class="fc" id="L559">              .formatln(&quot;    super(\&quot;%s\&quot;, \&quot;%s\&quot;, %s, Method.values());&quot;,</span>
+<span class="fc" id="L560">                        service.getService().getProgramName(),</span>
+<span class="fc" id="L561">                        service.getService().getName(),</span>
                         inherits)
-<span class="fc" id="L541">              .appendln('}')</span>
-<span class="fc" id="L542">              .newline()</span>
-<span class="fc" id="L543">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L544">              .appendln(&quot;public Method getMethod(String name) {&quot;)</span>
-<span class="fc" id="L545">              .appendln(&quot;    return Method.findByName(name);&quot;)</span>
-<span class="fc" id="L546">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L547">              .end()</span>
-<span class="fc" id="L548">              .appendln('}')</span>
-<span class="fc" id="L549">              .newline();</span>
+<span class="fc" id="L563">              .appendln('}')</span>
+<span class="fc" id="L564">              .newline()</span>
+<span class="fc" id="L565">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L566">              .appendln(&quot;public Method getMethod(String name) {&quot;)</span>
+<span class="fc" id="L567">              .appendln(&quot;    return Method.findByName(name);&quot;)</span>
+<span class="fc" id="L568">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L569">              .end()</span>
+<span class="fc" id="L570">              .appendln('}')</span>
+<span class="fc" id="L571">              .newline();</span>
 
-<span class="fc" id="L551">        writer.formatln(&quot;private static class _Provider implements %s {&quot;,</span>
-<span class="fc" id="L552">                        PServiceProvider.class.getName())</span>
-<span class="fc" id="L553">              .begin()</span>
-<span class="fc" id="L554">              .appendln(&quot;@Override&quot;)</span>
-<span class="fc" id="L555">              .formatln(&quot;public %s getService() {&quot;, PService.class.getName())</span>
-<span class="fc" id="L556">              .appendln(&quot;    return kDescriptor;&quot;)</span>
-<span class="fc" id="L557">              .appendln(&quot;}&quot;)</span>
-<span class="fc" id="L558">              .end()</span>
-<span class="fc" id="L559">              .appendln('}')</span>
-<span class="fc" id="L560">              .newline();</span>
+<span class="fc" id="L573">        writer.formatln(&quot;private static class _Provider implements %s {&quot;,</span>
+<span class="fc" id="L574">                        PServiceProvider.class.getName())</span>
+<span class="fc" id="L575">              .begin()</span>
+<span class="fc" id="L576">              .appendln(&quot;@Override&quot;)</span>
+<span class="fc" id="L577">              .formatln(&quot;public %s getService() {&quot;, PService.class.getName())</span>
+<span class="fc" id="L578">              .appendln(&quot;    return kDescriptor;&quot;)</span>
+<span class="fc" id="L579">              .appendln(&quot;}&quot;)</span>
+<span class="fc" id="L580">              .end()</span>
+<span class="fc" id="L581">              .appendln('}')</span>
+<span class="fc" id="L582">              .newline();</span>
 
-<span class="fc" id="L562">        writer.formatln(&quot;public static final %s kDescriptor = new _Descriptor();&quot;,</span>
-<span class="fc" id="L563">                        PService.class.getName())</span>
-<span class="fc" id="L564">              .newline();</span>
+<span class="fc" id="L584">        writer.formatln(&quot;public static final %s kDescriptor = new _Descriptor();&quot;,</span>
+<span class="fc" id="L585">                        PService.class.getName())</span>
+<span class="fc" id="L586">              .newline();</span>
 
-<span class="fc" id="L566">        writer.formatln(&quot;public static %s provider() {&quot;,</span>
-<span class="fc" id="L567">                        PServiceProvider.class.getName())</span>
-<span class="fc" id="L568">              .appendln(&quot;    return new _Provider();&quot;)</span>
-<span class="fc" id="L569">              .appendln('}')</span>
-<span class="fc" id="L570">              .newline();</span>
-<span class="fc" id="L571">    }</span>
+<span class="fc" id="L588">        writer.formatln(&quot;public static %s provider() {&quot;,</span>
+<span class="fc" id="L589">                        PServiceProvider.class.getName())</span>
+<span class="fc" id="L590">              .appendln(&quot;    return new _Provider();&quot;)</span>
+<span class="fc" id="L591">              .appendln('}')</span>
+<span class="fc" id="L592">              .newline();</span>
+<span class="fc" id="L593">    }</span>
 
     @SuppressWarnings(&quot;unchecked&quot;)
     private void appendStructs(IndentedPrintWriter writer, JService service) throws GeneratorException, IOException {
-<span class="fc bfc" id="L575" title="All 2 branches covered.">        for (JServiceMethod method : service.declaredMethods()) {</span>
-<span class="fc" id="L576">            JMessage request = new JMessage&lt;&gt;(method.getMethod().getRequestType(), helper);</span>
-<span class="fc" id="L577">            writer.formatln(&quot;// type --&gt; %s&quot;, request.descriptor().getName());</span>
+<span class="fc bfc" id="L597" title="All 2 branches covered.">        for (JServiceMethod method : service.declaredMethods()) {</span>
+<span class="fc" id="L598">            JMessage request = new JMessage&lt;&gt;(method.getMethod().getRequestType(), helper);</span>
+<span class="fc" id="L599">            writer.formatln(&quot;// type --&gt; %s&quot;, request.descriptor().getName());</span>
 
-<span class="fc" id="L579">            messageFormat.appendMessageClass(method.getMethod().getRequestType());</span>
+<span class="fc" id="L601">            messageFormat.appendMessageClass(method.getMethod().getRequestType());</span>
 
-<span class="fc bfc" id="L581" title="All 2 branches covered.">            if (method.getMethod().getResponseType() != null) {</span>
-<span class="fc" id="L582">                JMessage response = new JMessage(method.getMethod().getResponseType(), helper);</span>
-<span class="fc" id="L583">                writer.formatln(&quot;// type &lt;-- %s&quot;, response.descriptor().getName());</span>
+<span class="fc bfc" id="L603" title="All 2 branches covered.">            if (method.getMethod().getResponseType() != null) {</span>
+<span class="fc" id="L604">                JMessage response = new JMessage(method.getMethod().getResponseType(), helper);</span>
+<span class="fc" id="L605">                writer.formatln(&quot;// type &lt;-- %s&quot;, response.descriptor().getName());</span>
 
-<span class="fc" id="L585">                messageFormat.appendMessageClass(method.getMethod().getResponseType());</span>
+<span class="fc" id="L607">                messageFormat.appendMessageClass(method.getMethod().getResponseType());</span>
             }
         }
-<span class="fc" id="L588">    }</span>
+<span class="fc" id="L610">    }</span>
 
     private void appendIface(IndentedPrintWriter writer, JService service) throws GeneratorException {
-<span class="fc" id="L591">        String inherits = &quot;&quot;;</span>
-<span class="fc bfc" id="L592" title="All 2 branches covered.">        if (service.getService().getExtendsService() != null) {</span>
-<span class="fc" id="L593">            CService other = service.getService().getExtendsService();</span>
-<span class="fc" id="L594">            inherits = &quot;extends &quot; + helper.getJavaPackage(other) + &quot;.&quot; +</span>
-<span class="fc" id="L595">                       new JService(other, helper).className() + &quot;.Iface &quot;;</span>
+<span class="fc" id="L613">        String inherits = &quot;&quot;;</span>
+<span class="fc bfc" id="L614" title="All 2 branches covered.">        if (service.getService().getExtendsService() != null) {</span>
+<span class="fc" id="L615">            CService other = service.getService().getExtendsService();</span>
+<span class="fc" id="L616">            inherits = &quot;extends &quot; + helper.getJavaPackage(other) + &quot;.&quot; +</span>
+<span class="fc" id="L617">                       new JService(other, helper).className() + &quot;.Iface &quot;;</span>
         }
 
-<span class="fc bfc" id="L598" title="All 2 branches covered.">        if (service.getService().getDocumentation() != null) {</span>
-<span class="fc" id="L599">            new BlockCommentBuilder(writer)</span>
-<span class="fc" id="L600">                    .comment(service.getService().getDocumentation())</span>
-<span class="fc" id="L601">                    .finish();</span>
+<span class="fc bfc" id="L620" title="All 2 branches covered.">        if (service.getService().getDocumentation() != null) {</span>
+<span class="fc" id="L621">            new BlockCommentBuilder(writer)</span>
+<span class="fc" id="L622">                    .comment(service.getService().getDocumentation())</span>
+<span class="fc" id="L623">                    .finish();</span>
         }
 
-<span class="fc" id="L604">        writer.formatln(&quot;public interface Iface %s{&quot;, inherits)</span>
-<span class="fc" id="L605">              .begin();</span>
+<span class="fc" id="L626">        writer.formatln(&quot;public interface Iface %s{&quot;, inherits)</span>
+<span class="fc" id="L627">              .begin();</span>
 
-<span class="fc" id="L607">        boolean firstMethod = true;</span>
-<span class="fc bfc" id="L608" title="All 2 branches covered.">        for (JServiceMethod method : service.declaredMethods()) {</span>
-<span class="fc bfc" id="L609" title="All 2 branches covered.">            if (firstMethod) {</span>
-<span class="fc" id="L610">                firstMethod = false;</span>
+<span class="fc" id="L629">        boolean firstMethod = true;</span>
+<span class="fc bfc" id="L630" title="All 2 branches covered.">        for (JServiceMethod method : service.declaredMethods()) {</span>
+<span class="fc bfc" id="L631" title="All 2 branches covered.">            if (firstMethod) {</span>
+<span class="fc" id="L632">                firstMethod = false;</span>
             } else {
-<span class="fc" id="L612">                writer.newline();</span>
+<span class="fc" id="L634">                writer.newline();</span>
             }
-<span class="fc" id="L614">            String methodThrows = service.methodsThrows(method);</span>
+<span class="fc" id="L636">            String methodThrows = service.methodsThrows(method);</span>
 
-<span class="fc" id="L616">            BlockCommentBuilder comment = new BlockCommentBuilder(writer);</span>
+<span class="fc" id="L638">            BlockCommentBuilder comment = new BlockCommentBuilder(writer);</span>
 
-<span class="fc bfc" id="L618" title="All 2 branches covered.">            if (method.getMethod().getDocumentation() != null) {</span>
-<span class="fc" id="L619">                comment.comment(method.getMethod().getDocumentation())</span>
-<span class="fc" id="L620">                       .newline();</span>
+<span class="fc bfc" id="L640" title="All 2 branches covered.">            if (method.getMethod().getDocumentation() != null) {</span>
+<span class="fc" id="L641">                comment.comment(method.getMethod().getDocumentation())</span>
+<span class="fc" id="L642">                       .newline();</span>
             }
 
-<span class="fc bfc" id="L623" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
-<span class="pc bpc" id="L624" title="1 of 2 branches missed.">                if (param.comment() != null) {</span>
-<span class="nc" id="L625">                    comment.param_(param.param(), param.comment());</span>
+<span class="fc bfc" id="L645" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
+<span class="pc bpc" id="L646" title="1 of 2 branches missed.">                if (param.comment() != null) {</span>
+<span class="nc" id="L647">                    comment.param_(param.param(), param.comment());</span>
                 } else {
-<span class="fc" id="L627">                    comment.param_(param.param(), &quot;The &quot; + param.name() + &quot; value.&quot;);</span>
+<span class="fc" id="L649">                    comment.param_(param.param(), &quot;The &quot; + param.name() + &quot; value.&quot;);</span>
                 }
             }
 
-<span class="fc bfc" id="L631" title="All 2 branches covered.">            if (method.getResponse() != null &amp;&amp;</span>
-<span class="fc bfc" id="L632" title="All 2 branches covered.">                    !method.getResponse().isVoid()) {</span>
-<span class="fc" id="L633">                comment.return_(&quot;The &quot; + method.name() + &quot; result.&quot;);</span>
+<span class="fc bfc" id="L653" title="All 2 branches covered.">            if (method.getResponse() != null &amp;&amp;</span>
+<span class="fc bfc" id="L654" title="All 2 branches covered.">                    !method.getResponse().isVoid()) {</span>
+<span class="fc" id="L655">                comment.return_(&quot;The &quot; + method.name() + &quot; result.&quot;);</span>
             }
 
-<span class="fc bfc" id="L636" title="All 2 branches covered.">            if (methodThrows != null) {</span>
-<span class="fc" id="L637">                comment.throws_(methodThrows, &quot;On any declared exception.&quot;);</span>
+<span class="fc bfc" id="L658" title="All 2 branches covered.">            if (methodThrows != null) {</span>
+<span class="fc" id="L659">                comment.throws_(methodThrows, &quot;On any declared exception.&quot;);</span>
             } else {
-<span class="fc bfc" id="L639" title="All 2 branches covered.">                for (JField param : method.exceptions()) {</span>
-<span class="pc bpc" id="L640" title="1 of 2 branches missed.">                    if (param.comment() != null) {</span>
-<span class="nc" id="L641">                        comment.throws_(param.fieldType(), param.comment());</span>
+<span class="fc bfc" id="L661" title="All 2 branches covered.">                for (JField param : method.exceptions()) {</span>
+<span class="pc bpc" id="L662" title="1 of 2 branches missed.">                    if (param.comment() != null) {</span>
+<span class="nc" id="L663">                        comment.throws_(param.fieldType(), param.comment());</span>
                     } else {
-<span class="fc" id="L643">                        comment.throws_(param.fieldType(), &quot;The &quot; + param.name() + &quot; exception.&quot;);</span>
+<span class="fc" id="L665">                        comment.throws_(param.fieldType(), &quot;The &quot; + param.name() + &quot; exception.&quot;);</span>
                     }
                 }
             }
-<span class="fc" id="L647">            comment.throws_(IOException.class, &quot;On providence or non-declared exceptions.&quot;)</span>
-<span class="fc" id="L648">                   .finish();</span>
+<span class="fc" id="L669">            comment.throws_(IOException.class, &quot;On providence or non-declared exceptions.&quot;)</span>
+<span class="fc" id="L670">                   .finish();</span>
 
-<span class="fc" id="L650">            JField ret = method.getResponse();</span>
-<span class="fc bfc" id="L651" title="All 2 branches covered.">            if (ret != null) {</span>
-<span class="fc" id="L652">                writer.appendln(ret.valueType());</span>
+<span class="fc" id="L672">            JField ret = method.getResponse();</span>
+<span class="fc bfc" id="L673" title="All 2 branches covered.">            if (ret != null) {</span>
+<span class="fc" id="L674">                writer.appendln(ret.valueType());</span>
             } else {
-<span class="fc" id="L654">                writer.appendln(&quot;void&quot;);</span>
+<span class="fc" id="L676">                writer.appendln(&quot;void&quot;);</span>
             }
 
-<span class="fc" id="L657">            writer.format(&quot; %s(&quot;, method.methodName())</span>
-<span class="fc" id="L658">                  .begin(&quot;        &quot;);</span>
+<span class="fc" id="L679">            writer.format(&quot; %s(&quot;, method.methodName())</span>
+<span class="fc" id="L680">                  .begin(&quot;        &quot;);</span>
 
-<span class="fc" id="L660">            boolean first = true;</span>
-<span class="fc bfc" id="L661" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
-<span class="fc bfc" id="L662" title="All 2 branches covered.">                if (first) {</span>
-<span class="fc" id="L663">                    first = false;</span>
+<span class="fc" id="L682">            boolean first = true;</span>
+<span class="fc bfc" id="L683" title="All 2 branches covered.">            for (JField param : method.params()) {</span>
+<span class="fc bfc" id="L684" title="All 2 branches covered.">                if (first) {</span>
+<span class="fc" id="L685">                    first = false;</span>
                 } else {
-<span class="fc" id="L665">                    writer.append(&quot;,&quot;);</span>
+<span class="fc" id="L687">                    writer.append(&quot;,&quot;);</span>
                 }
-<span class="fc" id="L667">                writer.formatln(&quot;%s %s&quot;, param.valueType(), param.param());</span>
+<span class="fc" id="L689">                writer.formatln(&quot;%s %s&quot;, param.fieldType(), param.param());</span>
             }
 
-<span class="fc" id="L670">            writer.end()</span>
-<span class="fc" id="L671">                  .format(&quot;)&quot;);</span>
-<span class="fc" id="L672">            writer.formatln(&quot;        throws %s&quot;, IOException.class.getName())</span>
-<span class="fc" id="L673">                  .begin(&quot;               &quot;);</span>
-<span class="fc bfc" id="L674" title="All 2 branches covered.">            if (methodThrows != null) {</span>
-<span class="fc" id="L675">                writer.append(&quot;,&quot;);</span>
-<span class="fc" id="L676">                writer.formatln(&quot;%s&quot;, methodThrows);</span>
+<span class="fc" id="L692">            writer.end()</span>
+<span class="fc" id="L693">                  .format(&quot;)&quot;);</span>
+<span class="fc" id="L694">            writer.formatln(&quot;        throws %s&quot;, IOException.class.getName())</span>
+<span class="fc" id="L695">                  .begin(&quot;               &quot;);</span>
+<span class="fc bfc" id="L696" title="All 2 branches covered.">            if (methodThrows != null) {</span>
+<span class="fc" id="L697">                writer.append(&quot;,&quot;);</span>
+<span class="fc" id="L698">                writer.formatln(&quot;%s&quot;, methodThrows);</span>
             } else {
-<span class="fc bfc" id="L678" title="All 2 branches covered.">                for (JField ex : method.exceptions()) {</span>
-<span class="fc" id="L679">                    writer.append(&quot;,&quot;);</span>
-<span class="fc" id="L680">                    writer.appendln(ex.instanceType());</span>
+<span class="fc bfc" id="L700" title="All 2 branches covered.">                for (JField ex : method.exceptions()) {</span>
+<span class="fc" id="L701">                    writer.append(&quot;,&quot;);</span>
+<span class="fc" id="L702">                    writer.appendln(ex.instanceType());</span>
                 }
             }
-<span class="fc" id="L683">            writer.format(&quot;;&quot;)</span>
-<span class="fc" id="L684">                  .end();</span>
+<span class="fc" id="L705">            writer.format(&quot;;&quot;)</span>
+<span class="fc" id="L706">                  .end();</span>
         }
 
-<span class="fc" id="L687">        writer.end()</span>
-<span class="fc" id="L688">              .appendln('}')</span>
-<span class="fc" id="L689">              .newline();</span>
-<span class="fc" id="L690">    }</span>
+<span class="fc" id="L709">        writer.end()</span>
+<span class="fc" id="L710">              .appendln('}')</span>
+<span class="fc" id="L711">              .newline();</span>
+<span class="fc" id="L712">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

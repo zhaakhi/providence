@@ -163,31 +163,33 @@ public class TokenizerException extends SerializerException {
 <span class="fc" id="L163">                                     getLinePos(),</span>
 <span class="fc" id="L164">                                     getMessage());</span>
             }
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        } else if (file != null) {</span>
+<span class="fc" id="L167">            return String.format(&quot;Error in %s: %s&quot;, file, getMessage());</span>
         } else {
-<span class="fc" id="L167">            return String.format(&quot;Error: %s&quot;, getMessage());</span>
+<span class="fc" id="L169">            return String.format(&quot;Error: %s&quot;, getMessage());</span>
         }
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L173">        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(getClass())</span>
-<span class="fc" id="L174">                          .omitNullValues()</span>
-<span class="fc" id="L175">                          .addValue(getMessage())</span>
-<span class="fc" id="L176">                          .add(&quot;file&quot;, file);</span>
-<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (getExceptionType() != PApplicationExceptionType.PROTOCOL_ERROR) {</span>
-<span class="fc" id="L178">            helper.add(&quot;e&quot;, getExceptionType());</span>
+<span class="fc" id="L175">        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(getClass())</span>
+<span class="fc" id="L176">                          .omitNullValues()</span>
+<span class="fc" id="L177">                          .addValue(getMessage())</span>
+<span class="fc" id="L178">                          .add(&quot;file&quot;, file);</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (getExceptionType() != PApplicationExceptionType.PROTOCOL_ERROR) {</span>
+<span class="fc" id="L180">            helper.add(&quot;e&quot;, getExceptionType());</span>
         }
-<span class="fc bfc" id="L180" title="All 2 branches covered.">        if (!isNullOrEmpty(getLine())) {</span>
-<span class="fc" id="L181">            helper.add(&quot;line&quot;, lineNo);</span>
-<span class="fc" id="L182">            helper.add(&quot;pos&quot;, linePos);</span>
-<span class="fc" id="L183">            helper.add(&quot;len&quot;, length);</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        if (!isNullOrEmpty(getLine())) {</span>
+<span class="fc" id="L183">            helper.add(&quot;line&quot;, lineNo);</span>
+<span class="fc" id="L184">            helper.add(&quot;pos&quot;, linePos);</span>
+<span class="fc" id="L185">            helper.add(&quot;len&quot;, length);</span>
         }
-<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (!isNullOrEmpty(getMethodName())) {</span>
-<span class="fc" id="L186">            helper.add(&quot;method&quot;, getMethodName());</span>
-<span class="fc" id="L187">            helper.add(&quot;type&quot;, getCallType());</span>
-<span class="fc" id="L188">            helper.add(&quot;seq&quot;, getSequenceNo());</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        if (!isNullOrEmpty(getMethodName())) {</span>
+<span class="fc" id="L188">            helper.add(&quot;method&quot;, getMethodName());</span>
+<span class="fc" id="L189">            helper.add(&quot;type&quot;, getCallType());</span>
+<span class="fc" id="L190">            helper.add(&quot;seq&quot;, getSequenceNo());</span>
         }
-<span class="fc" id="L190">        return helper.toString();</span>
+<span class="fc" id="L192">        return helper.toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

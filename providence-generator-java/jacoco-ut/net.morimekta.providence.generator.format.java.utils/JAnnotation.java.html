@@ -24,40 +24,41 @@ import net.morimekta.providence.descriptor.PDescriptor;
 import net.morimekta.providence.reflect.contained.CAnnotatedDescriptor;
 import net.morimekta.providence.reflect.contained.CField;
 import net.morimekta.providence.util.ThriftAnnotation;
+import net.morimekta.providence.util.ThriftContainer;
 
 /**
  *
  */
-<span class="nc" id="L31">public class JAnnotation {</span>
+<span class="nc" id="L32">public class JAnnotation {</span>
     public static final String DEPRECATED = &quot;@Deprecated&quot;;
     public static final String NON_NULL = &quot;@javax.annotation.Nonnull&quot;;
     public static final String NULLABLE = &quot;@javax.annotation.Nullable&quot;;
 
     public static boolean isDeprecated(JField field) {
-<span class="fc" id="L37">        return isDeprecated(field.field());</span>
+<span class="fc" id="L38">        return isDeprecated(field.field());</span>
     }
 
     public static boolean isDeprecated(CAnnotatedDescriptor value) {
-<span class="fc" id="L41">        return value.hasAnnotation(ThriftAnnotation.DEPRECATED);</span>
+<span class="fc" id="L42">        return value.hasAnnotation(ThriftAnnotation.DEPRECATED);</span>
     }
 
     public static boolean isDeprecated(PDescriptor descriptor) {
-<span class="pc bpc" id="L45" title="2 of 4 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp; isDeprecated((CAnnotatedDescriptor) descriptor);</span>
+<span class="pc bpc" id="L46" title="2 of 4 branches missed.">        return descriptor instanceof CAnnotatedDescriptor &amp;&amp; isDeprecated((CAnnotatedDescriptor) descriptor);</span>
     }
 
-    static ContainerType containerType(CField field) {
-<span class="nc" id="L49">        return containerType((CAnnotatedDescriptor) field);</span>
+    static ThriftContainer containerType(CField field) {
+<span class="nc" id="L50">        return containerType((CAnnotatedDescriptor) field);</span>
     }
 
-    static ContainerType containerType(JField field) {
-<span class="fc" id="L53">        return containerType((CAnnotatedDescriptor) field.field());</span>
+    static ThriftContainer containerType(JField field) {
+<span class="fc" id="L54">        return containerType((CAnnotatedDescriptor) field.field());</span>
     }
 
-    private static ContainerType containerType(CAnnotatedDescriptor descriptor) {
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (descriptor.hasAnnotation(ThriftAnnotation.CONTAINER)) {</span>
-<span class="fc" id="L58">            return ContainerType.valueOf(descriptor.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
+    private static ThriftContainer containerType(CAnnotatedDescriptor descriptor) {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (descriptor.hasAnnotation(ThriftAnnotation.CONTAINER)) {</span>
+<span class="fc" id="L59">            return ThriftContainer.forName(descriptor.getAnnotationValue(ThriftAnnotation.CONTAINER));</span>
         }
-<span class="fc" id="L60">        return ContainerType.DEFAULT;</span>
+<span class="fc" id="L61">        return ThriftContainer.DEFAULT;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

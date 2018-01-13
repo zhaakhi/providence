@@ -21,6 +21,7 @@
 package net.morimekta.providence.reflect.parser;
 
 import net.morimekta.providence.descriptor.PEnumDescriptor;
+import net.morimekta.providence.descriptor.PRequirement;
 import net.morimekta.providence.model.ConstType;
 import net.morimekta.providence.model.Declaration;
 import net.morimekta.providence.model.EnumType;
@@ -78,720 +79,728 @@ import static net.morimekta.providence.reflect.parser.internal.ThriftTokenizer.k
  * @since 07.09.15
  */
 public class ThriftProgramParser implements ProgramParser {
-<span class="fc" id="L81">    private static final Pattern VALID_PROGRAM_NAME  = Pattern.compile(</span>
+<span class="fc" id="L82">    private static final Pattern VALID_PROGRAM_NAME  = Pattern.compile(</span>
             &quot;[-._a-zA-Z][-._a-zA-Z0-9]*&quot;);
-<span class="fc" id="L83">    public static final Pattern  VALID_NAMESPACE     = Pattern.compile(</span>
+<span class="fc" id="L84">    public static final Pattern  VALID_NAMESPACE     = Pattern.compile(</span>
             &quot;([_a-zA-Z][_a-zA-Z0-9]*[.])*[_a-zA-Z][_a-zA-Z0-9]*&quot;);
-<span class="fc" id="L85">    public static final Pattern  VALID_SDI_NAMESPACE = Pattern.compile(</span>
+<span class="fc" id="L86">    public static final Pattern  VALID_SDI_NAMESPACE = Pattern.compile(</span>
             &quot;([_a-zA-Z][-_a-zA-Z0-9]*[.])*[_a-zA-Z][-_a-zA-Z0-9]*&quot;);
 
     private final boolean requireFieldId;
     private final boolean requireEnumValue;
 
     public ThriftProgramParser() {
-<span class="fc" id="L92">        this(false, false);</span>
-<span class="fc" id="L93">    }</span>
+<span class="fc" id="L93">        this(false, false);</span>
+<span class="fc" id="L94">    }</span>
 
-<span class="fc" id="L95">    public ThriftProgramParser(boolean requireFieldId, boolean requireEnumValue) {</span>
-<span class="fc" id="L96">        this.requireFieldId = requireFieldId;</span>
-<span class="fc" id="L97">        this.requireEnumValue = requireEnumValue;</span>
-<span class="fc" id="L98">    }</span>
+<span class="fc" id="L96">    public ThriftProgramParser(boolean requireFieldId, boolean requireEnumValue) {</span>
+<span class="fc" id="L97">        this.requireFieldId = requireFieldId;</span>
+<span class="fc" id="L98">        this.requireEnumValue = requireEnumValue;</span>
+<span class="fc" id="L99">    }</span>
 
     @Override
     public ProgramType parse(InputStream in, File file, Collection&lt;File&gt; includeDirs) throws IOException {
         try {
-<span class="fc" id="L103">            return parseInternal(in, file, includeDirs);</span>
-<span class="fc" id="L104">        } catch (TokenizerException e) {</span>
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">            if (e.getFile() == null) {</span>
-<span class="fc" id="L106">                e.setFile(file.getName());</span>
+<span class="fc" id="L104">            return parseInternal(in, file, includeDirs);</span>
+<span class="fc" id="L105">        } catch (TokenizerException e) {</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">            if (e.getFile() == null) {</span>
+<span class="fc" id="L107">                e.setFile(file.getName());</span>
             }
-<span class="fc" id="L108">            throw e;</span>
+<span class="fc" id="L109">            throw e;</span>
         }
     }
 
     private ProgramType parseInternal(InputStream in, File file, Collection&lt;File&gt; includeDirs) throws IOException {
-<span class="fc" id="L113">        ProgramType._Builder program = ProgramType.builder();</span>
+<span class="fc" id="L114">        ProgramType._Builder program = ProgramType.builder();</span>
 
-<span class="fc" id="L115">        String programName = ReflectionUtils.programNameFromPath(file.getName());</span>
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (!VALID_PROGRAM_NAME.matcher(programName).matches()) {</span>
-<span class="nc" id="L117">            throw new ParseException(&quot;Program name \&quot;%s\&quot; derived from filename \&quot;%s\&quot; is not valid.&quot;,</span>
-<span class="nc" id="L118">                                     Strings.escape(programName),</span>
-<span class="nc" id="L119">                                     Strings.escape(file.getName()));</span>
+<span class="fc" id="L116">        String programName = ReflectionUtils.programNameFromPath(file.getName());</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if (!VALID_PROGRAM_NAME.matcher(programName).matches()) {</span>
+<span class="nc" id="L118">            throw new ParseException(&quot;Program name \&quot;%s\&quot; derived from filename \&quot;%s\&quot; is not valid.&quot;,</span>
+<span class="nc" id="L119">                                     Strings.escape(programName),</span>
+<span class="nc" id="L120">                                     Strings.escape(file.getName()));</span>
         }
-<span class="fc" id="L121">        program.setProgramName(programName);</span>
+<span class="fc" id="L122">        program.setProgramName(programName);</span>
 
-<span class="fc" id="L123">        List&lt;String&gt; include_files = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L124">        Set&lt;String&gt; includedPrograms = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L125">        Map&lt;String, String&gt; namespaces = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L124">        List&lt;String&gt; include_files = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L125">        Set&lt;String&gt; includedPrograms = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L126">        Map&lt;String, String&gt; namespaces = new LinkedHashMap&lt;&gt;();</span>
 
-<span class="fc" id="L127">        List&lt;Declaration&gt; declarations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L128">        List&lt;Declaration&gt; declarations = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L129">        ThriftTokenizer tokenizer = new ThriftTokenizer(in);</span>
+<span class="fc" id="L130">        ThriftTokenizer tokenizer = new ThriftTokenizer(in);</span>
 
-<span class="fc" id="L131">        boolean has_header = false;</span>
-<span class="fc" id="L132">        boolean hasDeclaration = false;</span>
+<span class="fc" id="L132">        boolean has_header = false;</span>
+<span class="fc" id="L133">        boolean hasDeclaration = false;</span>
 
-<span class="fc" id="L134">        String doc_string = null;</span>
+<span class="fc" id="L135">        String doc_string = null;</span>
         Token token;
-<span class="fc bfc" id="L136" title="All 2 branches covered.">        while ((token = tokenizer.next()) != null) {</span>
-<span class="fc bfc" id="L137" title="All 2 branches covered.">            if (token.strEquals(kLineCommentStart)) {</span>
-<span class="fc" id="L138">                doc_string = parseDocLine(tokenizer, doc_string);</span>
-<span class="fc" id="L139">                continue;</span>
-<span class="fc bfc" id="L140" title="All 2 branches covered.">            } else if (token.strEquals(kBlockCommentStart)) {</span>
-<span class="fc" id="L141">                doc_string = tokenizer.parseDocBlock();</span>
-<span class="fc" id="L142">                continue;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        while ((token = tokenizer.next()) != null) {</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">            if (token.strEquals(kLineCommentStart)) {</span>
+<span class="fc" id="L139">                doc_string = parseDocLine(tokenizer, doc_string);</span>
+<span class="fc" id="L140">                continue;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            } else if (token.strEquals(kBlockCommentStart)) {</span>
+<span class="fc" id="L142">                doc_string = tokenizer.parseDocBlock();</span>
+<span class="fc" id="L143">                continue;</span>
             }
 
-<span class="fc" id="L145">            String keyword = token.asString();</span>
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            if (!Model_Constants.kThriftKeywords.contains(keyword)) {</span>
-<span class="nc" id="L147">                throw tokenizer.failure(token,</span>
-<span class="nc" id="L148">                                        &quot;Unexpected token \'%s\'&quot;, token.asString());</span>
+<span class="fc" id="L146">            String keyword = token.asString();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">            if (!Model_Constants.kThriftKeywords.contains(keyword)) {</span>
+<span class="nc" id="L148">                throw tokenizer.failure(token,</span>
+<span class="nc" id="L149">                                        &quot;Unexpected token \'%s\'&quot;, token.asString());</span>
             }
-<span class="pc bpc" id="L150" title="11 of 36 branches missed.">            switch (keyword) {</span>
+<span class="pc bpc" id="L151" title="11 of 36 branches missed.">            switch (keyword) {</span>
                 case kNamespace:
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">                    if (hasDeclaration) {</span>
-<span class="nc" id="L153">                        throw tokenizer.failure(token,</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                    if (hasDeclaration) {</span>
+<span class="nc" id="L154">                        throw tokenizer.failure(token,</span>
                                                 &quot;Unexpected token 'namespace', expected type declaration&quot;);
                     }
-<span class="pc bpc" id="L156" title="1 of 4 branches missed.">                    if (doc_string != null &amp;&amp; !has_header) {</span>
-<span class="fc" id="L157">                        program.setDocumentation(doc_string);</span>
+<span class="pc bpc" id="L157" title="1 of 4 branches missed.">                    if (doc_string != null &amp;&amp; !has_header) {</span>
+<span class="fc" id="L158">                        program.setDocumentation(doc_string);</span>
                     }
-<span class="fc" id="L159">                    doc_string = null;</span>
-<span class="fc" id="L160">                    has_header = true;</span>
-<span class="fc" id="L161">                    parseNamespace(tokenizer, namespaces);</span>
-<span class="fc" id="L162">                    break;</span>
+<span class="fc" id="L160">                    doc_string = null;</span>
+<span class="fc" id="L161">                    has_header = true;</span>
+<span class="fc" id="L162">                    parseNamespace(tokenizer, namespaces);</span>
+<span class="fc" id="L163">                    break;</span>
                 case kInclude:
-<span class="fc bfc" id="L164" title="All 2 branches covered.">                    if (hasDeclaration) {</span>
-<span class="fc" id="L165">                        throw tokenizer.failure(token,</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">                    if (hasDeclaration) {</span>
+<span class="fc" id="L166">                        throw tokenizer.failure(token,</span>
                                                 &quot;Unexpected token 'include', expected type declaration&quot;);
                     }
-<span class="pc bpc" id="L168" title="3 of 4 branches missed.">                    if (doc_string != null &amp;&amp; !has_header) {</span>
-<span class="nc" id="L169">                        program.setDocumentation(doc_string);</span>
+<span class="pc bpc" id="L169" title="3 of 4 branches missed.">                    if (doc_string != null &amp;&amp; !has_header) {</span>
+<span class="nc" id="L170">                        program.setDocumentation(doc_string);</span>
                     }
-<span class="fc" id="L171">                    doc_string = null;</span>
-<span class="fc" id="L172">                    has_header = true;</span>
-<span class="fc" id="L173">                    parseIncludes(tokenizer, include_files, file, includedPrograms, includeDirs);</span>
-<span class="fc" id="L174">                    break;</span>
+<span class="fc" id="L172">                    doc_string = null;</span>
+<span class="fc" id="L173">                    has_header = true;</span>
+<span class="fc" id="L174">                    parseIncludes(tokenizer, include_files, file, includedPrograms, includeDirs);</span>
+<span class="fc" id="L175">                    break;</span>
                 case kTypedef:
-<span class="fc" id="L176">                    has_header = true;</span>
-<span class="fc" id="L177">                    hasDeclaration = true;</span>
-<span class="fc" id="L178">                    parseTypedef(tokenizer, doc_string, declarations, includedPrograms);</span>
-<span class="fc" id="L179">                    doc_string = null;</span>
-<span class="fc" id="L180">                    break;</span>
+<span class="fc" id="L177">                    has_header = true;</span>
+<span class="fc" id="L178">                    hasDeclaration = true;</span>
+<span class="fc" id="L179">                    parseTypedef(tokenizer, doc_string, declarations, includedPrograms);</span>
+<span class="fc" id="L180">                    doc_string = null;</span>
+<span class="fc" id="L181">                    break;</span>
                 case kEnum:
-<span class="fc" id="L182">                    has_header = true;</span>
-<span class="fc" id="L183">                    hasDeclaration = true;</span>
-<span class="fc" id="L184">                    EnumType et = parseEnum(tokenizer, doc_string);</span>
-<span class="fc" id="L185">                    declarations.add(Declaration.withDeclEnum(et));</span>
-<span class="fc" id="L186">                    doc_string = null;</span>
-<span class="fc" id="L187">                    break;</span>
+<span class="fc" id="L183">                    has_header = true;</span>
+<span class="fc" id="L184">                    hasDeclaration = true;</span>
+<span class="fc" id="L185">                    EnumType et = parseEnum(tokenizer, doc_string);</span>
+<span class="fc" id="L186">                    declarations.add(Declaration.withDeclEnum(et));</span>
+<span class="fc" id="L187">                    doc_string = null;</span>
+<span class="fc" id="L188">                    break;</span>
                 case kStruct:
                 case kUnion:
                 case kException:
-<span class="fc" id="L191">                    has_header = true;</span>
-<span class="fc" id="L192">                    hasDeclaration = true;</span>
-<span class="fc" id="L193">                    MessageType st = parseMessage(tokenizer, token.asString(), doc_string, includedPrograms);</span>
-<span class="fc" id="L194">                    declarations.add(Declaration.withDeclStruct(st));</span>
-<span class="fc" id="L195">                    doc_string = null;</span>
-<span class="fc" id="L196">                    break;</span>
+<span class="fc" id="L192">                    has_header = true;</span>
+<span class="fc" id="L193">                    hasDeclaration = true;</span>
+<span class="fc" id="L194">                    MessageType st = parseMessage(tokenizer, token.asString(), doc_string, includedPrograms);</span>
+<span class="fc" id="L195">                    declarations.add(Declaration.withDeclStruct(st));</span>
+<span class="fc" id="L196">                    doc_string = null;</span>
+<span class="fc" id="L197">                    break;</span>
                 case kService:
-<span class="fc" id="L198">                    has_header = true;</span>
-<span class="fc" id="L199">                    hasDeclaration = true;</span>
-<span class="fc" id="L200">                    ServiceType srv = parseService(tokenizer, doc_string, includedPrograms);</span>
-<span class="fc" id="L201">                    declarations.add(Declaration.withDeclService(srv));</span>
-<span class="fc" id="L202">                    doc_string = null;</span>
-<span class="fc" id="L203">                    break;</span>
+<span class="fc" id="L199">                    has_header = true;</span>
+<span class="fc" id="L200">                    hasDeclaration = true;</span>
+<span class="fc" id="L201">                    ServiceType srv = parseService(tokenizer, doc_string, includedPrograms);</span>
+<span class="fc" id="L202">                    declarations.add(Declaration.withDeclService(srv));</span>
+<span class="fc" id="L203">                    doc_string = null;</span>
+<span class="fc" id="L204">                    break;</span>
                 case kConst:
-<span class="fc" id="L205">                    has_header = true;</span>
-<span class="fc" id="L206">                    hasDeclaration = true;</span>
-<span class="fc" id="L207">                    ConstType cnst = parseConst(tokenizer, doc_string, includedPrograms);</span>
-<span class="fc" id="L208">                    declarations.add(Declaration.withDeclConst(cnst));</span>
-<span class="fc" id="L209">                    doc_string = null;</span>
-<span class="fc" id="L210">                    break;</span>
+<span class="fc" id="L206">                    has_header = true;</span>
+<span class="fc" id="L207">                    hasDeclaration = true;</span>
+<span class="fc" id="L208">                    ConstType cnst = parseConst(tokenizer, doc_string, includedPrograms);</span>
+<span class="fc" id="L209">                    declarations.add(Declaration.withDeclConst(cnst));</span>
+<span class="fc" id="L210">                    doc_string = null;</span>
+<span class="fc" id="L211">                    break;</span>
                 default:
-<span class="nc" id="L212">                    throw tokenizer.failure(token,</span>
+<span class="nc" id="L213">                    throw tokenizer.failure(token,</span>
                                             &quot;Unexpected token \'%s\'&quot;,
-<span class="nc" id="L214">                                            Strings.escape(token.asString()));</span>
+<span class="nc" id="L215">                                            Strings.escape(token.asString()));</span>
             }
-<span class="fc" id="L216">        }</span>
+<span class="fc" id="L217">        }</span>
 
-<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (namespaces.size() &gt; 0) {</span>
-<span class="fc" id="L219">            program.setNamespaces(namespaces);</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (namespaces.size() &gt; 0) {</span>
+<span class="fc" id="L220">            program.setNamespaces(namespaces);</span>
         }
-<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (include_files.size() &gt; 0) {</span>
-<span class="fc" id="L222">            program.setIncludes(include_files);</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        if (include_files.size() &gt; 0) {</span>
+<span class="fc" id="L223">            program.setIncludes(include_files);</span>
         }
-<span class="pc bpc" id="L224" title="1 of 2 branches missed.">        if (declarations.size() &gt; 0) {</span>
-<span class="fc" id="L225">            program.setDecl(declarations);</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">        if (declarations.size() &gt; 0) {</span>
+<span class="fc" id="L226">            program.setDecl(declarations);</span>
         }
 
-<span class="fc" id="L228">        return program.build();</span>
+<span class="fc" id="L229">        return program.build();</span>
     }
 
     private ConstType parseConst(ThriftTokenizer tokenizer, String comment, Set&lt;String&gt; includedPrograms) throws IOException {
-<span class="pc bpc" id="L232" title="3 of 4 branches missed.">        Token token = tokenizer.expect(&quot;const typename&quot;, t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
-<span class="fc" id="L233">        String type = parseType(tokenizer, token, includedPrograms);</span>
-<span class="fc" id="L234">        Token id = tokenizer.expectIdentifier(&quot;const identifier&quot;);</span>
+<span class="pc bpc" id="L233" title="3 of 4 branches missed.">        Token token = tokenizer.expect(&quot;const typename&quot;, t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
+<span class="fc" id="L234">        String type = parseType(tokenizer, token, includedPrograms);</span>
+<span class="fc" id="L235">        Token id = tokenizer.expectIdentifier(&quot;const identifier&quot;);</span>
 
-<span class="fc" id="L236">        tokenizer.expectSymbol(&quot;const value separator&quot;, Token.kFieldValueSep);</span>
+<span class="fc" id="L237">        tokenizer.expectSymbol(&quot;const value separator&quot;, Token.kFieldValueSep);</span>
 
-<span class="fc" id="L238">        Token value = tokenizer.parseValue();</span>
-<span class="pc bpc" id="L239" title="1 of 2 branches missed.">        if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L240">            Token sep = tokenizer.peek(&quot;&quot;);</span>
-<span class="pc bpc" id="L241" title="2 of 4 branches missed.">            if (sep.isSymbol(Token.kLineSep1) || sep.isSymbol(Token.kLineSep2)) {</span>
-<span class="fc" id="L242">                tokenizer.next();</span>
+<span class="fc" id="L239">        Token value = tokenizer.parseValue();</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L241">            Token sep = tokenizer.peek(&quot;&quot;);</span>
+<span class="pc bpc" id="L242" title="2 of 4 branches missed.">            if (sep.isSymbol(Token.kLineSep1) || sep.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L243">                tokenizer.next();</span>
             }
         }
 
-<span class="fc" id="L246">        return ConstType.builder()</span>
-<span class="fc" id="L247">                        .setDocumentation(comment)</span>
-<span class="fc" id="L248">                        .setName(id.asString())</span>
-<span class="fc" id="L249">                        .setType(type)</span>
-<span class="fc" id="L250">                        .setValue(value.asString())</span>
-<span class="fc" id="L251">                        .setStartLineNo(value.getLineNo())</span>
-<span class="fc" id="L252">                        .setStartLinePos(value.getLinePos())</span>
-<span class="fc" id="L253">                        .build();</span>
+<span class="fc" id="L247">        return ConstType.builder()</span>
+<span class="fc" id="L248">                        .setDocumentation(comment)</span>
+<span class="fc" id="L249">                        .setName(id.asString())</span>
+<span class="fc" id="L250">                        .setType(type)</span>
+<span class="fc" id="L251">                        .setValue(value.asString())</span>
+<span class="fc" id="L252">                        .setStartLineNo(value.getLineNo())</span>
+<span class="fc" id="L253">                        .setStartLinePos(value.getLinePos())</span>
+<span class="fc" id="L254">                        .build();</span>
     }
 
     private String parseDocLine(ThriftTokenizer tokenizer, String comment) throws IOException {
-<span class="fc" id="L257">        String line = IOUtils.readString(tokenizer, &quot;\n&quot;).trim();</span>
-<span class="fc bfc" id="L258" title="All 2 branches covered.">        if (comment != null) {</span>
-<span class="fc" id="L259">            return comment + &quot;\n&quot; + line;</span>
+<span class="fc" id="L258">        String line = IOUtils.readString(tokenizer, &quot;\n&quot;).trim();</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        if (comment != null) {</span>
+<span class="fc" id="L260">            return comment + &quot;\n&quot; + line;</span>
         }
-<span class="fc" id="L261">        return line;</span>
+<span class="fc" id="L262">        return line;</span>
     }
 
     private ServiceType parseService(ThriftTokenizer tokenizer, String doc_string, Set&lt;String&gt; includedPrograms) throws IOException {
-<span class="fc" id="L265">        ServiceType._Builder service = ServiceType.builder();</span>
+<span class="fc" id="L266">        ServiceType._Builder service = ServiceType.builder();</span>
 
-<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (doc_string != null) {</span>
-<span class="fc" id="L268">            service.setDocumentation(doc_string);</span>
-<span class="fc" id="L269">            doc_string = null;</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">        if (doc_string != null) {</span>
+<span class="fc" id="L269">            service.setDocumentation(doc_string);</span>
+<span class="fc" id="L270">            doc_string = null;</span>
         }
-<span class="fc" id="L271">        Token identifier = tokenizer.expectIdentifier(&quot;service name&quot;);</span>
-<span class="fc" id="L272">        service.setName(identifier.asString());</span>
+<span class="fc" id="L272">        Token identifier = tokenizer.expectIdentifier(&quot;service name&quot;);</span>
+<span class="fc" id="L273">        service.setName(identifier.asString());</span>
 
-<span class="fc bfc" id="L274" title="All 2 branches covered.">        if (tokenizer.peek(&quot;service start or extends&quot;).strEquals(kExtends)) {</span>
-<span class="fc" id="L275">            tokenizer.next();</span>
-<span class="fc" id="L276">            service.setExtend(tokenizer.expect(&quot;service extending identifier&quot;,</span>
-<span class="pc bpc" id="L277" title="1 of 4 branches missed.">                                               t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()).asString());</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (tokenizer.peek(&quot;service start or extends&quot;).strEquals(kExtends)) {</span>
+<span class="fc" id="L276">            tokenizer.next();</span>
+<span class="fc" id="L277">            service.setExtend(tokenizer.expect(&quot;service extending identifier&quot;,</span>
+<span class="pc bpc" id="L278" title="1 of 4 branches missed.">                                               t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()).asString());</span>
         }
 
-<span class="fc" id="L280">        tokenizer.expectSymbol(&quot;reading service start&quot;, Token.kMessageStart);</span>
+<span class="fc" id="L281">        tokenizer.expectSymbol(&quot;reading service start&quot;, Token.kMessageStart);</span>
 
-<span class="fc" id="L282">        Set&lt;String&gt; methodNames = new TreeSet&lt;&gt;();</span>
+<span class="fc" id="L283">        Set&lt;String&gt; methodNames = new TreeSet&lt;&gt;();</span>
 
         while (true) {
-<span class="fc" id="L285">            Token token = tokenizer.expect(&quot;service method initializer&quot;);</span>
-<span class="fc bfc" id="L286" title="All 2 branches covered.">            if (token.isSymbol(Token.kMessageEnd)) {</span>
-<span class="fc" id="L287">                break;</span>
-<span class="fc bfc" id="L288" title="All 2 branches covered.">            } else if (token.strEquals(kLineCommentStart)) {</span>
-<span class="fc" id="L289">                doc_string = parseDocLine(tokenizer, doc_string);</span>
-<span class="fc" id="L290">                continue;</span>
-<span class="fc bfc" id="L291" title="All 2 branches covered.">            } else if (token.strEquals(kBlockCommentStart)) {</span>
-<span class="fc" id="L292">                doc_string = tokenizer.parseDocBlock();</span>
-<span class="fc" id="L293">                continue;</span>
+<span class="fc" id="L286">            Token token = tokenizer.expect(&quot;service method initializer&quot;);</span>
+<span class="fc bfc" id="L287" title="All 2 branches covered.">            if (token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L288">                break;</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">            } else if (token.strEquals(kLineCommentStart)) {</span>
+<span class="fc" id="L290">                doc_string = parseDocLine(tokenizer, doc_string);</span>
+<span class="fc" id="L291">                continue;</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">            } else if (token.strEquals(kBlockCommentStart)) {</span>
+<span class="fc" id="L293">                doc_string = tokenizer.parseDocBlock();</span>
+<span class="fc" id="L294">                continue;</span>
             }
 
-<span class="fc" id="L296">            FunctionType._Builder method = FunctionType.builder();</span>
-<span class="fc bfc" id="L297" title="All 2 branches covered.">            if (doc_string != null) {</span>
-<span class="fc" id="L298">                method.setDocumentation(doc_string);</span>
-<span class="fc" id="L299">                doc_string = null;</span>
+<span class="fc" id="L297">            FunctionType._Builder method = FunctionType.builder();</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">            if (doc_string != null) {</span>
+<span class="fc" id="L299">                method.setDocumentation(doc_string);</span>
+<span class="fc" id="L300">                doc_string = null;</span>
             }
 
-<span class="fc bfc" id="L302" title="All 2 branches covered.">            if (token.strEquals(kOneway)) {</span>
-<span class="fc" id="L303">                method.setOneWay(true);</span>
-<span class="fc" id="L304">                token = tokenizer.expect(&quot;service method type&quot;);</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">            if (token.strEquals(kOneway)) {</span>
+<span class="fc" id="L304">                method.setOneWay(true);</span>
+<span class="fc" id="L305">                token = tokenizer.expect(&quot;service method type&quot;);</span>
             }
 
-<span class="fc bfc" id="L307" title="All 2 branches covered.">            if (!token.strEquals(kVoid)) {</span>
-<span class="pc bpc" id="L308" title="1 of 2 branches missed.">                if (method.isSetOneWay()) {</span>
-<span class="nc" id="L309">                    throw tokenizer.failure(token,</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">            if (!token.strEquals(kVoid)) {</span>
+<span class="pc bpc" id="L309" title="1 of 2 branches missed.">                if (method.isSetOneWay()) {</span>
+<span class="nc" id="L310">                    throw tokenizer.failure(token,</span>
                                             &quot;Oneway methods must have void return type, found '%s'&quot;,
-<span class="nc" id="L311">                                            Strings.escape(token.asString()));</span>
+<span class="nc" id="L312">                                            Strings.escape(token.asString()));</span>
                 }
-<span class="fc" id="L313">                method.setReturnType(parseType(tokenizer, token, includedPrograms));</span>
+<span class="fc" id="L314">                method.setReturnType(parseType(tokenizer, token, includedPrograms));</span>
             }
 
-<span class="fc" id="L316">            String name = tokenizer.expectIdentifier(&quot;method name&quot;).asString();</span>
-<span class="fc" id="L317">            String normalized = Strings.camelCase(&quot;&quot;, name);</span>
-<span class="pc bpc" id="L318" title="1 of 2 branches missed.">            if (methodNames.contains(normalized)) {</span>
-<span class="nc" id="L319">                throw tokenizer.failure(token,</span>
+<span class="fc" id="L317">            String name = tokenizer.expectIdentifier(&quot;method name&quot;).asString();</span>
+<span class="fc" id="L318">            String normalized = Strings.camelCase(&quot;&quot;, name);</span>
+<span class="pc bpc" id="L319" title="1 of 2 branches missed.">            if (methodNames.contains(normalized)) {</span>
+<span class="nc" id="L320">                throw tokenizer.failure(token,</span>
                                          &quot;Service method &quot; + name +
                                          &quot; has normalized name conflict&quot;);
             }
-<span class="fc" id="L323">            methodNames.add(normalized);</span>
+<span class="fc" id="L324">            methodNames.add(normalized);</span>
 
-<span class="fc" id="L325">            method.setName(name);</span>
+<span class="fc" id="L326">            method.setName(name);</span>
 
-<span class="fc" id="L327">            tokenizer.expectSymbol(&quot;method params begin&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L328">            tokenizer.expectSymbol(&quot;method params begin&quot;, Token.kParamsStart);</span>
 
-<span class="fc" id="L329">            int nextAutoParamKey = -1;</span>
+<span class="fc" id="L330">            int nextAutoParamKey = -1;</span>
             while (true) {
-<span class="fc" id="L331">                token = tokenizer.expect(&quot;method params&quot;);</span>
-<span class="fc bfc" id="L332" title="All 2 branches covered.">                if (token.isSymbol(Token.kParamsEnd)) {</span>
-<span class="fc" id="L333">                    break;</span>
-<span class="pc bpc" id="L334" title="1 of 2 branches missed.">                } else if (token.strEquals(kLineCommentStart)) {</span>
-<span class="nc" id="L335">                    doc_string = parseDocLine(tokenizer, doc_string);</span>
-<span class="nc" id="L336">                    continue;</span>
-<span class="pc bpc" id="L337" title="1 of 2 branches missed.">                } else if (token.strEquals(kBlockCommentStart)) {</span>
-<span class="nc" id="L338">                    doc_string = tokenizer.parseDocBlock();</span>
-<span class="nc" id="L339">                    continue;</span>
+<span class="fc" id="L332">                token = tokenizer.expect(&quot;method params&quot;);</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">                if (token.isSymbol(Token.kParamsEnd)) {</span>
+<span class="fc" id="L334">                    break;</span>
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">                } else if (token.strEquals(kLineCommentStart)) {</span>
+<span class="nc" id="L336">                    doc_string = parseDocLine(tokenizer, doc_string);</span>
+<span class="nc" id="L337">                    continue;</span>
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">                } else if (token.strEquals(kBlockCommentStart)) {</span>
+<span class="nc" id="L339">                    doc_string = tokenizer.parseDocBlock();</span>
+<span class="nc" id="L340">                    continue;</span>
                 }
 
-<span class="fc" id="L342">                FieldType._Builder field = FieldType.builder();</span>
-<span class="pc bpc" id="L343" title="1 of 2 branches missed.">                if (doc_string != null) {</span>
-<span class="nc" id="L344">                    field.setDocumentation(doc_string);</span>
-<span class="nc" id="L345">                    doc_string = null;</span>
+<span class="fc" id="L343">                FieldType._Builder field = FieldType.builder();</span>
+<span class="pc bpc" id="L344" title="1 of 2 branches missed.">                if (doc_string != null) {</span>
+<span class="nc" id="L345">                    field.setDocumentation(doc_string);</span>
+<span class="nc" id="L346">                    doc_string = null;</span>
                 }
 
-<span class="fc bfc" id="L348" title="All 2 branches covered.">                if (token.isInteger()) {</span>
-<span class="fc" id="L349">                    field.setId((int) token.parseInteger());</span>
-<span class="fc" id="L350">                    tokenizer.expectSymbol(&quot;params kv sep&quot;, Token.kKeyValueSep);</span>
-<span class="fc" id="L351">                    token = tokenizer.expect(&quot;param type&quot;);</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                if (token.isInteger()) {</span>
+<span class="fc" id="L350">                    field.setId((int) token.parseInteger());</span>
+<span class="fc" id="L351">                    tokenizer.expectSymbol(&quot;params kv sep&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L352">                    token = tokenizer.expect(&quot;param type&quot;);</span>
                 } else {
-<span class="pc bpc" id="L353" title="1 of 2 branches missed.">                    if (requireFieldId) {</span>
-<span class="nc" id="L354">                        throw tokenizer.failure(token, &quot;Missing param ID in strict declaration&quot;);</span>
+<span class="pc bpc" id="L354" title="1 of 2 branches missed.">                    if (requireFieldId) {</span>
+<span class="nc" id="L355">                        throw tokenizer.failure(token, &quot;Missing param ID in strict declaration&quot;);</span>
                     }
-<span class="fc" id="L356">                    field.setId(nextAutoParamKey--);</span>
+<span class="fc" id="L357">                    field.setId(nextAutoParamKey--);</span>
                 }
 
-<span class="fc" id="L359">                field.setType(parseType(tokenizer, token, includedPrograms));</span>
-<span class="fc" id="L360">                field.setName(tokenizer.expectIdentifier(&quot;param name&quot;)</span>
-<span class="fc" id="L361">                                       .asString());</span>
+<span class="fc bfc" id="L360" title="All 2 branches covered.">                if (PRequirement.OPTIONAL.label.equals(token.asString())) {</span>
+<span class="fc" id="L361">                    field.setRequirement(FieldRequirement.OPTIONAL);</span>
+<span class="fc" id="L362">                    token = tokenizer.expect(&quot;param type&quot;);</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">                } else if (PRequirement.REQUIRED.label.equals(token.asString())) {</span>
+<span class="fc" id="L364">                    field.setRequirement(FieldRequirement.REQUIRED);</span>
+<span class="fc" id="L365">                    token = tokenizer.expect(&quot;param type&quot;);</span>
+                }
+
+<span class="fc" id="L368">                field.setType(parseType(tokenizer, token, includedPrograms));</span>
+<span class="fc" id="L369">                field.setName(tokenizer.expectIdentifier(&quot;param name&quot;)</span>
+<span class="fc" id="L370">                                       .asString());</span>
 
                 // Annotations.
-<span class="fc" id="L364">                if (tokenizer.peek(&quot;method param annotation&quot;)</span>
-<span class="fc bfc" id="L365" title="All 2 branches covered.">                             .isSymbol(Token.kParamsStart)) {</span>
-<span class="fc" id="L366">                    tokenizer.next();</span>
-<span class="fc" id="L367">                    field.setAnnotations(parseAnnotations(tokenizer, &quot;params&quot;));</span>
+<span class="fc" id="L373">                if (tokenizer.peek(&quot;method param annotation&quot;)</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">                             .isSymbol(Token.kParamsStart)) {</span>
+<span class="fc" id="L375">                    tokenizer.next();</span>
+<span class="fc" id="L376">                    field.setAnnotations(parseAnnotations(tokenizer, &quot;params&quot;));</span>
                 }
 
-<span class="fc" id="L370">                token = tokenizer.peek(&quot;method params&quot;);</span>
-<span class="pc bpc" id="L371" title="1 of 4 branches missed.">                if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
-<span class="fc" id="L372">                    tokenizer.next();</span>
+<span class="fc" id="L379">                token = tokenizer.peek(&quot;method params&quot;);</span>
+<span class="pc bpc" id="L380" title="1 of 4 branches missed.">                if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L381">                    tokenizer.next();</span>
                 }
 
-<span class="fc" id="L375">                method.addToParams(field.build());</span>
-<span class="fc" id="L376">            }  // for each param</span>
-<span class="fc" id="L377">            doc_string = null;</span>
+<span class="fc" id="L384">                method.addToParams(field.build());</span>
+<span class="fc" id="L385">            }  // for each param</span>
+<span class="fc" id="L386">            doc_string = null;</span>
 
-<span class="fc" id="L379">            if (tokenizer.peek(&quot;possible throws statement&quot;)</span>
-<span class="fc bfc" id="L380" title="All 2 branches covered.">                         .strEquals(kThrows)) {</span>
-<span class="fc" id="L381">                tokenizer.next();</span>
-<span class="fc" id="L382">                tokenizer.expectSymbol(&quot;throws group start&quot;, Token.kParamsStart);</span>
+<span class="fc" id="L388">            if (tokenizer.peek(&quot;possible throws statement&quot;)</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">                         .strEquals(kThrows)) {</span>
+<span class="fc" id="L390">                tokenizer.next();</span>
+<span class="fc" id="L391">                tokenizer.expectSymbol(&quot;throws group start&quot;, Token.kParamsStart);</span>
 
-<span class="fc" id="L384">                int nextAutoExceptionKey = -1;</span>
+<span class="fc" id="L393">                int nextAutoExceptionKey = -1;</span>
 
                 while (true) {
-<span class="fc" id="L387">                    token = tokenizer.expect(&quot;exception key, type or end throws&quot;);</span>
+<span class="fc" id="L396">                    token = tokenizer.expect(&quot;exception key, type or end throws&quot;);</span>
 
-<span class="fc bfc" id="L389" title="All 2 branches covered.">                    if (token.isSymbol(Token.kParamsEnd)) {</span>
-<span class="fc" id="L390">                        break;</span>
-<span class="pc bpc" id="L391" title="1 of 2 branches missed.">                    } else if (token.strEquals(kLineCommentStart)) {</span>
-<span class="nc" id="L392">                        doc_string = parseDocLine(tokenizer, doc_string);</span>
-<span class="nc" id="L393">                        continue;</span>
-<span class="pc bpc" id="L394" title="1 of 2 branches missed.">                    } else if (token.strEquals(kBlockCommentStart)) {</span>
-<span class="nc" id="L395">                        doc_string = tokenizer.parseDocBlock();</span>
-<span class="nc" id="L396">                        continue;</span>
+<span class="fc bfc" id="L398" title="All 2 branches covered.">                    if (token.isSymbol(Token.kParamsEnd)) {</span>
+<span class="fc" id="L399">                        break;</span>
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">                    } else if (token.strEquals(kLineCommentStart)) {</span>
+<span class="nc" id="L401">                        doc_string = parseDocLine(tokenizer, doc_string);</span>
+<span class="nc" id="L402">                        continue;</span>
+<span class="pc bpc" id="L403" title="1 of 2 branches missed.">                    } else if (token.strEquals(kBlockCommentStart)) {</span>
+<span class="nc" id="L404">                        doc_string = tokenizer.parseDocBlock();</span>
+<span class="nc" id="L405">                        continue;</span>
                     }
 
-<span class="fc" id="L399">                    FieldType._Builder field = FieldType.builder();</span>
-<span class="pc bpc" id="L400" title="1 of 2 branches missed.">                    if (doc_string != null) {</span>
-<span class="nc" id="L401">                        field.setDocumentation(doc_string);</span>
-<span class="nc" id="L402">                        doc_string = null;</span>
+<span class="fc" id="L408">                    FieldType._Builder field = FieldType.builder();</span>
+<span class="pc bpc" id="L409" title="1 of 2 branches missed.">                    if (doc_string != null) {</span>
+<span class="nc" id="L410">                        field.setDocumentation(doc_string);</span>
+<span class="nc" id="L411">                        doc_string = null;</span>
                     }
 
-<span class="fc bfc" id="L405" title="All 2 branches covered.">                    if (token.isInteger()) {</span>
-<span class="fc" id="L406">                        field.setId((int) token.parseInteger());</span>
-<span class="fc" id="L407">                        tokenizer.expectSymbol(&quot;exception KV sep&quot;, Token.kKeyValueSep);</span>
-<span class="fc" id="L408">                        token = tokenizer.expect(&quot;exception type&quot;);</span>
+<span class="fc bfc" id="L414" title="All 2 branches covered.">                    if (token.isInteger()) {</span>
+<span class="fc" id="L415">                        field.setId((int) token.parseInteger());</span>
+<span class="fc" id="L416">                        tokenizer.expectSymbol(&quot;exception KV sep&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L417">                        token = tokenizer.expect(&quot;exception type&quot;);</span>
                     } else {
-<span class="pc bpc" id="L410" title="1 of 2 branches missed.">                        if (requireFieldId) {</span>
-<span class="nc" id="L411">                            throw tokenizer.failure(token, &quot;Missing exception ID in strict declaration&quot;);</span>
+<span class="pc bpc" id="L419" title="1 of 2 branches missed.">                        if (requireFieldId) {</span>
+<span class="nc" id="L420">                            throw tokenizer.failure(token, &quot;Missing exception ID in strict declaration&quot;);</span>
                         }
-<span class="fc" id="L413">                        field.setId(nextAutoExceptionKey--);</span>
+<span class="fc" id="L422">                        field.setId(nextAutoExceptionKey--);</span>
                     }
 
-<span class="fc" id="L416">                    field.setType(parseType(tokenizer, token, includedPrograms));</span>
-<span class="fc" id="L417">                    field.setName(tokenizer.expectIdentifier(&quot;exception name&quot;)</span>
-<span class="fc" id="L418">                                           .asString());</span>
+<span class="fc" id="L425">                    field.setType(parseType(tokenizer, token, includedPrograms));</span>
+<span class="fc" id="L426">                    field.setName(tokenizer.expectIdentifier(&quot;exception name&quot;)</span>
+<span class="fc" id="L427">                                           .asString());</span>
 
                     // Annotations.
-<span class="fc" id="L421">                    if (tokenizer.peek(&quot;exception annotation start&quot;)</span>
-<span class="fc bfc" id="L422" title="All 2 branches covered.">                                 .isSymbol(Token.kParamsStart)) {</span>
-<span class="fc" id="L423">                        tokenizer.next();</span>
-<span class="fc" id="L424">                        field.setAnnotations(parseAnnotations(tokenizer, &quot;exception&quot;));</span>
+<span class="fc" id="L430">                    if (tokenizer.peek(&quot;exception annotation start&quot;)</span>
+<span class="fc bfc" id="L431" title="All 2 branches covered.">                                 .isSymbol(Token.kParamsStart)) {</span>
+<span class="fc" id="L432">                        tokenizer.next();</span>
+<span class="fc" id="L433">                        field.setAnnotations(parseAnnotations(tokenizer, &quot;exception&quot;));</span>
                     }
 
-<span class="fc" id="L427">                    method.addToExceptions(field.build());</span>
+<span class="fc" id="L436">                    method.addToExceptions(field.build());</span>
 
-<span class="fc" id="L429">                    token = tokenizer.peek(&quot;method exceptions&quot;);</span>
-<span class="pc bpc" id="L430" title="1 of 4 branches missed.">                    if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
-<span class="fc" id="L431">                        tokenizer.next();</span>
+<span class="fc" id="L438">                    token = tokenizer.peek(&quot;method exceptions&quot;);</span>
+<span class="pc bpc" id="L439" title="1 of 4 branches missed.">                    if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L440">                        tokenizer.next();</span>
                     }
-<span class="fc" id="L433">                }</span>
+<span class="fc" id="L442">                }</span>
             }
 
-<span class="fc" id="L436">            token = tokenizer.peek(&quot;&quot;);</span>
+<span class="fc" id="L445">            token = tokenizer.peek(&quot;&quot;);</span>
             // Method Annotations.
-<span class="fc bfc" id="L438" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
-<span class="fc" id="L439">                tokenizer.next();</span>
-<span class="fc" id="L440">                method.setAnnotations(parseAnnotations(tokenizer, &quot;method&quot;));</span>
-<span class="fc" id="L441">                token = tokenizer.peek(&quot;method or service end&quot;);</span>
+<span class="fc bfc" id="L447" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
+<span class="fc" id="L448">                tokenizer.next();</span>
+<span class="fc" id="L449">                method.setAnnotations(parseAnnotations(tokenizer, &quot;method&quot;));</span>
+<span class="fc" id="L450">                token = tokenizer.peek(&quot;method or service end&quot;);</span>
             }
 
-<span class="fc" id="L444">            service.addToMethods(method.build());</span>
+<span class="fc" id="L453">            service.addToMethods(method.build());</span>
 
-<span class="pc bpc" id="L446" title="1 of 4 branches missed.">            if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
-<span class="fc" id="L447">                tokenizer.next();</span>
+<span class="pc bpc" id="L455" title="1 of 4 branches missed.">            if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L456">                tokenizer.next();</span>
             }
-<span class="fc" id="L449">        }  // for each method-line</span>
+<span class="fc" id="L458">        }  // for each method-line</span>
 
-<span class="fc bfc" id="L451" title="All 2 branches covered.">        if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L452">            Token token = tokenizer.peek(&quot;optional annotations&quot;);</span>
-<span class="fc bfc" id="L453" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
+<span class="fc bfc" id="L460" title="All 2 branches covered.">        if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L461">            Token token = tokenizer.peek(&quot;optional annotations&quot;);</span>
+<span class="fc bfc" id="L462" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
                 // Method Annotations.
-<span class="fc" id="L455">                tokenizer.next();</span>
-<span class="fc" id="L456">                service.setAnnotations(parseAnnotations(tokenizer, &quot;service&quot;));</span>
+<span class="fc" id="L464">                tokenizer.next();</span>
+<span class="fc" id="L465">                service.setAnnotations(parseAnnotations(tokenizer, &quot;service&quot;));</span>
             }
         }
 
-<span class="fc" id="L460">        return service.build();</span>
+<span class="fc" id="L469">        return service.build();</span>
     }
 
     private Map&lt;String,String&gt; parseAnnotations(ThriftTokenizer tokenizer, String annotationsOn) throws IOException {
-<span class="fc" id="L464">        Map&lt;String,String&gt; annotations = new TreeMap&lt;&gt;();</span>
-<span class="fc" id="L465">        char sep = Token.kParamsStart;</span>
-<span class="fc bfc" id="L466" title="All 2 branches covered.">        while (sep != Token.kParamsEnd) {</span>
-<span class="fc" id="L467">            Token token = tokenizer.expect(annotationsOn + &quot; annotation name&quot;, Token::isReferenceIdentifier);</span>
-<span class="fc" id="L468">            String name = token.asString();</span>
-<span class="fc" id="L469">            sep = tokenizer.expectSymbol(annotationsOn + &quot; annotation KV, sep or end&quot;, Token.kFieldValueSep, Token.kParamsEnd, Token.kParamsEnd, Token.kLineSep1);</span>
-<span class="fc bfc" id="L470" title="All 2 branches covered.">            if (sep == Token.kFieldValueSep) {</span>
-<span class="fc" id="L471">                Token value = tokenizer.expectLiteral(annotationsOn + &quot; annotation value&quot;);</span>
-<span class="fc" id="L472">                annotations.put(name, value.decodeLiteral(true));</span>
-<span class="fc" id="L473">                sep = tokenizer.expectSymbol(annotationsOn + &quot; annotation sep or end&quot;, Token.kParamsEnd, Token.kLineSep1, Token.kLineSep2);</span>
-<span class="fc" id="L474">            } else {</span>
-<span class="fc" id="L475">                annotations.put(name, &quot;&quot;);</span>
+<span class="fc" id="L473">        Map&lt;String,String&gt; annotations = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L474">        char sep = Token.kParamsStart;</span>
+<span class="fc bfc" id="L475" title="All 2 branches covered.">        while (sep != Token.kParamsEnd) {</span>
+<span class="fc" id="L476">            Token token = tokenizer.expect(annotationsOn + &quot; annotation name&quot;, Token::isReferenceIdentifier);</span>
+<span class="fc" id="L477">            String name = token.asString();</span>
+<span class="fc" id="L478">            sep = tokenizer.expectSymbol(annotationsOn + &quot; annotation KV, sep or end&quot;, Token.kFieldValueSep, Token.kParamsEnd, Token.kParamsEnd, Token.kLineSep1);</span>
+<span class="fc bfc" id="L479" title="All 2 branches covered.">            if (sep == Token.kFieldValueSep) {</span>
+<span class="fc" id="L480">                Token value = tokenizer.expectLiteral(annotationsOn + &quot; annotation value&quot;);</span>
+<span class="fc" id="L481">                annotations.put(name, value.decodeLiteral(true));</span>
+<span class="fc" id="L482">                sep = tokenizer.expectSymbol(annotationsOn + &quot; annotation sep or end&quot;, Token.kParamsEnd, Token.kLineSep1, Token.kLineSep2);</span>
+<span class="fc" id="L483">            } else {</span>
+<span class="fc" id="L484">                annotations.put(name, &quot;&quot;);</span>
             }
-<span class="fc" id="L477">        }</span>
+<span class="fc" id="L486">        }</span>
 
-<span class="fc" id="L479">        return annotations;</span>
+<span class="fc" id="L488">        return annotations;</span>
     }
 
     private void parseNamespace(ThriftTokenizer tokenizer, Map&lt;String, String&gt; namespaces) throws IOException {
-<span class="fc" id="L483">        Token language = tokenizer.expect(&quot;namespace language&quot;,</span>
+<span class="fc" id="L492">        Token language = tokenizer.expect(&quot;namespace language&quot;,</span>
                                           Token::isReferenceIdentifier);
-<span class="pc bpc" id="L485" title="1 of 2 branches missed.">        if (namespaces.containsKey(language.asString())) {</span>
-<span class="nc" id="L486">            throw tokenizer.failure(language,</span>
+<span class="pc bpc" id="L494" title="1 of 2 branches missed.">        if (namespaces.containsKey(language.asString())) {</span>
+<span class="nc" id="L495">            throw tokenizer.failure(language,</span>
                                     &quot;Namespace for %s already defined.&quot;,
-<span class="nc" id="L488">                                    language.asString());</span>
+<span class="nc" id="L497">                                    language.asString());</span>
         }
 
-<span class="fc" id="L491">        Token namespace = tokenizer.expect(</span>
+<span class="fc" id="L500">        Token namespace = tokenizer.expect(</span>
                 &quot;namespace&quot;,
-<span class="pc bpc" id="L493" title="1 of 2 branches missed.">                t -&gt; VALID_NAMESPACE.matcher(t.asString()).matches() ||</span>
-<span class="pc bnc" id="L494" title="All 2 branches missed.">                     VALID_SDI_NAMESPACE.matcher(t.asString()).matches());</span>
+<span class="pc bpc" id="L502" title="1 of 2 branches missed.">                t -&gt; VALID_NAMESPACE.matcher(t.asString()).matches() ||</span>
+<span class="pc bnc" id="L503" title="All 2 branches missed.">                     VALID_SDI_NAMESPACE.matcher(t.asString()).matches());</span>
 
-<span class="fc" id="L496">        namespaces.put(language.asString(), namespace.asString());</span>
-<span class="fc" id="L497">    }</span>
+<span class="fc" id="L505">        namespaces.put(language.asString(), namespace.asString());</span>
+<span class="fc" id="L506">    }</span>
 
     private void parseIncludes(ThriftTokenizer tokenizer, List&lt;String&gt; includeFiles, File currentFile, Set&lt;String&gt; includePrograms, Collection&lt;File&gt; includeDirs) throws IOException {
-<span class="fc" id="L500">        Token include = tokenizer.expectLiteral(&quot;include file&quot;);</span>
-<span class="fc" id="L501">        String filePath = include.decodeLiteral(true);</span>
-<span class="pc bpc" id="L502" title="1 of 2 branches missed.">        if (!ReflectionUtils.isThriftFile(filePath)) {</span>
-<span class="nc" id="L503">            throw tokenizer.failure(include,</span>
+<span class="fc" id="L509">        Token include = tokenizer.expectLiteral(&quot;include file&quot;);</span>
+<span class="fc" id="L510">        String filePath = include.decodeLiteral(true);</span>
+<span class="pc bpc" id="L511" title="1 of 2 branches missed.">        if (!ReflectionUtils.isThriftFile(filePath)) {</span>
+<span class="nc" id="L512">            throw tokenizer.failure(include,</span>
                                     &quot;Include not valid for thrift files &quot; + filePath);
         }
-<span class="fc bfc" id="L506" title="All 2 branches covered.">        if (!includeExists(currentFile, filePath, includeDirs)) {</span>
-<span class="fc" id="L507">            throw tokenizer.failure(include, &quot;Included file not found &quot; + filePath);</span>
+<span class="fc bfc" id="L515" title="All 2 branches covered.">        if (!includeExists(currentFile, filePath, includeDirs)) {</span>
+<span class="fc" id="L516">            throw tokenizer.failure(include, &quot;Included file not found &quot; + filePath);</span>
         }
-<span class="fc" id="L509">        includeFiles.add(filePath);</span>
-<span class="fc" id="L510">        includePrograms.add(ReflectionUtils.programNameFromPath(filePath));</span>
-<span class="fc" id="L511">    }</span>
+<span class="fc" id="L518">        includeFiles.add(filePath);</span>
+<span class="fc" id="L519">        includePrograms.add(ReflectionUtils.programNameFromPath(filePath));</span>
+<span class="fc" id="L520">    }</span>
 
     private boolean includeExists(File currentFile, String filePath, Collection&lt;File&gt; includeDirs) {
-<span class="fc" id="L514">        File currentDir = currentFile.getParentFile();</span>
-<span class="fc bfc" id="L515" title="All 2 branches covered.">        if (new File(currentDir, filePath).isFile()) {</span>
-<span class="fc" id="L516">            return true;</span>
+<span class="fc" id="L523">        File currentDir = currentFile.getParentFile();</span>
+<span class="fc bfc" id="L524" title="All 2 branches covered.">        if (new File(currentDir, filePath).isFile()) {</span>
+<span class="fc" id="L525">            return true;</span>
         }
-<span class="pc bpc" id="L518" title="1 of 2 branches missed.">        for (File I : includeDirs) {</span>
-<span class="nc bnc" id="L519" title="All 2 branches missed.">            if (new File(I, filePath).isFile()) {</span>
-<span class="nc" id="L520">                return true;</span>
+<span class="pc bpc" id="L527" title="1 of 2 branches missed.">        for (File I : includeDirs) {</span>
+<span class="nc bnc" id="L528" title="All 2 branches missed.">            if (new File(I, filePath).isFile()) {</span>
+<span class="nc" id="L529">                return true;</span>
             }
-<span class="nc" id="L522">        }</span>
+<span class="nc" id="L531">        }</span>
 
-<span class="fc" id="L524">        return false;</span>
+<span class="fc" id="L533">        return false;</span>
     }
 
     private void parseTypedef(ThriftTokenizer tokenizer, String comment, List&lt;Declaration&gt; declarations, Set&lt;String&gt; includedPrograms)
             throws IOException {
-<span class="fc" id="L529">        String type = parseType(tokenizer, tokenizer.expect(&quot;typename&quot;), includedPrograms);</span>
-<span class="fc" id="L530">        Token id = tokenizer.expectIdentifier(&quot;typedef identifier&quot;);</span>
+<span class="fc" id="L538">        String type = parseType(tokenizer, tokenizer.expect(&quot;typename&quot;), includedPrograms);</span>
+<span class="fc" id="L539">        Token id = tokenizer.expectIdentifier(&quot;typedef identifier&quot;);</span>
 
-<span class="fc" id="L532">        TypedefType typedef = TypedefType.builder()</span>
-<span class="fc" id="L533">                                         .setDocumentation(comment)</span>
-<span class="fc" id="L534">                                         .setType(type)</span>
-<span class="fc" id="L535">                                         .setName(id.asString())</span>
-<span class="fc" id="L536">                                         .build();</span>
-<span class="fc" id="L537">        declarations.add(Declaration.withDeclTypedef(typedef));</span>
-<span class="fc" id="L538">    }</span>
+<span class="fc" id="L541">        TypedefType typedef = TypedefType.builder()</span>
+<span class="fc" id="L542">                                         .setDocumentation(comment)</span>
+<span class="fc" id="L543">                                         .setType(type)</span>
+<span class="fc" id="L544">                                         .setName(id.asString())</span>
+<span class="fc" id="L545">                                         .build();</span>
+<span class="fc" id="L546">        declarations.add(Declaration.withDeclTypedef(typedef));</span>
+<span class="fc" id="L547">    }</span>
 
     private EnumType parseEnum(ThriftTokenizer tokenizer, String doc_string) throws IOException {
-<span class="fc" id="L541">        String enum_name = tokenizer.expectIdentifier(&quot;enum name&quot;).asString();</span>
+<span class="fc" id="L550">        String enum_name = tokenizer.expectIdentifier(&quot;enum name&quot;).asString();</span>
 
-<span class="fc" id="L543">        EnumType._Builder enum_type = EnumType.builder();</span>
-<span class="fc bfc" id="L544" title="All 2 branches covered.">        if (doc_string != null) {</span>
-<span class="fc" id="L545">            enum_type.setDocumentation(doc_string);</span>
-<span class="fc" id="L546">            doc_string = null;</span>
+<span class="fc" id="L552">        EnumType._Builder enum_type = EnumType.builder();</span>
+<span class="fc bfc" id="L553" title="All 2 branches covered.">        if (doc_string != null) {</span>
+<span class="fc" id="L554">            enum_type.setDocumentation(doc_string);</span>
+<span class="fc" id="L555">            doc_string = null;</span>
         }
-<span class="fc" id="L548">        enum_type.setName(enum_name);</span>
+<span class="fc" id="L557">        enum_type.setName(enum_name);</span>
 
-<span class="fc" id="L550">        int nextValueID = PEnumDescriptor.DEFAULT_FIRST_VALUE;</span>
+<span class="fc" id="L559">        int nextValueID = PEnumDescriptor.DEFAULT_FIRST_VALUE;</span>
 
-<span class="fc" id="L552">        tokenizer.expectSymbol(&quot;enum start&quot;, Token.kMessageStart);</span>
+<span class="fc" id="L561">        tokenizer.expectSymbol(&quot;enum start&quot;, Token.kMessageStart);</span>
 
-<span class="pc bpc" id="L554" title="1 of 2 branches missed.">        if (!tokenizer.peek(&quot;&quot;).isSymbol(Token.kMessageEnd)) {</span>
+<span class="pc bpc" id="L563" title="1 of 2 branches missed.">        if (!tokenizer.peek(&quot;&quot;).isSymbol(Token.kMessageEnd)) {</span>
             while (true) {
-<span class="fc" id="L556">                Token token = tokenizer.expect(&quot;enum value or end&quot;);</span>
-<span class="fc bfc" id="L557" title="All 2 branches covered.">                if (token.isSymbol(Token.kMessageEnd)) {</span>
-<span class="fc" id="L558">                    break;</span>
-<span class="fc bfc" id="L559" title="All 2 branches covered.">                } else if (token.strEquals(kLineCommentStart)) {</span>
-<span class="fc" id="L560">                    doc_string = parseDocLine(tokenizer, doc_string);</span>
-<span class="fc bfc" id="L561" title="All 2 branches covered.">                } else if (token.strEquals(kBlockCommentStart)) {</span>
-<span class="fc" id="L562">                    doc_string = tokenizer.parseDocBlock();</span>
-<span class="pc bpc" id="L563" title="1 of 2 branches missed.">                } else if (token.isIdentifier()) {</span>
-<span class="fc" id="L564">                    EnumValue._Builder enum_value = EnumValue.builder();</span>
-<span class="fc" id="L565">                    enum_value.setName(token.asString());</span>
-<span class="fc bfc" id="L566" title="All 2 branches covered.">                    if (doc_string != null) {</span>
-<span class="fc" id="L567">                        enum_value.setDocumentation(doc_string);</span>
-<span class="fc" id="L568">                        doc_string = null;</span>
+<span class="fc" id="L565">                Token token = tokenizer.expect(&quot;enum value or end&quot;);</span>
+<span class="fc bfc" id="L566" title="All 2 branches covered.">                if (token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L567">                    break;</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">                } else if (token.strEquals(kLineCommentStart)) {</span>
+<span class="fc" id="L569">                    doc_string = parseDocLine(tokenizer, doc_string);</span>
+<span class="fc bfc" id="L570" title="All 2 branches covered.">                } else if (token.strEquals(kBlockCommentStart)) {</span>
+<span class="fc" id="L571">                    doc_string = tokenizer.parseDocBlock();</span>
+<span class="pc bpc" id="L572" title="1 of 2 branches missed.">                } else if (token.isIdentifier()) {</span>
+<span class="fc" id="L573">                    EnumValue._Builder enum_value = EnumValue.builder();</span>
+<span class="fc" id="L574">                    enum_value.setName(token.asString());</span>
+<span class="fc bfc" id="L575" title="All 2 branches covered.">                    if (doc_string != null) {</span>
+<span class="fc" id="L576">                        enum_value.setDocumentation(doc_string);</span>
+<span class="fc" id="L577">                        doc_string = null;</span>
                     }
 
-<span class="fc" id="L571">                    int value_id = nextValueID++;</span>
-<span class="fc" id="L572">                    if (tokenizer.peek(&quot;enum value ID&quot;)</span>
-<span class="fc bfc" id="L573" title="All 2 branches covered.">                                 .isSymbol(Token.kFieldValueSep)) {</span>
-<span class="fc" id="L574">                        tokenizer.next();</span>
-<span class="fc" id="L575">                        Token v = tokenizer.expectInteger(&quot;enum value&quot;);</span>
-<span class="fc" id="L576">                        value_id = (int) v.parseInteger();</span>
-<span class="fc" id="L577">                        nextValueID = value_id + 1;</span>
-<span class="fc bfc" id="L578" title="All 2 branches covered.">                    } else if (requireEnumValue) {</span>
+<span class="fc" id="L580">                    int value_id = nextValueID++;</span>
+<span class="fc" id="L581">                    if (tokenizer.peek(&quot;enum value ID&quot;)</span>
+<span class="fc bfc" id="L582" title="All 2 branches covered.">                                 .isSymbol(Token.kFieldValueSep)) {</span>
+<span class="fc" id="L583">                        tokenizer.next();</span>
+<span class="fc" id="L584">                        Token v = tokenizer.expectInteger(&quot;enum value&quot;);</span>
+<span class="fc" id="L585">                        value_id = (int) v.parseInteger();</span>
+<span class="fc" id="L586">                        nextValueID = value_id + 1;</span>
+<span class="fc bfc" id="L587" title="All 2 branches covered.">                    } else if (requireEnumValue) {</span>
                         // So the token points at the token that *should* have been '='.
-<span class="pc bpc" id="L580" title="1 of 2 branches missed.">                        if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L581">                            token = tokenizer.next();</span>
+<span class="pc bpc" id="L589" title="1 of 2 branches missed.">                        if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L590">                            token = tokenizer.next();</span>
                         }
-<span class="fc" id="L583">                        throw tokenizer.failure(token, &quot;Missing enum value in strict declaration&quot;);</span>
+<span class="fc" id="L592">                        throw tokenizer.failure(token, &quot;Missing enum value in strict declaration&quot;);</span>
                     }
 
-<span class="fc" id="L586">                    enum_value.setId(value_id);</span>
+<span class="fc" id="L595">                    enum_value.setId(value_id);</span>
 
                     // Enum value annotations.
-<span class="fc" id="L589">                    if (tokenizer.peek(&quot;enum value annotation&quot;)</span>
-<span class="fc bfc" id="L590" title="All 2 branches covered.">                                 .isSymbol(Token.kParamsStart)) {</span>
-<span class="fc" id="L591">                        tokenizer.next();</span>
-<span class="fc" id="L592">                        enum_value.setAnnotations(parseAnnotations(tokenizer, &quot;enum value&quot;));</span>
+<span class="fc" id="L598">                    if (tokenizer.peek(&quot;enum value annotation&quot;)</span>
+<span class="fc bfc" id="L599" title="All 2 branches covered.">                                 .isSymbol(Token.kParamsStart)) {</span>
+<span class="fc" id="L600">                        tokenizer.next();</span>
+<span class="fc" id="L601">                        enum_value.setAnnotations(parseAnnotations(tokenizer, &quot;enum value&quot;));</span>
                     }
 
-<span class="fc" id="L595">                    enum_type.addToValues(enum_value.build());</span>
+<span class="fc" id="L604">                    enum_type.addToValues(enum_value.build());</span>
 
                     // Optional separator...
-<span class="fc" id="L598">                    token = tokenizer.peek(&quot;enum value or end&quot;);</span>
-<span class="fc bfc" id="L599" title="All 4 branches covered.">                    if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
-<span class="fc" id="L600">                        tokenizer.next();</span>
+<span class="fc" id="L607">                    token = tokenizer.peek(&quot;enum value or end&quot;);</span>
+<span class="fc bfc" id="L608" title="All 4 branches covered.">                    if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L609">                        tokenizer.next();</span>
                     }
-<span class="fc" id="L602">                } else {</span>
-<span class="nc" id="L603">                    throw tokenizer.failure(token, &quot;Unexpected token: %s&quot;, token.asString());</span>
+<span class="fc" id="L611">                } else {</span>
+<span class="nc" id="L612">                    throw tokenizer.failure(token, &quot;Unexpected token: %s&quot;, token.asString());</span>
                 }
-<span class="fc" id="L605">            }</span>
+<span class="fc" id="L614">            }</span>
         } // if has values.
 
-<span class="fc bfc" id="L608" title="All 2 branches covered.">        if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L609">            Token token = tokenizer.peek(&quot;optional annotations&quot;);</span>
-<span class="fc bfc" id="L610" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
-<span class="fc" id="L611">                tokenizer.next();</span>
-<span class="fc" id="L612">                enum_type.setAnnotations(parseAnnotations(tokenizer, &quot;enum type&quot;));</span>
+<span class="fc bfc" id="L617" title="All 2 branches covered.">        if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L618">            Token token = tokenizer.peek(&quot;optional annotations&quot;);</span>
+<span class="fc bfc" id="L619" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
+<span class="fc" id="L620">                tokenizer.next();</span>
+<span class="fc" id="L621">                enum_type.setAnnotations(parseAnnotations(tokenizer, &quot;enum type&quot;));</span>
             }
         }
 
-<span class="fc" id="L616">        return enum_type.build();</span>
+<span class="fc" id="L625">        return enum_type.build();</span>
     }
 
     private MessageType parseMessage(ThriftTokenizer tokenizer, String variant, String comment, Set&lt;String&gt; includedPrograms)
             throws IOException {
-<span class="fc" id="L621">        MessageType._Builder struct = MessageType.builder();</span>
-<span class="fc bfc" id="L622" title="All 2 branches covered.">        if (comment != null) {</span>
-<span class="fc" id="L623">            struct.setDocumentation(comment);</span>
-<span class="fc" id="L624">            comment = null;</span>
+<span class="fc" id="L630">        MessageType._Builder struct = MessageType.builder();</span>
+<span class="fc bfc" id="L631" title="All 2 branches covered.">        if (comment != null) {</span>
+<span class="fc" id="L632">            struct.setDocumentation(comment);</span>
+<span class="fc" id="L633">            comment = null;</span>
         }
-<span class="fc" id="L626">        boolean union = variant.equals(&quot;union&quot;);</span>
-<span class="fc bfc" id="L627" title="All 2 branches covered.">        if (!variant.equals(&quot;struct&quot;)) {</span>
-<span class="fc" id="L628">            struct.setVariant(MessageVariant.valueForName(variant.toUpperCase()));</span>
+<span class="fc" id="L635">        boolean union = variant.equals(&quot;union&quot;);</span>
+<span class="fc bfc" id="L636" title="All 2 branches covered.">        if (!variant.equals(&quot;struct&quot;)) {</span>
+<span class="fc" id="L637">            struct.setVariant(MessageVariant.valueForName(variant.toUpperCase()));</span>
         }
 
-<span class="fc" id="L631">        struct.setName(tokenizer.expectIdentifier(&quot;message name identifier&quot;).asString());</span>
+<span class="fc" id="L640">        struct.setName(tokenizer.expectIdentifier(&quot;message name identifier&quot;).asString());</span>
 
-<span class="fc" id="L633">        int nextAutoFieldKey = -1;</span>
+<span class="fc" id="L642">        int nextAutoFieldKey = -1;</span>
 
-<span class="fc" id="L635">        tokenizer.expectSymbol(&quot;message start&quot;, Token.kMessageStart);</span>
+<span class="fc" id="L644">        tokenizer.expectSymbol(&quot;message start&quot;, Token.kMessageStart);</span>
 
-<span class="fc" id="L637">        Set&lt;String&gt; fieldNames = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L638">        Set&lt;String&gt; fieldNameVariants = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L639">        Set&lt;Integer&gt; fieldIds = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L646">        Set&lt;String&gt; fieldNames = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L647">        Set&lt;String&gt; fieldNameVariants = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L648">        Set&lt;Integer&gt; fieldIds = new HashSet&lt;&gt;();</span>
 
         while (true) {
-<span class="fc" id="L642">            Token token = tokenizer.expect(&quot;field def or message end&quot;);</span>
-<span class="fc bfc" id="L643" title="All 2 branches covered.">            if (token.isSymbol(Token.kMessageEnd)) {</span>
-<span class="fc" id="L644">                break;</span>
-<span class="fc bfc" id="L645" title="All 2 branches covered.">            } else if (token.strEquals(kLineCommentStart)) {</span>
-<span class="fc" id="L646">                comment = parseDocLine(tokenizer, comment);</span>
-<span class="fc" id="L647">                continue;</span>
-<span class="fc bfc" id="L648" title="All 2 branches covered.">            } else if (token.strEquals(kBlockCommentStart)) {</span>
-<span class="fc" id="L649">                comment = tokenizer.parseDocBlock();</span>
-<span class="fc" id="L650">                continue;</span>
+<span class="fc" id="L651">            Token token = tokenizer.expect(&quot;field def or message end&quot;);</span>
+<span class="fc bfc" id="L652" title="All 2 branches covered.">            if (token.isSymbol(Token.kMessageEnd)) {</span>
+<span class="fc" id="L653">                break;</span>
+<span class="fc bfc" id="L654" title="All 2 branches covered.">            } else if (token.strEquals(kLineCommentStart)) {</span>
+<span class="fc" id="L655">                comment = parseDocLine(tokenizer, comment);</span>
+<span class="fc" id="L656">                continue;</span>
+<span class="fc bfc" id="L657" title="All 2 branches covered.">            } else if (token.strEquals(kBlockCommentStart)) {</span>
+<span class="fc" id="L658">                comment = tokenizer.parseDocBlock();</span>
+<span class="fc" id="L659">                continue;</span>
             }
 
-<span class="fc" id="L653">            FieldType._Builder field = FieldType.builder();</span>
-<span class="fc" id="L654">            field.setDocumentation(comment);</span>
-<span class="fc" id="L655">            comment = null;</span>
+<span class="fc" id="L662">            FieldType._Builder field = FieldType.builder();</span>
+<span class="fc" id="L663">            field.setDocumentation(comment);</span>
+<span class="fc" id="L664">            comment = null;</span>
 
-<span class="fc bfc" id="L657" title="All 2 branches covered.">            if (token.isInteger()) {</span>
-<span class="fc" id="L658">                int fId = (int) token.parseInteger();</span>
-<span class="pc bpc" id="L659" title="1 of 2 branches missed.">                if (fId &lt; 1) {</span>
-<span class="nc" id="L660">                    throw tokenizer.failure(token,</span>
+<span class="fc bfc" id="L666" title="All 2 branches covered.">            if (token.isInteger()) {</span>
+<span class="fc" id="L667">                int fId = (int) token.parseInteger();</span>
+<span class="pc bpc" id="L668" title="1 of 2 branches missed.">                if (fId &lt; 1) {</span>
+<span class="nc" id="L669">                    throw tokenizer.failure(token,</span>
                                             &quot;Negative or 0 field id &quot; + fId + &quot; not allowed.&quot;);
                 }
-<span class="fc bfc" id="L663" title="All 2 branches covered.">                if (fieldIds.contains(fId)) {</span>
-<span class="fc" id="L664">                    throw tokenizer.failure(token,</span>
-<span class="fc" id="L665">                                            &quot;Field id &quot; + fId + &quot; already exists in &quot; + struct.build().getName());</span>
+<span class="fc bfc" id="L672" title="All 2 branches covered.">                if (fieldIds.contains(fId)) {</span>
+<span class="fc" id="L673">                    throw tokenizer.failure(token,</span>
+<span class="fc" id="L674">                                            &quot;Field id &quot; + fId + &quot; already exists in &quot; + struct.build().getName());</span>
                 }
-<span class="fc" id="L667">                fieldIds.add(fId);</span>
-<span class="fc" id="L668">                field.setId(fId);</span>
+<span class="fc" id="L676">                fieldIds.add(fId);</span>
+<span class="fc" id="L677">                field.setId(fId);</span>
 
-<span class="fc" id="L670">                tokenizer.expectSymbol(&quot;field id sep&quot;, Token.kKeyValueSep);</span>
-<span class="fc" id="L671">                token = tokenizer.expect(&quot;field requirement or type&quot;,</span>
-<span class="pc bpc" id="L672" title="1 of 4 branches missed.">                                         t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
-<span class="fc" id="L673">            } else {</span>
-<span class="pc bpc" id="L674" title="1 of 2 branches missed.">                if (requireFieldId) {</span>
-<span class="nc" id="L675">                    throw tokenizer.failure(token,</span>
+<span class="fc" id="L679">                tokenizer.expectSymbol(&quot;field id sep&quot;, Token.kKeyValueSep);</span>
+<span class="fc" id="L680">                token = tokenizer.expect(&quot;field requirement or type&quot;,</span>
+<span class="pc bpc" id="L681" title="1 of 4 branches missed.">                                         t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
+<span class="fc" id="L682">            } else {</span>
+<span class="pc bpc" id="L683" title="1 of 2 branches missed.">                if (requireFieldId) {</span>
+<span class="nc" id="L684">                    throw tokenizer.failure(token,</span>
                                             &quot;Missing field ID in strict declaration&quot;);
                 }
-<span class="fc" id="L678">                field.setId(nextAutoFieldKey--);</span>
+<span class="fc" id="L687">                field.setId(nextAutoFieldKey--);</span>
             }
 
-<span class="fc bfc" id="L681" title="All 2 branches covered.">            if (token.strEquals(kRequired)) {</span>
-<span class="pc bpc" id="L682" title="1 of 2 branches missed.">                if (union) {</span>
-<span class="nc" id="L683">                    throw tokenizer.failure(token,</span>
+<span class="fc bfc" id="L690" title="All 2 branches covered.">            if (token.strEquals(kRequired)) {</span>
+<span class="pc bpc" id="L691" title="1 of 2 branches missed.">                if (union) {</span>
+<span class="nc" id="L692">                    throw tokenizer.failure(token,</span>
                                             &quot;Found required field in union&quot;);
                 }
-<span class="fc" id="L686">                field.setRequirement(FieldRequirement.REQUIRED);</span>
-<span class="fc" id="L687">                token = tokenizer.expect(&quot;field type&quot;,</span>
-<span class="pc bpc" id="L688" title="3 of 4 branches missed.">                                         t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
-<span class="fc bfc" id="L689" title="All 2 branches covered.">            } else if (token.strEquals(kOptional)) {</span>
-<span class="pc bpc" id="L690" title="1 of 2 branches missed.">                if (!union) {</span>
+<span class="fc" id="L695">                field.setRequirement(FieldRequirement.REQUIRED);</span>
+<span class="fc" id="L696">                token = tokenizer.expect(&quot;field type&quot;,</span>
+<span class="pc bpc" id="L697" title="3 of 4 branches missed.">                                         t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
+<span class="fc bfc" id="L698" title="All 2 branches covered.">            } else if (token.strEquals(kOptional)) {</span>
+<span class="pc bpc" id="L699" title="1 of 2 branches missed.">                if (!union) {</span>
                     // All union fields are optional regardless.
-<span class="fc" id="L692">                    field.setRequirement(FieldRequirement.OPTIONAL);</span>
+<span class="fc" id="L701">                    field.setRequirement(FieldRequirement.OPTIONAL);</span>
                 }
-<span class="fc" id="L694">                token = tokenizer.expect(&quot;field type&quot;,</span>
-<span class="pc bpc" id="L695" title="3 of 4 branches missed.">                                         t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
+<span class="fc" id="L703">                token = tokenizer.expect(&quot;field type&quot;,</span>
+<span class="pc bpc" id="L704" title="3 of 4 branches missed.">                                         t -&gt; t.isIdentifier() || t.isQualifiedIdentifier());</span>
             }
 
             // Get type.... This is mandatory.
-<span class="fc" id="L699">            field.setType(parseType(tokenizer, token, includedPrograms));</span>
+<span class="fc" id="L708">            field.setType(parseType(tokenizer, token, includedPrograms));</span>
 
-<span class="fc" id="L701">            Token name = tokenizer.expectIdentifier(&quot;field name&quot;);</span>
-<span class="fc" id="L702">            String fName = name.asString();</span>
-<span class="fc bfc" id="L703" title="All 2 branches covered.">            if (fieldNames.contains(fName)) {</span>
-<span class="fc" id="L704">                throw tokenizer.failure(name,</span>
+<span class="fc" id="L710">            Token name = tokenizer.expectIdentifier(&quot;field name&quot;);</span>
+<span class="fc" id="L711">            String fName = name.asString();</span>
+<span class="fc bfc" id="L712" title="All 2 branches covered.">            if (fieldNames.contains(fName)) {</span>
+<span class="fc" id="L713">                throw tokenizer.failure(name,</span>
                                         &quot;Field %s already exists in %s&quot;,
                                         fName,
-<span class="fc" id="L707">                                        struct.build().getName());</span>
+<span class="fc" id="L716">                                        struct.build().getName());</span>
             }
-<span class="fc bfc" id="L709" title="All 2 branches covered.">            if (fieldNameVariants.contains(Strings.camelCase(&quot;get&quot;, fName))) {</span>
-<span class="fc" id="L710">                throw tokenizer.failure(name,</span>
+<span class="fc bfc" id="L718" title="All 2 branches covered.">            if (fieldNameVariants.contains(Strings.camelCase(&quot;get&quot;, fName))) {</span>
+<span class="fc" id="L719">                throw tokenizer.failure(name,</span>
                                         &quot;Field %s has field with conflicting name in %s&quot;,
                                         fName,
-<span class="fc" id="L713">                                        struct.build().getName());</span>
+<span class="fc" id="L722">                                        struct.build().getName());</span>
             }
-<span class="fc" id="L715">            fieldNames.add(fName);</span>
-<span class="fc" id="L716">            fieldNameVariants.add(Strings.camelCase(&quot;get&quot;, fName));</span>
+<span class="fc" id="L724">            fieldNames.add(fName);</span>
+<span class="fc" id="L725">            fieldNameVariants.add(Strings.camelCase(&quot;get&quot;, fName));</span>
 
-<span class="fc" id="L718">            field.setName(fName);</span>
+<span class="fc" id="L727">            field.setName(fName);</span>
 
-<span class="fc" id="L720">            token = tokenizer.peek(&quot;default sep, annotation, field def or message end&quot;);</span>
+<span class="fc" id="L729">            token = tokenizer.peek(&quot;default sep, annotation, field def or message end&quot;);</span>
 
             // Default value
-<span class="fc bfc" id="L723" title="All 2 branches covered.">            if (token.isSymbol(Token.kFieldValueSep)) {</span>
-<span class="fc" id="L724">                tokenizer.next();</span>
-<span class="fc" id="L725">                Token defaultValue = tokenizer.parseValue();</span>
-<span class="fc" id="L726">                field.setDefaultValue(defaultValue.asString());</span>
-<span class="fc" id="L727">                field.setStartLineNo(defaultValue.getLineNo());</span>
-<span class="fc" id="L728">                field.setStartLinePos(defaultValue.getLinePos());</span>
-<span class="fc" id="L729">                token = tokenizer.peek(&quot;field annotation, def or message end&quot;);</span>
+<span class="fc bfc" id="L732" title="All 2 branches covered.">            if (token.isSymbol(Token.kFieldValueSep)) {</span>
+<span class="fc" id="L733">                tokenizer.next();</span>
+<span class="fc" id="L734">                Token defaultValue = tokenizer.parseValue();</span>
+<span class="fc" id="L735">                field.setDefaultValue(defaultValue.asString());</span>
+<span class="fc" id="L736">                field.setStartLineNo(defaultValue.getLineNo());</span>
+<span class="fc" id="L737">                field.setStartLinePos(defaultValue.getLinePos());</span>
+<span class="fc" id="L738">                token = tokenizer.peek(&quot;field annotation, def or message end&quot;);</span>
             }
 
             // Annotation
-<span class="fc bfc" id="L733" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
-<span class="fc" id="L734">                tokenizer.next();</span>
-<span class="fc" id="L735">                field.setAnnotations(parseAnnotations(tokenizer, &quot;field&quot;));</span>
-<span class="fc" id="L736">                token = tokenizer.peek(&quot;field def or message end&quot;);</span>
+<span class="fc bfc" id="L742" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
+<span class="fc" id="L743">                tokenizer.next();</span>
+<span class="fc" id="L744">                field.setAnnotations(parseAnnotations(tokenizer, &quot;field&quot;));</span>
+<span class="fc" id="L745">                token = tokenizer.peek(&quot;field def or message end&quot;);</span>
             }
 
-<span class="fc" id="L739">            struct.addToFields(field.build());</span>
+<span class="fc" id="L748">            struct.addToFields(field.build());</span>
 
-<span class="fc bfc" id="L741" title="All 4 branches covered.">            if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
-<span class="fc" id="L742">                tokenizer.next();</span>
+<span class="fc bfc" id="L750" title="All 4 branches covered.">            if (token.isSymbol(Token.kLineSep1) || token.isSymbol(Token.kLineSep2)) {</span>
+<span class="fc" id="L751">                tokenizer.next();</span>
             }
-<span class="fc" id="L744">        }</span>
+<span class="fc" id="L753">        }</span>
 
-<span class="fc bfc" id="L746" title="All 2 branches covered.">        if (tokenizer.hasNext()) {</span>
-<span class="fc" id="L747">            Token token = tokenizer.peek(&quot;optional annotations&quot;);</span>
-<span class="fc bfc" id="L748" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
-<span class="fc" id="L749">                tokenizer.next();</span>
-<span class="fc" id="L750">                struct.setAnnotations(parseAnnotations(tokenizer, &quot;message&quot;));</span>
+<span class="fc bfc" id="L755" title="All 2 branches covered.">        if (tokenizer.hasNext()) {</span>
+<span class="fc" id="L756">            Token token = tokenizer.peek(&quot;optional annotations&quot;);</span>
+<span class="fc bfc" id="L757" title="All 2 branches covered.">            if (token.isSymbol(Token.kParamsStart)) {</span>
+<span class="fc" id="L758">                tokenizer.next();</span>
+<span class="fc" id="L759">                struct.setAnnotations(parseAnnotations(tokenizer, &quot;message&quot;));</span>
             }
         }
 
-<span class="fc" id="L754">        return struct.build();</span>
+<span class="fc" id="L763">        return struct.build();</span>
     }
 
     private String parseType(ThriftTokenizer tokenizer, Token token, Set&lt;String&gt; includedPrograms) throws IOException {
-<span class="fc bfc" id="L758" title="All 2 branches covered.">        if (!token.isQualifiedIdentifier() &amp;&amp;</span>
-<span class="pc bpc" id="L759" title="1 of 2 branches missed.">            !token.isIdentifier()) {</span>
-<span class="nc" id="L760">            throw tokenizer.failure(token, &quot;Expected type identifier but found &quot; + token.asString());</span>
+<span class="fc bfc" id="L767" title="All 2 branches covered.">        if (!token.isQualifiedIdentifier() &amp;&amp;</span>
+<span class="pc bpc" id="L768" title="1 of 2 branches missed.">            !token.isIdentifier()) {</span>
+<span class="nc" id="L769">            throw tokenizer.failure(token, &quot;Expected type identifier but found &quot; + token.asString());</span>
         }
 
-<span class="fc" id="L763">        String type = token.asString();</span>
-<span class="pc bpc" id="L764" title="3 of 13 branches missed.">        switch (type) {</span>
+<span class="fc" id="L772">        String type = token.asString();</span>
+<span class="pc bpc" id="L773" title="3 of 13 branches missed.">        switch (type) {</span>
             case &quot;list&quot;:
             case &quot;set&quot;: {
-<span class="fc" id="L767">                tokenizer.expectSymbol(type + &quot; generic start&quot;, Token.kGenericStart);</span>
-<span class="fc" id="L768">                String item = parseType(tokenizer, tokenizer.expect(type + &quot; item type&quot;,</span>
-<span class="pc bpc" id="L769" title="3 of 4 branches missed.">                                                                    t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()), includedPrograms);</span>
-<span class="fc" id="L770">                tokenizer.expectSymbol(type + &quot; generic end&quot;, Token.kGenericEnd);</span>
+<span class="fc" id="L776">                tokenizer.expectSymbol(type + &quot; generic start&quot;, Token.kGenericStart);</span>
+<span class="fc" id="L777">                String item = parseType(tokenizer, tokenizer.expect(type + &quot; item type&quot;,</span>
+<span class="pc bpc" id="L778" title="3 of 4 branches missed.">                                                                    t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()), includedPrograms);</span>
+<span class="fc" id="L779">                tokenizer.expectSymbol(type + &quot; generic end&quot;, Token.kGenericEnd);</span>
 
-<span class="fc" id="L772">                return String.format(&quot;%s&lt;%s&gt;&quot;, type, item);</span>
+<span class="fc" id="L781">                return String.format(&quot;%s&lt;%s&gt;&quot;, type, item);</span>
             }
             case &quot;map&quot;: {
-<span class="fc" id="L775">                tokenizer.expectSymbol(type + &quot; generic start&quot;, Token.kGenericStart);</span>
-<span class="fc" id="L776">                String key = parseType(tokenizer, tokenizer.expect(type + &quot; key type&quot;,</span>
-<span class="pc bpc" id="L777" title="3 of 4 branches missed.">                                                                   t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()</span>
+<span class="fc" id="L784">                tokenizer.expectSymbol(type + &quot; generic start&quot;, Token.kGenericStart);</span>
+<span class="fc" id="L785">                String key = parseType(tokenizer, tokenizer.expect(type + &quot; key type&quot;,</span>
+<span class="pc bpc" id="L786" title="3 of 4 branches missed.">                                                                   t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()</span>
                                                                    ), includedPrograms);
-<span class="fc" id="L779">                tokenizer.expectSymbol(type + &quot; generic sep&quot;, Token.kLineSep1);</span>
-<span class="fc" id="L780">                String item = parseType(tokenizer, tokenizer.expect(type + &quot; item type&quot;,</span>
-<span class="pc bpc" id="L781" title="3 of 4 branches missed.">                                                                    t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()), includedPrograms);</span>
-<span class="fc" id="L782">                tokenizer.expectSymbol(type + &quot; generic end&quot;, Token.kGenericEnd);</span>
+<span class="fc" id="L788">                tokenizer.expectSymbol(type + &quot; generic sep&quot;, Token.kLineSep1);</span>
+<span class="fc" id="L789">                String item = parseType(tokenizer, tokenizer.expect(type + &quot; item type&quot;,</span>
+<span class="pc bpc" id="L790" title="3 of 4 branches missed.">                                                                    t -&gt; t.isIdentifier() || t.isQualifiedIdentifier()), includedPrograms);</span>
+<span class="fc" id="L791">                tokenizer.expectSymbol(type + &quot; generic end&quot;, Token.kGenericEnd);</span>
 
-<span class="fc" id="L784">                return String.format(&quot;%s&lt;%s,%s&gt;&quot;, type, key, item);</span>
+<span class="fc" id="L793">                return String.format(&quot;%s&lt;%s,%s&gt;&quot;, type, key, item);</span>
             }
             default:
-<span class="fc bfc" id="L787" title="All 2 branches covered.">                if (type.contains(&quot;.&quot;)) {</span>
+<span class="fc bfc" id="L796" title="All 2 branches covered.">                if (type.contains(&quot;.&quot;)) {</span>
                     // Enforce scope by program name.
-<span class="fc" id="L789">                    String program = type.replaceAll(&quot;[.].*&quot;, &quot;&quot;);</span>
-<span class="fc bfc" id="L790" title="All 2 branches covered.">                    if (!includedPrograms.contains(program)) {</span>
-<span class="fc" id="L791">                        throw tokenizer.failure(token, &quot;Unknown program '%s' for type %s&quot;, program, type);</span>
+<span class="fc" id="L798">                    String program = type.replaceAll(&quot;[.].*&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L799" title="All 2 branches covered.">                    if (!includedPrograms.contains(program)) {</span>
+<span class="fc" id="L800">                        throw tokenizer.failure(token, &quot;Unknown program '%s' for type %s&quot;, program, type);</span>
                     }
                 }
-<span class="fc" id="L794">                return type;</span>
+<span class="fc" id="L803">                return type;</span>
         }
     }
 }

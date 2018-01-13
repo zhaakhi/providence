@@ -94,11 +94,12 @@ public class MessageCollectors {
 <span class="fc" id="L94">            }</span>
 <span class="fc" id="L95">        }, (a, b) -&gt; a, (outputStream) -&gt; {</span>
             try {
-<span class="fc" id="L97">                outputStream.close();</span>
-<span class="fc" id="L98">            } catch (IOException e) {</span>
-<span class="fc" id="L99">                throw new UncheckedIOException(&quot;Unable to close &quot; + file.getName(), e);</span>
-<span class="fc" id="L100">            }</span>
-<span class="fc" id="L101">            return result.getAndSet(0);</span>
+<span class="fc" id="L97">                outputStream.flush();</span>
+<span class="fc" id="L98">                outputStream.close();</span>
+<span class="fc" id="L99">            } catch (IOException e) {</span>
+<span class="fc" id="L100">                throw new UncheckedIOException(&quot;Unable to close &quot; + file.getName(), e);</span>
+<span class="fc" id="L101">            }</span>
+<span class="fc" id="L102">            return result.getAndSet(0);</span>
         });
     }
 
@@ -115,37 +116,58 @@ public class MessageCollectors {
     public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Collector&lt;Message, AtomicInteger, Integer&gt; toStream(OutputStream out,
                                                         Serializer serializer) {
-<span class="fc" id="L118">        return Collector.of(AtomicInteger::new, (counter, t) -&gt; {</span>
+<span class="fc" id="L119">        return toStream(out, serializer, false);</span>
+    }
+
+    /**
+     * Serialize stream of messages into stream.
+     *
+     * @param out The output stream to write to.
+     * @param serializer The serializer to use.
+     * @param close Close the stream when ending.
+     * @param &lt;Message&gt; The message type.
+     * @param &lt;Field&gt; The field type.
+     * @return The collector.
+     */
+    @Nonnull
+    public static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
+    Collector&lt;Message, AtomicInteger, Integer&gt; toStream(OutputStream out,
+                                                        Serializer serializer,
+                                                        boolean close) {
+<span class="fc" id="L137">        return Collector.of(AtomicInteger::new, (counter, t) -&gt; {</span>
             try {
-<span class="fc" id="L120">                synchronized (out) {</span>
-<span class="fc" id="L121">                    counter.addAndGet(serializer.serialize(out, t));</span>
-<span class="fc bfc" id="L122" title="All 2 branches covered.">                    if (!serializer.binaryProtocol()) {</span>
-<span class="fc" id="L123">                        counter.addAndGet(maybeWriteBytes(out, MessageStreams.READABLE_ENTRY_SEP));</span>
+<span class="fc" id="L139">                synchronized (out) {</span>
+<span class="fc" id="L140">                    counter.addAndGet(serializer.serialize(out, t));</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                    if (!serializer.binaryProtocol()) {</span>
+<span class="fc" id="L142">                        counter.addAndGet(maybeWriteBytes(out, MessageStreams.READABLE_ENTRY_SEP));</span>
                     }
-<span class="fc" id="L125">                }</span>
-<span class="fc" id="L126">            } catch (IOException e) {</span>
-<span class="fc" id="L127">                throw new UncheckedIOException(e.getMessage(), e);</span>
-<span class="fc" id="L128">            }</span>
-<span class="fc" id="L129">        }, (a, b) -&gt; {</span>
-<span class="fc" id="L130">            a.addAndGet(b.get());</span>
-<span class="fc" id="L131">            return a;</span>
+<span class="fc" id="L144">                }</span>
+<span class="fc" id="L145">            } catch (IOException e) {</span>
+<span class="fc" id="L146">                throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L147">            }</span>
+<span class="fc" id="L148">        }, (a, b) -&gt; {</span>
+<span class="fc" id="L149">            a.addAndGet(b.get());</span>
+<span class="fc" id="L150">            return a;</span>
         }, i -&gt; {
             try {
-<span class="fc" id="L134">                out.flush();</span>
-<span class="nc" id="L135">            } catch (IOException e) {</span>
-<span class="nc" id="L136">                throw new UncheckedIOException(e.getMessage(), e);</span>
-<span class="fc" id="L137">            }</span>
-<span class="fc" id="L138">            return i.getAndSet(0);</span>
+<span class="fc" id="L153">                out.flush();</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">                if (close) {</span>
+<span class="nc" id="L155">                    out.close();</span>
+                }
+<span class="nc" id="L157">            } catch (IOException e) {</span>
+<span class="nc" id="L158">                throw new UncheckedIOException(e.getMessage(), e);</span>
+<span class="fc" id="L159">            }</span>
+<span class="fc" id="L160">            return i.getAndSet(0);</span>
         });
     }
 
     private static int maybeWriteBytes(OutputStream out, byte[] bytes) throws IOException {
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if(bytes.length &gt; 0) {</span>
-<span class="fc" id="L144">            out.write(bytes);</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if(bytes.length &gt; 0) {</span>
+<span class="fc" id="L166">            out.write(bytes);</span>
         }
-<span class="fc" id="L146">        return bytes.length;</span>
+<span class="fc" id="L168">        return bytes.length;</span>
     }
 
-<span class="fc" id="L149">    private MessageCollectors() {}</span>
+<span class="fc" id="L171">    private MessageCollectors() {}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

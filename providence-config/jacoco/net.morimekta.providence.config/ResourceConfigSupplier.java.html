@@ -27,6 +27,7 @@ import net.morimekta.providence.serializer.JsonSerializer;
 import net.morimekta.providence.serializer.PrettySerializer;
 import net.morimekta.providence.serializer.Serializer;
 import net.morimekta.providence.serializer.SerializerException;
+import net.morimekta.providence.serializer.pretty.TokenizerException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,8 +57,8 @@ public class ResourceConfigSupplier&lt;Message extends PMessage&lt;Message, Fiel
      */
     public ResourceConfigSupplier(String resourceName, PMessageDescriptor&lt;Message, Field&gt; descriptor)
             throws ProvidenceConfigException {
-<span class="fc" id="L59">        this(resourceName, descriptor, Clock.systemUTC());</span>
-<span class="fc" id="L60">    }</span>
+<span class="fc" id="L60">        this(resourceName, descriptor, Clock.systemUTC());</span>
+<span class="fc" id="L61">    }</span>
 
     /**
      * Create a config that wraps a providence message instance. This message
@@ -71,55 +72,68 @@ public class ResourceConfigSupplier&lt;Message extends PMessage&lt;Message, Fiel
      */
     public ResourceConfigSupplier(String resourceName, PMessageDescriptor&lt;Message, Field&gt; descriptor, Clock clock)
             throws ProvidenceConfigException {
-<span class="fc" id="L74">        super(loadInternal(resourceName, descriptor), clock.millis());</span>
-<span class="fc" id="L75">        this.resourceName = resourceName;</span>
-<span class="fc" id="L76">    }</span>
+<span class="fc" id="L75">        super(loadInternal(resourceName, descriptor), clock.millis());</span>
+<span class="fc" id="L76">        this.resourceName = resourceName;</span>
+<span class="fc" id="L77">    }</span>
 
     @Override
     public String getName() {
-<span class="fc" id="L80">        return &quot;ResourceConfig{&quot; + resourceName + &quot;}&quot;;</span>
+<span class="fc" id="L81">        return &quot;ResourceConfig{&quot; + resourceName + &quot;}&quot;;</span>
     }
 
     private static &lt;Message extends PMessage&lt;Message, Field&gt;, Field extends PField&gt;
     Message loadInternal(String resourceName, PMessageDescriptor&lt;Message, Field&gt; descriptor) throws ProvidenceConfigException {
-<span class="fc" id="L85">        int lastDot = resourceName.lastIndexOf(&quot;.&quot;);</span>
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (lastDot &lt; 1) {</span>
-<span class="nc" id="L87">            throw new ProvidenceConfigException(&quot;No file ending, or no resource file name: &quot; + resourceName);</span>
+<span class="fc" id="L86">        int lastDot = resourceName.lastIndexOf(&quot;.&quot;);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (lastDot &lt; 1) {</span>
+<span class="nc" id="L88">            throw new ProvidenceConfigException(&quot;No file ending, or no resource file name: &quot; + resourceName);</span>
         }
-<span class="fc" id="L89">        String suffix = resourceName.substring(lastDot).toLowerCase();</span>
-        Serializer serializer;
-<span class="pc bpc" id="L91" title="16 of 22 branches missed.">        switch (suffix) {</span>
-            case &quot;.json&quot;:
-<span class="fc" id="L93">                serializer = new JsonSerializer();</span>
-<span class="fc" id="L94">                break;</span>
-            case &quot;.cfg&quot;:
-            case &quot;.cnf&quot;:
-            case &quot;.config&quot;:
-            case &quot;.pvd&quot;:
-            case &quot;.providence&quot;:
-<span class="fc" id="L100">                serializer = new PrettySerializer().config();</span>
-<span class="fc" id="L101">                break;</span>
-            // TODO: Add YAML serializer to the file options. Could be a wrapper around SnakeYAML.
-            default:
-<span class="nc" id="L104">                throw new ProvidenceConfigException(</span>
-<span class="nc" id="L105">                        String.format(&quot;Unrecognized resource config type: %s (%s)&quot;,</span>
-                                      suffix, resourceName));
+<span class="fc" id="L90">        int lastSlash = resourceName.lastIndexOf(&quot;/&quot;);</span>
+<span class="fc" id="L91">        String fileName = resourceName;</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (lastSlash &gt;= 0) {</span>
+<span class="fc" id="L93">            fileName = resourceName.substring(lastSlash + 1);</span>
         }
-<span class="fc" id="L108">        ClassLoader classLoader = ClassLoader.getSystemClassLoader();</span>
-<span class="fc" id="L109">        InputStream in = classLoader.getResourceAsStream(resourceName);</span>
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (in == null) {</span>
-<span class="fc" id="L111">            in = ResourceConfigSupplier.class.getResourceAsStream(resourceName);</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if (in == null) {</span>
-<span class="nc" id="L113">                throw new ProvidenceConfigException(&quot;No such config resource: &quot; + resourceName);</span>
-            }
-        }
-
         try {
-<span class="fc" id="L118">            return serializer.deserialize(in, descriptor);</span>
-<span class="nc" id="L119">        } catch (SerializerException se) {</span>
-<span class="nc" id="L120">            throw new ProvidenceConfigException(se);</span>
-<span class="nc" id="L121">        } catch (IOException e) {</span>
-<span class="nc" id="L122">            throw new ProvidenceConfigException(e, &quot;Unknown serializer exception: &quot; + e.getMessage());</span>
+<span class="fc" id="L96">            String suffix = resourceName.substring(lastDot)</span>
+<span class="fc" id="L97">                                        .toLowerCase();</span>
+            Serializer serializer;
+<span class="pc bpc" id="L99" title="16 of 22 branches missed.">            switch (suffix) {</span>
+                case &quot;.json&quot;:
+<span class="fc" id="L101">                    serializer = new JsonSerializer();</span>
+<span class="fc" id="L102">                    break;</span>
+                case &quot;.cfg&quot;:
+                case &quot;.cnf&quot;:
+                case &quot;.config&quot;:
+                case &quot;.pvd&quot;:
+                case &quot;.providence&quot;:
+<span class="fc" id="L108">                    serializer = new PrettySerializer().config();</span>
+<span class="fc" id="L109">                    break;</span>
+                // TODO: Add YAML serializer to the file options. Could be a wrapper around SnakeYAML.
+                default:
+<span class="nc" id="L112">                    throw new ProvidenceConfigException(String.format(&quot;Unrecognized resource config type: %s (%s)&quot;,</span>
+                                                                      suffix,
+                                                                      resourceName));
+            }
+<span class="fc" id="L116">            ClassLoader classLoader = ClassLoader.getSystemClassLoader();</span>
+<span class="fc" id="L117">            InputStream in = classLoader.getResourceAsStream(resourceName);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if (in == null) {</span>
+<span class="fc" id="L119">                in = ResourceConfigSupplier.class.getResourceAsStream(resourceName);</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">                if (in == null) {</span>
+<span class="nc" id="L121">                    throw new ProvidenceConfigException(&quot;No such config resource: &quot; + resourceName);</span>
+                }
+            }
+
+            try {
+<span class="fc" id="L126">                return serializer.deserialize(in, descriptor);</span>
+<span class="nc" id="L127">            } catch (TokenizerException te) {</span>
+<span class="nc" id="L128">                throw new ProvidenceConfigException(te);</span>
+<span class="nc" id="L129">            } catch (SerializerException se) {</span>
+<span class="nc" id="L130">                throw new ProvidenceConfigException(se);</span>
+<span class="nc" id="L131">            } catch (IOException e) {</span>
+<span class="nc" id="L132">                throw  new ProvidenceConfigException(e, &quot;Unknown serializer exception: &quot; + e.getMessage());</span>
+            }
+<span class="nc" id="L134">        } catch (ProvidenceConfigException pce) {</span>
+<span class="nc" id="L135">            pce.setFile(fileName);</span>
+<span class="nc" id="L136">            throw pce;</span>
         }
     }
 }

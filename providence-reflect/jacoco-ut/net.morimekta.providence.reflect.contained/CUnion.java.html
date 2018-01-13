@@ -27,7 +27,7 @@ import net.morimekta.providence.PUnion;
 import net.morimekta.providence.descriptor.PMessageDescriptor;
 import net.morimekta.providence.descriptor.PUnionDescriptor;
 import net.morimekta.providence.util.ThriftAnnotation;
-import net.morimekta.providence.util.ThriftCollection;
+import net.morimekta.providence.util.ThriftContainer;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,7 +63,7 @@ public class CUnion implements PUnion&lt;CUnion,CField&gt; {
 <span class="fc bfc" id="L63" title="All 2 branches covered.">        } else if (builder.currentValue instanceof List) {</span>
 <span class="fc" id="L64">            this.unionValue = ImmutableList.copyOf((List) builder.currentValue);</span>
 <span class="fc bfc" id="L65" title="All 2 branches covered.">        } else if (builder.currentValue instanceof Map) {</span>
-<span class="pc bfc" id="L66" title="All 2 branches covered.">            switch (ThriftCollection.forName(unionField.getAnnotationValue(ThriftAnnotation.CONTAINER))) {</span>
+<span class="pc bfc" id="L66" title="All 2 branches covered.">            switch (ThriftContainer.forName(unionField.getAnnotationValue(ThriftAnnotation.CONTAINER))) {</span>
                 case SORTED:
 <span class="fc" id="L68">                    this.unionValue = ImmutableSortedMap.copyOf((Map) builder.currentValue);</span>
 <span class="fc" id="L69">                    break;</span>
@@ -72,7 +72,7 @@ public class CUnion implements PUnion&lt;CUnion,CField&gt; {
 <span class="fc" id="L72">                    break;</span>
             }
 <span class="fc bfc" id="L74" title="All 2 branches covered.">        } else if (builder.currentValue instanceof Set) {</span>
-<span class="fc bfc" id="L75" title="All 2 branches covered.">            switch (ThriftCollection.forName(unionField.getAnnotationValue(ThriftAnnotation.CONTAINER))) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            switch (ThriftContainer.forName(unionField.getAnnotationValue(ThriftAnnotation.CONTAINER))) {</span>
                 case SORTED:
 <span class="fc" id="L77">                    this.unionValue = ImmutableSortedSet.copyOf((Set) builder.currentValue);</span>
 <span class="fc" id="L78">                    break;</span>
