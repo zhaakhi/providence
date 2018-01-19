@@ -70,7 +70,10 @@ public interface ConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PFie
      * @return Non-modifiable supplier of current config containing a snapshot.
      */
     default ConfigSupplier&lt;M,F&gt; snapshot() {
-<span class="nc" id="L73">        return new FixedConfigSupplier&lt;&gt;(this);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (this instanceof FixedConfigSupplier) {</span>
+<span class="fc" id="L74">            return this;</span>
+        }
+<span class="fc" id="L76">        return new FixedConfigSupplier&lt;&gt;(this);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

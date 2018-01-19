@@ -20,6 +20,7 @@
  */
 package net.morimekta.providence.config.impl;
 
+import net.morimekta.providence.PEnumValue;
 import net.morimekta.providence.PMessage;
 import net.morimekta.providence.PType;
 import net.morimekta.providence.config.ProvidenceConfigException;
@@ -49,7 +50,7 @@ import java.util.TreeMap;
 /**
  * Utilities for helping with providence config handling.
  */
-<span class="nc" id="L52">public class ProvidenceConfigUtil {</span>
+<span class="nc" id="L53">class ProvidenceConfigUtil {</span>
     /**
      * Look up a key in the message structure. If the key is not found, return null.
      *
@@ -59,7 +60,7 @@ import java.util.TreeMap;
      * @throws ProvidenceConfigException When unable to get value from message.
      */
     static Object getInMessage(PMessage message, String key) throws ProvidenceConfigException {
-<span class="fc" id="L62">        return getInMessage(message, key, null);</span>
+<span class="fc" id="L63">        return getInMessage(message, key, null);</span>
     }
 
     /**
@@ -75,110 +76,121 @@ import java.util.TreeMap;
      */
     static Object getInMessage(PMessage message, final String key, Object defValue)
             throws ProvidenceConfigException {
-<span class="fc" id="L78">        String sub = key;</span>
+<span class="fc" id="L79">        String sub = key;</span>
         String name;
 
-<span class="fc" id="L81">        PMessageDescriptor descriptor = message.descriptor();</span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">        while (sub.contains(&quot;.&quot;)) {</span>
-<span class="fc" id="L83">            int idx = sub.indexOf(&quot;.&quot;);</span>
+<span class="fc" id="L82">        PMessageDescriptor descriptor = message.descriptor();</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        while (sub.contains(&quot;.&quot;)) {</span>
+<span class="fc" id="L84">            int idx = sub.indexOf(&quot;.&quot;);</span>
 
-<span class="fc" id="L85">            name = sub.substring(0, idx);</span>
-<span class="fc" id="L86">            sub = sub.substring(idx + 1);</span>
+<span class="fc" id="L86">            name = sub.substring(0, idx);</span>
+<span class="fc" id="L87">            sub = sub.substring(idx + 1);</span>
 
-<span class="fc" id="L88">            PField field = descriptor.findFieldByName(name);</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (field == null) {</span>
-<span class="fc" id="L90">                throw new ProvidenceConfigException(&quot;Message &quot; + descriptor.getQualifiedName() + &quot; has no field named &quot; + name);</span>
+<span class="fc" id="L89">            PField field = descriptor.findFieldByName(name);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (field == null) {</span>
+<span class="fc" id="L91">                throw new ProvidenceConfigException(&quot;Message &quot; + descriptor.getQualifiedName() + &quot; has no field named &quot; + name);</span>
             }
 
-<span class="fc" id="L93">            PDescriptor fieldDesc = field.getDescriptor();</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (fieldDesc.getType() != PType.MESSAGE) {</span>
-<span class="fc" id="L95">                throw new ProvidenceConfigException(&quot;Field '&quot; + name + &quot;' is not of message type in &quot; + descriptor.getQualifiedName());</span>
+<span class="fc" id="L94">            PDescriptor fieldDesc = field.getDescriptor();</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (fieldDesc.getType() != PType.MESSAGE) {</span>
+<span class="fc" id="L96">                throw new ProvidenceConfigException(&quot;Field '&quot; + name + &quot;' is not of message type in &quot; + descriptor.getQualifiedName());</span>
             }
-<span class="fc" id="L97">            descriptor = (PMessageDescriptor) fieldDesc;</span>
+<span class="fc" id="L98">            descriptor = (PMessageDescriptor) fieldDesc;</span>
 
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (message != null) {</span>
-<span class="fc" id="L100">                message = (PMessage) message.get(field.getId());</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">            if (message != null) {</span>
+<span class="fc" id="L101">                message = (PMessage) message.get(field.getId());</span>
             }
-<span class="fc" id="L102">        }</span>
+<span class="fc" id="L103">        }</span>
 
-<span class="fc" id="L104">        PField field = descriptor.findFieldByName(sub);</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (field == null) {</span>
-<span class="fc" id="L106">            throw new ProvidenceConfigException(&quot;Message &quot; + descriptor.getQualifiedName() + &quot; has no field named &quot; + sub);</span>
+<span class="fc" id="L105">        PField field = descriptor.findFieldByName(sub);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (field == null) {</span>
+<span class="fc" id="L107">            throw new ProvidenceConfigException(&quot;Message &quot; + descriptor.getQualifiedName() + &quot; has no field named &quot; + sub);</span>
         }
 
-<span class="pc bpc" id="L109" title="1 of 4 branches missed.">        if (message == null || !message.has(field.getId())) {</span>
-<span class="fc" id="L110">            return asType(field.getDescriptor(), defValue);</span>
+<span class="pc bpc" id="L110" title="1 of 4 branches missed.">        if (message == null || !message.has(field.getId())) {</span>
+<span class="fc" id="L111">            return asType(field.getDescriptor(), defValue);</span>
         }
 
-<span class="fc" id="L113">        return message.get(field.getId());</span>
+<span class="fc" id="L114">        return message.get(field.getId());</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
-    private static Object asType(PDescriptor descriptor, Object o) throws ProvidenceConfigException {
-<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (o == null) {</span>
-<span class="fc" id="L119">            return null;</span>
+    static Object asType(PDescriptor descriptor, Object o) throws ProvidenceConfigException {
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (o == null) {</span>
+<span class="fc" id="L120">            return null;</span>
         }
 
-<span class="pc bpc" id="L122" title="13 of 14 branches missed.">        switch (descriptor.getType()) {</span>
+<span class="pc bpc" id="L123" title="4 of 14 branches missed.">        switch (descriptor.getType()) {</span>
             case BOOL:
-<span class="nc" id="L124">                return asBoolean(o);</span>
+<span class="fc" id="L125">                return asBoolean(o);</span>
             case BYTE:
-<span class="nc" id="L126">                return (byte) asInteger(o, Byte.MIN_VALUE, Byte.MAX_VALUE);</span>
+<span class="fc" id="L127">                return (byte) asInteger(o, Byte.MIN_VALUE, Byte.MAX_VALUE);</span>
             case I16:
-<span class="nc" id="L128">                return (short) asInteger(o, Short.MIN_VALUE, Short.MAX_VALUE);</span>
+<span class="fc" id="L129">                return (short) asInteger(o, Short.MIN_VALUE, Short.MAX_VALUE);</span>
             case I32:
-<span class="nc" id="L130">                return asInteger(o, Integer.MIN_VALUE, Integer.MAX_VALUE);</span>
+<span class="fc" id="L131">                return asInteger(o, Integer.MIN_VALUE, Integer.MAX_VALUE);</span>
             case I64:
-<span class="nc" id="L132">                return asLong(o);</span>
+<span class="fc" id="L133">                return asLong(o);</span>
             case DOUBLE:
-<span class="nc" id="L134">                return asDouble(o);</span>
+<span class="fc" id="L135">                return asDouble(o);</span>
             case ENUM:
-<span class="nc bnc" id="L136" title="All 2 branches missed.">                if (o instanceof Number) {</span>
-<span class="nc" id="L137">                    return ((PEnumDescriptor) descriptor).findById(((Number) o).intValue());</span>
-<span class="nc bnc" id="L138" title="All 2 branches missed.">                } else if (o instanceof Numeric) {</span>
-<span class="nc" id="L139">                    return ((PEnumDescriptor) descriptor).findById(((Numeric) o).asInteger());</span>
-<span class="nc bnc" id="L140" title="All 2 branches missed.">                } else if (o instanceof CharSequence) {</span>
-<span class="nc" id="L141">                    return ((PEnumDescriptor) descriptor).findByName(o.toString());</span>
-                } else {
-<span class="nc" id="L143">                    throw new ProvidenceConfigException(&quot;Unable to cast &quot; + o.getClass().getSimpleName() + &quot; to enum type.&quot;);</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                if (o instanceof PEnumValue) {</span>
+<span class="fc" id="L138">                    PEnumValue verified = ((PEnumDescriptor) descriptor).findById(((PEnumValue) o).asInteger());</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">                    if (o.equals(verified)) {</span>
+<span class="fc" id="L140">                        return verified;</span>
+                    }
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                } else if (o instanceof Number) {</span>
+<span class="nc" id="L143">                    return ((PEnumDescriptor) descriptor).findById(((Number) o).intValue());</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                } else if (o instanceof Numeric) {</span>
+<span class="nc" id="L145">                    return ((PEnumDescriptor) descriptor).findById(((Numeric) o).asInteger());</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                } else if (o instanceof CharSequence) {</span>
+<span class="nc" id="L147">                    return ((PEnumDescriptor) descriptor).findByName(o.toString());</span>
                 }
+<span class="nc" id="L149">                throw new ProvidenceConfigException(&quot;Unable to cast &quot; + o.getClass().getSimpleName() + &quot; to enum &quot; + descriptor.getQualifiedName());</span>
             case MESSAGE:
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                if (o instanceof PMessage) {</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">                if (o instanceof PMessage) {</span>
                     // Assume the correct message.
-<span class="fc" id="L148">                    return o;</span>
+<span class="fc" id="L153">                    PMessage message = (PMessage) o;</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">                    if (descriptor.equals(message.descriptor())) {</span>
+<span class="fc" id="L155">                        return o;</span>
+                    }
+<span class="nc" id="L157">                    throw new ProvidenceConfigException(&quot;Message type mismatch: &quot; + message.descriptor().getQualifiedName() +</span>
+<span class="nc" id="L158">                                                        &quot; is not compatible with &quot; + descriptor.getQualifiedName());</span>
                 } else {
-<span class="nc" id="L150">                    throw new ProvidenceConfigException(&quot;Unable to cast &quot; + o.getClass().getSimpleName() + &quot; to message.&quot;);</span>
+<span class="nc" id="L160">                    throw new ProvidenceConfigException(o.getClass().getSimpleName() + &quot; is not compatible with message &quot; +</span>
+<span class="nc" id="L161">                                                        descriptor.getQualifiedName());</span>
                 }
             case STRING:
-<span class="nc" id="L153">                return asString(o);</span>
+<span class="fc" id="L164">                return asString(o);</span>
             case BINARY:
-<span class="nc bnc" id="L155" title="All 2 branches missed.">                if (o instanceof Binary) {</span>
-<span class="nc" id="L156">                    return o;</span>
-<span class="nc bnc" id="L157" title="All 2 branches missed.">                } else if (o instanceof CharSequence) {</span>
-<span class="nc" id="L158">                    return Binary.fromBase64(o.toString());</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">                if (o instanceof Binary) {</span>
+<span class="fc" id="L167">                    return o;</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                } else if (o instanceof CharSequence) {</span>
+<span class="nc" id="L169">                    return Binary.fromBase64(o.toString());</span>
                 } else {
-<span class="nc" id="L160">                    throw new ProvidenceConfigException(&quot;Unable to cast &quot; + o.getClass().getSimpleName() + &quot; to binary.&quot;);</span>
+<span class="nc" id="L171">                    throw new ProvidenceConfigException(o.getClass()</span>
+<span class="nc" id="L172">                                                         .getSimpleName() + &quot; is not compatible with binary&quot;);</span>
                 }
             case LIST: {
-<span class="nc" id="L163">                PList&lt;Object&gt; list = (PList) descriptor;</span>
-<span class="nc" id="L164">                return list.builder()</span>
-<span class="nc" id="L165">                           .addAll(asCollection(o, list.itemDescriptor()))</span>
-<span class="nc" id="L166">                           .build();</span>
+<span class="nc" id="L175">                PList&lt;Object&gt; list = (PList) descriptor;</span>
+<span class="nc" id="L176">                return list.builder()</span>
+<span class="nc" id="L177">                           .addAll(asCollection(o, list.itemDescriptor()))</span>
+<span class="nc" id="L178">                           .build();</span>
             }
             case SET: {
-<span class="nc" id="L169">                PSet&lt;Object&gt; set = (PSet) descriptor;</span>
-<span class="nc" id="L170">                return set.builder()</span>
-<span class="nc" id="L171">                          .addAll(asCollection(o, set.itemDescriptor()))</span>
-<span class="nc" id="L172">                          .build();</span>
+<span class="nc" id="L181">                PSet&lt;Object&gt; set = (PSet) descriptor;</span>
+<span class="nc" id="L182">                return set.builder()</span>
+<span class="nc" id="L183">                          .addAll(asCollection(o, set.itemDescriptor()))</span>
+<span class="nc" id="L184">                          .build();</span>
             }
             case MAP: {
-<span class="nc" id="L175">                PMap&lt;Object, Object&gt; map = (PMap) descriptor;</span>
-<span class="nc" id="L176">                return map.builder()</span>
-<span class="nc" id="L177">                          .putAll(asMap(o, map.keyDescriptor(), map.itemDescriptor()))</span>
-<span class="nc" id="L178">                          .build();</span>
+<span class="nc" id="L187">                PMap&lt;Object, Object&gt; map = (PMap) descriptor;</span>
+<span class="nc" id="L188">                return map.builder()</span>
+<span class="nc" id="L189">                          .putAll(asMap(o, map.keyDescriptor(), map.itemDescriptor()))</span>
+<span class="nc" id="L190">                          .build();</span>
             }
             default:
-<span class="nc" id="L181">                throw new IllegalStateException(&quot;Unhandled field type: &quot; + descriptor.getType());</span>
+<span class="nc" id="L193">                throw new IllegalStateException(&quot;Unhandled field type: &quot; + descriptor.getType());</span>
         }
     }
 
@@ -190,36 +202,36 @@ import java.util.TreeMap;
      * @throws ProvidenceConfigException When unable to convert value.
      */
     static boolean asBoolean(Object value) throws ProvidenceConfigException {
-<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (value instanceof Boolean) {</span>
-<span class="fc" id="L194">            return (Boolean) value;</span>
-<span class="pc bpc" id="L195" title="1 of 4 branches missed.">        } else if (value instanceof Double || value instanceof Float) {</span>
-<span class="fc" id="L196">            throw new ProvidenceConfigException(&quot;Unable to convert real value to boolean&quot;);</span>
-<span class="fc bfc" id="L197" title="All 2 branches covered.">        } else if (value instanceof Number) {</span>
-<span class="fc" id="L198">            long l = ((Number) value).longValue();</span>
-<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (l == 0L) return false;</span>
-<span class="fc bfc" id="L200" title="All 2 branches covered.">            if (l == 1L) return true;</span>
-<span class="fc" id="L201">            throw new ProvidenceConfigException(&quot;Unable to convert number &quot; + l + &quot; to boolean&quot;);</span>
-<span class="fc bfc" id="L202" title="All 2 branches covered.">        } else if (value instanceof CharSequence) {</span>
-<span class="pc bpc" id="L203" title="26 of 34 branches missed.">            switch (value.toString().toLowerCase()) {</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (value instanceof Boolean) {</span>
+<span class="fc" id="L206">            return (Boolean) value;</span>
+<span class="pc bpc" id="L207" title="1 of 4 branches missed.">        } else if (value instanceof Double || value instanceof Float) {</span>
+<span class="fc" id="L208">            throw new ProvidenceConfigException(&quot;Unable to convert real value to boolean&quot;);</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        } else if (value instanceof Number) {</span>
+<span class="fc" id="L210">            long l = ((Number) value).longValue();</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            if (l == 0L) return false;</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            if (l == 1L) return true;</span>
+<span class="fc" id="L213">            throw new ProvidenceConfigException(&quot;Unable to convert number &quot; + l + &quot; to boolean&quot;);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        } else if (value instanceof CharSequence) {</span>
+<span class="pc bpc" id="L215" title="26 of 34 branches missed.">            switch (value.toString().toLowerCase()) {</span>
                 case &quot;0&quot;:
                 case &quot;n&quot;:
                 case &quot;f&quot;:
                 case &quot;no&quot;:
                 case &quot;false&quot;:
-<span class="fc" id="L209">                    return false;</span>
+<span class="fc" id="L221">                    return false;</span>
                 case &quot;1&quot;:
                 case &quot;y&quot;:
                 case &quot;t&quot;:
                 case &quot;yes&quot;:
                 case &quot;true&quot;:
-<span class="fc" id="L215">                    return true;</span>
+<span class="fc" id="L227">                    return true;</span>
                 default:
-<span class="fc" id="L217">                    throw new ProvidenceConfigException(String.format(</span>
+<span class="fc" id="L229">                    throw new ProvidenceConfigException(String.format(</span>
                             &quot;Unable to parse the string \&quot;%s\&quot; to boolean&quot;,
-<span class="fc" id="L219">                            Strings.escape(value.toString())));</span>
+<span class="fc" id="L231">                            Strings.escape(value.toString())));</span>
             }
         }
-<span class="fc" id="L222">        throw new ProvidenceConfigException(&quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a boolean&quot;);</span>
+<span class="fc" id="L234">        throw new ProvidenceConfigException(&quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a boolean&quot;);</span>
     }
 
     /**
@@ -230,48 +242,48 @@ import java.util.TreeMap;
      * @throws ProvidenceConfigException When unable to convert value.
      */
     static int asInteger(Object value, int min, int max) throws ProvidenceConfigException {
-<span class="fc bfc" id="L233" title="All 2 branches covered.">        if (value instanceof Long) {</span>
-<span class="fc" id="L234">            return validateInRange(&quot;Long&quot;, (Long) value, min, max);</span>
-<span class="pc bpc" id="L235" title="1 of 4 branches missed.">        } else if (value instanceof Float || value instanceof Double) {</span>
-<span class="fc" id="L236">            long l = ((Number) value).longValue();</span>
-<span class="fc bfc" id="L237" title="All 2 branches covered.">            if ((double) l != ((Number) value).doubleValue()) {</span>
-<span class="fc" id="L238">                throw new ProvidenceConfigException(&quot;Truncating integer decimals from &quot; + value.toString());</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (value instanceof Long) {</span>
+<span class="fc" id="L246">            return validateInRange(&quot;Long&quot;, (Long) value, min, max);</span>
+<span class="pc bpc" id="L247" title="1 of 4 branches missed.">        } else if (value instanceof Float || value instanceof Double) {</span>
+<span class="fc" id="L248">            long l = ((Number) value).longValue();</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">            if ((double) l != ((Number) value).doubleValue()) {</span>
+<span class="fc" id="L250">                throw new ProvidenceConfigException(&quot;Truncating integer decimals from &quot; + value.toString());</span>
             }
-<span class="fc" id="L240">            return validateInRange(value.getClass().getSimpleName(), l, min, max);</span>
-<span class="fc bfc" id="L241" title="All 2 branches covered.">        } else if (value instanceof Number) {</span>
-<span class="fc" id="L242">            return validateInRange(value.getClass().getSimpleName(), ((Number) value).intValue(), min, max);</span>
-<span class="fc bfc" id="L243" title="All 2 branches covered.">        } else if (value instanceof Numeric) {</span>
-<span class="fc" id="L244">            return validateInRange(&quot;Numeric&quot;, ((Numeric) value).asInteger(), min, max);</span>
-<span class="fc bfc" id="L245" title="All 2 branches covered.">        } else if (value instanceof Boolean) {</span>
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">            return ((Boolean) value) ? 1 : 0;</span>
-<span class="fc bfc" id="L247" title="All 2 branches covered.">        } else if (value instanceof CharSequence) {</span>
+<span class="fc" id="L252">            return validateInRange(value.getClass().getSimpleName(), l, min, max);</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        } else if (value instanceof Number) {</span>
+<span class="fc" id="L254">            return validateInRange(value.getClass().getSimpleName(), ((Number) value).intValue(), min, max);</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        } else if (value instanceof Numeric) {</span>
+<span class="fc" id="L256">            return validateInRange(&quot;Numeric&quot;, ((Numeric) value).asInteger(), min, max);</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        } else if (value instanceof Boolean) {</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">            return ((Boolean) value) ? 1 : 0;</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        } else if (value instanceof CharSequence) {</span>
             try {
-<span class="fc" id="L249">                String s = value.toString();</span>
-<span class="fc bfc" id="L250" title="All 2 branches covered.">                if (s.startsWith(&quot;0x&quot;)) {</span>
-<span class="fc" id="L251">                    return validateInRange(&quot;String&quot;, Integer.parseInt(s.substring(2), 16), min, max);</span>
-<span class="fc bfc" id="L252" title="All 2 branches covered.">                } else if (s.startsWith(&quot;0&quot;)) {</span>
-<span class="fc" id="L253">                    return validateInRange(&quot;String&quot;, Integer.parseInt(s, 8), min, max);</span>
+<span class="fc" id="L261">                String s = value.toString();</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">                if (s.startsWith(&quot;0x&quot;)) {</span>
+<span class="fc" id="L263">                    return validateInRange(&quot;String&quot;, Integer.parseInt(s.substring(2), 16), min, max);</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                } else if (s.startsWith(&quot;0&quot;)) {</span>
+<span class="fc" id="L265">                    return validateInRange(&quot;String&quot;, Integer.parseInt(s, 8), min, max);</span>
                 }
-<span class="fc" id="L255">                return validateInRange(&quot;String&quot;, Integer.parseInt(value.toString()), min, max);</span>
-<span class="fc" id="L256">            } catch (NumberFormatException nfe) {</span>
-<span class="fc" id="L257">                throw new ProvidenceConfigException(</span>
-<span class="fc" id="L258">                        &quot;Unable to parse string \&quot;&quot; + Strings.escape(value.toString()) +</span>
+<span class="fc" id="L267">                return validateInRange(&quot;String&quot;, Integer.parseInt(value.toString()), min, max);</span>
+<span class="fc" id="L268">            } catch (NumberFormatException nfe) {</span>
+<span class="fc" id="L269">                throw new ProvidenceConfigException(</span>
+<span class="fc" id="L270">                        &quot;Unable to parse string \&quot;&quot; + Strings.escape(value.toString()) +</span>
                         &quot;\&quot; to an int&quot;, nfe);
             }
-<span class="fc bfc" id="L261" title="All 2 branches covered.">        } else if (value instanceof Date) {</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        } else if (value instanceof Date) {</span>
             // Convert date timestamp to seconds since epoch.
-<span class="fc" id="L263">            return validateInRange(&quot;Date&quot;, (((Date) value).getTime() / 1000), min, max);</span>
+<span class="fc" id="L275">            return validateInRange(&quot;Date&quot;, (((Date) value).getTime() / 1000), min, max);</span>
         }
-<span class="fc" id="L265">        throw new ProvidenceConfigException(&quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to an int&quot;);</span>
+<span class="fc" id="L277">        throw new ProvidenceConfigException(&quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to an int&quot;);</span>
     }
 
     private static int validateInRange(String type, long l, int min, int max) throws ProvidenceConfigException {
-<span class="fc bfc" id="L269" title="All 2 branches covered.">        if (l &lt; min) {</span>
-<span class="fc" id="L270">            throw new ProvidenceConfigException(type + &quot; value outsize of bounds: &quot; + l + &quot; &lt; &quot; + min);</span>
-<span class="fc bfc" id="L271" title="All 2 branches covered.">        } else if (l &gt; max) {</span>
-<span class="fc" id="L272">            throw new ProvidenceConfigException(type + &quot; value outsize of bounds: &quot; + l + &quot; &gt; &quot; + max);</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (l &lt; min) {</span>
+<span class="fc" id="L282">            throw new ProvidenceConfigException(type + &quot; value outsize of bounds: &quot; + l + &quot; &lt; &quot; + min);</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">        } else if (l &gt; max) {</span>
+<span class="fc" id="L284">            throw new ProvidenceConfigException(type + &quot; value outsize of bounds: &quot; + l + &quot; &gt; &quot; + max);</span>
         }
-<span class="fc" id="L274">        return (int) l;</span>
+<span class="fc" id="L286">        return (int) l;</span>
     }
 
     /**
@@ -282,36 +294,36 @@ import java.util.TreeMap;
      * @throws ProvidenceConfigException When unable to convert value.
      */
     static long asLong(Object value) throws ProvidenceConfigException {
-<span class="pc bpc" id="L285" title="2 of 4 branches missed.">        if (value instanceof Float || value instanceof Double) {</span>
-<span class="nc" id="L286">            long l = ((Number) value).longValue();</span>
-<span class="nc bnc" id="L287" title="All 2 branches missed.">            if ((double) l != ((Number) value).doubleValue()) {</span>
-<span class="nc" id="L288">                throw new ProvidenceConfigException(&quot;Truncating long decimals from &quot; + value.toString());</span>
+<span class="pc bpc" id="L297" title="2 of 4 branches missed.">        if (value instanceof Float || value instanceof Double) {</span>
+<span class="nc" id="L298">            long l = ((Number) value).longValue();</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">            if ((double) l != ((Number) value).doubleValue()) {</span>
+<span class="nc" id="L300">                throw new ProvidenceConfigException(&quot;Truncating long decimals from &quot; + value.toString());</span>
             }
-<span class="nc" id="L290">            return l;</span>
-<span class="pc bpc" id="L291" title="1 of 2 branches missed.">        } else if (value instanceof Number) {</span>
-<span class="fc" id="L292">            return ((Number) value).longValue();</span>
-<span class="nc bnc" id="L293" title="All 2 branches missed.">        } else if (value instanceof Numeric) {</span>
-<span class="nc" id="L294">            return ((Numeric) value).asInteger();</span>
-<span class="nc bnc" id="L295" title="All 2 branches missed.">        } else if (value instanceof Boolean) {</span>
-<span class="nc bnc" id="L296" title="All 2 branches missed.">            return ((Boolean) value) ? 1L : 0L;</span>
-<span class="nc bnc" id="L297" title="All 2 branches missed.">        } else if (value instanceof CharSequence) {</span>
+<span class="nc" id="L302">            return l;</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        } else if (value instanceof Number) {</span>
+<span class="fc" id="L304">            return ((Number) value).longValue();</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">        } else if (value instanceof Numeric) {</span>
+<span class="nc" id="L306">            return ((Numeric) value).asInteger();</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">        } else if (value instanceof Boolean) {</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">            return ((Boolean) value) ? 1L : 0L;</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">        } else if (value instanceof CharSequence) {</span>
             try {
-<span class="nc" id="L299">                String s = value.toString();</span>
-<span class="nc bnc" id="L300" title="All 2 branches missed.">                if (s.startsWith(&quot;0x&quot;)) {</span>
-<span class="nc" id="L301">                    return Long.parseLong(s.substring(2), 16);</span>
-<span class="nc bnc" id="L302" title="All 2 branches missed.">                } else if (s.startsWith(&quot;0&quot;)) {</span>
-<span class="nc" id="L303">                    return Long.parseLong(s, 8);</span>
+<span class="nc" id="L311">                String s = value.toString();</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">                if (s.startsWith(&quot;0x&quot;)) {</span>
+<span class="nc" id="L313">                    return Long.parseLong(s.substring(2), 16);</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">                } else if (s.startsWith(&quot;0&quot;)) {</span>
+<span class="nc" id="L315">                    return Long.parseLong(s, 8);</span>
                 }
-<span class="nc" id="L305">                return Long.parseLong(s);</span>
-<span class="nc" id="L306">            } catch (NumberFormatException nfe) {</span>
-<span class="nc" id="L307">                throw new ProvidenceConfigException(&quot;Unable to parse string \&quot;&quot; + Strings.escape(value.toString()) +</span>
+<span class="nc" id="L317">                return Long.parseLong(s);</span>
+<span class="nc" id="L318">            } catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L319">                throw new ProvidenceConfigException(&quot;Unable to parse string \&quot;&quot; + Strings.escape(value.toString()) +</span>
                                                     &quot;\&quot; to a long&quot;, nfe);
             }
-<span class="nc bnc" id="L310" title="All 2 branches missed.">        } else if (value instanceof Date) {</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        } else if (value instanceof Date) {</span>
             // Return date timestamp in milliseconds.
-<span class="nc" id="L312">            return ((Date) value).getTime();</span>
+<span class="nc" id="L324">            return ((Date) value).getTime();</span>
         }
-<span class="nc" id="L314">        throw new ProvidenceConfigException(&quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a long&quot;);</span>
+<span class="nc" id="L326">        throw new ProvidenceConfigException(&quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a long&quot;);</span>
     }
 
     /**
@@ -322,20 +334,20 @@ import java.util.TreeMap;
      * @throws ProvidenceConfigException When unable to convert value.
      */
     static double asDouble(Object value) throws ProvidenceConfigException {
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        if (value instanceof Number) {</span>
-<span class="fc" id="L326">            return ((Number) value).doubleValue();</span>
-<span class="nc bnc" id="L327" title="All 2 branches missed.">        } else if (value instanceof Numeric) {</span>
-<span class="nc" id="L328">            return ((Numeric) value).asInteger();</span>
-<span class="nc bnc" id="L329" title="All 2 branches missed.">        } else if (value instanceof CharSequence) {</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">        if (value instanceof Number) {</span>
+<span class="fc" id="L338">            return ((Number) value).doubleValue();</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">        } else if (value instanceof Numeric) {</span>
+<span class="nc" id="L340">            return ((Numeric) value).asInteger();</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">        } else if (value instanceof CharSequence) {</span>
             try {
-<span class="nc" id="L331">                return Double.parseDouble(value.toString());</span>
-<span class="nc" id="L332">            } catch (NumberFormatException nfe) {</span>
-<span class="nc" id="L333">                throw new ProvidenceConfigException(&quot;Unable to parse string \&quot;&quot; + Strings.escape(value.toString()) +</span>
+<span class="nc" id="L343">                return Double.parseDouble(value.toString());</span>
+<span class="nc" id="L344">            } catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L345">                throw new ProvidenceConfigException(&quot;Unable to parse string \&quot;&quot; + Strings.escape(value.toString()) +</span>
                                                     &quot;\&quot; to a double&quot;, nfe);
             }
         }
-<span class="nc" id="L337">        throw new ProvidenceConfigException(</span>
-<span class="nc" id="L338">                &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a double&quot;);</span>
+<span class="nc" id="L349">        throw new ProvidenceConfigException(</span>
+<span class="nc" id="L350">                &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a double&quot;);</span>
     }
 
     /**
@@ -346,16 +358,16 @@ import java.util.TreeMap;
      * @throws ProvidenceConfigException When unable to convert value.
      */
     static String asString(Object value) throws ProvidenceConfigException {
-<span class="pc bpc" id="L349" title="2 of 4 branches missed.">        if (value instanceof Collection || value instanceof Map) {</span>
-<span class="nc" id="L350">            throw new ProvidenceConfigException(</span>
-<span class="nc" id="L351">                    &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a string&quot;);</span>
-<span class="pc bpc" id="L352" title="1 of 2 branches missed.">        } else if (value instanceof Stringable) {</span>
-<span class="nc" id="L353">            return ((Stringable) value).asString();</span>
-<span class="pc bpc" id="L354" title="1 of 2 branches missed.">        } else if (value instanceof Date) {</span>
-<span class="nc" id="L355">            Instant instant = ((Date) value).toInstant();</span>
-<span class="nc" id="L356">            return DateTimeFormatter.ISO_INSTANT.format(instant);</span>
+<span class="pc bpc" id="L361" title="2 of 4 branches missed.">        if (value instanceof Collection || value instanceof Map) {</span>
+<span class="nc" id="L362">            throw new ProvidenceConfigException(</span>
+<span class="nc" id="L363">                    &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a string&quot;);</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">        } else if (value instanceof Stringable) {</span>
+<span class="nc" id="L365">            return ((Stringable) value).asString();</span>
+<span class="pc bpc" id="L366" title="1 of 2 branches missed.">        } else if (value instanceof Date) {</span>
+<span class="nc" id="L367">            Instant instant = ((Date) value).toInstant();</span>
+<span class="nc" id="L368">            return DateTimeFormatter.ISO_INSTANT.format(instant);</span>
         }
-<span class="fc" id="L358">        return Objects.toString(value);</span>
+<span class="fc" id="L370">        return Objects.toString(value);</span>
     }
 
     /**
@@ -369,15 +381,15 @@ import java.util.TreeMap;
      */
     @SuppressWarnings(&quot;unchecked&quot;)
     static &lt;T&gt; Collection&lt;T&gt; asCollection(Object value, PDescriptor itemType) throws ProvidenceConfigException {
-<span class="nc bnc" id="L372" title="All 2 branches missed.">        if (value instanceof Collection) {</span>
-<span class="nc" id="L373">            List&lt;T&gt; out = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L374" title="All 2 branches missed.">            for (Object item : (Collection) value) {</span>
-<span class="nc" id="L375">                out.add((T) asType(itemType, item));</span>
-<span class="nc" id="L376">            }</span>
-<span class="nc" id="L377">            return out;</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">        if (value instanceof Collection) {</span>
+<span class="nc" id="L385">            List&lt;T&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">            for (Object item : (Collection) value) {</span>
+<span class="nc" id="L387">                out.add((T) asType(itemType, item));</span>
+<span class="nc" id="L388">            }</span>
+<span class="nc" id="L389">            return out;</span>
         }
-<span class="nc" id="L379">        throw new ProvidenceConfigException(</span>
-<span class="nc" id="L380">                &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a collection&quot;);</span>
+<span class="nc" id="L391">        throw new ProvidenceConfigException(</span>
+<span class="nc" id="L392">                &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a collection&quot;);</span>
     }
 
     /**
@@ -393,16 +405,16 @@ import java.util.TreeMap;
      */
     @SuppressWarnings(&quot;unchecked&quot;)
     static &lt;K,V&gt; Map&lt;K,V&gt; asMap(Object value, PDescriptor keyType, PDescriptor itemType) throws ProvidenceConfigException {
-<span class="nc bnc" id="L396" title="All 2 branches missed.">        if (value instanceof Map) {</span>
-<span class="nc bnc" id="L397" title="All 2 branches missed.">            Map&lt;K,V&gt; out = value instanceof TreeMap ? new TreeMap&lt;&gt;() : new LinkedHashMap&lt;&gt;();</span>
-<span class="nc bnc" id="L398" title="All 2 branches missed.">            for (Map.Entry item : ((Map&lt;?,?&gt;) value).entrySet()) {</span>
-<span class="nc" id="L399">                out.put((K) asType(keyType, item.getKey()),</span>
-<span class="nc" id="L400">                        (V) asType(itemType, item.getValue()));</span>
-<span class="nc" id="L401">            }</span>
-<span class="nc" id="L402">            return out;</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">        if (value instanceof Map) {</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">            Map&lt;K,V&gt; out = value instanceof TreeMap ? new TreeMap&lt;&gt;() : new LinkedHashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">            for (Map.Entry item : ((Map&lt;?,?&gt;) value).entrySet()) {</span>
+<span class="nc" id="L411">                out.put((K) asType(keyType, item.getKey()),</span>
+<span class="nc" id="L412">                        (V) asType(itemType, item.getValue()));</span>
+<span class="nc" id="L413">            }</span>
+<span class="nc" id="L414">            return out;</span>
         }
-<span class="nc" id="L404">        throw new ProvidenceConfigException(</span>
-<span class="nc" id="L405">                &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a collection&quot;);</span>
+<span class="nc" id="L416">        throw new ProvidenceConfigException(</span>
+<span class="nc" id="L417">                &quot;Unable to convert &quot; + value.getClass().getSimpleName() + &quot; to a collection&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

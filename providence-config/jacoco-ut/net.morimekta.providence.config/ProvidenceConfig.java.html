@@ -31,9 +31,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static net.morimekta.providence.config.impl.ProvidenceConfigParser.canonicalFileLocation;
 
 /**
  * Providence config loader. This loads providence configs.
@@ -45,8 +48,8 @@ public class ProvidenceConfig implements ConfigResolver {
      * @param registry The type registry used to find message and enum types.
      */
     public ProvidenceConfig(TypeRegistry registry) {
-<span class="fc" id="L48">        this(registry, new FileWatcher(), false);</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L51">        this(registry, new FileWatcher(), false);</span>
+<span class="fc" id="L52">    }</span>
 
     /**
      * Make a config instance.
@@ -57,8 +60,8 @@ public class ProvidenceConfig implements ConfigResolver {
      */
     public ProvidenceConfig(@Nonnull TypeRegistry registry,
                             @Nullable FileWatcher watcher, boolean strict) {
-<span class="fc" id="L60">        this(registry, watcher, strict, Clock.systemUTC());</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L63">        this(registry, watcher, strict, Clock.systemUTC());</span>
+<span class="fc" id="L64">    }</span>
 
     /**
      * Make a config instance.
@@ -71,12 +74,12 @@ public class ProvidenceConfig implements ConfigResolver {
     public ProvidenceConfig(@Nonnull TypeRegistry registry,
                             @Nullable FileWatcher watcher,
                             boolean strict,
-<span class="fc" id="L74">                            @Nonnull Clock clock) {</span>
-<span class="fc" id="L75">        this.loaded = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="fc" id="L76">        this.watcher = watcher;</span>
-<span class="fc" id="L77">        this.parser = new ProvidenceConfigParser(registry, strict);</span>
-<span class="fc" id="L78">        this.clock = clock;</span>
-<span class="fc" id="L79">    }</span>
+<span class="fc" id="L77">                            @Nonnull Clock clock) {</span>
+<span class="fc" id="L78">        this.loaded = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L79">        this.watcher = watcher;</span>
+<span class="fc" id="L80">        this.parser = new ProvidenceConfigParser(registry, strict);</span>
+<span class="fc" id="L81">        this.clock = clock;</span>
+<span class="fc" id="L82">    }</span>
 
     @Nonnull
     @Override
@@ -85,23 +88,27 @@ public class ProvidenceConfig implements ConfigResolver {
     ConfigSupplier&lt;M, F&gt; resolveConfig(@Nonnull File configFile,
                                        @Nullable ConfigSupplier&lt;M, F&gt; parentConfig)
             throws ProvidenceConfigException {
-<span class="fc" id="L88">        String path = null;</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (parentConfig == null) {</span>
-            try {
-<span class="fc" id="L91">                path = configFile.getAbsoluteFile().getCanonicalPath();</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">                if (loaded.containsKey(path)) {</span>
-<span class="fc" id="L93">                    return (ConfigSupplier&lt;M,F&gt;) loaded.get(path);</span>
-                }
-<span class="nc" id="L95">            } catch (IOException e) {</span>
-<span class="nc" id="L96">                throw new ProvidenceConfigException(e, e.getMessage());</span>
-<span class="fc" id="L97">            }</span>
+        Path configPath;
+        try {
+<span class="fc" id="L93">            configPath = canonicalFileLocation(configFile.toPath());</span>
+<span class="nc" id="L94">        } catch (IOException e) {</span>
+<span class="nc" id="L95">            throw new ProvidenceConfigException(e, e.getMessage());</span>
+<span class="fc" id="L96">        }</span>
+
+<span class="fc" id="L98">        String path = null;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (parentConfig == null) {</span>
+<span class="fc" id="L100">            path = configPath.toString();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            if (loaded.containsKey(path)) {</span>
+<span class="fc" id="L102">                return (ConfigSupplier&lt;M, F&gt;) loaded.get(path);</span>
+            }
         }
-<span class="fc" id="L99">        ProvidenceConfigSupplier&lt;M,F&gt; supplier = new ProvidenceConfigSupplier&lt;&gt;(configFile, parentConfig, watcher, parser, clock);</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (parentConfig == null) {</span>
-<span class="fc" id="L101">            loaded.put(path, supplier);</span>
+<span class="fc" id="L105">        ProvidenceConfigSupplier&lt;M, F&gt; supplier = new ProvidenceConfigSupplier&lt;&gt;(</span>
+                configFile, parentConfig, watcher, parser, clock);
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (parentConfig == null) {</span>
+<span class="fc" id="L108">            loaded.put(path, supplier);</span>
         }
 
-<span class="fc" id="L104">        return supplier;</span>
+<span class="fc" id="L111">        return supplier;</span>
     }
 
     /**
@@ -116,8 +123,8 @@ public class ProvidenceConfig implements ConfigResolver {
     @Nonnull
     public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
     M getConfig(@Nonnull File configFile) throws ProvidenceConfigException {
-<span class="fc" id="L119">        ConfigSupplier&lt;M,F&gt; supplier = resolveConfig(configFile);</span>
-<span class="fc" id="L120">        return supplier.get();</span>
+<span class="fc" id="L126">        ConfigSupplier&lt;M,F&gt; supplier = resolveConfig(configFile);</span>
+<span class="fc" id="L127">        return supplier.get();</span>
     }
 
     /**
@@ -133,8 +140,8 @@ public class ProvidenceConfig implements ConfigResolver {
     @Nonnull
     public &lt;M extends PMessage&lt;M, F&gt;, F extends PField&gt;
     M getConfig(@Nonnull File configFile, @Nonnull M parent) throws ProvidenceConfigException {
-<span class="fc" id="L136">        ConfigSupplier&lt;M,F&gt; supplier = resolveConfig(configFile, new FixedConfigSupplier&lt;&gt;(parent));</span>
-<span class="fc" id="L137">        return supplier.get();</span>
+<span class="fc" id="L143">        ConfigSupplier&lt;M,F&gt; supplier = resolveConfig(configFile, new FixedConfigSupplier&lt;&gt;(parent));</span>
+<span class="fc" id="L144">        return supplier.get();</span>
     }
 
     private final Map&lt;String, ConfigSupplier&gt; loaded;

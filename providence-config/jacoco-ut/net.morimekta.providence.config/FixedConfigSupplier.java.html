@@ -24,12 +24,14 @@ import net.morimekta.providence.PMessage;
 import net.morimekta.providence.descriptor.PField;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 import java.time.Clock;
 import java.util.Objects;
 
 /**
  * A supplier and instance holder for an immutable config instance.
  */
+@Immutable
 public class FixedConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PField&gt; implements ConfigSupplier&lt;M,F&gt; {
     private final M instance;
     private final long timestamp;
@@ -40,8 +42,8 @@ public class FixedConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PFi
      * @param initialConfig The initial config instance.
      */
     public FixedConfigSupplier(@Nonnull M initialConfig) {
-<span class="fc" id="L43">        this(initialConfig, Clock.systemUTC().millis());</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L45">        this(initialConfig, Clock.systemUTC().millis());</span>
+<span class="fc" id="L46">    }</span>
 
     /**
      * This essentially makes a static snapshot of the config and keeps the
@@ -49,12 +51,12 @@ public class FixedConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PFi
      *
      * @param supplier The config supplier to copy.
      */
-<span class="nc" id="L52">    public FixedConfigSupplier(@Nonnull ConfigSupplier&lt;M, F&gt; supplier) {</span>
-<span class="nc" id="L53">        synchronized (Objects.requireNonNull(supplier)) {</span>
-<span class="nc" id="L54">            this.instance = supplier.get();</span>
-<span class="nc" id="L55">            this.timestamp = supplier.configTimestamp();</span>
-<span class="nc" id="L56">        }</span>
-<span class="nc" id="L57">    }</span>
+<span class="fc" id="L54">    public FixedConfigSupplier(@Nonnull ConfigSupplier&lt;M, F&gt; supplier) {</span>
+<span class="fc" id="L55">        synchronized (Objects.requireNonNull(supplier)) {</span>
+<span class="fc" id="L56">            this.instance = supplier.get();</span>
+<span class="fc" id="L57">            this.timestamp = supplier.configTimestamp();</span>
+<span class="pc" id="L58">        }</span>
+<span class="fc" id="L59">    }</span>
 
     /**
      * Initialize with an initial config instance.
@@ -62,38 +64,38 @@ public class FixedConfigSupplier&lt;M extends PMessage&lt;M,F&gt;, F extends PFi
      * @param initialConfig The initial config instance.
      * @param timestamp The config timestamp.
      */
-<span class="fc" id="L65">    public FixedConfigSupplier(@Nonnull M initialConfig, long timestamp) {</span>
-<span class="fc" id="L66">        this.instance = initialConfig;</span>
-<span class="fc" id="L67">        this.timestamp = timestamp;</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L67">    public FixedConfigSupplier(@Nonnull M initialConfig, long timestamp) {</span>
+<span class="fc" id="L68">        this.instance = initialConfig;</span>
+<span class="fc" id="L69">        this.timestamp = timestamp;</span>
+<span class="fc" id="L70">    }</span>
 
     @Nonnull
     @Override
     public final M get() {
-<span class="fc" id="L73">        return instance;</span>
+<span class="fc" id="L75">        return instance;</span>
     }
 
     @Override
     public final void addListener(@Nonnull ConfigListener&lt;M, F&gt; listener) {
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L80">    }</span>
 
     @Override
     public final void removeListener(@Nonnull ConfigListener&lt;M,F&gt; listener) {
-<span class="nc" id="L82">    }</span>
+<span class="fc" id="L84">    }</span>
 
     @Override
     public long configTimestamp() {
-<span class="nc" id="L86">        return timestamp;</span>
+<span class="fc" id="L88">        return timestamp;</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L91">        return getName();</span>
+<span class="fc" id="L93">        return getName();</span>
     }
 
     @Override
     public String getName() {
-<span class="fc" id="L96">        return &quot;InMemoryConfig&quot;;</span>
+<span class="fc" id="L98">        return &quot;InMemoryConfig&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

@@ -305,7 +305,7 @@ public class NonblockingSocketServer implements AutoCloseable {
 <span class="fc" id="L305">        long startTime = System.nanoTime();</span>
 
         // part a: read into the readBuffer.
-<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (context.currentFrameSize == 0) {</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">        if (context.currentFrameSize == 0) {</span>
             // read frame size.
             try {
 <span class="fc bfc" id="L311" title="All 2 branches covered.">                if (context.channel.read(context.sizeBuffer) &lt; 0) {</span>
@@ -357,9 +357,9 @@ public class NonblockingSocketServer implements AutoCloseable {
 <span class="nc" id="L357">            return;</span>
 <span class="fc" id="L358">        }</span>
 
-<span class="fc bfc" id="L360" title="All 2 branches covered.">        if (context.readBuffer.position() &lt; context.readBuffer.limit()) {</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">        if (context.readBuffer.position() &lt; context.readBuffer.limit()) {</span>
             // wait until next read, and see if remaining of frame has arrived.
-<span class="fc" id="L362">            return;</span>
+<span class="nc" id="L362">            return;</span>
         }
 
         // part b: if the read buffer is complete, handle the content.
